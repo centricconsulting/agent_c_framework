@@ -122,7 +122,7 @@ If you prefer to understand each step or if the script doesn't work:
    pip install -e agent_c_core
    pip install -e agent_c_tools
    pip install -e agent_c_reference_apps
-   pip install -e test\agent_c_tools
+   pip install -e ../test/agent_c_tools
    ```
 
 > **Note**: The `-e` flag installs packages in "editable" mode, so your code changes are immediately available without reinstalling.
