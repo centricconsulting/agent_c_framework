@@ -13,6 +13,7 @@ pip install -e my_agent_c
 pip install -e agent_c_reference_apps
 pip install -e agent_c_api_ui/agent_c_api
 
+pip install -e ..\test\agent_c_tools
 
 if errorlevel 1 (
     echo Failed to install the required python packages.
