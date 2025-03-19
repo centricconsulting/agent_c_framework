@@ -30,9 +30,6 @@ RUN pip install  -e agent_c_core \
     && pip install -e agent_c_tools \
     && pip install -e agent_c_api_ui/agent_c_api
 
-WORKDIR /app/test
-RUN pip install -e agent_c_tools
-
 # Return to the app's root
 WORKDIR /app
 
