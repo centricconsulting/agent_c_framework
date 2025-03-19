@@ -3,7 +3,6 @@ from setuptools import setup, find_namespace_packages
 setup(
     name="agent_c-core",
     packages=find_namespace_packages(include=["agent_c.*"]),
-    package_dir={'': 'src'},
     author="Centric Consulting",
     author_email="donavan.stanley@centricconsulting.com",
     description="A framework for tool-using AI chat agents",

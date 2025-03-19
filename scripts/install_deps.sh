@@ -8,6 +8,7 @@ pip install -e agent_c_tools
 pip install -e my_agent_c
 pip install -e agent_c_reference_apps
 pip install -e agent_c_api_ui/agent_c_api
+pip install -e ../test/agent_c_tools
 
 echo "Installing NPM dependencies..."
 cd agent_c_api_ui/agent_c_react_client  # Use forward slashes for Linux/macOS

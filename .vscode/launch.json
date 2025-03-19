@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "All Projects",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "${workspaceFolder}/test"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+			"console": "integratedTerminal"
+        }
+    ]
+
+}
