@@ -2,8 +2,8 @@ import json
 
 import python_weather
 
-from agent_c import json_schema, Toolset
-from agent_c.util.slugs import MnemonicSlugs
+from agent_c_core.agent_c import json_schema, Toolset
+from agent_c_core.agent_c.util.slugs import MnemonicSlugs
 
 
 # Simple demonstration tool that grabs a weather forecast for a location.

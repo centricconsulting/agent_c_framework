@@ -9,10 +9,10 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.rule import Rule
 
-from agent_c.agents.gpt import GPTChatAgent
-from agent_c.models.chat_event import ChatEvent
-from agent_c.prompting import PersonaSection, PromptBuilder
-from agent_c.toolsets.tool_chest import ToolChest
+from agent_c_core.agent_c.agents.gpt import GPTChatAgent
+from agent_c_core.agent_c.models.chat_event import ChatEvent
+from agent_c_core.agent_c.prompting import PersonaSection, PromptBuilder
+from agent_c_core.agent_c.toolsets.tool_chest import ToolChest
 from agent_c_tools.tools.weather import WeatherTools  # noqa
 
 

@@ -4,8 +4,8 @@ load_dotenv(override=True)
 
 from typing import Any, List
 
-from agent_c.agents.gpt import GPTChatAgent
-from agent_c.toolsets.tool_chest import ToolChest
+from agent_c_core.agent_c.agents.gpt import GPTChatAgent
+from agent_c_core.agent_c.toolsets.tool_chest import ToolChest
 from agent_c_tools.tools.weather import WeatherTools  # noqa
 
 async def main():

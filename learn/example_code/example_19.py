@@ -14,10 +14,10 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.rule import Rule
 
-from agent_c.agents.gpt import GPTChatAgent
-from agent_c.models.chat_event import ChatEvent, RenderMedia
-from agent_c.prompting import PersonaSection, PromptBuilder
-from agent_c.toolsets.tool_chest import ToolChest
+from agent_c_core.agent_c.agents.gpt import GPTChatAgent
+from agent_c_core.agent_c.models.chat_event import ChatEvent, RenderMedia
+from agent_c_core.agent_c.prompting import PersonaSection, PromptBuilder
+from agent_c_core.agent_c.toolsets.tool_chest import ToolChest
 from agent_c_tools.tools.workspaces import WorkspaceTools  # noqa
 from agent_c_tools.tools.workspaces.local_storage import LocalStorageWorkspace
 from agent_c_tools.tools.dall_e import DallETools  # noqa

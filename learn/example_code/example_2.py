@@ -2,7 +2,7 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from agent_c import GPTChatAgent
+from agent_c_core.agent_c import GPTChatAgent
 
 
 async def main():

@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.rule import Rule
 
-from agent_c import GPTChatAgent, ToolChest
+from agent_c_core.agent_c import GPTChatAgent, ToolChest
 
 from agent_c_tools.tools.weather import WeatherTools  # noqa
 

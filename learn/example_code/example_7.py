@@ -3,7 +3,7 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from agent_c.agents.gpt import GPTChatAgent
+from agent_c_core.agent_c.agents.gpt import GPTChatAgent
 
 def segment_blog_posts(content):
     posts = []

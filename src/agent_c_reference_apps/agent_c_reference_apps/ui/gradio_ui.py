@@ -15,13 +15,13 @@ from typing import Union, List, Optional
 from dotenv import load_dotenv
 from spacy.tokens.doc import defaultdict
 
-from agent_c.models.input.audio_input import AudioInput
-from agent_c.toolsets import Toolset
+from agent_c_core.agent_c.models.input.audio_input import AudioInput
+from agent_c_core.agent_c.toolsets import Toolset
 
-from agent_c.models.input.image_input import ImageInput
-from agent_c.prompting import DynamicPersonaSection
+from agent_c_core.agent_c.models.input.image_input import ImageInput
+from agent_c_core.agent_c.prompting import DynamicPersonaSection
 
-from agent_c.util.response_format import align_tool_calls, question_response, system_prompt, \
+from agent_c_core.agent_c.util.response_format import align_tool_calls, question_response, system_prompt, \
     combine_debug_info, filtered_responses
 
 from agent_c_reference_apps.ui.markdown_render import MarkdownTokenRenderer
@@ -35,17 +35,17 @@ from agent_c_reference_apps.util.audio_cues import AudioCues
 from agent_c_reference_apps.util.chat_commands import CommandHandler
 
 # Without this none of the rest matter
-from agent_c import GPTChatAgent, ClaudeChatAgent, ChatSessionManager, ToolChest, ToolCache
+from agent_c_core.agent_c import GPTChatAgent, ClaudeChatAgent, ChatSessionManager, ToolChest, ToolCache
 
-from agent_c.util import debugger_is_active
+from agent_c_core.agent_c.util import debugger_is_active
 from agent_c_tools.tools.user_preferences import AssistantPersonalityPreference, AddressMeAsPreference, UserPreference
-from agent_c.prompting import CoreInstructionSection, HelpfulInfoStartSection, EndOperatingGuideLinesSection, \
+from agent_c_core.agent_c.prompting import CoreInstructionSection, HelpfulInfoStartSection, EndOperatingGuideLinesSection, \
     EnvironmentInfoSection, PromptBuilder
-from agent_c.models.events import MessageEvent, ToolCallEvent, InteractionEvent, TextDeltaEvent, HistoryEvent, CompletionEvent, ToolCallDeltaEvent, SessionEvent, RenderMediaEvent
+from agent_c_core.agent_c.models.events import MessageEvent, ToolCallEvent, InteractionEvent, TextDeltaEvent, HistoryEvent, CompletionEvent, ToolCallDeltaEvent, SessionEvent, RenderMediaEvent
 
 from agent_c_tools import LocalStorageWorkspace
 from agent_c_tools.tools.user_bio.prompt import UserBioSection
-from agent_c.util.oai_audio import OAIAudioPlayerAsync
+from agent_c_core.agent_c.util.oai_audio import OAIAudioPlayerAsync
 
 ENHANCED_DEBUG_INFO = os.getenv('ENHANCED_DEBUG_INFO', 'False').lower() in ('true', '1', 'yes')
 

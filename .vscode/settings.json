@@ -4,12 +4,12 @@
     "python.testing.pytestArgs": [
         "test"
     ],
-    "python.testing.cwd": "${workspaceFolder}/test",
+    "python.testing.cwd": "${workspaceFolder}",    
     "python.analysis.extraPaths": [
         "${workspaceFolder}/src"
-    ],
+    ],    
     "terminal.integrated.env.windows": {
         "PYTHONPATH": "${workspaceFolder}/src"
-    },
+    },    
     "python.testing.unittestEnabled": false
 }

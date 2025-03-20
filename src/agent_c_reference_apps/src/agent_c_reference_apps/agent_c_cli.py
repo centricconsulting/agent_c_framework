@@ -10,8 +10,8 @@ from typing import Optional, List
 from dotenv import load_dotenv
 
 
-from agent_c.models.input import AudioInput
-from agent_c.models.input.image_input import ImageInput
+from agent_c_core.agent_c.models.input import AudioInput
+from agent_c_core.agent_c.models.input.image_input import ImageInput
 from agent_c_tools import LocalStorageWorkspace
 from agent_c_tools.tools.workspaces.local_storage import LocalProjectWorkspace
 
@@ -22,12 +22,12 @@ from agent_c_reference_apps.util.audio_cues import AudioCues
 from agent_c_reference_apps.util.chat_commands import CommandHandler
 
 # Without this none of the rest matter
-from agent_c import GPTChatAgent, ClaudeChatAgent, ChatSessionManager, ToolChest, ToolCache
+from agent_c_core.agent_c import GPTChatAgent, ClaudeChatAgent, ChatSessionManager, ToolChest, ToolCache
 
 
-from agent_c.util import debugger_is_active
+from agent_c_core.agent_c.util import debugger_is_active
 from agent_c_tools.tools.user_preferences import AssistantPersonalityPreference, AddressMeAsPreference, UserPreference #noqa
-from agent_c.prompting import CoreInstructionSection, HelpfulInfoStartSection, EndOperatingGuideLinesSection, \
+from agent_c_core.agent_c.prompting import CoreInstructionSection, HelpfulInfoStartSection, EndOperatingGuideLinesSection, \
     EnvironmentInfoSection, PromptBuilder, PersonaSection
 
 
@@ -161,7 +161,7 @@ class CLIChat:
     async def __init_session(self):
         self.logger.debug("Initializing Session...")
         if os.environ.get("ZEP_CE_KEY") or os.environ.get("ZEP_API_KEY"):
-            from agent_c.chat.zep_session_manager import ZepCESessionManager, ZepCloudSessionManager, AsyncZep
+            from agent_c_core.agent_c.chat.zep_session_manager import ZepCESessionManager, ZepCloudSessionManager, AsyncZep
             client = AsyncZep(api_key=os.environ.get("ZEP_API_KEY"))
             cls = ZepCESessionManager if os.environ.get("ZEP_CE_KEY") else ZepCloudSessionManager
             self.session_manager = cls(client, allow_auto_user_create=True)

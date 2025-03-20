@@ -2,7 +2,7 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from agent_c.agents.gpt import TikTokenTokenCounter
+from agent_c_core.agent_c.agents.gpt import TikTokenTokenCounter
 
 
 async def main():

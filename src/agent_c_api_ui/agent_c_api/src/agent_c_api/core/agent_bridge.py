@@ -7,23 +7,23 @@ import traceback
 from typing import Union, List, Dict, Any, AsyncGenerator, Optional
 from datetime import datetime, timezone
 
-from agent_c.models.input.image_input import ImageInput
-from agent_c.models.input.audio_input import AudioInput
-from agent_c.models.input.file_input import FileInput
-from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
-from agent_c.agents import GPTChatAgent
-from agent_c.agents.claude import ClaudeChatAgent
-from agent_c.models.events import SessionEvent
-from agent_c.models.input import AudioInput
+from agent_c_core.agent_c.models.input.image_input import ImageInput
+from agent_c_core.agent_c.models.input.audio_input import AudioInput
+from agent_c_core.agent_c.models.input.file_input import FileInput
+from agent_c_core.agent_c.prompting.basic_sections.persona import DynamicPersonaSection
+from agent_c_core.agent_c.agents import GPTChatAgent
+from agent_c_core.agent_c.agents.claude import ClaudeChatAgent
+from agent_c_core.agent_c.models.events import SessionEvent
+from agent_c_core.agent_c.models.input import AudioInput
 from agent_c_api.core.file_handler import FileHandler
 from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c_tools.tools.workspaces import LocalStorageWorkspace
-from agent_c.toolsets import ToolChest, ToolCache, Toolset
+from agent_c_core.agent_c.toolsets import ToolChest, ToolCache, Toolset
 
-from agent_c.chat import ChatSessionManager
+from agent_c_core.agent_c.chat import ChatSessionManager
 
 from agent_c_tools.tools.user_preferences import AssistantPersonalityPreference, AddressMeAsPreference, UserPreference
-from agent_c.prompting import PromptBuilder, CoreInstructionSection, HelpfulInfoStartSection, \
+from agent_c_core.agent_c.prompting import PromptBuilder, CoreInstructionSection, HelpfulInfoStartSection, \
     EndOperatingGuideLinesSection, \
     EnvironmentInfoSection
 

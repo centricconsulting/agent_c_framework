@@ -18,8 +18,8 @@ else:
     from zep_cloud.client import AsyncZep
     from zep_cloud.errors import NotFoundError, InternalServerError, BadRequestError, UnauthorizedError
 
-from agent_c import ChatSessionManager, MemoryMessage
-from agent_c.util.slugs import MnemonicSlugs
+from agent_c_core.agent_c import ChatSessionManager, MemoryMessage
+from agent_c_core.agent_c.util.slugs import MnemonicSlugs
 
 # TODOS:
 # - clean up exception handling and add retries

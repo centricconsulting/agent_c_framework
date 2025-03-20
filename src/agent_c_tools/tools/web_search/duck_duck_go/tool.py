@@ -1,6 +1,6 @@
 import json
 from duckduckgo_search import AsyncDDGS
-from agent_c.toolsets import json_schema, Toolset
+from agent_c_core.agent_c.toolsets import json_schema, Toolset
 
 # A tool belt for asynchronous search functionality using the DuckDuckGo search API.
 class DuckDuckGoTools(Toolset):

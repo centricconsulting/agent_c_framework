@@ -3,9 +3,9 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from agent_c.agents.gpt import GPTChatAgent
+from agent_c_core.agent_c.agents.gpt import GPTChatAgent
 from agent_c_tools.tools.workspaces.local_storage import LocalStorageWorkspace
-from agent_c.models.input.image_input import ImageInput
+from agent_c_core.agent_c.models.input.image_input import ImageInput
 
 
 async def main():

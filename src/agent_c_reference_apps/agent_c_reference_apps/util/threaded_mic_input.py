@@ -6,8 +6,8 @@ import sounddevice as sd
 from queue import Queue
 from typing import Union, Optional
 
-from agent_c.util import MnemonicSlugs
-from agent_c.models.events.audio import AudioInputBeginEvent, AudioInputDeltaEvent, AudioInputEndEvent
+from agent_c_core.agent_c.util import MnemonicSlugs
+from agent_c_core.agent_c.models.events.audio import AudioInputBeginEvent, AudioInputDeltaEvent, AudioInputEndEvent
 
 CHUNK_LENGTH_S = 0.05  # 100ms
 SAMPLE_RATE = 24000

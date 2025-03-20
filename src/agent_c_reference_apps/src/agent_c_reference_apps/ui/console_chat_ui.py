@@ -18,12 +18,12 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 
-from agent_c.models.input import TextInput
-from agent_c.models.input.audio_input import AudioInput
-from agent_c.util.oai_audio import OAIAudioPlayerAsync
+from agent_c_core.agent_c.models.input import TextInput
+from agent_c_core.agent_c.models.input.audio_input import AudioInput
+from agent_c_core.agent_c.util.oai_audio import OAIAudioPlayerAsync
 from agent_c_reference_apps.util.audio_cues import AudioCues
 from agent_c_reference_apps.ui.markdown_render import MarkdownTokenRenderer
-from agent_c.models.events import MessageEvent, ToolCallEvent, TextDeltaEvent, CompletionEvent, RenderMediaEvent
+from agent_c_core.agent_c.models.events import MessageEvent, ToolCallEvent, TextDeltaEvent, CompletionEvent, RenderMediaEvent
 from agent_c_reference_apps.util.threaded_mic_input import MicInputThread
 
 LINE_SEPARATOR: Markdown = Markdown("---\n")
