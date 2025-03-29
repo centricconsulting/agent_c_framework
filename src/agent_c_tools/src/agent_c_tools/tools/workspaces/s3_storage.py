@@ -3,6 +3,7 @@
 import logging
 import base64
 import json
+import os
 from aiobotocore.session import get_session
 from botocore.exceptions import NoCredentialsError, ClientError
 from agent_c_tools.tools.workspaces.base import BaseWorkspace
@@ -34,6 +35,24 @@ class S3StorageWorkspace(BaseWorkspace):
         self.bucket_name = bucket_name
         self.prefix = prefix.rstrip('/') + '/' if prefix else ""
         self.session = get_session()
+  
+        aws_region_name = os.getenv('AWS_REGION_NAME')
+        aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+        aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+
+        if not aws_access_key_id or not aws_secret_access_key or not aws_region_name:
+            error_msg = "AWS credentials not found"
+            logging.error(error_msg)
+            raise ValueError(error_msg)
+
+        aws_session_token = os.getenv('AWS_SESSION_TOKEN')
+
+        self.session.set_credentials(
+            secret_key=aws_secret_access_key,
+            access_key=aws_access_key_id,
+            token=aws_session_token if aws_session_token else None)
+
+        self.session.set_config_variable('region',aws_region_name)
 
         # S3 has a maximum object key length of 1024 bytes
         self.max_filename_length = 1024 - len(self.prefix)
@@ -102,18 +121,17 @@ class S3StorageWorkspace(BaseWorkspace):
                 response = await client.get_object(Bucket=self.bucket_name, Key=full_path)
                 async with response['Body'] as stream:
                     return await stream.read()
-            except ClientError as clientError:
-                logging.error(clientError)
-                if clientError.response['Error']['Code'] == 'NoSuchKey':
-                    raise FileNotFoundError(f"File not found: {file_path}") from clientError
+            except ClientError as client_error:
+                logging.error(client_error)
+                if client_error.response['Error']['Code'] == 'NoSuchKey':
+                    error_msg = f"File not found: {file_path}"
+                    raise FileNotFoundError(error_msg) from client_error
                 else:
-                    raise clientError
-            #except client.exceptions.NoSuchKey as exc:
-            #    raise FileNotFoundError(f"File not found: {file_path}") from exc
+                    raise client_error
             except Exception as e:
-                logging.error(e)
-                raise ClientError(f"Error reading file {file_path}: {str(e)}",
-                                  "read_bytes_internal") from e
+                error_msg = f"Error reading file {file_path}: {str(e)}","read_bytes_internal"
+                logging.error(error_msg)
+                raise ClientError(error_msg) from e
 
     async def read_bytes_base64(self, file_path: str) -> str:
         """
@@ -213,8 +231,8 @@ class S3StorageWorkspace(BaseWorkspace):
                                 files.append(rel_path)
 
                 return '\n'.join(sorted(files))
-            except ClientError as clientError:
-                logging.error(clientError)
+            except ClientError as client_error:
+                logging.error(client_error)
                 raise
             except Exception as e:
                 logging.error(e)

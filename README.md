@@ -223,6 +223,11 @@ The following sections allow additional functionality if you have these services
 #AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
 #AZURE_OPENAI_API_VERSION=2024-03-01-preview
 
+# Optional: AWS Storage
+#AWS_REGION_NAME=your-region-name
+#AWS_SECRET_ACCESS_KEY=your-secret-access-key
+#AWS_ACCESS_KEY_ID=your-access-key-id
+
 # Optional: If you're using Zep CE locally instead of Zep Cloud
 #ZEP_CE_KEY=your-zep-ce-key-here
 #ZEP_URL=http://localhost:8001

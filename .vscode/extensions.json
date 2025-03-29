@@ -3,6 +3,7 @@
         "ms-python.python",
         "ms-python.pylint",
         "ms-python.vscode-pylance", 
-        "ms-python.debugpy"
+        "ms-python.debugpy",
+        "ms-python.autopep8"
     ]
 }

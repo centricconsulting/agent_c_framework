@@ -4,13 +4,6 @@ SETLOCAL
 :: Store the starting directory
 pushd %CD%
 
-::install package dependencies
-pip install pytest
-pip install pytest-asyncio
-pip install pytest-cov
-pip install pytest-mock
-pip install markdown
-
 :: Install the requirements
 echo Installing dependencies.
 cd src
@@ -19,6 +12,7 @@ pip install -e agent_c_tools
 pip install -e my_agent_c
 pip install -e agent_c_reference_apps
 pip install -e agent_c_api_ui/agent_c_api
+pip install -e ..\test\unit\agent_c_tools
 
 
 if errorlevel 1 (
