@@ -10,7 +10,7 @@ jobs:
   build_agent_c_core:
     name: Build and Publish agent_c_core
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.merged == true }}
+    #if: ${{ github.event.pull_request.merged == true }}
     permissions:
       contents: read
       packages: write
