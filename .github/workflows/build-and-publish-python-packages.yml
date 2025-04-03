@@ -51,7 +51,7 @@ jobs:
           echo "[distutils]" >> ~/.pypirc
           echo "index-servers = github" >> ~/.pypirc
           echo "[github]" >> ~/.pypirc
-          echo "repository = https://upload.github.com/centricconsulting/agent_c_framework/packages" >> ~/.pypirc
+          echo "repository = https://github.com/centricconsulting/agent_c_framework/packages" >> ~/.pypirc
           echo "username = ${{ github.actor }}" >> ~/.pypirc
           echo "password = ${{ secrets.GITHUB_TOKEN }}" >> ~/.pypirc
 
