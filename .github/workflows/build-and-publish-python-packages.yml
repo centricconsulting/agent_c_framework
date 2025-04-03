@@ -55,7 +55,7 @@ jobs:
 
       - name: Debug network
         run: |
-          nslookup upload.github.com
+          nslookup pypi.github.com
           curl -v https://pypi.github.com      
 
       - name: Build agent_c_core package
