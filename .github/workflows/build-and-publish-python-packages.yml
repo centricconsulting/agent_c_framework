@@ -65,7 +65,7 @@ jobs:
         if: steps.check.outputs.changed == 'true'
         run: |
           cd src/agent_c_core
-          python -m twine upload --verbose --repository-url https://github.com/centricconsulting/agent_c_framework/packages/pypi/ dist/* \
+          python -m twine upload --verbose --repository-url https://github.com/centricconsulting/agent_c_framework/packages dist/* \
           --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
         env:
           TWINE_USERNAME: ${{ github.actor }}
