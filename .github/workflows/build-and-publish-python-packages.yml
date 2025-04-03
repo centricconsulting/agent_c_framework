@@ -53,6 +53,11 @@ jobs:
       #    echo "[github]" >> ~/.pypirc
       #    echo "repository = https://upload.github.com/centricconsulting/agent_c_framework/packages" >> ~/.pypirc
 
+      - name: Debug network
+        run: |
+          nslookup upload.github.com
+          curl -v https://pypi.github.com      
+
       - name: Build agent_c_core package
         if: steps.check.outputs.changed == 'true'
         run: |
@@ -63,7 +68,7 @@ jobs:
         if: steps.check.outputs.changed == 'true'
         run: |
           cd src/agent_c_core
-          python -m twine upload --repository-url https://pypi.pkg.github.com/centricconsulting/agent_c_framework dist/* \
+          python -m twine upload --verbose --repository-url https://pypi.github.com/centricconsulting dist/* \
           --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
         env:
           TWINE_USERNAME: ${{ github.actor }}
