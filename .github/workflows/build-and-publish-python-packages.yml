@@ -45,18 +45,15 @@ jobs:
         if: steps.check.outputs.changed == 'true'
         run: python ci/bump_version.py src/agent_c_core/pyproject.toml ${{ github.run_number }}
 
-      #- name: Setup GitHub Packages environment
-      #  if: steps.check.outputs.changed == 'true'
-      #  run: |
-      #    echo "[distutils]" >> ~/.pypirc
-      #    echo "index-servers = github" >> ~/.pypirc
-      #    echo "[github]" >> ~/.pypirc
-      #    echo "repository = https://upload.github.com/centricconsulting/agent_c_framework/packages" >> ~/.pypirc
-
-      - name: Debug network
+      - name: Setup GitHub Packages environment
+        if: steps.check.outputs.changed == 'true'
         run: |
-          nslookup github.com
-          curl -v https://github.com      
+          echo "[distutils]" >> ~/.pypirc
+          echo "index-servers = github" >> ~/.pypirc
+          echo "[github]" >> ~/.pypirc
+          echo "repository = https://upload.github.com/centricconsulting/agent_c_framework/packages" >> ~/.pypirc
+          echo "username = ${{ github.actor }}" >> ~/.pypirc
+          echo "password = ${{ secrets.GITHUB_TOKEN }}" >> ~/.pypirc
 
       - name: Build agent_c_core package
         if: steps.check.outputs.changed == 'true'
