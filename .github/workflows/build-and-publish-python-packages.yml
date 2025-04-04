@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     #if: ${{ github.event.pull_request.merged == true }}
     permissions:
-      contents: read
+      contents: write
       packages: write
     steps:
       - name: Checkout code
@@ -66,11 +66,16 @@ jobs:
           echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
   
       - name: Create Git Tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git tag ${{ steps.tagger.outputs.new_tag }}
-          git push origin ${{ steps.tagger.outputs.new_tag }}     
+      
+          # Authenticate with token
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          git push origin ${{ steps.tagger.outputs.new_tag }} 
 
       - name: Upload to GitHub release
         if: steps.check.outputs.changed == 'true'
