@@ -51,11 +51,30 @@ jobs:
           cd src/agent_c_core
           python -m build
 
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          latest=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "Latest tag: $latest"
+          version=${latest#v}
+          IFS='.' read -r major minor patch <<< "$version"
+          patch=$((patch + 1))
+          new_tag="v$major.$minor.$patch"
+          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
+    
+      - name: Create Git Tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag ${{ steps.get_tag.outputs.new_tag }}
+          git push origin ${{ steps.get_tag.outputs.new_tag }}          
+
       - name: Upload to GitHub release
         if: steps.check.outputs.changed == 'true'
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/*
+          files: dist/*'
+          tag_name: ${{ steps.get_tag.outputs.new_tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
