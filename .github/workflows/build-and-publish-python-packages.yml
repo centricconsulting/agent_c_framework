@@ -81,7 +81,9 @@ jobs:
         if: steps.check.outputs.changed == 'true'
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/*'
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
           tag_name: ${{ steps.tagger.outputs.new_tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
