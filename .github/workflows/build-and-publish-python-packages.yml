@@ -45,31 +45,19 @@ jobs:
         if: steps.check.outputs.changed == 'true'
         run: python ci/bump_version.py src/agent_c_core/pyproject.toml ${{ github.run_number }}
 
-      - name: Setup GitHub Packages environment
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          echo "[distutils]" >> ~/.pypirc
-          echo "index-servers = github" >> ~/.pypirc
-          echo "[github]" >> ~/.pypirc
-          echo "repository = https://github.com/centricconsulting/agent_c_framework/packages" >> ~/.pypirc
-          echo "username = ${{ github.actor }}" >> ~/.pypirc
-          echo "password = ${{ secrets.GITHUB_TOKEN }}" >> ~/.pypirc
-
       - name: Build agent_c_core package
         if: steps.check.outputs.changed == 'true'
         run: |
           cd src/agent_c_core
           python -m build
 
-      - name: Publish agent_c_core package to GitHub Packages
+      - name: Upload to GitHub release
         if: steps.check.outputs.changed == 'true'
-        run: |
-          cd src/agent_c_core
-          python -m twine upload --verbose --repository-url https://github.com/centricconsulting/agent_c_framework/packages dist/* \
-          --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
         env:
-          TWINE_USERNAME: ${{ github.actor }}
-          TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_agent_c_tools:
     name: Build and Publish agent_c_tools
