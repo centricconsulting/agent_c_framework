@@ -215,6 +215,73 @@ class TestS3WorkspaceIntegration:
             await ro_workspace.write("test.txt", "write", "Test content")
 
     @pytest.mark.asyncio
+    async def test_tree(self, workspace):
+        """
+        Test generating a tree-like structure of files and directories.
+        """
+        # Create test files and directories
+        files_to_create = [
+            "tree_test/file1.txt",
+            "tree_test/file2.txt",
+            "tree_test/subdir/file3.txt"
+        ]
+
+        for file_path in files_to_create:
+            await workspace.write(file_path, "write", f"Content for {file_path}")
+
+        # Generate tree structure
+        tree_output = await workspace.tree("tree_test")
+
+        # Expected tree structure
+        expected_tree = "\n".join(sorted([
+            "file1.txt",
+            "file2.txt",
+            "subdir/file3.txt"
+        ]))
+
+        assert tree_output == expected_tree, "Tree structure should match expected output"
+
+    @pytest.mark.asyncio
+    async def test_cp(self, workspace):
+        """
+        Test copying a file within the S3 bucket.
+        """
+        src_path = "copy_test/source.txt"
+        dest_path = "copy_test/destination.txt"
+
+        # Write source file
+        await workspace.write(src_path, "write", "Content to copy")
+
+        # Copy the file
+        await workspace.cp(src_path, dest_path)
+
+        # Verify both source and destination exist with the same content
+        src_content = await workspace.read(src_path)
+        dest_content = await workspace.read(dest_path)
+
+        assert src_content == "Content to copy", "Source content should match"
+        assert dest_content == "Content to copy", "Destination content should match"
+
+    @pytest.mark.asyncio
+    async def test_mv(self, workspace):
+        """
+        Test moving a file within the S3 bucket.
+        """
+        src_path = "move_test/source.txt"
+        dest_path = "move_test/destination.txt"
+
+        # Write source file
+        await workspace.write(src_path, "write", "Content to move")
+
+        # Move the file
+        await workspace.mv(src_path, dest_path)
+
+        # Verify source no longer exists and destination has the content
+        assert not await workspace.path_exists(src_path), "Source file should not exist after move"
+        dest_content = await workspace.read(dest_path)
+        assert dest_content == "Content to move", "Destination content should match"
+
+    @pytest.mark.asyncio
     async def integration_test_cleanup(self, bucket_name):
         """
         Method for cleaning up S3 bucket after integration tests.

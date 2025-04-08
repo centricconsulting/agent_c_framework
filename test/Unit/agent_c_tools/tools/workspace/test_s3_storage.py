@@ -306,6 +306,61 @@ class TestS3StorageWorkspace:
         assert mock_write.call_args == mocker.call(
             "file.txt", "write", b"test content")
 
+    @pytest.mark.asyncio
+    async def test_tree(self, mocker):
+        """Test the tree method."""
+        # Mock the paginator to simulate S3 objects
+        async def paginate_mock(*args, **kwargs):
+            yield {
+                "Contents": [
+                    {"Key": "test/prefix/folder/file1.txt"},
+                    {"Key": "test/prefix/folder/file2.txt"},
+                    {"Key": "test/prefix/folder/subdir/file3.txt"}
+                ]
+            }
+
+        mock_paginator = mocker.MagicMock()
+        mock_paginator.paginate = paginate_mock
+        self.mock_client.get_paginator = mocker.MagicMock(
+            return_value=mock_paginator)
+
+        # Test tree structure
+        result = await self.workspace.tree("folder")
+        assert result == "file1.txt\nfile2.txt\nsubdir/file3.txt"
+        self.mock_client.get_paginator.assert_called_once_with(
+            "list_objects_v2")
+
+    @pytest.mark.asyncio
+    async def test_cp(self, mocker):
+        """Test the cp method."""
+        # Mock the copy_object method
+        self.mock_client.copy_object = mocker.AsyncMock()
+
+        # Test copying a file
+        result = await self.workspace.cp("source.txt", "destination.txt")
+        assert result == "destination.txt"
+        self.mock_client.copy_object.assert_called_once_with(
+            Bucket=self.bucket_name,
+            CopySource={"Bucket": self.bucket_name,
+                        "Key": "test/prefix/source.txt"},
+            Key="test/prefix/destination.txt"
+        )
+
+    @pytest.mark.asyncio
+    async def test_mv(self, mocker):
+        """Test the mv method."""
+        # Mock the cp and delete methods
+        mock_cp = mocker.patch.object(
+            self.workspace, "cp", mocker.AsyncMock(return_value="destination.txt"))
+        mock_delete = mocker.patch.object(
+            self.workspace, "_delete_file", mocker.AsyncMock())
+
+        # Test moving a file
+        result = await self.workspace.mv("source.txt", "destination.txt")
+        assert result == "destination.txt"
+        mock_cp.assert_called_once_with("source.txt", "destination.txt")
+        mock_delete.assert_called_once_with("source.txt")
+
 
 if __name__ == "__main__":
     pytest.main()
