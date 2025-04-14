@@ -1,4 +1,5 @@
 import json
+import asyncio
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Form, Depends
@@ -54,8 +55,11 @@ async def chat_endpoint(
         """Inner generator for streaming response chunks"""
         # logger.debug(f"Starting event stream for session: {ui_session_id}")
         try:
-            # try to force through browser buffering
-            # yield " " * 2048 + "\n"
+            # Initial padding to help break through browser buffering
+            yield " " * 2048 + "\n"
+            # Force an immediate yield to ensure headers are sent right away
+            await asyncio.sleep(0)
+            
             async for token in agent_manager.stream_response(
                     ui_session_id,
                     file_ids=file_id_list,
@@ -64,7 +68,13 @@ async def chat_endpoint(
                 # Each token is a piece of the assistant's reply
                 if not token.endswith('\n'):
                     token += '\n'
+                    
+                # Yield the token
                 yield token
+                
+                # Force a yield point after each token to ensure immediate delivery
+                await asyncio.sleep(0)
+                
         except Exception as e:
             logger.error(f"Error in stream_response: {e}")
             error_type = type(e).__name__
@@ -74,18 +84,15 @@ async def chat_endpoint(
 
     return StreamingResponse(
         event_stream(),
-        media_type="text/plain",
+        media_type="text/event-stream",
         headers={
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
             "Connection": "keep-alive",
-        },
-        # headers={ "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
-        # "Pragma": "no-cache",
-        # "Expires": "0",
-        # "Connection": "keep-alive",
-        # "X-Accel-Buffering": "no",  # Disable Nginx buffering
-        # "Transfer-Encoding": "chunked",  # Force chunked transfer encoding
-        # "Content-Encoding": "identity"}
+            "X-Accel-Buffering": "no",  # Disable Nginx buffering
+            "Transfer-Encoding": "chunked"  # Force chunked transfer encoding
+        }
     )
     # return StreamingResponse(
     #     event_stream(),

@@ -419,7 +419,11 @@ class BaseAgent:
 
     async def _call_function(self, tool_chest, function_id: str, function_args: Dict) -> Any:
         """
-        Call a function asynchronously.
+        Call a function asynchronously with non-blocking execution.
+
+        This implementation uses asyncio.create_task to prevent tool execution from
+        blocking the event stream, allowing events to be processed while the tool
+        is running.
 
         Parameters:
         function_id: str
@@ -441,8 +445,15 @@ class BaseAgent:
                 return f"{toolset} is not a valid toolset."
 
             function_to_call: Any = getattr(src_obj, function_name)
-
-            return await function_to_call(**function_args)
+            
+            # Create task for function execution but don't immediately await it
+            function_task = asyncio.create_task(function_to_call(**function_args))
+            
+            # Yield control to allow events to be processed
+            await asyncio.sleep(0)
+            
+            # Now await the result
+            return await function_task
         except Exception as e:
             logging.exception(f"Failed calling {function_name} on {toolset}. {e}")
             return f"Important!  Tell the user an error occurred calling {function_name} on {toolset}. {e}"
