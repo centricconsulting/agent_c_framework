@@ -85,12 +85,13 @@
   background-color: hsl(var(--background));
 }
 
-/* AppSidebar: Theme toggle container that hides when sidebar is collapsed */
-.theme-toggle-container {
+/* AppSidebar: Command menu container that hides when sidebar is collapsed */
+.command-menu-container {
+  width: 100%;
   transition: opacity 0.2s ease-in-out;
 }
 
-[data-state="collapsed"] .theme-toggle-container {
+[data-state="collapsed"] .command-menu-container {
   opacity: 0;
   pointer-events: none;
 }

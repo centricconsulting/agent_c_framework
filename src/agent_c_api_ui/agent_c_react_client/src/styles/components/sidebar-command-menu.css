@@ -1,0 +1,50 @@
+/* ===== COMPONENT: SidebarCommandMenu ===== */
+/* Description: Command menu in the sidebar footer for app-wide commands */
+
+/* SidebarCommandMenu: Button styling */
+.sidebar-command-button {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  height: 2.5rem;
+  background-color: transparent;
+  border-radius: var(--radius);
+  color: var(--foreground-muted);
+  transition: all 0.2s ease-in-out;
+}
+
+.sidebar-command-button:hover {
+  background-color: var(--accent-hover);
+  color: var(--foreground);
+}
+
+/* SidebarCommandMenu: Command dialog styling */
+.sidebar-command-dialog {
+  max-width: 32rem;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background-color: var(--background);
+  box-shadow: var(--shadow-lg);
+}
+
+/* SidebarCommandMenu: Command item styling */
+.sidebar-command-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: all 0.2s ease-in-out;
+}
+
+.sidebar-command-item:hover {
+  background-color: var(--accent);
+}
+
+.sidebar-command-item-icon {
+  flex-shrink: 0;
+  color: var(--foreground-muted);
+}

@@ -14,7 +14,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from './ui/sidebar';
-import { ThemeToggle } from './ui/theme-toggle';
+import SidebarCommandMenu from './SidebarCommandMenu';
 import { Separator } from './ui/separator';
 import { cn } from '../lib/utils';
 
@@ -76,8 +76,8 @@ const AppSidebar = ({ children, defaultOpen = true, collapsible = "icon" }) => {
           <SidebarFooter>
             <Separator className="my-2" />
             <div className="flex flex-col items-center px-2 gap-3">
-              <div className="theme-toggle-container">
-                <ThemeToggle/>
+              <div className="command-menu-container">
+                <SidebarCommandMenu />
               </div>
               <div className="footer-logo-container">
                 <img src={footerLogo} alt="Footer Logo" className="footer-logo" />
