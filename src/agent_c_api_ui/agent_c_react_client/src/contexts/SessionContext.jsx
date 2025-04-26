@@ -34,12 +34,7 @@ export const SessionProvider = ({children}) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isInitialized, setIsInitialized] = useState(false);
     const [isReady, setIsReady] = useState(false);
-    const [theme, setTheme] = useState(() => {
-        // Check for saved theme preference in localStorage
-        const savedTheme = localStorage.getItem('theme');
-        logger.debug('Initial theme loaded from localStorage', 'SessionProvider', { savedTheme });
-        return savedTheme || 'system';
-    });
+    // Theme state moved to ThemeContext
 
     // Agent settings & configuration
     const [persona, setPersona] = useState("");
@@ -838,17 +833,7 @@ export const SessionProvider = ({children}) => {
     };
     
     // Handle theme change
-    const handleThemeChange = (newTheme) => {
-        logger.info('Theme changed', 'SessionContext', { previousTheme: theme, newTheme });
-        setTheme(newTheme);
-        try {
-            localStorage.setItem('theme', newTheme);
-            logger.storageOp('write', 'theme', true);
-        } catch (err) {
-            logger.error('Failed to save theme to localStorage', 'SessionContext', { error: err.message });
-            logger.storageOp('write', 'theme', false);
-        }
-    };
+    // Theme handling moved to ThemeContext
 
     // --- Effects ---
     useEffect(() => {
@@ -895,8 +880,7 @@ export const SessionProvider = ({children}) => {
                 personas,
                 availableTools,
                 activeTools,
-                theme,
-                handleThemeChange,
+                // Theme moved to ThemeContext
                 fetchAgentTools,
                 updateAgentSettings,
                 handleEquipTools,

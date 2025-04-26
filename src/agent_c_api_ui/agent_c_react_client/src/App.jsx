@@ -2,17 +2,17 @@ import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import AppRoutes from '@/Routes';
 import { SessionProvider } from '@/contexts/SessionContext';
-import { ThemeProvider } from '@/contexts/ThemeProvider';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 function App() {
   return (
-    <SessionProvider>
-      <ThemeProvider>
+    <ThemeProvider>
+      <SessionProvider>
         <Router>
           <AppRoutes />
         </Router>
-      </ThemeProvider>
-    </SessionProvider>
+      </SessionProvider>
+    </ThemeProvider>
   );
 }
 
