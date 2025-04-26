@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import AppSidebar from './AppSidebar';
 import PageHeader from './PageHeader';
 import { cn } from '../lib/utils';
+import { useLogger } from '../hooks/use-logger';
 
 /**
  * Main application layout with sidebar and content area
@@ -24,6 +25,9 @@ const Layout = ({
 }) => {
   const location = useLocation();
   const isHome = location.pathname === '/';
+  
+  // Simple component logging
+  useLogger('Layout');
 
   return (
     <AppSidebar>

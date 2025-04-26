@@ -1,9 +1,18 @@
 import React, {createContext, useState, useEffect, useRef} from 'react';
 import {API_URL} from '@/config/config';
+// Simple console logger for critical errors
+const logger = {
+    error: (msg, component, data) => console.error(`[${component}] ${msg}`, data),
+    warn: (msg, component, data) => console.warn(`[${component}] ${msg}`, data),
+    info: (msg, component, data) => console.info(`[${component}] ${msg}`, data),
+    debug: (msg, component, data) => console.debug(`[${component}] ${msg}`, data),
+    stateChange: () => {}, // No-op function
+    performance: () => {}, // No-op function
+    storageOp: () => {} // No-op function
+};
 
 if (!API_URL) {
-    console.error('API_URL is not defined! Environment variables may not be loading correctly.');
-    console.log('Current environment variables:', {
+    logger.error('API_URL is not defined! Environment variables may not be loading correctly.', 'SessionContext', {
         'import.meta.env.VITE_API_URL': import.meta.env.VITE_API_URL,
         'process.env.VITE_API_URL': process.env?.VITE_API_URL,
         'NODE_ENV': process.env?.NODE_ENV
@@ -13,6 +22,8 @@ if (!API_URL) {
 export const SessionContext = createContext();
 
 export const SessionProvider = ({children}) => {
+    logger.info('SessionProvider initializing', 'SessionProvider');
+    
     // Global session & UI state
     const [sessionId, setSessionId] = useState(null);
     const debouncedUpdateRef = useRef(null);
@@ -26,6 +37,7 @@ export const SessionProvider = ({children}) => {
     const [theme, setTheme] = useState(() => {
         // Check for saved theme preference in localStorage
         const savedTheme = localStorage.getItem('theme');
+        logger.debug('Initial theme loaded from localStorage', 'SessionProvider', { savedTheme });
         return savedTheme || 'system';
     });
 
@@ -47,10 +59,37 @@ export const SessionProvider = ({children}) => {
     });
     const [activeTools, setActiveTools] = useState([]);
 
+    // Chat export functions
+    const [messages, setMessages] = useState([]);
+    
+    // Format the entire chat for copying
+    const getChatCopyContent = () => {
+        if (!messages || messages.length === 0) {
+            return '';
+        }
+        
+        // Import the function on-demand if we need to format
+        const { createClipboardContent } = require('@/components/chat_interface/utils/htmlChatFormatter');
+        const clipboardContent = createClipboardContent(messages);
+        return clipboardContent.text;
+    };
+    
+    // Get HTML version for rich copying
+    const getChatCopyHTML = () => {
+        if (!messages || messages.length === 0) {
+            return '';
+        }
+        
+        // Import the function on-demand if we need to format
+        const { createClipboardContent } = require('@/components/chat_interface/utils/htmlChatFormatter');
+        const clipboardContent = createClipboardContent(messages);
+        return clipboardContent.html;
+    };
+    
     // --- Business Logic Functions ---
     const checkResponse = async (response, endpoint) => {
         const contentType = response.headers.get("content-type");
-        console.log(`Response from ${endpoint}:`, {
+        logger.debug(`Response from ${endpoint}`, 'SessionContext', {
             status: response.status,
             contentType,
             ok: response.ok
@@ -72,12 +111,12 @@ export const SessionProvider = ({children}) => {
         }
 
         const text = await response.text();
-        console.log(`Raw response from ${endpoint}:`, text);
+        logger.debug(`Raw response from ${endpoint}`, 'SessionContext', { responseText: text });
 
         try {
             return JSON.parse(text);
         } catch (e) {
-            console.error(`Failed to parse JSON from ${endpoint}:`, text);
+            logger.error(`Failed to parse JSON from ${endpoint}`, 'SessionContext', { text });
             throw new Error(`Invalid JSON from ${endpoint}: ${e.message}`);
         }
     };
@@ -85,7 +124,7 @@ export const SessionProvider = ({children}) => {
     // Fetch initial data (personas, tools, models)
     const fetchInitialData = async () => {
         try {
-            console.log('Starting fetchInitialData with API_URL:', API_URL);
+            logger.info('Starting fetchInitialData', 'SessionContext', { apiUrl: API_URL });
             if (!API_URL) {
                 throw new Error('API_URL is undefined. Please check your environment variables.');
             }
@@ -93,11 +132,15 @@ export const SessionProvider = ({children}) => {
             setIsInitialized(false);
 
             // Parallel fetching
+            logger.debug('Fetching personas, tools, and models in parallel', 'SessionContext');
+            const startTime = performance.now();
             const [personasResponse, toolsResponse, modelsResponse] = await Promise.all([
                 fetch(`${API_URL}/personas`),
                 fetch(`${API_URL}/tools`),
                 fetch(`${API_URL}/models`)
             ]);
+            const fetchDuration = performance.now() - startTime;
+            logger.performance('SessionContext', 'Initial API fetches', Math.round(fetchDuration));
 
             if (!personasResponse.ok || !toolsResponse.ok || !modelsResponse.ok) {
                 throw new Error('Failed to fetch initial data');
@@ -108,7 +151,13 @@ export const SessionProvider = ({children}) => {
                 toolsResponse.json(),
                 modelsResponse.json()
             ]);
-            // console.log('Fetched initial data:', {personasData, toolsData, modelsData});
+            
+            logger.debug('Initial data fetched successfully', 'SessionContext', {
+                personasCount: personasData?.length,
+                toolsCount: Object.keys(toolsData?.groups || {}).length,
+                modelsCount: modelsData?.models?.length
+            });
+            
             // Store data returned from backend into their data structures.
             setPersonas(personasData);
             setAvailableTools(toolsData);
@@ -119,6 +168,9 @@ export const SessionProvider = ({children}) => {
             if (savedConfig) {
                 try {
                     const parsedConfig = JSON.parse(savedConfig);
+                    logger.debug('Found saved configuration in localStorage', 'SessionContext', { 
+                        configAge: parsedConfig.lastUpdated ? new Date() - new Date(parsedConfig.lastUpdated) : 'unknown' 
+                    });
 
                     // Check if the configuration is expired (14 days)
                     if (parsedConfig.lastUpdated) {
@@ -126,14 +178,18 @@ export const SessionProvider = ({children}) => {
                         const maxAgeMs = 14 * 24 * 60 * 60 * 1000; // 14 days
 
                         if (configAge > maxAgeMs) {
-                            console.log('Saved configuration is too old (>14 days), using defaults');
+                            logger.info('Saved configuration is too old (>14 days), using defaults', 'SessionContext');
                             localStorage.removeItem("agent_config");
                         } else {
                             // Verify the saved model still exists in the available models
                             const savedModel = modelsData.models.find(m => m.id === parsedConfig.modelName);
 
                             if (savedModel) {
-                                console.log('Loading saved configuration:', parsedConfig);
+                                logger.info('Loading saved configuration', 'SessionContext', { 
+                                    modelName: parsedConfig.modelName,
+                                    persona: parsedConfig.persona
+                                });
+                                
                                 // Use the saved model as the initial model
                                 const initialModel = {
                                     id: savedModel.id,
@@ -158,19 +214,22 @@ export const SessionProvider = ({children}) => {
                                 setIsInitialized(true);
                                 return; // Exit early as we've handled initialization
                             } else {
-                                console.log('Saved model not found in available models, using defaults');
+                                logger.warn('Saved model not found in available models, using defaults', 'SessionContext', {
+                                    savedModelName: parsedConfig.modelName,
+                                    availableModels: modelsData.models.map(m => m.id)
+                                });
                             }
                         }
                     }
                 } catch (err) {
-                    console.error('Error parsing saved configuration:', err);
+                    logger.error('Error parsing saved configuration', 'SessionContext', { error: err.message });
                     // Continue with default initialization if parsing fails
                 }
             }
 
             // this is the default initialization path is a config is not saved.
             if (modelsData.models.length > 0) {
-                // console.log('Initializing session with model:', modelsData.models[0]);
+                logger.info('Using default initialization path', 'SessionContext');
                 const initialModel = modelsData.models[0];
                 setModelName(initialModel.id);
                 setSelectedModel(initialModel);
@@ -198,31 +257,43 @@ export const SessionProvider = ({children}) => {
 
                 // Choose a default persona (or fall back to the first)
                 if (personasData.length > 0) {
-                    // console.log('Setting initial persona:', personasData[0]);
                     const defaultPersona = personasData.find(p => p.name === 'default');
                     const initialPersona = defaultPersona || personasData[0];
                     setPersona(initialPersona.name);
                     setCustomPrompt(initialPersona.content);
+                    logger.debug('Setting initial persona', 'SessionContext', {
+                        personaName: initialPersona.name,
+                        isDefault: initialPersona.name === 'default',
+                        promptLength: initialPersona.content?.length
+                    });
                 }
 
                 // Initialize a session with the initial model
-                // console.log('Initializing session with initial model:', initialModel);
+                logger.info('Initializing session with initial model', 'SessionContext', {
+                    modelId: initialModel.id,
+                    backend: initialModel.backend
+                });
                 await initializeSession(false, initialModel, modelsData.models);
                 setIsInitialized(true);
             } else {
                 throw new Error('No models available');
             }
         } catch (err) {
-            console.error('Error fetching initial data:', err);
+            logger.error('Error fetching initial data', 'SessionContext', { error: err.message, stack: err.stack });
             setError(`Failed to load initial data: ${err.message}`);
         } finally {
             setIsLoading(false);
+            logger.debug('fetchInitialData completed', 'SessionContext', { 
+                isInitialized: isInitialized,
+                modelName: modelName
+            });
         }
     };
 
     // Initialize (or reinitialize) a session
     // Modified initializeSession function to correctly handle passed parameters
     const initializeSession = async (forceNew = false, initialModel = null, modelConfigsData = null) => {
+        logger.info('initializeSession called', 'SessionContext', { forceNew, initialModelId: initialModel?.id });
         setIsReady(false);
         try {
             // First, validate that we have model configurations available
@@ -239,7 +310,7 @@ export const SessionProvider = ({children}) => {
                 if ('id' in initialModel && initialModel.id) {
                     currentModel = models.find(model => model.id === initialModel.id);
                     if (!currentModel) {
-                        console.warn(`Model with id ${initialModel.id} not found in configurations, falling back to first model`);
+                        logger.warn(`Model with id ${initialModel.id} not found in configurations, falling back to first model`, 'SessionContext');
                         // Fallback to the first model
                         if (models.length > 0) {
                             currentModel = models[0];
@@ -253,7 +324,7 @@ export const SessionProvider = ({children}) => {
                 // Find the model by the current modelName state
                 currentModel = models.find(model => model.id === modelName);
                 if (!currentModel) {
-                    console.warn(`Model with name ${modelName} not found in configurations. Falling back to first model`);
+                    logger.warn(`Model with name ${modelName} not found in configurations. Falling back to first model`, 'SessionContext');
                     // Fallback to the first model
                     if (models.length > 0) {
                         currentModel = models[0];
@@ -264,7 +335,7 @@ export const SessionProvider = ({children}) => {
                 // No model specified, use the first available model
                 if (models.length > 0) {
                     currentModel = models[0];
-                    console.log('No model specified, using default:', currentModel.id);
+                    logger.info('No model specified, using default', 'SessionContext', { modelId: currentModel.id });
                     setModelName(currentModel.id);
                 }
             }
@@ -274,7 +345,7 @@ export const SessionProvider = ({children}) => {
                 throw new Error('No valid model configuration available');
             }
 
-            console.log('Initializing session with model:', currentModel);
+            logger.debug('Initializing session with model', 'SessionContext', { modelId: currentModel.id, backend: currentModel.backend });
 
             // Build JSON request body
             const jsonData = {
@@ -286,7 +357,7 @@ export const SessionProvider = ({children}) => {
             // If we have an existing session and we're not forcing a new one, include the session ID
             if (sessionId && !forceNew) {
                 jsonData.ui_session_id = sessionId;
-                console.log(`Using existing session ID: ${sessionId} for model change`);
+                logger.debug(`Using existing session ID for model change`, 'SessionContext', { sessionId });
             }
 
 
@@ -296,18 +367,22 @@ export const SessionProvider = ({children}) => {
             // First priority: custom prompt from initialModel if provided
             if (initialModel && ('custom_prompt' in initialModel || 'customPrompt' in initialModel)) {
                 promptToUse = initialModel.custom_prompt || initialModel.customPrompt;
-                console.log('Using custom prompt from initialModel');
+                logger.debug('Using custom prompt from initialModel', 'SessionContext', { 
+                    promptLength: promptToUse?.length
+                });
             }
             // Second priority: current state's custom prompt
             else if (customPrompt) {
                 promptToUse = customPrompt;
-                // console.log('Using current state custom prompt');
+                logger.debug('Using current state custom prompt', 'SessionContext', { 
+                    promptLength: promptToUse?.length
+                });
             }
 
             // Always include custom prompt if available
             if (promptToUse) {
                 jsonData.custom_prompt = promptToUse;
-                // console.log('Sending custom prompt to backend');
+                logger.debug('Sending custom prompt to backend', 'SessionContext');
             }
 
             // Use parameters directly from initialModel if provided, otherwise use model config
@@ -315,13 +390,13 @@ export const SessionProvider = ({children}) => {
                 // Add temperature if available from initialModel
                 if ('temperature' in initialModel) {
                     jsonData.temperature = initialModel.temperature;
-                    // console.log(`Setting initial temperature=${initialModel.temperature}`);
+                    logger.debug(`Setting temperature from initialModel`, 'SessionContext', { temperature: initialModel.temperature });
                 }
 
                 // Add reasoning_effort if available from initialModel
                 if ('reasoning_effort' in initialModel) {
                     jsonData.reasoning_effort = initialModel.reasoning_effort;
-                    // console.log(`Setting initial reasoning_effort=${initialModel.reasoning_effort}`);
+                    logger.debug(`Setting reasoning_effort from initialModel`, 'SessionContext', { reasoningEffort: initialModel.reasoning_effort });
                 }
 
                 // Handle extended_thinking (either as boolean or object)
@@ -340,7 +415,10 @@ export const SessionProvider = ({children}) => {
                             jsonData.budget_tokens = extThinking.budget_tokens;
                         }
 
-                        console.log(`Setting initial extended_thinking as object with enabled=${extThinking.enabled}`);
+                        logger.debug(`Setting extended_thinking as object`, 'SessionContext', { 
+                            enabled: extThinking.enabled,
+                            budgetTokens: jsonData.budget_tokens 
+                        });
                     } else {
                         // It's a boolean
                         jsonData.extended_thinking = extThinking;
@@ -350,7 +428,10 @@ export const SessionProvider = ({children}) => {
                             jsonData.budget_tokens = initialModel.budget_tokens;
                         }
 
-                        // console.log(`Setting extended_thinking=${extThinking}`);
+                        logger.debug(`Setting extended_thinking as boolean`, 'SessionContext', {
+                            enabled: extThinking,
+                            budgetTokens: jsonData.budget_tokens
+                        });
                     }
                 }
                 // Fallback to addModelParameters when no direct parameters were provided
@@ -362,9 +443,10 @@ export const SessionProvider = ({children}) => {
                 addModelParameters(jsonData, currentModel);
             }
 
-            console.log('initializeSession data being sent:', jsonData);
+            logger.debug('initializeSession data being sent', 'SessionContext', { requestData: jsonData });
 
             // Send the initialize request
+            const startTime = performance.now();
             const response = await fetch(`${API_URL}/initialize`, {
                 method: 'POST',
                 headers: {
@@ -372,7 +454,13 @@ export const SessionProvider = ({children}) => {
                 },
                 body: JSON.stringify(jsonData)
             });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const requestDuration = performance.now() - startTime;
+            logger.performance('SessionContext', 'initialize API request', Math.round(requestDuration));
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            }
 
             const data = await response.json();
             if (data.ui_session_id) {
@@ -384,11 +472,16 @@ export const SessionProvider = ({children}) => {
                 // Update modelName state to reflect the current model
                 setModelName(currentModel.id);
                 setSelectedModel(currentModel);
+                
+                logger.info('Session initialized successfully', 'SessionContext', { 
+                    sessionId: data.ui_session_id,
+                    modelId: currentModel.id 
+                });
             } else {
                 throw new Error("No ui_session_id in response");
             }
         } catch (err) {
-            console.error("Session initialization failed:", err);
+            logger.error("Session initialization failed", 'SessionContext', { error: err.message, stack: err.stack });
             setIsReady(false);
             setError(`Session initialization failed: ${err.message}`);
         }
@@ -400,7 +493,7 @@ export const SessionProvider = ({children}) => {
         if (model.parameters?.temperature) {
             const currentTemp = temperature ?? model.parameters.temperature.default;
             jsonData.temperature = currentTemp;
-            // console.log(`Setting temperature=${currentTemp}`);
+            logger.debug(`Setting temperature`, 'SessionContext', { temperature: currentTemp });
         }
 
         // Handle Claude extended thinking parameters
@@ -423,7 +516,7 @@ export const SessionProvider = ({children}) => {
                 : 0;
 
             jsonData.budget_tokens = budgetTokens;
-            console.log(`Setting budget_tokens=${budgetTokens}`);
+            logger.debug(`Setting budget_tokens`, 'SessionContext', { budgetTokens });
         }
 
         // Handle OpenAI reasoning effort parameter if supported
@@ -434,29 +527,44 @@ export const SessionProvider = ({children}) => {
                 : reasoningEffortDefault;
 
             jsonData.reasoning_effort = reasoningEffort;
-            // console.log(`Setting reasoning_effort=${reasoningEffort}`);
+            logger.debug(`Setting reasoning_effort`, 'SessionContext', { reasoningEffort });
         }
     };
 
     // Fetch agent tools for the current session
     const fetchAgentTools = async () => {
-        if (!sessionId || !isReady) return;
+        if (!sessionId || !isReady) {
+            logger.debug('Skipping fetchAgentTools - session not ready', 'SessionContext', { sessionId, isReady });
+            return;
+        }
         try {
+            logger.debug('Fetching agent tools', 'SessionContext', { sessionId });
             const response = await fetch(`${API_URL}/get_agent_tools/${sessionId}`);
-            if (!response.ok) throw new Error('Failed to fetch agent tools');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch agent tools: ${response.status}`);
+            }
             const data = await response.json();
             if (data.status === 'success' && Array.isArray(data.initialized_tools)) {
-                setActiveTools(data.initialized_tools.map(tool => tool.class_name));
+                const toolNames = data.initialized_tools.map(tool => tool.class_name);
+                setActiveTools(toolNames);
+                logger.debug('Agent tools fetched successfully', 'SessionContext', { toolCount: toolNames.length });
+            } else {
+                logger.warn('Unexpected response from get_agent_tools', 'SessionContext', { data });
             }
         } catch (err) {
-            console.error('Error fetching agent tools:', err);
+            logger.error('Error fetching agent tools', 'SessionContext', { error: err.message, stack: err.stack });
         }
     };
 
     // Update agent settings (model change, settings update, parameter update)
     const updateAgentSettings = async (updateType, values) => {
-        if (!sessionId || !isReady) return;
+        if (!sessionId || !isReady) {
+            logger.warn('Skipping updateAgentSettings - session not ready', 'SessionContext', { sessionId, isReady, updateType });
+            return;
+        }
         try {
+            logger.info('updateAgentSettings called', 'SessionContext', { updateType, values });
+            
             switch (updateType) {
                 case 'MODEL_CHANGE': {
                     setIsReady(false);
@@ -497,8 +605,10 @@ export const SessionProvider = ({children}) => {
                         temperature: newParameters.temperature
                     };
 
-                    // console.log('Changing model with custom prompt:', customPrompt ?
-                    //     `${customPrompt.substring(0, 10)}...` : 'None');
+                    logger.debug('Changing model with custom prompt', 'SessionContext', { 
+                        modelId: newModel.id, 
+                        promptLength: customPrompt?.length
+                    });
 
                     // Initialize new session with the custom prompt
                     await initializeSession(false, modelWithPersona);
@@ -524,7 +634,12 @@ export const SessionProvider = ({children}) => {
                         custom_prompt: updatedPrompt
                     };
 
-                    console.log('json data being sent for settings update:', jsonData);
+                    logger.debug('Settings update data being sent', 'SessionContext', { 
+                        sessionId,
+                        modelName,
+                        persona: updatedPersona,
+                        promptLength: updatedPrompt?.length 
+                    });
 
                     const response = await fetch(`${API_URL}/update_settings`, {
                         method: 'POST',
@@ -533,19 +648,27 @@ export const SessionProvider = ({children}) => {
                         },
                         body: JSON.stringify(jsonData)
                     });
-                    if (!response.ok) throw new Error('Failed to update settings');
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Failed to update settings: ${response.status} - ${errorText}`);
+                    }
                     setSettingsVersion(v => v + 1);
                     const updatedSettingsConfig = {
                         persona: updatedPersona,
                         customPrompt: updatedPrompt
                     };
                     saveConfigToStorage(updatedSettingsConfig);
+                    logger.info('Settings updated successfully', 'SessionContext', { persona: updatedPersona });
                     break;
                 }
                 case 'PARAMETER_UPDATE': {
                     if (debouncedUpdateRef.current) {
                         clearTimeout(debouncedUpdateRef.current);
                     }
+                    
+                    // Log the parameter update request
+                    logger.debug('Parameter update requested', 'SessionContext', { values });
+                    
                     debouncedUpdateRef.current = setTimeout(async () => {
                         const updatedParameters = {...modelParameters};
 
@@ -594,27 +717,40 @@ export const SessionProvider = ({children}) => {
                             }
                         }
 
-                        console.log('JSON data being sent:', jsonData);
+                        logger.debug('Parameter update data being sent', 'SessionContext', { requestData: jsonData });
                         setModelParameters(updatedParameters);
-                        await fetch(`${API_URL}/update_settings`, {
+                        
+                        const startTime = performance.now();
+                        const response = await fetch(`${API_URL}/update_settings`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify(jsonData)
                         });
+                        const requestDuration = performance.now() - startTime;
+                        logger.performance('SessionContext', 'update_settings API request', Math.round(requestDuration));
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`Failed to update parameters: ${response.status} - ${errorText}`);
+                        }
+                        
                         setSettingsVersion(v => v + 1);
                         const updatedParamConfig = {
                             modelParameters: updatedParameters
                         };
                         saveConfigToStorage(updatedParamConfig);
+                        logger.info('Parameters updated successfully', 'SessionContext', { parameters: updatedParameters });
                     }, 300);
                     break;
                 }
                 default:
+                    logger.warn(`Unknown updateType: ${updateType}`, 'SessionContext');
                     break;
             }
         } catch (err) {
+            logger.error(`Failed to update settings`, 'SessionContext', { updateType, error: err.message, stack: err.stack });
             setError(`Failed to update settings: ${err.message}`);
         }
     };
@@ -629,8 +765,19 @@ export const SessionProvider = ({children}) => {
             lastUpdated: new Date().toISOString()
         };
 
-        console.log('Saving configuration to localStorage:', configToSave);
-        localStorage.setItem("agent_config", JSON.stringify(configToSave));
+        logger.debug('Saving configuration to localStorage', 'SessionContext', { 
+            modelName: configToSave.modelName,
+            persona: configToSave.persona,
+            parametersKeys: Object.keys(configToSave.modelParameters || {})
+        });
+        
+        try {
+            localStorage.setItem("agent_config", JSON.stringify(configToSave));
+            logger.storageOp('write', 'agent_config', true);
+        } catch (err) {
+            logger.error('Failed to save configuration to localStorage', 'SessionContext', { error: err.message });
+            logger.storageOp('write', 'agent_config', false);
+        }
     };
 
 
@@ -641,6 +788,7 @@ export const SessionProvider = ({children}) => {
             tools: tools
         };
         try {
+            logger.info('Equipping tools', 'SessionContext', { toolCount: tools.length });
             const response = await fetch(`${API_URL}/update_tools`, {
                 method: 'POST',
                 headers: {
@@ -648,49 +796,82 @@ export const SessionProvider = ({children}) => {
                 },
                 body: JSON.stringify(jsonData)
             });
-            if (!response.ok) throw new Error("Failed to equip tools");
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to equip tools: ${response.status} - ${errorText}`);
+            }
             await fetchAgentTools();
             setSettingsVersion(v => v + 1);
+            logger.info('Tools equipped successfully', 'SessionContext');
             // saveConfigToStorage(); // this does nothing right now, but future request will be to pre-initialize tools
         } catch (err) {
-            console.error("Failed to equip tools:", err);
+            logger.error("Failed to equip tools", 'SessionContext', { error: err.message, stack: err.stack });
             throw err;
         }
     };
 
     // Update processing status (for loading/spinner UI)
     const handleProcessingStatus = (status) => {
+        logger.debug('Processing status updated', 'SessionContext', { isStreaming: status });
         setIsStreaming(status);
     };
 
     // Handle session deletion
     const handleSessionsDeleted = () => {
-        localStorage.removeItem("ui_session_id");
-        localStorage.removeItem("agent_config");
+        logger.info('Deleting session', 'SessionContext', { sessionId });
+        try {
+            localStorage.removeItem("ui_session_id");
+            localStorage.removeItem("agent_config");
+            logger.storageOp('remove', 'ui_session_id', true);
+            logger.storageOp('remove', 'agent_config', true);
+        } catch (err) {
+            logger.error('Error removing items from localStorage', 'SessionContext', { error: err.message });
+        }
+        
         setSessionId(null);
         setIsReady(false);
         setActiveTools([]);
         setError(null);
         setModelName("");
         setSelectedModel(null);
+        logger.info('Session deleted successfully', 'SessionContext');
     };
     
     // Handle theme change
     const handleThemeChange = (newTheme) => {
+        logger.info('Theme changed', 'SessionContext', { previousTheme: theme, newTheme });
         setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
+        try {
+            localStorage.setItem('theme', newTheme);
+            logger.storageOp('write', 'theme', true);
+        } catch (err) {
+            logger.error('Failed to save theme to localStorage', 'SessionContext', { error: err.message });
+            logger.storageOp('write', 'theme', false);
+        }
     };
 
     // --- Effects ---
     useEffect(() => {
+        logger.debug('SessionProvider mounted, fetching initial data', 'SessionContext');
         fetchInitialData();
+        
+        return () => {
+            logger.debug('SessionProvider unmounting', 'SessionContext');
+            // Clean up any outstanding timeouts
+            if (debouncedUpdateRef.current) {
+                clearTimeout(debouncedUpdateRef.current);
+            }
+        };
     }, []);
 
     useEffect(() => {
         if (sessionId && isReady) {
+            logger.debug('Session is ready, fetching agent tools', 'SessionContext', { sessionId });
             fetchAgentTools();
         }
     }, [sessionId, isReady, modelName]);
+
+    // State change logging removed for simplicity
 
     return (
         <SessionContext.Provider
@@ -720,7 +901,12 @@ export const SessionProvider = ({children}) => {
                 updateAgentSettings,
                 handleEquipTools,
                 handleProcessingStatus,
-                handleSessionsDeleted
+                handleSessionsDeleted,
+                // Export functions
+                messages,
+                setMessages,
+                getChatCopyContent,
+                getChatCopyHTML
             }}
         >
             {children}

@@ -1,12 +1,19 @@
-import React, { useContext, useEffect } from 'react';
-import { SessionContext } from './SessionContext';
+import React, { useEffect } from 'react';
+import { useSessionContext } from '../hooks/use-session-context';
 
+/**
+ * ThemeProvider component
+ * Applies theme classes to the document root based on theme from SessionContext
+ */
 export const ThemeProvider = ({ children }) => {
-  const { theme } = useContext(SessionContext);
+  const { theme } = useSessionContext('ThemeProvider');
+  
+  // Apply theme based on context
 
   // Apply theme class to the document root
   useEffect(() => {
     const root = window.document.documentElement;
+    const startTime = performance.now();
     
     // Remove old theme classes
     root.classList.remove('light', 'dark');
@@ -24,6 +31,8 @@ export const ThemeProvider = ({ children }) => {
       // Apply the selected theme
       root.classList.add(theme);
     }
+    
+    // Theme has been applied
   }, [theme]);
 
   // Listen for changes in OS color scheme preference
@@ -36,14 +45,19 @@ export const ThemeProvider = ({ children }) => {
     const handleChange = () => {
       const root = window.document.documentElement;
       root.classList.remove('light', 'dark');
-      root.classList.add(mediaQuery.matches ? 'dark' : 'light');
+      const newTheme = mediaQuery.matches ? 'dark' : 'light';
+      root.classList.add(newTheme);
     };
 
     // Add event listener
     mediaQuery.addEventListener('change', handleChange);
+    // Media query listener added
     
     // Cleanup
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      // Media query listener removed
+    };
   }, [theme]);
 
   return <>{children}</>;
