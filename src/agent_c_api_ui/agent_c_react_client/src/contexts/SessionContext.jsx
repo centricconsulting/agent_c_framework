@@ -5,8 +5,6 @@ import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
 import { useAuth } from '@/hooks/use-auth';
 import { useModel } from '@/hooks/use-model';
-import { trackContextInitialization, completeContextInitialization } from '@/lib/diagnostic';
-import contextDiagnosticConsole, { trackContext, updateContext, contextError } from '@/lib/context-diagnostic-console';
 
 if (!API_URL) {
     logger.error('API_URL is not defined! Environment variables may not be loading correctly.', 'SessionContext', {
@@ -28,11 +26,11 @@ const initialState = {
     settingsVersion: 0,
     
     // Session info
-    sessionId: null, // The current session ID - explicitly include this in the state
+    sessionId: null, // The current session ID
     
     // Agent settings & configuration
-    persona: "",
-    customPrompt: "",
+    persona: '',
+    customPrompt: '',
     
     // Data from backend
     personas: [],
@@ -45,6 +43,9 @@ const initialState = {
     
     // Chat messages
     messages: [],
+    
+    // User settings (with persistence)
+    savedSettings: {},
 };
 
 // Define action types
@@ -56,13 +57,15 @@ const SESSION_ACTIONS = {
     SET_READY: 'SET_READY',
     SET_ERROR: 'SET_ERROR',
     INCREMENT_SETTINGS_VERSION: 'INCREMENT_SETTINGS_VERSION',
-    SET_SESSION_ID: 'SET_SESSION_ID', // Add action for setting session ID
+    SET_SESSION_ID: 'SET_SESSION_ID',
     SET_PERSONA: 'SET_PERSONA',
     SET_CUSTOM_PROMPT: 'SET_CUSTOM_PROMPT',
     SET_PERSONAS: 'SET_PERSONAS',
     SET_AVAILABLE_TOOLS: 'SET_AVAILABLE_TOOLS',
     SET_ACTIVE_TOOLS: 'SET_ACTIVE_TOOLS',
     SET_MESSAGES: 'SET_MESSAGES',
+    SET_SAVED_SETTINGS: 'SET_SAVED_SETTINGS',
+    UPDATE_SAVED_SETTINGS: 'UPDATE_SAVED_SETTINGS',
 };
 
 // Reducer function to handle state updates
@@ -89,7 +92,6 @@ function sessionReducer(state, action) {
                 currentSessionId: state.sessionId,
                 newSessionId: newSessionId,
                 unchanged: state.sessionId === newSessionId,
-                newSessionIdType: typeof newSessionId
             });
             
             // Only update if the session ID actually changed, helping prevent unnecessary rerenders
@@ -111,6 +113,13 @@ function sessionReducer(state, action) {
             return { ...state, activeTools: action.payload };
         case SESSION_ACTIONS.SET_MESSAGES:
             return { ...state, messages: action.payload };
+        case SESSION_ACTIONS.SET_SAVED_SETTINGS:
+            return { ...state, savedSettings: action.payload };
+        case SESSION_ACTIONS.UPDATE_SAVED_SETTINGS:
+            return { 
+                ...state, 
+                savedSettings: { ...state.savedSettings, ...action.payload },
+            };
         default:
             return state;
     }
@@ -151,7 +160,9 @@ export const SessionContext = createContext({
     handleProcessingStatus: () => console.warn('Session context not initialized: handleProcessingStatus'),
     getChatCopyContent: () => '',
     getChatCopyHTML: () => '',
-    setMessages: () => console.warn('Session context not initialized: setMessages')
+    setMessages: () => console.warn('Session context not initialized: setMessages'),
+    saveUserSettings: () => console.warn('Session context not initialized: saveUserSettings'),
+    loadUserSettings: () => console.warn('Session context not initialized: loadUserSettings'),
 });
 
 /**
@@ -164,47 +175,12 @@ export const SessionProvider = ({ children }) => {
     // Initialize logger
     logger.info('SessionProvider initializing', 'SessionProvider');
     
-    // Track the start of SessionContext initialization
-    trackContextInitialization('SessionContext', 'start');
-    trackContext('SessionContext', { status: 'initializing' });
-    
     // LOOP PREVENTION: Add a mounting flag ref to prevent repeated initialization
     const hasInitializedRef = useRef(false);
-    const initializationCountRef = useRef(0);
-    
-    // Debug the value passed to the provider
-    logger.debug('SessionProvider initializing with value', 'SessionProvider', {
-        hasChildren: !!children,
-        previouslyInitialized: hasInitializedRef.current,
-        initCount: initializationCountRef.current
-    });
-    
-    // Increment our initialization counter
-    initializationCountRef.current += 1;
     
     // Access other contexts
     const { sessionId, isAuthenticated, isInitializing: authInitializing, initializeSession } = useAuth('SessionProvider');
     const { modelName, selectedModel, isLoading: modelLoading } = useModel('SessionProvider');
-    
-    // Enhanced debugging for auth context
-    logger.debug('Auth context in SessionProvider:', 'SessionProvider', {
-        hasSessionId: !!sessionId,
-        sessionId: sessionId,
-        sessionIdType: typeof sessionId,
-        isAuthenticated,
-        authInitializing
-    });
-    
-    // Track dependency state
-    trackContextInitialization('SessionContext', 'update', {
-        hasSessionId: !!sessionId,
-        sessionIdType: typeof sessionId,
-        hasModelName: !!modelName,
-        modelNameType: typeof modelName,
-        hasAuthData: isAuthenticated,
-        authStillInitializing: authInitializing,
-        modelStillLoading: modelLoading
-    });
     
     // Initialize state with useReducer
     const [state, dispatch] = useReducer(sessionReducer, initialState);
@@ -213,7 +189,7 @@ export const SessionProvider = ({ children }) => {
     const {
         isOptionsOpen, isStreaming, isLoading, isInitialized, isReady, error,
         settingsVersion, persona, customPrompt, personas, availableTools,
-        activeTools, messages
+        activeTools, messages, savedSettings
     } = state;
     
     // Action creator helper functions to dispatch actions
@@ -231,9 +207,8 @@ export const SessionProvider = ({ children }) => {
     const setAvailableTools = (value) => dispatch({ type: SESSION_ACTIONS.SET_AVAILABLE_TOOLS, payload: value });
     const setActiveTools = (value) => dispatch({ type: SESSION_ACTIONS.SET_ACTIVE_TOOLS, payload: value });
     const setMessages = (value) => dispatch({ type: SESSION_ACTIONS.SET_MESSAGES, payload: value });
-    
-    // Ref to track dependency initialization
-    const dependenciesInitializedRef = useRef(false);
+    const setSavedSettings = (value) => dispatch({ type: SESSION_ACTIONS.SET_SAVED_SETTINGS, payload: value });
+    const updateSavedSettings = (value) => dispatch({ type: SESSION_ACTIONS.UPDATE_SAVED_SETTINGS, payload: value });
     
     // Refs to track the last values of sessionId and modelName to avoid effect re-runs
     const lastSessionIdRef = useRef(sessionId);
@@ -273,12 +248,9 @@ export const SessionProvider = ({ children }) => {
         
         try {
             logger.info('Starting fetchInitialData', 'SessionContext');
-            trackContextInitialization('SessionContext', 'update', { operation: 'fetchInitialData:start' });
-            updateContext('SessionContext', { status: 'fetching-initial-data' }, 'fetchInitialData');
             
             if (!API_URL) {
                 const error = 'API_URL is undefined. Please check your environment variables.';
-                trackContextInitialization('SessionContext', 'error', { error, operation: 'fetchInitialData' });
                 throw new Error(error);
             }
             setIsLoading(true);
@@ -315,35 +287,17 @@ export const SessionProvider = ({ children }) => {
                 });
             }
 
+            // Load user settings from localStorage
+            await loadUserSettings();
+
             setIsInitialized(true);
             
             // Mark that we've initialized to prevent loops
             hasInitializedRef.current = true;
             
-            trackContextInitialization('SessionContext', 'update', {
-                operation: 'fetchInitialData:success',
-                personasLoaded: personasData?.length || 0,
-                toolsLoaded: Object.keys(toolsData?.groups || {}).length,
-                initialPersona: personasData.length > 0 ? (
-                    personasData.find(p => p.name === 'default')?.name || personasData[0].name
-                ) : null
-            });
-            
-            updateContext('SessionContext', { 
-                status: 'initial-data-fetched',
-                isInitialized: true
-            }, 'fetchInitialData');
         } catch (err) {
             logger.error('Error fetching initial data', 'SessionContext', { error: err.message, stack: err.stack });
             setError(`Failed to load initial data: ${err.message}`);
-            
-            trackContextInitialization('SessionContext', 'error', { 
-                operation: 'fetchInitialData',
-                error: err.message,
-                stack: err.stack
-            });
-            
-            contextError('SessionContext', err, 'fetchInitialData');
         } finally {
             setIsLoading(false);
             logger.debug('fetchInitialData completed', 'SessionContext', { 
@@ -361,13 +315,6 @@ export const SessionProvider = ({ children }) => {
                 modelLoading, 
                 hasModelName: !!modelName 
             });
-            trackContextInitialization('SessionContext', 'update', { 
-                operation: 'initializeAgentSession:skipped',
-                reason: 'dependencies not ready',
-                authInitializing,
-                modelLoading,
-                hasModelName: !!modelName
-            });
             return false;
         }
         
@@ -376,20 +323,6 @@ export const SessionProvider = ({ children }) => {
                 sessionId, 
                 modelName, 
                 persona 
-            });
-            
-            updateContext('SessionContext', { 
-                status: 'initializing-agent',
-                attemptingWithSessionId: sessionId,
-                modelName
-            }, 'initializeAgentSession');
-            
-            trackContextInitialization('SessionContext', 'update', { 
-                operation: 'initializeAgentSession:start',
-                sessionId: !!sessionId,
-                sessionIdValue: sessionId,
-                sessionIdType: typeof sessionId,
-                modelName
             });
             
             // Build the initialization payload
@@ -403,8 +336,7 @@ export const SessionProvider = ({ children }) => {
             if (sessionId) {
                 initPayload.ui_session_id = sessionId;
                 logger.debug('Using existing session ID for initialization', 'SessionContext', { 
-                    sessionId,
-                    sessionIdType: typeof sessionId 
+                    sessionId
                 });
             }
             
@@ -414,11 +346,8 @@ export const SessionProvider = ({ children }) => {
             // Enhanced debugging for response
             logger.debug('Api initializeAgent response received:', 'SessionContext', {
                 hasResponse: !!response,
-                responseType: typeof response,
                 hasUiSessionId: !!(response && response.ui_session_id),
                 uiSessionId: response && response.ui_session_id ? response.ui_session_id : null,
-                uiSessionIdType: response && response.ui_session_id ? typeof response.ui_session_id : 'undefined',
-                rawResponse: JSON.stringify(response)
             });
             
             // The issue is here - the response coming back from the API has ui_session_id but it's not being handled correctly
@@ -426,9 +355,7 @@ export const SessionProvider = ({ children }) => {
                 // Success - we got a session ID back
                 logger.info('Agent session initialized successfully', 'SessionContext', { 
                     responseSessionId: response.ui_session_id,
-                    responseSessionIdType: typeof response.ui_session_id,
                     currentSessionId: sessionId,
-                    currentSessionIdType: typeof sessionId,
                     matchesExisting: response.ui_session_id === sessionId
                 });
                 
@@ -437,7 +364,6 @@ export const SessionProvider = ({ children }) => {
                     logger.info('Found new session ID, updating app state', 'SessionContext', {
                         newSessionId: response.ui_session_id,
                         oldSessionId: sessionId,
-                        areSameType: typeof response.ui_session_id === typeof sessionId
                     });
                     
                     // Use our helper to update the session ID everywhere
@@ -452,18 +378,6 @@ export const SessionProvider = ({ children }) => {
                 setIsReady(true);
                 setError(null);
                 
-                updateContext('SessionContext', {
-                    status: 'agent-initialized',
-                    sessionId: response.ui_session_id,
-                    isReady: true
-                }, 'initializeAgentSession');
-                
-                trackContextInitialization('SessionContext', 'update', { 
-                    operation: 'initializeAgentSession:success',
-                    sessionId: response.ui_session_id,
-                    isReady: true
-                });
-                
                 return true;
             } else {
                 // Failed to get a session ID from the response
@@ -471,18 +385,6 @@ export const SessionProvider = ({ children }) => {
                 logger.error(error, 'SessionContext', { response });
                 setError(`Session initialization failed: ${error}`);
                 setIsReady(false);
-                
-                updateContext('SessionContext', {
-                    status: 'initialization-failed',
-                    error,
-                    response: JSON.stringify(response)
-                }, 'initializeAgentSession');
-                
-                trackContextInitialization('SessionContext', 'error', { 
-                    operation: 'initializeAgentSession',
-                    error,
-                    response
-                });
                 
                 return false;
             }
@@ -495,14 +397,6 @@ export const SessionProvider = ({ children }) => {
             setIsReady(false);
             setError(`Session initialization failed: ${err.message}`);
             
-            contextError('SessionContext', err, 'initializeAgentSession');
-            
-            trackContextInitialization('SessionContext', 'error', { 
-                operation: 'initializeAgentSession',
-                error: err.message,
-                stack: err.stack
-            });
-            
             return false;
         }
     };
@@ -511,12 +405,6 @@ export const SessionProvider = ({ children }) => {
     const fetchAgentTools = async () => {
         if (!sessionId || !isReady) {
             logger.debug('Skipping fetchAgentTools - session not ready', 'SessionContext', { sessionId, isReady });
-            trackContextInitialization('SessionContext', 'update', { 
-                operation: 'fetchAgentTools:skipped',
-                reason: 'session not ready',
-                hasSessionId: !!sessionId,
-                isReady
-            });
             return false;
         }
         try {
@@ -538,11 +426,11 @@ export const SessionProvider = ({ children }) => {
         }
     };
 
-    // Update agent settings (settings update only - model changes handled by ModelContext)
+    // Update agent settings (settings update and model changes)
     const updateAgentSettings = async (updateType, values) => {
         if (!sessionId || !isReady) {
             logger.warn('Skipping updateAgentSettings - session not ready', 'SessionContext', { sessionId, isReady, updateType });
-            return;
+            return false;
         }
         try {
             logger.info('updateAgentSettings called', 'SessionContext', { updateType, values });
@@ -569,30 +457,130 @@ export const SessionProvider = ({ children }) => {
 
                     await apiService.updateSettings(sessionId, settings);
                     incrementSettingsVersion();
+                    
+                    // Save user settings to localStorage
+                    await saveUserSettings({
+                        lastPersona: updatedPersona,
+                        lastPrompt: updatedPrompt,
+                    });
+                    
                     logger.info('Settings updated successfully', 'SessionContext', { persona: updatedPersona });
-                    break;
+                    return true;
+                }
+                case 'MODEL_CHANGE': {
+                    logger.info('Model change requested', 'SessionContext', { values });
+                    
+                    // Get the modelName and backend from the values
+                    const { modelName: newModelName, backend } = values;
+                    
+                    // Add extensive debugging
+                    logger.debug('MODEL_CHANGE details', 'SessionContext', { 
+                        newModelName, 
+                        backend,
+                    });
+
+                    if (!newModelName) {
+                        logger.error('Invalid model name provided for model change', 'SessionContext', { values });
+                        throw new Error('Invalid model name provided');
+                    }
+                    
+                    // For model changes, we directly update via the API
+                    const settings = {
+                        model_name: newModelName,
+                        backend: backend,
+                        persona_name: persona,
+                        custom_prompt: customPrompt
+                    };
+                    
+                    logger.debug('Model change data being sent', 'SessionContext', { 
+                        sessionId,
+                        newModelName,
+                        backend,
+                    });
+                    
+                    // Ensure we have the right data before making the API call
+                    if (!sessionId) {
+                        logger.error('Cannot update model - missing sessionId', 'SessionContext');
+                        throw new Error('Missing sessionId for model change');
+                    }
+
+                    const response = await apiService.updateSettings(sessionId, settings);
+                    logger.debug('Model change API response', 'SessionContext', { response });
+
+                    incrementSettingsVersion();
+                    
+                    // Save user settings to localStorage
+                    await saveUserSettings({
+                        lastModelName: newModelName,
+                        lastBackend: backend,
+                    });
+                    
+                    logger.info('Model changed successfully', 'SessionContext', { newModelName });
+                    return true;
+                }
+                case 'PARAMETER_UPDATE': {
+                    logger.info('Parameter update requested', 'SessionContext', { values });
+                    
+                    // For parameter updates, we directly update via the API
+                    const settings = {
+                        model_name: modelName,
+                        persona_name: persona,
+                        custom_prompt: customPrompt,
+                        ...values // Include the parameter updates
+                    };
+                    
+                    logger.debug('Parameter update data being sent', 'SessionContext', { 
+                        sessionId,
+                        modelName,
+                        parameters: values
+                    });
+                    
+                    await apiService.updateSettings(sessionId, settings);
+                    incrementSettingsVersion();
+                    
+                    // Save user settings to localStorage
+                    await saveUserSettings({
+                        lastParameters: values,
+                    });
+                    
+                    logger.info('Parameters updated successfully', 'SessionContext', { parameters: values });
+                    return true;
                 }
                 default:
                     logger.warn(`Unknown updateType: ${updateType}`, 'SessionContext');
-                    break;
+                    return false;
             }
         } catch (err) {
             logger.error(`Failed to update settings`, 'SessionContext', { updateType, error: err.message, stack: err.stack });
             setError(`Failed to update settings: ${err.message}`);
+            return false;
         }
     };
 
     // Handle equipping tools
     const handleEquipTools = async (tools) => {
+        if (!sessionId || !isReady) {
+            logger.warn('Skipping handleEquipTools - session not ready', 'SessionContext', { sessionId, isReady });
+            return false;
+        }
+        
         try {
             logger.info('Equipping tools', 'SessionContext', { toolCount: tools.length });
             await apiService.updateTools(sessionId, tools);
             await fetchAgentTools();
             incrementSettingsVersion();
+            
+            // Save user settings to localStorage
+            await saveUserSettings({
+                lastActiveTools: tools,
+            });
+            
             logger.info('Tools equipped successfully', 'SessionContext');
+            return true;
         } catch (err) {
             logger.error("Failed to equip tools", 'SessionContext', { error: err.message, stack: err.stack });
-            throw err;
+            setError(`Failed to equip tools: ${err.message}`);
+            return false;
         }
     };
 
@@ -601,36 +589,84 @@ export const SessionProvider = ({ children }) => {
         logger.debug('Processing status updated', 'SessionContext', { isStreaming: status });
         setIsStreaming(status);
     };
+    
+    // Save user settings to local storage
+    const saveUserSettings = async (newSettings) => {
+        try {
+            // Merge new settings with existing settings
+            const updatedSettings = { ...savedSettings, ...newSettings };
+            
+            // Add timestamp for expiration checking
+            updatedSettings.timestamp = Date.now();
+            
+            // Update state
+            setSavedSettings(updatedSettings);
+            
+            // Save to localStorage
+            await storageService.saveSettings(updatedSettings);
+            
+            logger.debug('User settings saved to localStorage', 'SessionContext', { 
+                settingsKeys: Object.keys(updatedSettings),
+            });
+            
+            return true;
+        } catch (err) {
+            logger.error('Failed to save user settings', 'SessionContext', { 
+                error: err.message, 
+                stack: err.stack 
+            });
+            return false;
+        }
+    };
+    
+    // Load user settings from local storage
+    const loadUserSettings = async () => {
+        try {
+            // Load settings from localStorage
+            const loadedSettings = await storageService.loadSettings();
+            
+            if (!loadedSettings) {
+                logger.debug('No saved settings found in localStorage', 'SessionContext');
+                return false;
+            }
+            
+            // Check if settings are expired (7 days)
+            const now = Date.now();
+            const timestamp = loadedSettings.timestamp || 0;
+            const expirationTime = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+            
+            if (now - timestamp > expirationTime) {
+                logger.debug('Saved settings are expired, ignoring', 'SessionContext', {
+                    age: Math.floor((now - timestamp) / (24 * 60 * 60 * 1000)) + ' days'
+                });
+                return false;
+            }
+            
+            // Update state with loaded settings
+            setSavedSettings(loadedSettings);
+            
+            logger.debug('User settings loaded from localStorage', 'SessionContext', { 
+                settingsKeys: Object.keys(loadedSettings),
+            });
+            
+            return true;
+        } catch (err) {
+            logger.error('Failed to load user settings', 'SessionContext', { 
+                error: err.message, 
+                stack: err.stack 
+            });
+            return false;
+        }
+    };
 
     // --- Effects ---
     // Initial setup effect - runs ONCE on mount
     useEffect(() => {
-        logger.debug('SessionProvider mounted, initial setup effect running', 'SessionContext', {
-            authInitializing,
-            modelLoading,
-            initCount: initializationCountRef.current
-        });
-        
-        // Mark the component as mounted
-        updateContext('SessionContext', { 
-            status: 'mounted',
-            initCount: initializationCountRef.current 
-        }, 'mount-effect');
-        
-        return () => {
-            logger.debug('SessionProvider unmounting', 'SessionContext');
-            updateContext('SessionContext', { status: 'unmounting' }, 'cleanup-effect');
-        };
+        logger.debug('SessionProvider mounted, initial setup effect running', 'SessionContext');
     }, []); // Empty deps array = run once on mount
 
     // Effect to fetch initial data when dependencies are ready
     useEffect(() => {
-        logger.debug('Dependency readiness check for fetchInitialData', 'SessionContext', {
-            authInitializing,
-            modelLoading,
-            alreadyInitialized: hasInitializedRef.current
-        });
-        
         // Only proceed with fetchInitialData if auth and model contexts are ready
         // AND we haven't initialized yet
         if (!authInitializing && !modelLoading && !hasInitializedRef.current) {
@@ -658,9 +694,7 @@ export const SessionProvider = ({ children }) => {
         
         logger.info('Updating session ID across application', 'SessionContext', {
             newSessionId,
-            oldSessionId: sessionId,
-            newSessionIdType: typeof newSessionId,
-            oldSessionIdType: typeof sessionId
+            oldSessionId: sessionId
         });
         
         try {
@@ -681,21 +715,12 @@ export const SessionProvider = ({ children }) => {
             // 3. Update our own SessionContext state
             setSessionId(newSessionId);
             
-            // 4. Additional logging
             logger.debug('Session ID updated across application', 'SessionContext', {
                 newSessionId,
                 savedToStorage: storedSuccessfully,
                 updatedAuthContext: typeof initializeSession === 'function',
                 updatedSessionContext: true
             });
-            
-            // 5. Update our tracking system
-            updateContext('SessionContext', {
-                status: 'session-id-updated',
-                sessionId: newSessionId,
-                storageUpdated: storedSuccessfully,
-                authContextUpdated: typeof initializeSession === 'function'
-            }, 'updateSessionIdAcrossApp');
             
             return true;
         } catch (err) {
@@ -720,9 +745,7 @@ export const SessionProvider = ({ children }) => {
         // When sessionId from AuthContext changes, update our reducer state
         logger.info('Session ID changed in AuthContext, updating SessionContext state', 'SessionContext', {
             authSessionId: sessionId,
-            authSessionIdType: typeof sessionId,
-            currentStateSessionId: state.sessionId,
-            currentStateSessionIdType: typeof state.sessionId
+            currentStateSessionId: state.sessionId
         });
         
         // Update our ref to the latest value
@@ -730,13 +753,6 @@ export const SessionProvider = ({ children }) => {
         
         // Update our state
         setSessionId(sessionId);
-        
-        // Track this change
-        updateContext('SessionContext', {
-            status: 'session-id-sync-from-auth',
-            sessionIdFromAuth: sessionId,
-            currentStateSessionId: state.sessionId
-        }, 'sessionId-sync-effect');
     }, [sessionId, state.sessionId]);
     
     // Effect to detect when sessionId and model are available but agent isn't initialized
@@ -757,19 +773,10 @@ export const SessionProvider = ({ children }) => {
             if (sessionId && modelName && !isReady && isInitialized) {
                 logger.info('Dependencies changed - sessionId and modelName available, initializing agent', 'SessionContext', {
                     sessionId, 
-                    sessionIdType: typeof sessionId,
                     modelName,
                     isReady,
                     isInitialized
                 });
-                
-                updateContext('SessionContext', {
-                    status: 'dependencies-changed-initializing-agent',
-                    sessionId,
-                    modelName,
-                    isReady,
-                    isInitialized
-                }, 'dependency-change-effect');
                 
                 try {
                     // Initialize the agent with the API
@@ -801,31 +808,8 @@ export const SessionProvider = ({ children }) => {
                 modelName
             });
             
-            updateContext('SessionContext', {
-                status: 'session-ready-fetching-tools',
-                sessionId,
-                isAuthenticated,
-                modelName
-            }, 'tools-fetch-effect');
-            
             fetchAgentTools().then(success => {
                 logger.debug('Agent tools fetch completed', 'SessionContext', { success });
-                
-                // Once everything is initialized and tools are fetched, signal app readiness
-                completeContextInitialization(true, {
-                    readyTimestamp: Date.now(),
-                    sessionId: !!sessionId,
-                    modelName: modelName,
-                    isInitialized,
-                    hasTools: success,
-                    dependenciesInitialized: true
-                });
-                
-                updateContext('SessionContext', {
-                    status: 'tools-fetched-context-ready',
-                    success,
-                    toolCount: activeTools?.length || 0
-                }, 'tools-fetch-completed');
             }).catch(err => {
                 logger.error('Error fetching agent tools', 'SessionContext', { 
                     error: err.message, 
@@ -835,18 +819,11 @@ export const SessionProvider = ({ children }) => {
         }
     }, [sessionId, isReady, isInitialized]);
 
+    // Get modelConfigs directly at the top level - not inside hooks
+    const { modelConfigs } = useModel('SessionProvider');
+
     // Create a value object with all the state and actions
     const contextValue = useMemo(() => {
-        // Get modelConfigs from ModelContext to ensure it's always available
-        const { modelConfigs } = useModel('SessionProvider');
-        
-        // Log modelConfigs for debugging
-        logger.debug('Creating SessionContext value with modelConfigs from ModelContext', 'SessionContext', {
-            hasModelConfigs: Array.isArray(modelConfigs),
-            modelConfigsLength: Array.isArray(modelConfigs) ? modelConfigs.length : 0,
-            modelConfigsType: typeof modelConfigs
-        });
-        
         return {
             // State from reducer
             ...state,
@@ -871,29 +848,16 @@ export const SessionProvider = ({ children }) => {
             getChatCopyContent,
             getChatCopyHTML,
             setMessages,
+            saveUserSettings,
+            loadUserSettings,
             
-            // Add modelConfigs directly from ModelContext to ensure it's always available
+            // Add modelConfigs directly to ensure it's always available
             modelConfigs: Array.isArray(modelConfigs) ? modelConfigs : []
         };
-    }, [state, modelName]); // Recompute when state or modelName changes
-
-    // Track context value updates
-    useEffect(() => {
-        updateContext('SessionContext', contextValue, 'context-value-update');
-    }, [contextValue]);
+    }, [state, modelName, modelConfigs]); // Recompute when state, modelName, or modelConfigs changes
 
     return (
         <SessionContext.Provider value={contextValue}>
-            <div 
-                data-session-provider="mounted" 
-                data-session-initialized={isInitialized} 
-                data-session-ready={isReady}
-                data-session-id={state.sessionId || 'missing'}
-                data-auth-session-id={sessionId || 'missing'}
-                style={{ display: 'none' }}
-            >
-                SessionProvider diagnostic element
-            </div>
             {children}
         </SessionContext.Provider>
     );

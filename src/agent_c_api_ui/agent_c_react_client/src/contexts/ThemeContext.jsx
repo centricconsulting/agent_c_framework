@@ -20,19 +20,14 @@ export const ThemeContext = createContext({
  * Manages theme state and persistence
  */
 export const ThemeProvider = ({ children }) => {
-  // Signal the start of ThemeContext initialization
-  trackContextInitialization('ThemeContext', 'start');
-  
   // Initialize theme from localStorage or default to 'system'
   const [theme, setThemeState] = useState(() => {
     try {
       const savedTheme = getStoredTheme();
       logger.debug('Initial theme loaded from localStorage', 'ThemeProvider', { savedTheme });
-      trackContextInitialization('ThemeContext', 'update', { initialTheme: savedTheme });
       return savedTheme;
     } catch (error) {
       logger.error('Failed to load theme from localStorage', 'ThemeProvider', { error });
-      trackContextInitialization('ThemeContext', 'error', { error: error.message });
       return 'system'; // Fall back to system theme
     }
   });
@@ -43,10 +38,8 @@ export const ThemeProvider = ({ children }) => {
       logger.info('Theme changed', 'ThemeProvider', { previousTheme: theme, newTheme });
       setThemeState(newTheme);
       storeTheme(newTheme);
-      trackContextInitialization('ThemeContext', 'update', { themeChanged: true, newTheme });
     } catch (error) {
       logger.error('Failed to change theme', 'ThemeProvider', { error, previousTheme: theme, newTheme });
-      trackContextInitialization('ThemeContext', 'error', { error: error.message, operation: 'setTheme' });
     }
   };
 
@@ -83,29 +76,8 @@ export const ThemeProvider = ({ children }) => {
         appliedTheme,
         selectedTheme: theme 
       });
-      
-      trackContextInitialization('ThemeContext', 'update', { 
-        themeApplied: true, 
-        selectedTheme: theme, 
-        appliedTheme,
-        duration: duration.toFixed(2)
-      });
-      
-      // Signal that ThemeContext has completed initialization
-      if (!window.__CONTEXT_DIAGNOSTIC?.contexts?.ThemeContext?.initialized) {
-        trackContextInitialization('ThemeContext', 'complete', { 
-          theme, 
-          appliedTheme,
-          systemPreference: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-        });
-      }
     } catch (error) {
       logger.error('Failed to apply theme', 'ThemeProvider', { error, theme });
-      trackContextInitialization('ThemeContext', 'error', { 
-        error: error.message, 
-        theme,
-        operation: 'applyTheme'
-      });
     }
   }, [theme]);
 

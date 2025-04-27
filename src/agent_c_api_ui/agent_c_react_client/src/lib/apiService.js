@@ -158,15 +158,63 @@ const apiService = {
    * @returns {Promise<Object>} Updated settings
    */
   updateSettings: (sessionId, settings) => {
+    const payload = {
+      ui_session_id: sessionId,
+      ...settings
+    };
+    
+    // Add extra detailed logging specifically for model changes
+    if (settings.model_name) {
+      logger.info('Updating model settings via API', 'apiService', {
+        sessionId,
+        modelName: settings.model_name,
+        backend: settings.backend,
+        payloadKeys: Object.keys(payload)
+      });
+      
+      // Add specific handling for MODEL_CHANGE operations
+      if (settings.backend) {
+        logger.debug('Processing model change operation', 'apiService', {
+          sessionId,
+          modelName: settings.model_name,
+          backend: settings.backend,
+          fullPayload: JSON.stringify(payload)
+        });
+      }
+    } else {
+      logger.info('Updating settings via API', 'apiService', {
+        sessionId,
+        settingsKeys: Object.keys(settings),
+        hasModelName: !!settings.model_name
+      });
+    }
+    
+    // Log the full payload in debug mode
+    logger.debug('Settings update payload', 'apiService', JSON.stringify(payload));
+    
     return fetchWithTimeout('/update_settings', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        ui_session_id: sessionId,
-        ...settings
-      })
+      body: JSON.stringify(payload)
+    }).then(response => {
+      logger.info('Settings updated successfully', 'apiService', {
+        statusCode: response.status || 200,
+        settingsUpdated: Object.keys(settings),
+        modelChanged: !!settings.model_name,
+        modelName: settings.model_name || 'not-changed'
+      });
+      return response;
+    }).catch(error => {
+      logger.error('Failed to update settings', 'apiService', {
+        error: error.message,
+        errorStack: error.stack,
+        sessionId,
+        settingsKeys: Object.keys(settings),
+        modelName: settings.model_name || 'not-specified'
+      });
+      throw error;
     });
   },
   

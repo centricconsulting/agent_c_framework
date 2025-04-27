@@ -139,7 +139,22 @@ const CollapsibleOptions = ({
                                     sessionId={sessionId}
                                     modelParameters={modelParameters}
                                     selectedModel={selectedModel}
-                                    onUpdateSettings={onUpdateSettings}
+                                    onUpdateSettings={(type, values) => {
+                                        console.log('CollapsibleOptions: onUpdateSettings called with:', { type, values });
+                                        // Add additional debugging for modelConfigs
+                                        console.log('CollapsibleOptions: modelConfigs being passed to PersonaSelector:', {
+                                            type: typeof modelConfigs,
+                                            isArray: Array.isArray(modelConfigs),
+                                            length: Array.isArray(modelConfigs) ? modelConfigs.length : 0,
+                                            sampleItem: Array.isArray(modelConfigs) && modelConfigs.length > 0 ? modelConfigs[0] : null
+                                        });
+                                        
+                                        if (typeof onUpdateSettings !== 'function') {
+                                            console.error('CollapsibleOptions: onUpdateSettings is not a function', onUpdateSettings);
+                                            return;
+                                        }
+                                        return onUpdateSettings(type, values);
+                                    }}
                                     isInitialized={isInitialized}
                                 />
                             </TabsContent>

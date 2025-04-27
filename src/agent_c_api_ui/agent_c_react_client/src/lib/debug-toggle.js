@@ -1,13 +1,18 @@
 /**
  * Debug Mode Toggle Utility
  * 
- * This script has been temporarily disabled due to performance issues.
- * A properly designed version will be implemented in the future.
+ * This script has been permanently disabled for performance reasons.
+ * Debug functionality should only be available in development builds.
  */
 
-// Force debug mode to be false
+// Debug mode is permanently disabled
 export const isDebugMode = false;
 
+// Additional utilities to prevent globals
+export const getDebugState = () => false;
+
+// Export an object with all utilities
 export default {
-  isDebugMode
+  isDebugMode,
+  getDebugState
 };

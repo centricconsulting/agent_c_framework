@@ -1,20 +1,18 @@
 /**
  * Context Diagnostic Console
  * 
- * This utility has been temporarily disabled due to performance issues.
- * A properly designed version will be implemented in the future.
+ * This utility has been permanently disabled for performance reasons.
+ * No global objects are created and all functions are complete no-ops.
  */
 
-import logger from './logger';
-
-// No-op implementations of all functions
+// No-op implementations of all functions without any imports
 export const trackContext = () => {};
 export const updateContext = () => {};
 export const contextError = () => {};
 export const getContextsStatus = () => ({});
 export const checkSessionPropagation = () => ({});
 
-// Empty object
+// Empty object for context diagnostic console
 const contextDiagnosticConsole = {
   trackContextInitialization: () => {},
   trackContextUpdate: () => {},

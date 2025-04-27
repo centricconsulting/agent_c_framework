@@ -1,204 +1,157 @@
 /**
- * Enhanced logging utility based on loglevel
- * Provides structured logging with context
+ * Logger utility - Performance optimized version
  * 
- * This version has been simplified to avoid performance issues.
+ * This implementation has been completely rewritten to eliminate performance issues.
+ * - No history tracking in production
+ * - No subscribers in production
+ * - No complex data processing
+ * - No console method overriding
  */
 
 import log from 'loglevel';
 
-// Set default level based on environment - production logs should be minimal
-const defaultLevel = process.env.NODE_ENV === 'production' ? 'error' : 'info';
+// Set default level based on environment
+const isProduction = process.env.NODE_ENV === 'production';
+const defaultLevel = isProduction ? 'error' : 'info';
 log.setLevel(defaultLevel);
 
-// Log history array - limited to 100 entries
-const logHistory = [];
-const MAX_LOG_HISTORY = 100;
+// Only in development: maintain minimal log history
+const MAX_HISTORY_SIZE = 50;
+const logHistory = isProduction ? null : [];
 
-// Subscribers for log events
-const subscribers = [];
-
-// Simple logger implementation that avoids performance issues
+// High performance logger implementation
 const logger = {
   /**
-   * Log at TRACE level
-   */
-  trace: (message, componentName, data) => {
-    log.trace(`[${componentName || 'unknown'}] ${message}`);
-    addToHistory('trace', message, componentName, data);
-  },
-  
-  /**
-   * Log performance metrics
-   */
-  performance: (componentName, operation, durationMs) => {
-    log.info(`[${componentName || 'unknown'}] PERF: ${operation} took ${durationMs}ms`);
-    addToHistory('performance', `${operation} took ${durationMs}ms`, componentName, { duration: durationMs, operation });
-  },
-  
-  /**
-   * Log at DEBUG level
-   * In production, this is a no-op for performance reasons
-   */
-  debug: (message, componentName, data) => {
-    // Skip debug logging in production for performance
-    if (process.env.NODE_ENV === 'production') return;
-    
-    log.debug(`[${componentName || 'unknown'}] ${message}`);
-    addToHistory('debug', message, componentName, data);
-  },
-  
-  /**
-   * Log at INIT level (alias for info)
+   * Log for initialization - same as info in most cases
    */
   init: (message, componentName, data) => {
-    log.info(`[${componentName || 'unknown'}] INIT: ${message}`);
-    addToHistory('init', message, componentName, data);
-  },
-  
-  /**
-   * Log at INFO level
-   */
-  info: (message, componentName, data) => {
+    if (isProduction) {
+      log.info(`[${componentName || 'unknown'}] ${message}`);
+      return;
+    }
+    
     log.info(`[${componentName || 'unknown'}] ${message}`);
-    addToHistory('info', message, componentName, data);
+    if (logHistory) {
+      addToMinimalHistory('init', message, componentName);
+    }
+  },
+
+  /**
+   * Log at TRACE level - minimal implementation
+   */
+  trace: (message, componentName) => {
+    if (isProduction) return;
+    log.trace(`[${componentName || 'unknown'}] ${message}`);
+    if (!isProduction && logHistory) {
+      addToMinimalHistory('trace', message, componentName);
+    }
   },
   
   /**
-   * Log at WARN level
+   * Log performance metrics - keeps working in production for critical perf issues
    */
-  warn: (message, componentName, data) => {
-    log.warn(`[${componentName || 'unknown'}] ${message}`);
-    addToHistory('warn', message, componentName, data);
-  },
-  
-  /**
-   * Log at ERROR level
-   */
-  error: (message, componentName, data) => {
-    log.error(`[${componentName || 'unknown'}] ${message}`);
-    addToHistory('error', message, componentName, data);
-  },
-  
-  /**
-   * Set the logging level
-   */
-  setLevel: (level) => {
-    log.setLevel(level);
-  },
-  
-  /**
-   * Get the current logging level
-   */
-  getLevel: () => log.getLevel(),
-  
-  /**
-   * Get the log level name
-   */
-  getLevelName: () => {
-    const level = log.getLevel();
-    return Object.keys(log.levels).find(key => log.levels[key] === level) || 'unknown';
-  },
-  
-  /**
-   * Get the log history
-   */
-  getLogHistory: () => {
-    return [...logHistory];
-  },
-  
-  /**
-   * Clear the log history
-   */
-  clearLogHistory: () => {
-    logHistory.length = 0;
-    notifySubscribers();
-  },
-  
-  /**
-   * Subscribe to log updates
-   */
-  onNewLog: (callback) => {
-    subscribers.push(callback);
-    return () => {
-      const index = subscribers.indexOf(callback);
-      if (index !== -1) {
-        subscribers.splice(index, 1);
+  performance: (componentName, operation, durationMs) => {
+    if (durationMs > 100) { // Only log slow operations even in production
+      log.warn(`[${componentName || 'unknown'}] PERF WARNING: ${operation} took ${durationMs}ms`);
+    } else if (!isProduction) {
+      log.info(`[${componentName || 'unknown'}] PERF: ${operation} took ${durationMs}ms`);
+      if (logHistory) {
+        addToMinimalHistory('performance', `${operation}: ${durationMs}ms`, componentName);
       }
-    };
+    }
+  },
+  
+  /**
+   * Log at DEBUG level - complete no-op in production
+   */
+  debug: (message, componentName, data) => {
+    // Complete no-op in production for maximum performance
+    if (isProduction) return;
+    
+    // Only log in development
+    log.debug(`[${componentName || 'unknown'}] ${message}`);
+    if (logHistory) {
+      addToMinimalHistory('debug', message, componentName);
+    }
+  },
+  
+  /**
+   * Log at INFO level - simplified in production
+   */
+  info: (message, componentName) => {
+    // In production, just do the minimal logging without history
+    if (isProduction) {
+      log.info(`[${componentName || 'unknown'}] ${message}`);
+      return;
+    }
+    
+    log.info(`[${componentName || 'unknown'}] ${message}`);
+    if (logHistory) {
+      addToMinimalHistory('info', message, componentName);
+    }
+  },
+  
+  /**
+   * Log at WARN level - always enabled
+   */
+  warn: (message, componentName) => {
+    log.warn(`[${componentName || 'unknown'}] ${message}`);
+    if (!isProduction && logHistory) {
+      addToMinimalHistory('warn', message, componentName);
+    }
+  },
+  
+  /**
+   * Log at ERROR level - always enabled
+   */
+  error: (message, componentName, error) => {
+    // Include error details if available
+    const errorDetails = error instanceof Error ? ` ${error.name}: ${error.message}` : '';
+    log.error(`[${componentName || 'unknown'}] ${message}${errorDetails}`);
+    
+    if (!isProduction && logHistory) {
+      addToMinimalHistory('error', message, componentName);
+    }
+  },
+  
+  // Simplified utility methods - most are no-ops in production
+  setLevel: (level) => log.setLevel(level),
+  getLevel: () => log.getLevel(),
+  getLevelName: () => isProduction ? 'error' : Object.keys(log.levels).find(key => log.levels[key] === log.getLevel()) || 'unknown',
+  
+  // History is disabled in production
+  getLogHistory: () => isProduction ? [] : [...(logHistory || [])],
+  clearLogHistory: () => {
+    if (!isProduction && logHistory) {
+      logHistory.length = 0;
+    }
+  },
+  
+  // Subscriber pattern disabled in production
+  onNewLog: () => {
+    // Return a no-op cleanup function
+    return () => {};
   }
 };
 
 /**
- * Add a log entry to the history
+ * Add a minimal log entry to history (dev only)
  */
-function addToHistory(level, message, component, data) {
-  // Keep history limited to prevent memory issues
-  if (logHistory.length >= MAX_LOG_HISTORY) {
+function addToMinimalHistory(level, message, component) {
+  if (isProduction || !logHistory) return;
+  
+  // Keep history limited
+  if (logHistory.length >= MAX_HISTORY_SIZE) {
     logHistory.shift();
   }
   
+  // Only store minimal information
   logHistory.push({
     level,
     timestamp: Date.now(),
     component,
-    message,
-    data
-  });
-  
-  notifySubscribers();
-}
-
-/**
- * Notify all subscribers about a new log entry
- */
-function notifySubscribers() {
-  subscribers.forEach(callback => {
-    try {
-      callback();
-    } catch (e) {
-      console.error('Error in log subscriber:', e);
-    }
+    message
   });
 }
-
-/**
- * In production, optionally replace console methods with no-ops
- * to prevent performance issues when dev tools are open
- */
-function setupProductionConsole() {
-  if (process.env.NODE_ENV === 'production') {
-    // Store original console methods
-    const originalConsole = {
-      log: console.log,
-      debug: console.debug,
-      info: console.info,
-      warn: console.warn,
-      error: console.error
-    };
-    
-    // Replace non-critical methods with no-ops
-    console.log = function() {};
-    console.debug = function() {};
-    console.info = function() {};
-    
-    // Keep error and warn for critical issues
-    // console.warn = function() {};
-    // console.error = function() {};
-    
-    // Create a method to restore original behavior if needed
-    console.enableFullLogging = function() {
-      console.log = originalConsole.log;
-      console.debug = originalConsole.debug;
-      console.info = originalConsole.info;
-      console.warn = originalConsole.warn;
-      console.error = originalConsole.error;
-      console.log('Full console logging restored');
-    };
-  }
-}
-
-// Set up production console behavior
-setupProductionConsole();
 
 export default logger;

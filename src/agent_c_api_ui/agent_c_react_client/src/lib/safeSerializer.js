@@ -1,39 +1,29 @@
 /**
- * Safe serialization utilities
+ * Safe serialization utilities - Performance optimized version
  *
- * This module provides minimal implementations to prevent any application errors,
- * but has been stripped of functionality that could cause performance issues.
+ * This module has been completely disabled for performance.
+ * All functions are no-ops that return minimal values to prevent errors.
  */
 
-// Simple implementation that doesn't cause issues
+// Complete no-op implementation
 export function toSafeString(value) {
   if (value === null) return 'null';
   if (value === undefined) return 'undefined';
-  
-  try {
-    if (typeof value === 'object') {
-      return '[Object]';
-    }
-    return String(value);
-  } catch (e) {
-    return '[Error]';
-  }
+  return typeof value === 'object' ? '[Object]' : String(value);
 }
 
-export function safeStringify(obj) {
-  try {
-    return typeof obj === 'object' ? '[Object]' : String(obj);
-  } catch (e) {
-    return '[Error]';
-  }
+// Complete no-op implementation
+export function safeStringify() {
+  return '[Object]';
 }
 
+// Complete no-op implementation
 export function safeInspect(obj) {
   return obj;
 }
 
-export function createSafeLogger(namespace = 'app') {
-  // Minimal implementation that doesn't cause issues
+// Return a no-op logger
+export function createSafeLogger() {
   return {
     debug: () => {},
     log: () => {},

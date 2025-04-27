@@ -1,85 +1,54 @@
 /**
  * Diagnostics utilities for Agent C React Client
  *
- * This module has been temporarily disabled due to performance issues.
- * A properly designed version will be implemented in the future.
+ * This module has been completely disabled for all environments to prevent performance issues.
+ * All functions are now pure no-ops.
  */
 
-import logger from './logger';
+// Ensure debug mode is always false
+export const DEBUG_MODE = false;
 
-// Force debug mode to be false
-// This must remain false for production to prevent console logging and performance issues
-export const DEBUG_MODE = process.env.NODE_ENV === 'development' && false;
-
-// Minimal implementation of context tracking
+// Empty object to avoid errors when accessing
 const contextStats = {};
 
 /**
  * Track context initialization events
- * @param {string} contextName - The name of the context being tracked
- * @param {string} status - The status of initialization
- * @param {Object} data - Additional data about the initialization
+ * This is now a complete no-op function
  */
-export const trackContextInitialization = (contextName, status, data) => {
-  if (!contextStats[contextName]) {
-    contextStats[contextName] = {
-      status: 'unknown',
-      timestamps: {},
-      data: {}
-    };
-  }
-  
-  const context = contextStats[contextName];
-  context.status = status;
-  context.timestamps[status] = Date.now();
-  context.data = { ...context.data, ...(data || {}) };
-  
-  // Log only in development mode and when debug is enabled
-  if (process.env.NODE_ENV !== 'production' && DEBUG_MODE) {
-    logger.debug(`Context ${contextName}: ${status}`, 'diagnostic', data);
-  }
+export const trackContextInitialization = () => {
+  // No-op implementation
 };
 
 /**
  * Mark a context as completely initialized
- * @param {string} contextName - The name of the context
- * @param {Object} data - Additional data about completion
+ * This is now a complete no-op function
  */
-export const completeContextInitialization = (contextName, data) => {
-  trackContextInitialization(contextName, 'complete', data);
+export const completeContextInitialization = () => {
+  // No-op implementation
 };
 
 /**
  * Get the current status of all context initializations
- * @returns {Object} - Status of all tracked contexts
+ * Returns empty object to prevent errors
  */
 export const getContextInitializationStatus = () => {
-  return { ...contextStats };
+  return {};
 };
+
 /**
  * Track component rendering events
- * This implementation is intentionally a no-op to prevent performance issues
- * @param {string} phase - The rendering phase (mount, update, unmount)
- * @param {string} componentName - The name of the component being tracked
- * @param {Object} data - Additional data about the rendering
+ * This is now a complete no-op function
  */
-export const trackComponentRendering = (phase, componentName, data) => {
-  // No-op implementation for performance reasons
-  if (process.env.NODE_ENV !== 'production' && DEBUG_MODE) {
-    logger.debug(`Component ${phase}: ${componentName}`, 'diagnostic', data);
-  }
+export const trackComponentRendering = () => {
+  // No-op implementation
 };
+
 /**
  * Track chat interface rendering events
- * This implementation is intentionally a no-op to prevent performance issues
- * @param {string} phase - The rendering phase (mount, update, unmount)
- * @param {Object} data - Additional data about the rendering
+ * This is now a complete no-op function
  */
-export const trackChatInterfaceRendering = (phase, data) => {
-  // No-op implementation for performance reasons
-  if (process.env.NODE_ENV !== 'production' && DEBUG_MODE) {
-    logger.debug(`ChatInterface ${phase}`, 'diagnostic', data);
-  }
+export const trackChatInterfaceRendering = () => {
+  // No-op implementation
 };
 
 export default {

@@ -12,7 +12,8 @@ const STORAGE_KEYS = {
   SESSION_ID: 'ui_session_id',
   AGENT_CONFIG: 'agent_config',
   THEME: 'theme',
-  CHAT_HISTORY: 'chat_history'
+  CHAT_HISTORY: 'chat_history',
+  USER_SETTINGS: 'agentc_user_settings' // New key for user settings
 };
 
 // Current storage schema version
@@ -250,6 +251,45 @@ const storageService = {
    */
   saveTheme: (theme) => {
     return storage.set(STORAGE_KEYS.THEME, theme);
+  },
+
+  /**
+   * Save user settings to localStorage with timestamp
+   * @param {Object} settings - User settings to save
+   * @returns {Promise<boolean>} - Success status
+   */
+  saveSettings: async (settings) => {
+    try {
+      // Add timestamp if not already present
+      if (!settings.timestamp) {
+        settings.timestamp = Date.now();
+      }
+      
+      // Save to localStorage
+      return storage.setJSON(STORAGE_KEYS.USER_SETTINGS, settings);
+    } catch (err) {
+      logger.error('Failed to save settings to localStorage:', 'storageService', { 
+        error: err.message,
+        stack: err.stack
+      });
+      return false;
+    }
+  },
+
+  /**
+   * Load user settings from localStorage
+   * @returns {Promise<Object|null>} - Loaded settings or null if not found
+   */
+  loadSettings: async () => {
+    try {
+      return storage.getJSON(STORAGE_KEYS.USER_SETTINGS, null);
+    } catch (err) {
+      logger.error('Failed to load settings from localStorage:', 'storageService', { 
+        error: err.message,
+        stack: err.stack
+      });
+      return null;
+    }
   }
 };
 

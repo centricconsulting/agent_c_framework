@@ -779,7 +779,14 @@ const ChatInterfaceInner = ({
               activeTools={activeTools}
               modelParameters={modelParameters}
               selectedModel={selectedModel}
-              onUpdateSettings={onUpdateSettings}
+              onUpdateSettings={(type, values) => {
+                console.log('ChatInterface: onUpdateSettings called with:', { type, values });
+                if (typeof onUpdateSettings !== 'function') {
+                  console.error('ChatInterface: onUpdateSettings is not a function', onUpdateSettings);
+                  return;
+                }
+                return onUpdateSettings(type, values);
+              }}
               isInitialized={isInitialized}
             />
             <Separator className="mt-2" />
