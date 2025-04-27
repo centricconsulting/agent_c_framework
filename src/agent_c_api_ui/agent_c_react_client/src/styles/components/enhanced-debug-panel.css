@@ -1,0 +1,103 @@
+/* ===== COMPONENT: EnhancedDebugPanel ===== */
+/* Description: Styles for the enhanced debug panel component */
+
+/* EnhancedDebugPanel: Container styling */
+.enhanced-debug-panel {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  width: 420px;
+  max-height: 80vh;
+  overflow: hidden;
+  z-index: 100;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+  resize: both;
+}
+
+.enhanced-debug-panel.expanded {
+  width: 600px;
+  height: 80vh;
+}
+
+/* Status indicators */
+.enhanced-debug-panel [data-enhanced-debug-panel] .status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.enhanced-debug-panel [data-enhanced-debug-panel] .status-success {
+  background-color: var(--success-50);
+  color: var(--success-900);
+  border: 1px solid var(--success-200);
+}
+
+.enhanced-debug-panel [data-enhanced-debug-panel] .status-error {
+  background-color: var(--destructive-50);
+  color: var(--destructive-900);
+  border: 1px solid var(--destructive-200);
+}
+
+/* Object display styling */
+.enhanced-debug-panel .object-display,
+.enhanced-debug-panel .array-display {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.enhanced-debug-panel .object-label,
+.enhanced-debug-panel .array-label {
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Highlight mismatches with animation */
+.enhanced-debug-panel .status-mismatch {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 640px) {
+  .enhanced-debug-panel {
+    width: 90vw;
+    right: 5vw;
+    left: 5vw;
+  }
+  
+  .enhanced-debug-panel.expanded {
+    width: 95vw;
+    height: 70vh;
+    right: 2.5vw;
+    left: 2.5vw;
+  }
+}
+
+/* Add success and destructive badge variants */
+[data-enhanced-debug-panel] .badge.badge-success {
+  background-color: hsl(var(--success) / 0.2);
+  color: hsl(var(--success));
+}
+
+[data-enhanced-debug-panel] .badge.badge-destructive {
+  background-color: hsl(var(--destructive) / 0.2);
+  color: hsl(var(--destructive));
+}
