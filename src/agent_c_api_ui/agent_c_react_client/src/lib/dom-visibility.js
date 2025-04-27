@@ -18,8 +18,8 @@ import logger from './logger';
  */
 export const checkElementVisibility = (element, options = {}) => {
   const {
-    logResults = true,
-    traceParents = true,
+    logResults = false,
+    traceParents = false,
     context = 'dom-visibility'
   } = options;
   
@@ -230,56 +230,61 @@ function determineVisibilityIssue(chatPageVisibility, chatInterfaceVisibility, c
 
 /**
  * Register global utility functions for debugging
+ * NOTE: This function is no longer called automatically to prevent performance issues.
+ * It should be called manually only when needed for debugging specific issues.
  */
 export const registerDOMVisibilityUtils = () => {
   if (typeof window !== 'undefined') {
-    // Check if an element is visible
-    window.checkElementVisibility = (selector) => {
-      return checkElementVisibility(selector, { logResults: true, traceParents: true });
-    };
-    
-    // Check chat interface visibility
-    window.checkChatInterfaceVisibility = () => {
-      const result = checkChatInterfaceVisibility({ logResults: true });
-      console.group('Chat Interface Visibility Check');
-      console.log('Diagnosis:', result.diagnosis);
-      console.log('All components exist:', result.allComponentsExist);
-      console.log('All components visible:', result.allComponentsVisible);
-      console.log('Detailed results:', result);
-      console.groupEnd();
-      return result;
-    };
-    
-    // Fix attempt - force DOM update
-    window.refreshChatInterface = () => {
-      const chatPage = document.querySelector('[data-chat-page]');
-      if (!chatPage) {
-        console.error('Chat page element not found, cannot refresh');
-        return false;
-      }
+    // Only add these utilities if in development mode
+    if (process.env.NODE_ENV === 'development') {
+      // Check if an element is visible
+      window.checkElementVisibility = (selector) => {
+        return checkElementVisibility(selector, { logResults: true, traceParents: true });
+      };
       
-      // Hide and show to force a repaint
-      const originalDisplay = chatPage.style.display;
-      chatPage.style.display = 'none';
+      // Check chat interface visibility
+      window.checkChatInterfaceVisibility = () => {
+        const result = checkChatInterfaceVisibility({ logResults: true });
+        console.group('Chat Interface Visibility Check');
+        console.log('Diagnosis:', result.diagnosis);
+        console.log('All components exist:', result.allComponentsExist);
+        console.log('All components visible:', result.allComponentsVisible);
+        console.log('Detailed results:', result);
+        console.groupEnd();
+        return result;
+      };
       
-      // Force a reflow
-      void chatPage.offsetHeight;
-      
-      // Show again after a small delay
-      setTimeout(() => {
-        chatPage.style.display = originalDisplay || 'block';
-        console.log('Chat page display refreshed');
+      // Fix attempt - force DOM update
+      window.refreshChatInterface = () => {
+        const chatPage = document.querySelector('[data-chat-page]');
+        if (!chatPage) {
+          console.error('Chat page element not found, cannot refresh');
+          return false;
+        }
         
-        // Check visibility after refresh
+        // Hide and show to force a repaint
+        const originalDisplay = chatPage.style.display;
+        chatPage.style.display = 'none';
+        
+        // Force a reflow
+        void chatPage.offsetHeight;
+        
+        // Show again after a small delay
         setTimeout(() => {
-          window.checkChatInterfaceVisibility();
-        }, 100);
-      }, 50);
-      
-      return true;
-    };
+          chatPage.style.display = originalDisplay || 'block';
+          console.log('Chat page display refreshed');
+          
+          // Check visibility after refresh
+          setTimeout(() => {
+            window.checkChatInterfaceVisibility();
+          }, 100);
+        }, 50);
+        
+        return true;
+      };
+    }
   }
 };
 
-// Register global utility functions when this module loads
-registerDOMVisibilityUtils();
+// No longer auto-registering global utility functions to prevent performance issues
+// registerDOMVisibilityUtils();

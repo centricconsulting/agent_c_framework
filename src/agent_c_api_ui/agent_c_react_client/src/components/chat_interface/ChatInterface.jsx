@@ -951,37 +951,25 @@ const ChatInterface = (props) => {
     
     console.groupEnd();
     
-    // Setup an interval to check for style changes that might affect visibility
-    const visibilityChecker = setInterval(() => {
-      const element = document.querySelector('.chat-interface-card');
-      if (element) {
-        const style = window.getComputedStyle(element);
-        const isVisible = style.display !== 'none' && style.visibility !== 'hidden';
-        
-        // Only log if visibility state changes
-        if (isVisible !== domStatus.visible) {
-          if (DEBUG_MODE) console.log('Chat interface visibility changed:', { 
-            wasVisible: domStatus.visible, 
-            isNowVisible: isVisible,
-            display: style.display,
-            visibility: style.visibility
-          });
-          
-          // Update tracking
-          trackChatInterfaceRendering('update', {
-            inDOM: true,
-            visible: isVisible,
-            visibilityChanged: true
-          });
-          
-          // Update our stored state
-          domStatus.visible = isVisible;
-        }
-      }
-    }, 2000);
+    // Removed interval-based visibility checking to improve performance
+    // One-time check is sufficient for initialization
+    const element = document.querySelector('.chat-interface-card');
+    if (element) {
+      const style = window.getComputedStyle(element);
+      const isVisible = style.display !== 'none' && style.visibility !== 'hidden';
+      
+      // Set initial visibility state
+      domStatus.visible = isVisible;
+      
+      // Initial tracking
+      trackChatInterfaceRendering('update', {
+        inDOM: true,
+        visible: isVisible,
+        initialCheck: true
+      });
+    }
     
     return () => {
-      clearInterval(visibilityChecker);
       logger.debug('ChatInterface unmounting', 'ChatInterface');
       trackChatInterfaceRendering('unmount', {
         reason: 'component-unmount',

@@ -7,7 +7,6 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ModelProvider } from '@/contexts/ModelContext';
 import { trackContextInitialization, getContextInitializationStatus } from '@/lib/diagnostic';
 import '@/lib/context-diagnostic-console';
-import '@/lib/dom-visibility';
 import logger from '@/lib/logger';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 

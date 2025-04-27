@@ -1,231 +1,87 @@
 /**
  * Enhanced logging utility based on loglevel
- * Provides structured logging with context and performance tracking
+ * Provides structured logging with context
+ * 
+ * This version has been simplified to avoid performance issues.
  */
 
 import log from 'loglevel';
-import { safeStringify, safeInspect } from './safeSerializer';
-import { DEBUG_MODE } from './diagnostic';
 
-// Set default level based on environment
-const defaultLevel = process.env.NODE_ENV === 'production' ? 'warn' : 'info';
+// Set default level based on environment - production logs should be minimal
+const defaultLevel = process.env.NODE_ENV === 'production' ? 'error' : 'info';
 log.setLevel(defaultLevel);
 
-// Performance tracking
-const performanceMetrics = {};
+// Log history array - limited to 100 entries
+const logHistory = [];
+const MAX_LOG_HISTORY = 100;
 
-// Maximum size for the performance metric history
-const MAX_PERFORMANCE_HISTORY = 100;
+// Subscribers for log events
+const subscribers = [];
 
-// ID for group tracking
-let currentGroupId = 0;
-
-/**
- * Format data for display in logs
- * @param {any} data - Data to format
- * @returns {string} Formatted data
- */
-const formatData = (data) => {
-  if (!data) return '';
-  
-  try {
-    if (typeof data === 'string') return data;
-    // Use safe stringify to prevent circular reference errors
-    return safeStringify(data);
-  } catch (e) {
-    return '[Unstringifiable data]';
-  }
-};
-
-// Enhanced logger with component tracking
+// Simple logger implementation that avoids performance issues
 const logger = {
   /**
    * Log at TRACE level
-   * @param {string} message - Log message
-   * @param {string} componentName - Component/module name
-   * @param {any} data - Additional data
    */
   trace: (message, componentName, data) => {
-    // Only log trace messages if DEBUG_MODE is enabled
-    if (DEBUG_MODE) {
-      // Use safe inspection for complex objects
-      const safeData = data ? safeInspect(data) : undefined;
-      log.trace(`[${componentName || 'unknown'}] ${message}`, safeData);
-    }
+    log.trace(`[${componentName || 'unknown'}] ${message}`);
+    addToHistory('trace', message, componentName, data);
+  },
+  
+  /**
+   * Log performance metrics
+   */
+  performance: (componentName, operation, durationMs) => {
+    log.info(`[${componentName || 'unknown'}] PERF: ${operation} took ${durationMs}ms`);
+    addToHistory('performance', `${operation} took ${durationMs}ms`, componentName, { duration: durationMs, operation });
   },
   
   /**
    * Log at DEBUG level
-   * @param {string} message - Log message
-   * @param {string} componentName - Component/module name
-   * @param {any} data - Additional data
+   * In production, this is a no-op for performance reasons
    */
   debug: (message, componentName, data) => {
-    // Only log debug messages if DEBUG_MODE is enabled, or we're in development
-    if (DEBUG_MODE || process.env.NODE_ENV === 'development') {
-      // Use safe inspection for complex objects
-      const safeData = data ? safeInspect(data) : undefined;
-      log.debug(`[${componentName || 'unknown'}] ${message}`, safeData);
-    }
+    // Skip debug logging in production for performance
+    if (process.env.NODE_ENV === 'production') return;
+    
+    log.debug(`[${componentName || 'unknown'}] ${message}`);
+    addToHistory('debug', message, componentName, data);
+  },
+  
+  /**
+   * Log at INIT level (alias for info)
+   */
+  init: (message, componentName, data) => {
+    log.info(`[${componentName || 'unknown'}] INIT: ${message}`);
+    addToHistory('init', message, componentName, data);
   },
   
   /**
    * Log at INFO level
-   * @param {string} message - Log message
-   * @param {string} componentName - Component/module name
-   * @param {any} data - Additional data
    */
   info: (message, componentName, data) => {
-    log.info(`[${componentName || 'unknown'}] ${message}`, data);
+    log.info(`[${componentName || 'unknown'}] ${message}`);
+    addToHistory('info', message, componentName, data);
   },
   
   /**
    * Log at WARN level
-   * @param {string} message - Log message
-   * @param {string} componentName - Component/module name
-   * @param {any} data - Additional data
    */
   warn: (message, componentName, data) => {
-    log.warn(`[${componentName || 'unknown'}] ${message}`, data);
+    log.warn(`[${componentName || 'unknown'}] ${message}`);
+    addToHistory('warn', message, componentName, data);
   },
   
   /**
    * Log at ERROR level
-   * @param {string} message - Log message
-   * @param {string} componentName - Component/module name
-   * @param {any} data - Additional data
    */
   error: (message, componentName, data) => {
-    log.error(`[${componentName || 'unknown'}] ${message}`, data);
-  },
-  
-  /**
-   * Log for application initialization 
-   * @param {string} message - Log message
-   * @param {string} componentName - Component/module name
-   * @param {any} data - Additional data
-   */
-  init: (message, componentName, data) => {
-    log.info(`[${componentName || 'unknown'}] 🚀 ${message}`, data);
-  },
-  
-  /**
-   * Track performance metrics
-   * @param {string} componentName - Component/module name
-   * @param {string} operation - Operation being measured
-   * @param {number} duration - Duration in milliseconds
-   */
-  performance: (componentName, operation, duration) => {
-    // Don't record if we're not at debug level
-    if (log.getLevel() > log.levels.DEBUG) return;
-    
-    // Create component metrics if they don't exist
-    if (!performanceMetrics[componentName]) {
-      performanceMetrics[componentName] = {};
-    }
-    
-    // Create operation metrics if they don't exist
-    if (!performanceMetrics[componentName][operation]) {
-      performanceMetrics[componentName][operation] = {
-        count: 0,
-        total: 0,
-        min: Infinity,
-        max: 0,
-        history: []
-      };
-    }
-    
-    const metrics = performanceMetrics[componentName][operation];
-    
-    // Update metrics
-    metrics.count++;
-    metrics.total += duration;
-    metrics.min = Math.min(metrics.min, duration);
-    metrics.max = Math.max(metrics.max, duration);
-    
-    // Add to history, maintaining maximum size
-    metrics.history.push({
-      timestamp: Date.now(),
-      duration
-    });
-    
-    if (metrics.history.length > MAX_PERFORMANCE_HISTORY) {
-      metrics.history.shift();
-    }
-    
-    // Log the performance information
-    log.debug(
-      `[${componentName}] Performance: ${operation} took ${duration}ms`,
-      { avg: Math.round(metrics.total / metrics.count), min: metrics.min, max: metrics.max }
-    );
-  },
-  
-  /**
-   * Get all collected performance metrics
-   * @returns {Object} Performance metrics
-   */
-  getPerformanceMetrics: () => {
-    return { ...performanceMetrics };
-  },
-  
-  /**
-   * Log localStorage operations
-   * @param {string} operation - Storage operation type ('read'|'write'|'remove'|'clear')
-   * @param {string} key - Storage key
-   * @param {boolean} success - Whether operation succeeded
-   */
-  storageOp: (operation, key, success) => {
-    // Only log at debug level
-    if (log.getLevel() > log.levels.DEBUG) return;
-    
-    const icon = success ? '💾' : '❌';
-    const status = success ? 'succeeded' : 'failed';
-    log.debug(`${icon} Storage ${operation} for '${key}' ${status}`);
-  },
-  
-  /**
-   * Start a logical grouping of logs
-   * @param {string} name - Group name
-   * @param {string} componentName - Component/module name
-   * @returns {number} Group ID for ending the group
-   */
-  group: (name, componentName) => {
-    const groupId = ++currentGroupId;
-    log.info(`[${componentName || 'unknown'}] ▼ BEGIN ${name} (${groupId})`);
-    return groupId;
-  },
-  
-  /**
-   * End a logical grouping of logs
-   * @param {number} groupId - Group ID returned from group()
-   * @param {string} name - Group name
-   * @param {string} componentName - Component/module name
-   */
-  groupEnd: (groupId, name, componentName) => {
-    log.info(`[${componentName || 'unknown'}] ▲ END ${name} (${groupId})`);
-  },
-  
-  /**
-   * Track state changes (use sparingly)
-   * @param {string} componentName - Component/module name
-   * @param {string} stateName - Name of the state being changed
-   * @param {any} prevValue - Previous state value
-   * @param {any} newValue - New state value
-   */
-  stateChange: (componentName, stateName, prevValue, newValue) => {
-    // Only log at debug level
-    if (log.getLevel() > log.levels.DEBUG) return;
-    
-    return logger.debug(
-      `State '${stateName}' changed`, 
-      componentName, 
-      { prev: prevValue, new: newValue }
-    );
+    log.error(`[${componentName || 'unknown'}] ${message}`);
+    addToHistory('error', message, componentName, data);
   },
   
   /**
    * Set the logging level
-   * @param {string|number} level - Log level (trace|debug|info|warn|error)
    */
   setLevel: (level) => {
     log.setLevel(level);
@@ -233,18 +89,116 @@ const logger = {
   
   /**
    * Get the current logging level
-   * @returns {number} Current log level
    */
   getLevel: () => log.getLevel(),
   
   /**
    * Get the log level name
-   * @returns {string} Current log level name
    */
   getLevelName: () => {
     const level = log.getLevel();
     return Object.keys(log.levels).find(key => log.levels[key] === level) || 'unknown';
+  },
+  
+  /**
+   * Get the log history
+   */
+  getLogHistory: () => {
+    return [...logHistory];
+  },
+  
+  /**
+   * Clear the log history
+   */
+  clearLogHistory: () => {
+    logHistory.length = 0;
+    notifySubscribers();
+  },
+  
+  /**
+   * Subscribe to log updates
+   */
+  onNewLog: (callback) => {
+    subscribers.push(callback);
+    return () => {
+      const index = subscribers.indexOf(callback);
+      if (index !== -1) {
+        subscribers.splice(index, 1);
+      }
+    };
   }
 };
+
+/**
+ * Add a log entry to the history
+ */
+function addToHistory(level, message, component, data) {
+  // Keep history limited to prevent memory issues
+  if (logHistory.length >= MAX_LOG_HISTORY) {
+    logHistory.shift();
+  }
+  
+  logHistory.push({
+    level,
+    timestamp: Date.now(),
+    component,
+    message,
+    data
+  });
+  
+  notifySubscribers();
+}
+
+/**
+ * Notify all subscribers about a new log entry
+ */
+function notifySubscribers() {
+  subscribers.forEach(callback => {
+    try {
+      callback();
+    } catch (e) {
+      console.error('Error in log subscriber:', e);
+    }
+  });
+}
+
+/**
+ * In production, optionally replace console methods with no-ops
+ * to prevent performance issues when dev tools are open
+ */
+function setupProductionConsole() {
+  if (process.env.NODE_ENV === 'production') {
+    // Store original console methods
+    const originalConsole = {
+      log: console.log,
+      debug: console.debug,
+      info: console.info,
+      warn: console.warn,
+      error: console.error
+    };
+    
+    // Replace non-critical methods with no-ops
+    console.log = function() {};
+    console.debug = function() {};
+    console.info = function() {};
+    
+    // Keep error and warn for critical issues
+    // console.warn = function() {};
+    // console.error = function() {};
+    
+    // Create a method to restore original behavior if needed
+    console.enableFullLogging = function() {
+      console.log = originalConsole.log;
+      console.debug = originalConsole.debug;
+      console.info = originalConsole.info;
+      console.warn = originalConsole.warn;
+      console.error = originalConsole.error;
+      console.log('Full console logging restored');
+    };
+  }
+}
+
+// Set up production console behavior
+setupProductionConsole();
 
 export default logger;

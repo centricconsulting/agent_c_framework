@@ -4,7 +4,7 @@ import AppSidebar from './AppSidebar';
 import PageHeader from './PageHeader';
 import { cn } from '../lib/utils';
 import { useLogger } from '../hooks/use-logger';
-import EnhancedDebugPanel from './ui/enhanced-debug-panel';
+// Debug panel removed temporarily
 import logger from '@/lib/logger';
 import { trackComponentRendering } from '@/lib/diagnostic';
 
@@ -59,8 +59,7 @@ const Layout = ({
         {children}
       </main>
       
-      {/* Enhanced Debug Panel - always included but conditionally shows */}
-      <EnhancedDebugPanel />
+      {/* Debug Panel temporarily removed */}
     </AppSidebar>
   );
 };

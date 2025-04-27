@@ -1,19 +1,23 @@
 /**
- * Minimal logger hooks for component tracking
+ * Logging hooks for component tracking
+ *
+ * These hooks have been temporarily disabled due to performance issues.
+ * A properly designed version will be implemented in the future.
  */
-
-import { useEffect } from 'react';
-import logger from '../lib/logger';
 
 /**
  * Simple hook to log component mounting/unmounting
- * @param {string} componentName - Name of the component
+ * @param {string} componentName - Name of the component 
  */
-export const useLogger = (componentName) => {
-  useEffect(() => {
-    logger.debug(`Component mounted`, componentName);
-    return () => {
-      logger.debug(`Component unmounted`, componentName);
-    };
-  }, [componentName]);
+export const useLogger = () => {
+  // No-op implementation
+};
+
+/**
+ * Hook to log when a component renders with state data
+ * @param {string} componentName - Name of the component
+ * @param {Object} data - Data to log
+ */
+export const useRenderLogger = () => {
+  // No-op implementation
 };
