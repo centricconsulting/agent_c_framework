@@ -4,6 +4,8 @@
  */
 
 import log from 'loglevel';
+import { safeStringify, safeInspect } from './safeSerializer';
+import { DEBUG_MODE } from './diagnostic';
 
 // Set default level based on environment
 const defaultLevel = process.env.NODE_ENV === 'production' ? 'warn' : 'info';
@@ -28,7 +30,8 @@ const formatData = (data) => {
   
   try {
     if (typeof data === 'string') return data;
-    return JSON.stringify(data);
+    // Use safe stringify to prevent circular reference errors
+    return safeStringify(data);
   } catch (e) {
     return '[Unstringifiable data]';
   }
@@ -43,7 +46,12 @@ const logger = {
    * @param {any} data - Additional data
    */
   trace: (message, componentName, data) => {
-    log.trace(`[${componentName || 'unknown'}] ${message}`, data);
+    // Only log trace messages if DEBUG_MODE is enabled
+    if (DEBUG_MODE) {
+      // Use safe inspection for complex objects
+      const safeData = data ? safeInspect(data) : undefined;
+      log.trace(`[${componentName || 'unknown'}] ${message}`, safeData);
+    }
   },
   
   /**
@@ -53,7 +61,12 @@ const logger = {
    * @param {any} data - Additional data
    */
   debug: (message, componentName, data) => {
-    log.debug(`[${componentName || 'unknown'}] ${message}`, data);
+    // Only log debug messages if DEBUG_MODE is enabled, or we're in development
+    if (DEBUG_MODE || process.env.NODE_ENV === 'development') {
+      // Use safe inspection for complex objects
+      const safeData = data ? safeInspect(data) : undefined;
+      log.debug(`[${componentName || 'unknown'}] ${message}`, safeData);
+    }
   },
   
   /**

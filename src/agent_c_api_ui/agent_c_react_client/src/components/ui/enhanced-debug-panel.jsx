@@ -4,7 +4,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useModel } from '@/hooks/use-model';
 import { useTheme } from '@/hooks/use-theme';
 import storageService from '@/lib/storageService';
-import { getContextInitializationStatus } from '@/lib/diagnostic';
+import { getContextInitializationStatus, DEBUG_MODE } from '@/lib/diagnostic';
+import { safeInspect } from '@/lib/safeSerializer';
 
 /**
  * Enhanced Debug Panel for monitoring application state and diagnosing issues
@@ -52,21 +53,40 @@ const EnhancedDebugPanel = () => {
     };
   }, []);
   
-  // Update context status periodically
+  // Update context status periodically, but only when expanded
   useEffect(() => {
+    // If not expanded, don't update as frequently
+    if (!isExpanded) {
+      return;
+    }
+    
     const updateContextStatus = () => {
-      setContextStatus(getContextInitializationStatus());
+      // Use safe copy to prevent circular references and memory issues
+      const status = getContextInitializationStatus();
+      // Only store a limited subset of the context status information
+      const safeStatus = {};
+      
+      Object.keys(status).forEach(key => {
+        safeStatus[key] = {
+          status: status[key].status,
+          startTime: status[key].startTime,
+          complete: status[key].complete,
+          hasErrors: status[key].errors && status[key].errors.length > 0
+        };
+      });
+      
+      setContextStatus(safeStatus);
       setLastUpdated(Date.now());
     };
     
     // Initial update
     updateContextStatus();
     
-    // Setup interval for updates
-    const intervalId = setInterval(updateContextStatus, 1000);
+    // Update less frequently to reduce performance impact
+    const intervalId = setInterval(updateContextStatus, 2000);
     
     return () => clearInterval(intervalId);
-  }, []);
+  }, [isExpanded]);
   
   // Get session ID from storage
   const storedSessionId = storageService.getSessionId();
@@ -247,9 +267,31 @@ const EnhancedDebugPanel = () => {
           
           {/* Context Initialize Details */}
           <div className="mb-4">
-            <h3 className="text-yellow-400 font-bold mb-1 border-b border-yellow-700 pb-1">Context Details</h3>
+            <h3 className="text-yellow-400 font-bold mb-1 border-b border-yellow-700 pb-1">Context Status</h3>
             <div className="text-xs font-mono bg-gray-800 p-2 rounded overflow-auto max-h-[200px]">
-              {JSON.stringify(contextStatus, null, 2)}
+              {/* Render as a table instead of raw JSON to reduce memory */}
+              <table className="w-full text-left">
+                <thead>
+                  <tr>
+                    <th className="p-1">Context</th>
+                    <th className="p-1">Status</th>
+                    <th className="p-1">Complete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(contextStatus).map(([key, value]) => (
+                    <tr key={key}>
+                      <td className="p-1">{key}</td>
+                      <td className={`p-1 ${value.status === 'complete' ? 'text-green-400' : value.status === 'error' ? 'text-red-400' : 'text-yellow-400'}`}>
+                        {value.status}
+                      </td>
+                      <td className="p-1">
+                        {value.complete ? '✓' : '✗'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
           
@@ -257,11 +299,34 @@ const EnhancedDebugPanel = () => {
           <div className="mb-4">
             <h3 className="text-yellow-400 font-bold mb-1 border-b border-yellow-700 pb-1">Local Storage</h3>
             <div className="text-xs font-mono bg-gray-800 p-2 rounded overflow-auto max-h-[200px]">
-              {JSON.stringify({
-                ui_session_id: localStorage.getItem('ui_session_id'),
-                theme: localStorage.getItem('theme'),
-                agent_config: localStorage.getItem('agent_config')
-              }, null, 2)}
+              <table className="w-full text-left">
+                <tbody>
+                  <tr>
+                    <td className="p-1 text-gray-400">Session ID:</td>
+                    <td className="p-1">
+                      {localStorage.getItem('ui_session_id') || 'not set'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-1 text-gray-400">Theme:</td>
+                    <td className="p-1">
+                      {localStorage.getItem('theme') || 'system'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-1 text-gray-400">Agent Config:</td>
+                    <td className="p-1">
+                      {localStorage.getItem('agent_config') ? 'set' : 'not set'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-1 text-gray-400">Debug Mode:</td>
+                    <td className="p-1">
+                      {localStorage.getItem('debug_mode') === 'true' ? 'enabled' : 'disabled'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

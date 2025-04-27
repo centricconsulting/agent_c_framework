@@ -5,7 +5,8 @@ import ChatInterface from '../components/chat_interface/ChatInterface';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import logger from '@/lib/logger';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
-import { trackComponentRendering, trackChatInterfaceRendering } from '@/lib/diagnostic';
+import { trackComponentRendering, trackChatInterfaceRendering, DEBUG_MODE } from '@/lib/diagnostic';
+import { safeInspect } from '@/lib/safeSerializer';
 
 const ChatPage = () => {
   // Use the useSessionContext hook for better error handling and logging
@@ -61,32 +62,38 @@ const ChatPage = () => {
       timestamp: new Date().toISOString()
     });
     
-    // Log this to console for immediate visibility with proper type information
-    console.log('🔎 ChatPage state:', {
-      sessionId, // Log the actual value
-      sessionIdType: typeof sessionId,
-      sessionIdLength: typeof sessionId === 'string' ? sessionId.length : 0,
-      hasValidSessionId,
-      isInitialized,
-      isReady,
-      error: error || 'none',
-      isLoading,
-      timestamp: new Date().toISOString()
-    });
+    // Log this to console for immediate visibility with proper type information - but only in debug mode
+    if (DEBUG_MODE) {
+      console.log('🔎 ChatPage state:', safeInspect({
+        sessionId, // Log the actual value
+        sessionIdType: typeof sessionId,
+        sessionIdLength: typeof sessionId === 'string' ? sessionId.length : 0,
+        hasValidSessionId,
+        isInitialized,
+        isReady,
+        error: error || 'none',
+        isLoading,
+        timestamp: new Date().toISOString()
+      }));
+    }
   }, [sessionId, isInitialized, isReady, error, isLoading]);
 
   // Log rendering decision with proper type handling
   // Check if sessionId is a string (UUID) rather than using it as a boolean
   const hasValidSessionId = typeof sessionId === 'string' && sessionId.length > 0;
   const shouldRenderChatInterface = hasValidSessionId && !!isInitialized;
-  console.log('🔎 ChatPage rendering decision:', {
-    sessionId, // Log the actual sessionId value
-    hasValidSessionId,
-    isInitialized: !!isInitialized,
-    shouldRenderChatInterface,
-    error: error || 'none',
-    isLoading
-  });
+  
+  // Only log in debug mode
+  if (DEBUG_MODE) {
+    console.log('🔎 ChatPage rendering decision:', safeInspect({
+      sessionId, // Log the actual sessionId value
+      hasValidSessionId,
+      isInitialized: !!isInitialized,
+      shouldRenderChatInterface,
+      error: error || 'none',
+      isLoading
+    }));
+  }
   
   // Add global diagnostic functions
   if (typeof window !== 'undefined') {
@@ -149,9 +156,10 @@ const ChatPage = () => {
     isInitialized
   };
   
-  // Record current props in window for console debugging
-  if (typeof window !== 'undefined') {
-    window.__CHAT_INTERFACE_PROPS = chatInterfaceProps;
+  // Record current props in window for console debugging, but only in debug mode
+  if (DEBUG_MODE && typeof window !== 'undefined') {
+    // Use a safe copy of the props to prevent circular references
+    window.__CHAT_INTERFACE_PROPS = safeInspect(chatInterfaceProps);
   }
 
   return (

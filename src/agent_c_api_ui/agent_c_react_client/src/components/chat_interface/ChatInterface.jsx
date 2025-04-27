@@ -15,8 +15,9 @@ import { createClipboardContent } from '@/components/chat_interface/utils/htmlCh
 import { processMessageStream } from './utils/MessageStreamProcessor';
 import { cn } from "@/lib/utils";
 import logger from '@/lib/logger';
-import { trackComponentRendering, trackChatInterfaceRendering } from '@/lib/diagnostic';
+import { trackComponentRendering, trackChatInterfaceRendering, DEBUG_MODE } from '@/lib/diagnostic';
 import storageService from '@/lib/storageService';
+import { safeInspect } from '@/lib/safeSerializer';
 
 // Import our refactored components
 import MessagesList from './MessagesList';
@@ -35,7 +36,7 @@ const ChatInterfaceInner = ({
   sessionId, 
   customPrompt, 
   modelName, 
-  modelParameters, 
+  modelParameters = {}, // Provide default empty object to prevent undefined errors
   onProcessingStatus,
   // Added props for options panel
   persona,
@@ -151,7 +152,7 @@ const ChatInterfaceInner = ({
    */
   const handleFileDrop = (files) => {
     if (files && files.length > 0) {
-      console.log('File dropped:', files[0].name);
+      if (DEBUG_MODE) console.log('File dropped:', files[0].name);
       
       // Set uploading state first
       setIsUploading(true);
@@ -188,7 +189,7 @@ const ChatInterfaceInner = ({
    */
   const handleClipboardPaste = (files) => {
     if (files && files.length > 0) {
-      console.log('File pasted from clipboard:', files[0].name);
+      if (DEBUG_MODE) console.log('File pasted from clipboard:', files[0].name);
       
       // Set uploading state first
       setIsUploading(true);
@@ -268,7 +269,7 @@ const ChatInterfaceInner = ({
    */
   const handleFileSelection = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      console.log('File selected:', e.target.files[0].name);
+      if (DEBUG_MODE) console.log('File selected:', e.target.files[0].name);
       setIsUploading(true);
       
       // We need to upload the file directly here instead of relying on FileUploadManager
@@ -302,7 +303,7 @@ const ChatInterfaceInner = ({
         return response.json();
       })
       .then(data => {
-        console.log('Upload successful:', data);
+        if (DEBUG_MODE) console.log('Upload successful:', safeInspect(data));
         
         // Create a file object that matches what FileUploadManager expects
         const newFile = {
@@ -353,7 +354,7 @@ const ChatInterfaceInner = ({
         setIsUploading(false);
       })
       .catch(error => {
-        console.error("Error uploading file:", error);
+        console.error("Error uploading file:", error?.message || error);
         setMessages((prev) => [
           ...prev,
           {
@@ -405,7 +406,7 @@ const ChatInterfaceInner = ({
         // If processing is complete or failed, stop polling
         return fileData.processing_status !== "pending";
       } catch (error) {
-        console.error("Error checking file status:", error);
+        console.error("Error checking file status:", error?.message || error);
         return true; // Stop polling on error
       }
     };
@@ -459,12 +460,12 @@ const ChatInterfaceInner = ({
       if (!response.ok) {
         console.error(`Error cancelling stream: ${response.status}`);
       } else {
-        console.log("Stream cancelled successfully");
+        if (DEBUG_MODE) console.log("Stream cancelled successfully");
         // We'll let the stream processing handle setting isStreaming to false
         // as the stream will close naturally after cancellation
       }
     } catch (error) {
-      console.error("Error cancelling stream:", error);
+      console.error("Error cancelling stream:", error?.message || error);
     }
   };
   
@@ -503,12 +504,15 @@ const ChatInterfaceInner = ({
         formData.append("file_ids", JSON.stringify(selectedFiles.map(f => f.id)));
       }
       
+      // Check if modelParameters exists before accessing its properties
+      const params = modelParameters || {};
+      
       // Add the correct parameter based on model type
-      if (modelParameters.temperature !== undefined) {
-        formData.append("temperature", modelParameters.temperature);
+      if (params.temperature !== undefined) {
+        formData.append("temperature", params.temperature);
       }
-      if (modelParameters.reasoning_effort !== undefined) {
-        formData.append("reasoning_effort", modelParameters.reasoning_effort);
+      if (params.reasoning_effort !== undefined) {
+        formData.append("reasoning_effort", params.reasoning_effort);
       }
       
       formData.append("llm_model", modelName);
@@ -688,7 +692,7 @@ const ChatInterfaceInner = ({
           console.warn("Unknown message type:", data.type);
         }
       }).catch(error => {
-        console.error("Error processing stream:", error);
+        console.error("Error processing stream:", error?.message || error);
         setMessages((prev) => [
           ...prev,
           {
@@ -703,7 +707,7 @@ const ChatInterfaceInner = ({
       });
       
     } catch (error) {
-      console.error("Error in chat:", error);
+      console.error("Error in chat:", error?.message || error);
       setMessages((prev) => [
         ...prev,
         {
@@ -869,7 +873,7 @@ const ChatInterface = (props) => {
     propsKeys: Object.keys(props)
   };
   
-  console.log('Props received:', propsInfo);
+  if (DEBUG_MODE) console.log('Props received:', safeInspect(propsInfo));
   
   // Track component mounting with our enhanced tracking
   trackChatInterfaceRendering('start', {
@@ -881,7 +885,7 @@ const ChatInterface = (props) => {
   // Check DOM after render using useEffect
   useEffect(() => {
     // Log session ID and debug information
-    console.log('📋 Session ID check from ChatInterface:', {
+    if (DEBUG_MODE) console.log('📋 Session ID check from ChatInterface:', {
       propSessionId: props.sessionId,
       storedSessionId: storageService.getSessionId(),
       match: props.sessionId === storageService.getSessionId()
@@ -910,7 +914,7 @@ const ChatInterface = (props) => {
       ) : false
     };
     
-    console.log('Chat interface in DOM after mount:', domStatus);
+    if (DEBUG_MODE) console.log('Chat interface in DOM after mount:', safeInspect(domStatus));
     
     // Track mounting with our enhanced tracking
     trackChatInterfaceRendering('mount', {
@@ -942,7 +946,7 @@ const ChatInterface = (props) => {
         depth++;
       }
       
-      console.log('Chat interface parent elements:', parentInfo);
+      if (DEBUG_MODE) console.log('Chat interface parent elements:', safeInspect(parentInfo));
     }
     
     console.groupEnd();
@@ -956,7 +960,7 @@ const ChatInterface = (props) => {
         
         // Only log if visibility state changes
         if (isVisible !== domStatus.visible) {
-          console.log('Chat interface visibility changed:', { 
+          if (DEBUG_MODE) console.log('Chat interface visibility changed:', { 
             wasVisible: domStatus.visible, 
             isNowVisible: isVisible,
             display: style.display,
