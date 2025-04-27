@@ -1,6 +1,6 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import logger from '../lib/logger';
-import { getStoredTheme, storeTheme } from '../lib/theme';
+import React, { createContext, useState, useEffect } from 'react';
+import logger from '@/lib/logger';
+import { getStoredTheme, storeTheme } from '@/lib/theme';
 
 /**
  * @typedef {'light' | 'dark' | 'system'} ThemeType
@@ -95,16 +95,4 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-/**
- * Custom hook for consuming the ThemeContext
- * @returns {Object} The ThemeContext value { theme, setTheme }
- */
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  
-  return context;
-};
+// The useTheme hook is now in src/hooks/use-theme.jsx

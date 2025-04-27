@@ -1,16 +1,11 @@
-/**
- * Temporary placeholder for the actual useTheme hook
- * This will be implemented in a future PR
- */
-
 import { useContext } from 'react';
-import { ThemeContext } from '../contexts/ThemeContext';
-import logger from '../lib/logger';
+import { ThemeContext } from '@/contexts/ThemeContext';
+import logger from '@/lib/logger';
 
 /**
- * Hook for using the ThemeContext
- * @param {string} componentName - Component name for logging
- * @returns {Object} Theme context value
+ * Custom hook that provides access to the ThemeContext
+ * @param {string} componentName - Name of the component using this hook (for logging)
+ * @returns {Object} The ThemeContext value with theme state and methods
  */
 export const useTheme = (componentName = 'unknown') => {
   try {
@@ -29,3 +24,5 @@ export const useTheme = (componentName = 'unknown') => {
     throw error;
   }
 };
+
+export default useTheme;

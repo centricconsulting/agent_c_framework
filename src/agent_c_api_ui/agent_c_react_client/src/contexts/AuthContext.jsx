@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useRef } from 'react';
 import logger from '@/lib/logger';
-import { apiService } from '@/lib/apiService';
-import { storageService } from '@/lib/storageService';
+import apiService from '@/lib/apiService';
+import storageService from '@/lib/storageService';
 
 // Create the context
 export const AuthContext = createContext();
