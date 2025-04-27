@@ -213,7 +213,14 @@ export const trackChatInterfaceRendering = (action, data = {}) => {
         chatInterface.offsetWidth > 0 && 
         chatInterface.offsetHeight > 0);
       
+      // Get the sessionId attribute from the chat interface
+      const sessionIdValue = chatInterface ? chatInterface.getAttribute('data-session-id-value') : null;
+      const storedSessionId = localStorage.getItem('ui_session_id');
+      
       console.log(`Chat interface is ${isVisible ? 'VISIBLE' : 'NOT VISIBLE'}`);
+      console.log(`Session ID from attribute: ${sessionIdValue || 'missing'}`);
+      console.log(`Session ID from localStorage: ${storedSessionId || 'missing'}`);
+      console.log(`Session IDs match: ${sessionIdValue === storedSessionId}`);
       
       if (!isVisible) {
         // Check if the parent elements are visible
@@ -259,11 +266,31 @@ export const trackChatInterfaceRendering = (action, data = {}) => {
       console.log('\nKey rendering conditions:');
       console.log(`- Auth initialized: ${authContext?.status === 'complete'}`);
       console.log(`- Session initialized: ${sessionContext?.status === 'complete'}`);
-      console.log(`- Has session ID: ${!!sessionContext?.data?.sessionId}`);
+      
+      // Session ID details
+      const storedSessionId = localStorage.getItem('ui_session_id');
+      const sessionIdFromContext = sessionContext?.data?.sessionId;
+      console.log('\nSession ID details:');
+      console.log(`- localStorage session ID: ${storedSessionId || 'not found'}`);
+      console.log(`- Context session ID: ${sessionIdFromContext || 'not found'}`);
+      console.log(`- Session ID type: ${typeof sessionIdFromContext}`);
+      console.log(`- Session ID valid: ${typeof sessionIdFromContext === 'string' && sessionIdFromContext?.length > 0}`);
+      console.log(`- Session IDs match: ${storedSessionId === sessionIdFromContext}`);
+      
+      // Other conditions
+      console.log('\nOther conditions:');
+      console.log(`- Has session ID in context: ${!!sessionContext?.data?.sessionId}`);
       console.log(`- Session is ready: ${!!sessionContext?.data?.isReady}`);
       
-      const sessionId = localStorage.getItem('ui_session_id');
-      console.log(`- localStorage session ID: ${sessionId || 'not found'}`);
+      // Check ChatPage component state
+      const chatPageState = window.componentRendering?.ChatPage;
+      if (chatPageState) {
+        console.log('\nChatPage component state:');
+        console.log(`- Last render time: ${new Date(chatPageState.lastRender).toISOString()}`);
+        console.log(`- Render count: ${chatPageState.renders}`);
+        console.log(`- Session ID in component: ${chatPageState.data?.sessionId || 'unknown'}`);
+        console.log(`- Should render interface: ${chatPageState.data?.shouldRenderChatInterface}`);
+      }
     };
     
     // Utility to force a render of the chat interface

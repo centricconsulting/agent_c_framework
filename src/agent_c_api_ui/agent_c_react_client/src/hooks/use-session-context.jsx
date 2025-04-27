@@ -2,7 +2,7 @@
  * Enhanced useSessionContext hook with better error handling and debugging
  */
 
-import { useContext } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { SessionContext } from '../contexts/SessionContext';
 import logger from '../lib/logger';
 
@@ -12,8 +12,53 @@ import logger from '../lib/logger';
  * @returns {Object} The SessionContext value with session state and methods
  */
 export const useSessionContext = (componentName = 'unknown') => {
+  // Create a ref to detect if this is the first render
+  const isFirstRender = useRef(true);
+  
   try {
     const context = useContext(SessionContext);
+    
+    // Track component using this context
+    useEffect(() => {
+      logger.debug(`${componentName} mounted with SessionContext`, 'useSessionContext');
+      
+      // Add this component to the list of components using SessionContext
+      if (typeof window !== 'undefined' && !window.__SESSION_CONTEXT_USERS) {
+        window.__SESSION_CONTEXT_USERS = {};
+      }
+      
+      if (typeof window !== 'undefined') {
+        window.__SESSION_CONTEXT_USERS[componentName] = {
+          mountTime: Date.now(),
+          isInitialized: context?.isInitialized || false,
+          isReady: context?.isReady || false
+        };
+      }
+      
+      return () => {
+        logger.debug(`${componentName} unmounted`, 'useSessionContext');
+        if (typeof window !== 'undefined' && window.__SESSION_CONTEXT_USERS) {
+          window.__SESSION_CONTEXT_USERS[componentName] = {
+            ...window.__SESSION_CONTEXT_USERS[componentName],
+            unmountTime: Date.now()
+          };
+        }
+      };
+    }, []);
+    
+    // Debug logging for the first render only
+    if (isFirstRender.current) {
+      logger.debug(`${componentName} using SessionContext (first render)`, 'useSessionContext', {
+        hasContext: !!context,
+        hasSessionId: !!(context && context.sessionId),
+        sessionIdType: context ? typeof context.sessionId : 'undefined',
+        hasDispatcher: !!(context && context.dispatch),
+        isInitialized: context ? context.isInitialized : false,
+        isReady: context ? context.isReady : false
+      });
+      
+      isFirstRender.current = false;
+    }
     
     if (!context) {
       const error = 'useSessionContext must be used within a SessionProvider';
@@ -36,6 +81,8 @@ export const useSessionContext = (componentName = 'unknown') => {
         contextType: typeof context,
         hasSessionProps: !!(context.isInitialized !== undefined),
         sessionId: context.sessionId,
+        sessionIdType: typeof context.sessionId,
+        sessionIdValid: typeof context.sessionId === 'string' && context.sessionId.length > 0,
         isInitialized: context.isInitialized,
         isReady: context.isReady,
         callingComponent: componentName
@@ -90,12 +137,42 @@ export const useSessionContext = (componentName = 'unknown') => {
       return fallbackContext;
     }
     
-    // Dispatch logging (only in development)
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug(`${componentName} using SessionContext`, 'useSessionContext');
+    // Normalize the sessionId to ensure consistent typing
+    // This is crucial for 'shouldRenderChatInterface' in ChatPage.jsx
+    const normalizedContext = {
+      ...context,
+      // Ensure sessionId is always a string or null, never undefined
+      sessionId: context.sessionId || null
+    };
+    
+    // Track usage of context
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      if (!window.__SESSION_CONTEXT_USAGE) {
+        window.__SESSION_CONTEXT_USAGE = {};
+      }
+      
+      window.__SESSION_CONTEXT_USAGE[componentName] = {
+        lastAccessed: new Date().toISOString(),
+        isInitialized: normalizedContext.isInitialized,
+        isReady: normalizedContext.isReady,
+        hasSessionId: !!normalizedContext.sessionId,
+        sessionIdType: typeof normalizedContext.sessionId
+      };
     }
     
-    return context;
+    // Log substantial changes to the context values (like session ID changes)
+    useEffect(() => {
+      if (normalizedContext.sessionId) {
+        logger.debug(`${componentName} received session ID from context`, 'useSessionContext', {
+          sessionId: normalizedContext.sessionId,
+          sessionIdType: typeof normalizedContext.sessionId,
+          isInitialized: normalizedContext.isInitialized,
+          isReady: normalizedContext.isReady
+        });
+      }
+    }, [normalizedContext.sessionId, componentName]);
+    
+    return normalizedContext;
   } catch (error) {
     logger.error(`useSessionContext error in ${componentName}`, 'useSessionContext', { 
       error: error.message,

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useRef, useReducer } from 'react';
+import React, { createContext, useState, useEffect, useRef, useReducer, useMemo } from 'react';
 import { API_URL } from '@/config/config';
 import logger from '@/lib/logger';
 import apiService from '@/lib/apiService';
@@ -6,6 +6,7 @@ import storageService from '@/lib/storageService';
 import { useAuth } from '@/hooks/use-auth';
 import { useModel } from '@/hooks/use-model';
 import { trackContextInitialization, completeContextInitialization } from '@/lib/diagnostic';
+import contextDiagnosticConsole, { trackContext, updateContext, contextError } from '@/lib/context-diagnostic-console';
 
 if (!API_URL) {
     logger.error('API_URL is not defined! Environment variables may not be loading correctly.', 'SessionContext', {
@@ -25,6 +26,9 @@ const initialState = {
     isReady: false,
     error: null,
     settingsVersion: 0,
+    
+    // Session info
+    sessionId: null, // The current session ID - explicitly include this in the state
     
     // Agent settings & configuration
     persona: "",
@@ -52,6 +56,7 @@ const SESSION_ACTIONS = {
     SET_READY: 'SET_READY',
     SET_ERROR: 'SET_ERROR',
     INCREMENT_SETTINGS_VERSION: 'INCREMENT_SETTINGS_VERSION',
+    SET_SESSION_ID: 'SET_SESSION_ID', // Add action for setting session ID
     SET_PERSONA: 'SET_PERSONA',
     SET_CUSTOM_PROMPT: 'SET_CUSTOM_PROMPT',
     SET_PERSONAS: 'SET_PERSONAS',
@@ -77,6 +82,23 @@ function sessionReducer(state, action) {
             return { ...state, error: action.payload };
         case SESSION_ACTIONS.INCREMENT_SETTINGS_VERSION:
             return { ...state, settingsVersion: state.settingsVersion + 1 };
+        case SESSION_ACTIONS.SET_SESSION_ID:
+            // Add additional logging for session ID changes
+            const newSessionId = action.payload;
+            logger.debug('Setting sessionId in reducer', 'SessionReducer', {
+                currentSessionId: state.sessionId,
+                newSessionId: newSessionId,
+                unchanged: state.sessionId === newSessionId,
+                newSessionIdType: typeof newSessionId
+            });
+            
+            // Only update if the session ID actually changed, helping prevent unnecessary rerenders
+            if (state.sessionId === newSessionId) {
+                return state;
+            }
+            
+            // Store the new session ID
+            return { ...state, sessionId: newSessionId };
         case SESSION_ACTIONS.SET_PERSONA:
             return { ...state, persona: action.payload };
         case SESSION_ACTIONS.SET_CUSTOM_PROMPT:
@@ -144,11 +166,21 @@ export const SessionProvider = ({ children }) => {
     
     // Track the start of SessionContext initialization
     trackContextInitialization('SessionContext', 'start');
+    trackContext('SessionContext', { status: 'initializing' });
+    
+    // LOOP PREVENTION: Add a mounting flag ref to prevent repeated initialization
+    const hasInitializedRef = useRef(false);
+    const initializationCountRef = useRef(0);
     
     // Debug the value passed to the provider
     logger.debug('SessionProvider initializing with value', 'SessionProvider', {
-        hasChildren: !!children
+        hasChildren: !!children,
+        previouslyInitialized: hasInitializedRef.current,
+        initCount: initializationCountRef.current
     });
+    
+    // Increment our initialization counter
+    initializationCountRef.current += 1;
     
     // Access other contexts
     const { sessionId, isAuthenticated, isInitializing: authInitializing, initializeSession } = useAuth('SessionProvider');
@@ -158,6 +190,7 @@ export const SessionProvider = ({ children }) => {
     logger.debug('Auth context in SessionProvider:', 'SessionProvider', {
         hasSessionId: !!sessionId,
         sessionId: sessionId,
+        sessionIdType: typeof sessionId,
         isAuthenticated,
         authInitializing
     });
@@ -165,7 +198,9 @@ export const SessionProvider = ({ children }) => {
     // Track dependency state
     trackContextInitialization('SessionContext', 'update', {
         hasSessionId: !!sessionId,
+        sessionIdType: typeof sessionId,
         hasModelName: !!modelName,
+        modelNameType: typeof modelName,
         hasAuthData: isAuthenticated,
         authStillInitializing: authInitializing,
         modelStillLoading: modelLoading
@@ -189,6 +224,7 @@ export const SessionProvider = ({ children }) => {
     const setIsReady = (value) => dispatch({ type: SESSION_ACTIONS.SET_READY, payload: value });
     const setError = (value) => dispatch({ type: SESSION_ACTIONS.SET_ERROR, payload: value });
     const incrementSettingsVersion = () => dispatch({ type: SESSION_ACTIONS.INCREMENT_SETTINGS_VERSION });
+    const setSessionId = (value) => dispatch({ type: SESSION_ACTIONS.SET_SESSION_ID, payload: value });
     const setPersona = (value) => dispatch({ type: SESSION_ACTIONS.SET_PERSONA, payload: value });
     const setCustomPrompt = (value) => dispatch({ type: SESSION_ACTIONS.SET_CUSTOM_PROMPT, payload: value });
     const setPersonas = (value) => dispatch({ type: SESSION_ACTIONS.SET_PERSONAS, payload: value });
@@ -198,6 +234,10 @@ export const SessionProvider = ({ children }) => {
     
     // Ref to track dependency initialization
     const dependenciesInitializedRef = useRef(false);
+    
+    // Refs to track the last values of sessionId and modelName to avoid effect re-runs
+    const lastSessionIdRef = useRef(sessionId);
+    const lastModelNameRef = useRef(modelName);
     
     // Format the entire chat for copying
     const getChatCopyContent = () => {
@@ -225,9 +265,16 @@ export const SessionProvider = ({ children }) => {
 
     // Fetch initial data (personas, tools)
     const fetchInitialData = async () => {
+        // LOOP PREVENTION: Only run fetchInitialData once
+        if (hasInitializedRef.current) {
+            logger.debug('Skipping fetchInitialData - already initialized', 'SessionContext');
+            return;
+        }
+        
         try {
             logger.info('Starting fetchInitialData', 'SessionContext');
             trackContextInitialization('SessionContext', 'update', { operation: 'fetchInitialData:start' });
+            updateContext('SessionContext', { status: 'fetching-initial-data' }, 'fetchInitialData');
             
             if (!API_URL) {
                 const error = 'API_URL is undefined. Please check your environment variables.';
@@ -235,8 +282,7 @@ export const SessionProvider = ({ children }) => {
                 throw new Error(error);
             }
             setIsLoading(true);
-            setIsInitialized(false);
-
+            
             // Parallel fetching using apiService
             logger.debug('Fetching personas and tools in parallel', 'SessionContext');
             const startTime = performance.now();
@@ -271,6 +317,9 @@ export const SessionProvider = ({ children }) => {
 
             setIsInitialized(true);
             
+            // Mark that we've initialized to prevent loops
+            hasInitializedRef.current = true;
+            
             trackContextInitialization('SessionContext', 'update', {
                 operation: 'fetchInitialData:success',
                 personasLoaded: personasData?.length || 0,
@@ -279,6 +328,11 @@ export const SessionProvider = ({ children }) => {
                     personasData.find(p => p.name === 'default')?.name || personasData[0].name
                 ) : null
             });
+            
+            updateContext('SessionContext', { 
+                status: 'initial-data-fetched',
+                isInitialized: true
+            }, 'fetchInitialData');
         } catch (err) {
             logger.error('Error fetching initial data', 'SessionContext', { error: err.message, stack: err.stack });
             setError(`Failed to load initial data: ${err.message}`);
@@ -288,6 +342,8 @@ export const SessionProvider = ({ children }) => {
                 error: err.message,
                 stack: err.stack
             });
+            
+            contextError('SessionContext', err, 'fetchInitialData');
         } finally {
             setIsLoading(false);
             logger.debug('fetchInitialData completed', 'SessionContext', { 
@@ -321,9 +377,18 @@ export const SessionProvider = ({ children }) => {
                 modelName, 
                 persona 
             });
+            
+            updateContext('SessionContext', { 
+                status: 'initializing-agent',
+                attemptingWithSessionId: sessionId,
+                modelName
+            }, 'initializeAgentSession');
+            
             trackContextInitialization('SessionContext', 'update', { 
                 operation: 'initializeAgentSession:start',
                 sessionId: !!sessionId,
+                sessionIdValue: sessionId,
+                sessionIdType: typeof sessionId,
                 modelName
             });
             
@@ -337,7 +402,10 @@ export const SessionProvider = ({ children }) => {
             // If we have an existing sessionId, include it for reconnection
             if (sessionId) {
                 initPayload.ui_session_id = sessionId;
-                logger.debug('Using existing session ID for initialization', 'SessionContext', { sessionId });
+                logger.debug('Using existing session ID for initialization', 'SessionContext', { 
+                    sessionId,
+                    sessionIdType: typeof sessionId 
+                });
             }
             
             // Make the API call to initialize the agent
@@ -349,6 +417,7 @@ export const SessionProvider = ({ children }) => {
                 responseType: typeof response,
                 hasUiSessionId: !!(response && response.ui_session_id),
                 uiSessionId: response && response.ui_session_id ? response.ui_session_id : null,
+                uiSessionIdType: response && response.ui_session_id ? typeof response.ui_session_id : 'undefined',
                 rawResponse: JSON.stringify(response)
             });
             
@@ -357,6 +426,9 @@ export const SessionProvider = ({ children }) => {
                 // Success - we got a session ID back
                 logger.info('Agent session initialized successfully', 'SessionContext', { 
                     responseSessionId: response.ui_session_id,
+                    responseSessionIdType: typeof response.ui_session_id,
+                    currentSessionId: sessionId,
+                    currentSessionIdType: typeof sessionId,
                     matchesExisting: response.ui_session_id === sessionId
                 });
                 
@@ -364,7 +436,8 @@ export const SessionProvider = ({ children }) => {
                 if (response.ui_session_id !== sessionId) {
                     logger.info('Found new session ID, updating app state', 'SessionContext', {
                         newSessionId: response.ui_session_id,
-                        oldSessionId: sessionId
+                        oldSessionId: sessionId,
+                        areSameType: typeof response.ui_session_id === typeof sessionId
                     });
                     
                     // Use our helper to update the session ID everywhere
@@ -379,6 +452,12 @@ export const SessionProvider = ({ children }) => {
                 setIsReady(true);
                 setError(null);
                 
+                updateContext('SessionContext', {
+                    status: 'agent-initialized',
+                    sessionId: response.ui_session_id,
+                    isReady: true
+                }, 'initializeAgentSession');
+                
                 trackContextInitialization('SessionContext', 'update', { 
                     operation: 'initializeAgentSession:success',
                     sessionId: response.ui_session_id,
@@ -392,6 +471,12 @@ export const SessionProvider = ({ children }) => {
                 logger.error(error, 'SessionContext', { response });
                 setError(`Session initialization failed: ${error}`);
                 setIsReady(false);
+                
+                updateContext('SessionContext', {
+                    status: 'initialization-failed',
+                    error,
+                    response: JSON.stringify(response)
+                }, 'initializeAgentSession');
                 
                 trackContextInitialization('SessionContext', 'error', { 
                     operation: 'initializeAgentSession',
@@ -409,6 +494,8 @@ export const SessionProvider = ({ children }) => {
             });
             setIsReady(false);
             setError(`Session initialization failed: ${err.message}`);
+            
+            contextError('SessionContext', err, 'initializeAgentSession');
             
             trackContextInitialization('SessionContext', 'error', { 
                 operation: 'initializeAgentSession',
@@ -516,76 +603,51 @@ export const SessionProvider = ({ children }) => {
     };
 
     // --- Effects ---
+    // Initial setup effect - runs ONCE on mount
     useEffect(() => {
-        logger.debug('SessionProvider mounted, checking dependencies', 'SessionContext', {
+        logger.debug('SessionProvider mounted, initial setup effect running', 'SessionContext', {
             authInitializing,
-            modelLoading
+            modelLoading,
+            initCount: initializationCountRef.current
+        });
+        
+        // Mark the component as mounted
+        updateContext('SessionContext', { 
+            status: 'mounted',
+            initCount: initializationCountRef.current 
+        }, 'mount-effect');
+        
+        return () => {
+            logger.debug('SessionProvider unmounting', 'SessionContext');
+            updateContext('SessionContext', { status: 'unmounting' }, 'cleanup-effect');
+        };
+    }, []); // Empty deps array = run once on mount
+
+    // Effect to fetch initial data when dependencies are ready
+    useEffect(() => {
+        logger.debug('Dependency readiness check for fetchInitialData', 'SessionContext', {
+            authInitializing,
+            modelLoading,
+            alreadyInitialized: hasInitializedRef.current
         });
         
         // Only proceed with fetchInitialData if auth and model contexts are ready
-        if (!authInitializing && !modelLoading) {
+        // AND we haven't initialized yet
+        if (!authInitializing && !modelLoading && !hasInitializedRef.current) {
             logger.debug('Dependencies ready, fetching initial data', 'SessionContext', {
                 hasSessionId: !!sessionId,
                 hasModelName: !!modelName
             });
             
             fetchInitialData().then(() => {
-                // Always mark the context as complete after initial data fetch
-                // The initialization was successful even if we didn't get data
-                setIsInitialized(true);
-                trackContextInitialization('SessionContext', 'complete', {
-                    success: true,
-                    isInitialized: true,
-                    isReady,
-                    hasTools: availableTools?.categories?.length > 0,
-                    hasPersonas: personas?.length > 0,
-                    dependenciesInitialized: true
-                });
-                
                 // After fetching initial data, we need to initialize the agent session
                 if (sessionId && modelName) {
                     logger.info('Initial data loaded, now initializing agent session with API', 'SessionContext');
-                    initializeAgentSession().then(success => {
-                        if (success) {
-                            logger.info('Agent session initialized successfully after initial data load', 'SessionContext');
-                            // Now fetch agent tools since we're properly initialized
-                            fetchAgentTools();
-                        }
-                    }).catch(err => {
-                        logger.error('Failed to initialize agent after initial data load', 'SessionContext', { 
-                            error: err.message, 
-                            stack: err.stack 
-                        });
-                    });
+                    initializeAgentSession();
                 }
-            }).catch(err => {
-                logger.error('Fatal error in fetchInitialData', 'SessionContext', { 
-                    error: err.message, 
-                    stack: err.stack 
-                });
-                
-                // Set initialized even with error to prevent UI blockage
-                setIsInitialized(true);
-                setError(`Error initializing session: ${err.message}`);
-                
-                trackContextInitialization('SessionContext', 'complete', {
-                    success: false,
-                    error: err.message,
-                    isInitialized: true,
-                    errorRecovery: true
-                });
-            });
-        } else {
-            logger.debug('Waiting for dependencies to initialize before fetching data', 'SessionContext', {
-                authInitializing,
-                modelLoading
             });
         }
-        
-        return () => {
-            logger.debug('SessionProvider unmounting', 'SessionContext');
-        };
-    }, [authInitializing, modelLoading]);
+    }, [authInitializing, modelLoading]); // Only rerun when these dependencies change
 
     // Helper to update session ID across all relevant places
     const updateSessionIdAcrossApp = async (newSessionId) => {
@@ -596,7 +658,9 @@ export const SessionProvider = ({ children }) => {
         
         logger.info('Updating session ID across application', 'SessionContext', {
             newSessionId,
-            oldSessionId: sessionId
+            oldSessionId: sessionId,
+            newSessionIdType: typeof newSessionId,
+            oldSessionIdType: typeof sessionId
         });
         
         try {
@@ -614,12 +678,24 @@ export const SessionProvider = ({ children }) => {
                 logger.error('initializeSession function not available from AuthContext', 'SessionContext');
             }
             
-            // 3. Additional logging
+            // 3. Update our own SessionContext state
+            setSessionId(newSessionId);
+            
+            // 4. Additional logging
             logger.debug('Session ID updated across application', 'SessionContext', {
                 newSessionId,
                 savedToStorage: storedSuccessfully,
-                updatedAuthContext: typeof initializeSession === 'function'
+                updatedAuthContext: typeof initializeSession === 'function',
+                updatedSessionContext: true
             });
+            
+            // 5. Update our tracking system
+            updateContext('SessionContext', {
+                status: 'session-id-updated',
+                sessionId: newSessionId,
+                storageUpdated: storedSuccessfully,
+                authContextUpdated: typeof initializeSession === 'function'
+            }, 'updateSessionIdAcrossApp');
             
             return true;
         } catch (err) {
@@ -631,8 +707,49 @@ export const SessionProvider = ({ children }) => {
         }
     };
 
+    // Effect to synchronize sessionId from AuthContext into our SessionContext state
+    useEffect(() => {
+        // Important: Skip first run and runs where the sessionId hasn't actually changed
+        // This helps break dependency cycles
+        if (sessionId === state.sessionId || sessionId === lastSessionIdRef.current) {
+            // Session ID hasn't changed, just update the ref
+            lastSessionIdRef.current = sessionId;
+            return;
+        }
+        
+        // When sessionId from AuthContext changes, update our reducer state
+        logger.info('Session ID changed in AuthContext, updating SessionContext state', 'SessionContext', {
+            authSessionId: sessionId,
+            authSessionIdType: typeof sessionId,
+            currentStateSessionId: state.sessionId,
+            currentStateSessionIdType: typeof state.sessionId
+        });
+        
+        // Update our ref to the latest value
+        lastSessionIdRef.current = sessionId;
+        
+        // Update our state
+        setSessionId(sessionId);
+        
+        // Track this change
+        updateContext('SessionContext', {
+            status: 'session-id-sync-from-auth',
+            sessionIdFromAuth: sessionId,
+            currentStateSessionId: state.sessionId
+        }, 'sessionId-sync-effect');
+    }, [sessionId, state.sessionId]);
+    
     // Effect to detect when sessionId and model are available but agent isn't initialized
     useEffect(() => {
+        // Skip if the values haven't actually changed, preventing unnecessary reruns
+        if (sessionId === lastSessionIdRef.current && modelName === lastModelNameRef.current) {
+            return;
+        }
+        
+        // Update our refs to track the latest values
+        lastSessionIdRef.current = sessionId;
+        lastModelNameRef.current = modelName;
+        
         // This effect handles the case where we get auth and model contexts ready
         // after SessionContext is already mounted
         const initializeAgentIfNeeded = async () => {
@@ -640,10 +757,19 @@ export const SessionProvider = ({ children }) => {
             if (sessionId && modelName && !isReady && isInitialized) {
                 logger.info('Dependencies changed - sessionId and modelName available, initializing agent', 'SessionContext', {
                     sessionId, 
+                    sessionIdType: typeof sessionId,
                     modelName,
                     isReady,
                     isInitialized
                 });
+                
+                updateContext('SessionContext', {
+                    status: 'dependencies-changed-initializing-agent',
+                    sessionId,
+                    modelName,
+                    isReady,
+                    isInitialized
+                }, 'dependency-change-effect');
                 
                 try {
                     // Initialize the agent with the API
@@ -675,6 +801,13 @@ export const SessionProvider = ({ children }) => {
                 modelName
             });
             
+            updateContext('SessionContext', {
+                status: 'session-ready-fetching-tools',
+                sessionId,
+                isAuthenticated,
+                modelName
+            }, 'tools-fetch-effect');
+            
             fetchAgentTools().then(success => {
                 logger.debug('Agent tools fetch completed', 'SessionContext', { success });
                 
@@ -687,6 +820,12 @@ export const SessionProvider = ({ children }) => {
                     hasTools: success,
                     dependenciesInitialized: true
                 });
+                
+                updateContext('SessionContext', {
+                    status: 'tools-fetched-context-ready',
+                    success,
+                    toolCount: activeTools?.length || 0
+                }, 'tools-fetch-completed');
             }).catch(err => {
                 logger.error('Error fetching agent tools', 'SessionContext', { 
                     error: err.message, 
@@ -697,7 +836,7 @@ export const SessionProvider = ({ children }) => {
     }, [sessionId, isReady, isInitialized]);
 
     // Create a value object with all the state and actions
-    const contextValue = {
+    const contextValue = useMemo(() => ({
         // State from reducer
         ...state,
         
@@ -721,11 +860,23 @@ export const SessionProvider = ({ children }) => {
         getChatCopyContent,
         getChatCopyHTML,
         setMessages
-    };
+    }), [state]); // Only recompute when state changes
+
+    // Track context value updates
+    useEffect(() => {
+        updateContext('SessionContext', contextValue, 'context-value-update');
+    }, [contextValue]);
 
     return (
         <SessionContext.Provider value={contextValue}>
-            <div data-session-provider="mounted" data-session-initialized={isInitialized} style={{ display: 'none' }}>
+            <div 
+                data-session-provider="mounted" 
+                data-session-initialized={isInitialized} 
+                data-session-ready={isReady}
+                data-session-id={state.sessionId || 'missing'}
+                data-auth-session-id={sessionId || 'missing'}
+                style={{ display: 'none' }}
+            >
                 SessionProvider diagnostic element
             </div>
             {children}

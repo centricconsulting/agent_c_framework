@@ -47,21 +47,26 @@ const ChatPage = () => {
       timestamp: new Date().toISOString()
     });
     
-    // Also track specific chat interface rendering decision
+    // Also track specific chat interface rendering decision with proper type handling
     trackChatInterfaceRendering('page-render-check', {
-      hasSessionId: !!sessionId,
+      sessionIdType: typeof sessionId,
+      sessionIdValue: sessionId,
+      hasValidSessionId,
       isInitialized,
       isReady,
       hasError: !!error,
       errorMessage: error,
       isLoading,
-      shouldRender: !!sessionId && !!isInitialized,
+      shouldRender: hasValidSessionId && !!isInitialized,
       timestamp: new Date().toISOString()
     });
     
-    // Log this to console for immediate visibility
+    // Log this to console for immediate visibility with proper type information
     console.log('🔎 ChatPage state:', {
-      sessionId: !!sessionId,
+      sessionId, // Log the actual value
+      sessionIdType: typeof sessionId,
+      sessionIdLength: typeof sessionId === 'string' ? sessionId.length : 0,
+      hasValidSessionId,
       isInitialized,
       isReady,
       error: error || 'none',
@@ -70,10 +75,13 @@ const ChatPage = () => {
     });
   }, [sessionId, isInitialized, isReady, error, isLoading]);
 
-  // Log rendering decision - ensure values are booleans with double negation
-  const shouldRenderChatInterface = !!sessionId && !!isInitialized;
+  // Log rendering decision with proper type handling
+  // Check if sessionId is a string (UUID) rather than using it as a boolean
+  const hasValidSessionId = typeof sessionId === 'string' && sessionId.length > 0;
+  const shouldRenderChatInterface = hasValidSessionId && !!isInitialized;
   console.log('🔎 ChatPage rendering decision:', {
-    sessionId: !!sessionId,
+    sessionId, // Log the actual sessionId value
+    hasValidSessionId,
     isInitialized: !!isInitialized,
     shouldRenderChatInterface,
     error: error || 'none',
@@ -83,8 +91,11 @@ const ChatPage = () => {
   // Add global diagnostic functions
   if (typeof window !== 'undefined') {
     window.checkChatVisibility = () => {
+      const hasValidSessionId = typeof sessionId === 'string' && sessionId.length > 0;
       console.log('Chat visibility check:', {
-        sessionId: !!sessionId,
+        sessionId, // Log the actual value
+        sessionIdType: typeof sessionId,
+        hasValidSessionId,
         isInitialized: !!isInitialized,
         shouldRender: shouldRenderChatInterface,
         timestamp: new Date().toISOString()
@@ -94,12 +105,15 @@ const ChatPage = () => {
   }
 
   useEffect(() => {
-    // Record chat interface render attempts for debugging
+    // Record chat interface render attempts for debugging with proper type information
     if (typeof window !== 'undefined') {
+      const hasValidSessionId = typeof sessionId === 'string' && sessionId.length > 0;
       window.__CHAT_INTERFACE_RENDER_CHECK = {
         timestamp: new Date().toISOString(),
         shouldRender: shouldRenderChatInterface,
-        sessionId: !!sessionId,
+        sessionId, // Store actual value
+        sessionIdType: typeof sessionId,
+        hasValidSessionId,
         isInitialized,
         isReady,
         error: error || null
@@ -163,14 +177,16 @@ const ChatPage = () => {
       {/* Diagnostic element - invisible but helps with debugging */}
       <div 
         data-chat-page="true"
-        data-should-render-chat="false"
-        data-session-id={!!sessionId ? 'true' : 'false'}
+        data-should-render-chat={shouldRenderChatInterface ? 'true' : 'false'}
+        data-session-id-type={typeof sessionId}
+        data-session-id-valid={(typeof sessionId === 'string' && sessionId.length > 0) ? 'true' : 'false'}
+        data-session-id-value={typeof sessionId === 'string' ? sessionId : 'invalid'}
         data-initialized={!!isInitialized ? 'true' : 'false'}
         data-ready={!!isReady ? 'true' : 'false'}
         style={{ display: 'none' }}
       />
       
-      {shouldRenderChatInterface === true ? (
+      {shouldRenderChatInterface ? (
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <div className="flex-1 overflow-hidden flex flex-col">
             {trackChatInterfaceRendering('about-to-render', { shouldRender: true })}
