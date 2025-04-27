@@ -125,7 +125,7 @@ class ClaudeChatAgent(BaseAgent):
         messages = opts["completion_opts"]["messages"]
 
         delay = 1  # Initial delay between retries
-        async with self.semaphore:
+        async with (self.semaphore):
             interaction_id = await self._raise_interaction_start(**callback_opts)
             while delay <= self.max_delay:
                 try:
@@ -147,9 +147,12 @@ class ClaudeChatAgent(BaseAgent):
                     # Exponential backoff handled in a helper method
                     delay = await self._handle_retryable_error(e, delay, callback_opts)
                 except Exception as e:
-                    await self._raise_system_event(f"Exception calling `client.messages.stream`.\n\n{e}\n", **callback_opts)
-                    await self._raise_completion_end(opts["completion_opts"], stop_reason="exception", **callback_opts)
-                    return []
+                    if "Overloaded" in str(e):
+                        delay = await self._handle_retryable_error(e, delay, callback_opts)
+                    else:
+                        await self._raise_system_event(f"Exception calling `client.messages.stream`.\n\n{e}\n", **callback_opts)
+                        await self._raise_completion_end(opts["completion_opts"], stop_reason="exception", **callback_opts)
+                        return []
 
         return messages
 
