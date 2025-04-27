@@ -836,31 +836,46 @@ export const SessionProvider = ({ children }) => {
     }, [sessionId, isReady, isInitialized]);
 
     // Create a value object with all the state and actions
-    const contextValue = useMemo(() => ({
-        // State from reducer
-        ...state,
+    const contextValue = useMemo(() => {
+        // Get modelConfigs from ModelContext to ensure it's always available
+        const { modelConfigs } = useModel('SessionProvider');
         
-        // Expose dispatch for advanced usage
-        dispatch,
+        // Log modelConfigs for debugging
+        logger.debug('Creating SessionContext value with modelConfigs from ModelContext', 'SessionContext', {
+            hasModelConfigs: Array.isArray(modelConfigs),
+            modelConfigsLength: Array.isArray(modelConfigs) ? modelConfigs.length : 0,
+            modelConfigsType: typeof modelConfigs
+        });
         
-        // Action creators
-        setIsOptionsOpen,
-        setIsStreaming,
-        setIsLoading,
-        setIsInitialized,
-        setIsReady,
-        setError,
-        
-        // Additional methods
-        initializeAgentSession,
-        fetchAgentTools,
-        updateAgentSettings,
-        handleEquipTools,
-        handleProcessingStatus,
-        getChatCopyContent,
-        getChatCopyHTML,
-        setMessages
-    }), [state]); // Only recompute when state changes
+        return {
+            // State from reducer
+            ...state,
+            
+            // Expose dispatch for advanced usage
+            dispatch,
+            
+            // Action creators
+            setIsOptionsOpen,
+            setIsStreaming,
+            setIsLoading,
+            setIsInitialized,
+            setIsReady,
+            setError,
+            
+            // Additional methods
+            initializeAgentSession,
+            fetchAgentTools,
+            updateAgentSettings,
+            handleEquipTools,
+            handleProcessingStatus,
+            getChatCopyContent,
+            getChatCopyHTML,
+            setMessages,
+            
+            // Add modelConfigs directly from ModelContext to ensure it's always available
+            modelConfigs: Array.isArray(modelConfigs) ? modelConfigs : []
+        };
+    }, [state, modelName]); // Recompute when state or modelName changes
 
     // Track context value updates
     useEffect(() => {

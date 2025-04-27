@@ -47,6 +47,38 @@ function PersonaSelector({
                              onUpdateSettings,
                              isInitialized
                          }) {
+    // Defensive check for modelConfigs - ensure it's an array
+    const [safeModelConfigs, setSafeModelConfigs] = useState([]);
+    
+    // Initialize with a default empty array immediately to prevent undefined errors
+    React.useEffect(() => {
+        console.log('PersonaSelector received modelConfigs:', modelConfigs);
+        if (Array.isArray(modelConfigs)) {
+            setSafeModelConfigs(modelConfigs);
+        } else if (modelConfigs && typeof modelConfigs === 'object') {
+            // Try to convert object to array if possible
+            setSafeModelConfigs(Object.values(modelConfigs));
+        } else {
+            console.warn('PersonaSelector: modelConfigs is not an array or valid object, using empty array');
+            setSafeModelConfigs([]);
+        }
+    }, [modelConfigs]);
+    
+    // CRITICAL: Ensure modelConfigs is never undefined before any operations
+    
+    useEffect(() => {
+        if (modelConfigs && Array.isArray(modelConfigs)) {
+            // It's already an array, use it directly
+            setSafeModelConfigs(modelConfigs);
+        } else if (modelConfigs && typeof modelConfigs === 'object') {
+            console.error('PersonaSelector received modelConfigs that is not an array:', modelConfigs);
+            // Try to convert to array if possible
+            setSafeModelConfigs(Object.values(modelConfigs));
+        } else {
+            console.error('PersonaSelector received undefined or invalid modelConfigs');
+            setSafeModelConfigs([]); // Default to empty array
+        }
+    }, [modelConfigs]);
     // Local UI state only
     const [error, setError] = useState(null);
     const [selectedPersona, setSelectedPersona] = useState(persona_name || 'default');
@@ -114,14 +146,28 @@ function PersonaSelector({
      * @param {string} selectedValue - Selected model identifier
      */
     const handleModelChange = useCallback((selectedValue) => {
-        const model = modelConfigs.find(model => model.id === selectedValue);
-        if (model) {
-            onUpdateSettings('MODEL_CHANGE', {
-                modelName: model.id,
-                backend: model.backend
-            });
+        // Defensive check: verify safeModelConfigs exists and is an array
+        if (!Array.isArray(safeModelConfigs)) {
+            console.error('handleModelChange: safeModelConfigs is not an array:', safeModelConfigs);
+            return;
         }
-    }, [modelConfigs, onUpdateSettings]);
+
+        try {
+            // Use our safe model configs array that's guaranteed to be an array
+            const model = safeModelConfigs.find(model => model && model.id === selectedValue);
+            if (model && model.id && model.backend) {
+                console.log('Selected model:', model.id);
+                onUpdateSettings('MODEL_CHANGE', {
+                    modelName: model.id,
+                    backend: model.backend
+                });
+            } else {
+                console.error(`Could not find valid model with ID ${selectedValue} in available models`);
+            }
+        } catch (error) {
+            console.error('Error in handleModelChange:', error);
+        }
+    }, [safeModelConfigs, onUpdateSettings]);
 
     return (
         <Card className="persona-selector-card" role="region" aria-label="Persona and model settings">
@@ -202,7 +248,10 @@ function PersonaSelector({
                                 <SelectValue placeholder="Select model"/>
                             </SelectTrigger>
                             <SelectContent className="persona-selector-select-content">
-                                {Object.entries(modelConfigs.reduce((acc, model) => {
+                                {safeModelConfigs && safeModelConfigs.length > 0 ? Object.entries(safeModelConfigs.reduce((acc, model) => {
+                                    // Skip any models that don't have a backend property
+                                    if (!model || !model.backend) return acc;
+                                    
                                     if (!acc[model.backend]) acc[model.backend] = [];
                                     acc[model.backend].push(model);
                                     return acc;
@@ -215,7 +264,9 @@ function PersonaSelector({
                                         >
                                             {vendor.toUpperCase()}
                                         </SelectItem>
-                                        {vendorModels.map((model) => (
+                                        {vendorModels && vendorModels.length > 0 ? 
+                                          vendorModels.map((model) => (
+                                            model && model.id ? (
                                             <TooltipProvider key={model.id}>
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
@@ -234,9 +285,10 @@ function PersonaSelector({
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
-                                        ))}
+                                            ) : null
+                                          )) : null}
                                     </React.Fragment>
-                                ))}
+                                )) : <SelectItem value="no-models" disabled>No models available</SelectItem>}
                             </SelectContent>
                         </Select>
                     </div>

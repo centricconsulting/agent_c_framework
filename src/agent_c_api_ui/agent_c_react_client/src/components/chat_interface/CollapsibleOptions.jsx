@@ -168,7 +168,7 @@ CollapsibleOptions.propTypes = {
     customPrompt: PropTypes.string,
     temperature: PropTypes.number,
     modelName: PropTypes.string,
-    modelConfigs: PropTypes.object,
+    modelConfigs: PropTypes.array.isRequired, // Must be an array of model configurations, not an object
     sessionId: PropTypes.string.isRequired,
     personas: PropTypes.array,
     availableTools: PropTypes.array,
