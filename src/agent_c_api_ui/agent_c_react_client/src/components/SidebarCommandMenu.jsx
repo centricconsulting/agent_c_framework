@@ -1,7 +1,8 @@
 import React from 'react';
 import { CommandIcon, Settings } from 'lucide-react';
-import { useContext, useState, useEffect } from 'react';
-import { SessionContext } from '../contexts/SessionContext';
+import { useState, useEffect } from 'react';
+import { useSessionContext } from '../hooks/use-session-context';
+import { useTheme } from '../hooks/use-theme';
 import { Button } from './ui/button';
 import {
   CommandDialog,
@@ -24,15 +25,17 @@ import { formatChatAsHTML, createClipboardContent } from './chat_interface/utils
 const SidebarCommandMenu = () => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { theme, setTheme: handleThemeChange } = useTheme('SidebarCommandMenu');
   const { 
-    theme, 
-    handleThemeChange, 
     messages, 
-    sessionId, 
     settingsVersion,
     getChatCopyContent,
     getChatCopyHTML
-  } = useContext(SessionContext);
+  } = useSessionContext('SidebarCommandMenu');
+  
+  // We need the sessionId from AuthContext but we can use useSessionContext for now
+  // until we update this component to use AuthContext directly
+  const { sessionId } = useSessionContext('SidebarCommandMenu');
 
   useEffect(() => {
     // Debug logging

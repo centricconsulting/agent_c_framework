@@ -147,7 +147,7 @@ class ClaudeChatAgent(BaseAgent):
                     # Exponential backoff handled in a helper method
                     delay = await self._handle_retryable_error(e, delay, callback_opts)
                 except Exception as e:
-                    if "Overloaded" in str(e):
+                    if "overloaded" in str(e).lower():
                         delay = await self._handle_retryable_error(e, delay, callback_opts)
                     else:
                         await self._raise_system_event(f"Exception calling `client.messages.stream`.\n\n{e}\n", **callback_opts)

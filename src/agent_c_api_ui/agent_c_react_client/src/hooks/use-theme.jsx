@@ -1,13 +1,31 @@
 /**
- * Custom hook for accessing the ThemeContext
+ * Temporary placeholder for the actual useTheme hook
+ * This will be implemented in a future PR
  */
 
-import { useTheme as useThemeContext } from '../contexts/ThemeContext';
+import { useContext } from 'react';
+import { ThemeContext } from '../contexts/ThemeContext';
+import logger from '../lib/logger';
 
 /**
- * Hook that provides access to theme state and theme change functionality
- * @returns {Object} The ThemeContext value { theme, setTheme }
+ * Hook for using the ThemeContext
+ * @param {string} componentName - Component name for logging
+ * @returns {Object} Theme context value
  */
-export const useTheme = () => {
-  return useThemeContext();
+export const useTheme = (componentName = 'unknown') => {
+  try {
+    const context = useContext(ThemeContext);
+    
+    if (context === undefined) {
+      const error = 'useTheme must be used within a ThemeProvider';
+      logger.error(error, componentName);
+      throw new Error(error);
+    }
+    
+    logger.debug(`${componentName} using ThemeContext`, 'useTheme');
+    return context;
+  } catch (error) {
+    logger.error(`useTheme error in ${componentName}`, 'useTheme', { error: error.message });
+    throw error;
+  }
 };

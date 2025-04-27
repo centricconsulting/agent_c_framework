@@ -6,14 +6,6 @@ import storageService from '@/lib/storageService';
 import { useAuth } from '@/hooks/use-auth';
 import { useModel } from '@/hooks/use-model';
 
-if (!API_URL) {
-    logger.error('API_URL is not defined! Environment variables may not be loading correctly.', 'SessionContext', {
-        'import.meta.env.VITE_API_URL': import.meta.env.VITE_API_URL,
-        'process.env.VITE_API_URL': process.env?.VITE_API_URL,
-        'NODE_ENV': process.env?.NODE_ENV
-    });
-}
-
 export const SessionContext = createContext();
 
 /**
@@ -78,7 +70,7 @@ export const SessionProvider = ({ children }) => {
         const clipboardContent = createClipboardContent(messages);
         return clipboardContent.html;
     };
-
+    
     // Fetch initial data (personas, tools)
     const fetchInitialData = async () => {
         try {
@@ -132,8 +124,6 @@ export const SessionProvider = ({ children }) => {
             });
         }
     };
-
-
 
     // Fetch agent tools for the current session
     const fetchAgentTools = async () => {
@@ -220,9 +210,6 @@ export const SessionProvider = ({ children }) => {
         logger.debug('Processing status updated', 'SessionContext', { isStreaming: status });
         setIsStreaming(status);
     };
-    
-    // Handle theme change
-    // Theme handling moved to ThemeContext
 
     // --- Effects ---
     useEffect(() => {

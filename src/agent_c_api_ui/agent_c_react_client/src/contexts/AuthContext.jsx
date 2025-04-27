@@ -1,9 +1,15 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { API_URL } from '@/config/config';
+import React, { createContext, useState, useEffect, useRef } from 'react';
 import logger from '@/lib/logger';
+import { apiService } from '@/lib/apiService';
+import { storageService } from '@/lib/storageService';
 
 // Create the context
 export const AuthContext = createContext();
+
+// Constants
+const SESSION_ID_KEY = 'ui_session_id';
+const INIT_TIMEOUT = 5000; // ms for initial auth timeout
+const SESSION_INIT_TIMEOUT = 10000; // ms for session initialization timeout
 
 /**
  * AuthProvider handles session initialization and authentication state
@@ -16,56 +22,57 @@ export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isInitializing, setIsInitializing] = useState(true);
     const [authError, setAuthError] = useState(null);
+    
+    // References for timeouts
+    const initTimeoutRef = useRef(null);
+    const sessionInitTimeoutRef = useRef(null);
 
     // Initialize auth from localStorage on mount
     useEffect(() => {
+        const initStartTime = performance.now();
         logger.init('AuthProvider initializing', 'AuthContext');
-        console.log('🚀 AuthProvider initializing');
         
         // Set a timeout to ensure initialization doesn't get stuck
-        const initTimeout = setTimeout(() => {
+        initTimeoutRef.current = setTimeout(() => {
             if (isInitializing) {
                 logger.warn('Auth initialization timed out after 5 seconds', 'AuthContext');
-                console.warn('⚠️ AUTH TIMEOUT: Auth initialization timed out after 5 seconds');
                 setIsInitializing(false);
-                console.log('💢 DIAGNOSTIC: Force-completing auth initialization after timeout');
             }
-        }, 5000);
+        }, INIT_TIMEOUT);
         
         // Try to load session from localStorage
-        let storedSessionId;
-        try {
-            storedSessionId = localStorage.getItem('ui_session_id');
-            logger.storageOp('getItem', 'ui_session_id', true);
-            console.log('📝 Found localStorage session ID:', storedSessionId);
-        } catch (err) {
-            logger.error('Error reading from localStorage', 'AuthContext', { error: err.message });
-            logger.storageOp('getItem', 'ui_session_id', false);
-            console.error('💢 Error reading from localStorage:', err.message);
-        }
+        const storedSessionId = storageService.get(SESSION_ID_KEY);
         
         if (storedSessionId) {
             logger.init('Found stored session ID', 'AuthContext', { sessionId: storedSessionId });
-            console.log('📝 Found stored session ID:', storedSessionId);
             setSessionId(storedSessionId);
             setIsAuthenticated(true);
         } else {
             logger.init('No stored session ID found', 'AuthContext');
-            console.log('📝 No stored session ID found, will need to create a new session');
         }
         
         // Complete initialization with a small delay to ensure state updates
         setTimeout(() => {
             setIsInitializing(false);
-            logger.init('Auth initialization complete', 'AuthContext', { hasSessionId: !!storedSessionId });
-            console.log('💡 Auth initialization complete, hasSessionId:', !!storedSessionId);
+            const initDuration = performance.now() - initStartTime;
+            logger.init('Auth initialization complete', 'AuthContext', { 
+                hasSessionId: !!storedSessionId,
+                initializationTimeMs: Math.round(initDuration)
+            });
             
             // Clear timeout if initialization completes normally
-            clearTimeout(initTimeout);
+            if (initTimeoutRef.current) {
+                clearTimeout(initTimeoutRef.current);
+                initTimeoutRef.current = null;
+            }
         }, 100);
         
         return () => {
-            clearTimeout(initTimeout);
+            // Cleanup timeouts
+            if (initTimeoutRef.current) {
+                clearTimeout(initTimeoutRef.current);
+                initTimeoutRef.current = null;
+            }
         };
     }, []);
 
@@ -83,17 +90,17 @@ export const AuthProvider = ({ children }) => {
         setAuthError(null);
         
         // Set a timeout to prevent hanging initialization
-        const initTimeout = setTimeout(() => {
-            logger.warn('Session initialization timed out after 10 seconds', 'AuthContext');
+        if (sessionInitTimeoutRef.current) {
+            clearTimeout(sessionInitTimeoutRef.current);
+        }
+        
+        sessionInitTimeoutRef.current = setTimeout(() => {
+            logger.warn('Session initialization timed out', 'AuthContext', { timeoutMs: SESSION_INIT_TIMEOUT });
             setIsInitializing(false);
-            setAuthError('Session initialization timed out after 10 seconds');
-        }, 10000);
+            setAuthError(`Session initialization timed out after ${SESSION_INIT_TIMEOUT/1000} seconds`);
+        }, SESSION_INIT_TIMEOUT);
         
         try {
-            if (!API_URL) {
-                throw new Error('API_URL is undefined. Please check your environment variables.');
-            }
-
             // Build request body
             const requestBody = { ...sessionConfig };
             
@@ -103,27 +110,12 @@ export const AuthProvider = ({ children }) => {
                 logger.debug('Using existing session ID', 'AuthContext', { sessionId });
             }
             
-            logger.debug('Session initialization request', 'AuthContext', { requestBody });
-            
-            // Make API request
-            const response = await fetch(`${API_URL}/initialize`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody)
-            });
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-            }
-
-            const data = await response.json();
+            // Make API request using our centralized API service
+            const data = await apiService.post('/initialize', requestBody);
             
             if (data.ui_session_id) {
-                // Store session in localStorage
-                localStorage.setItem('ui_session_id', data.ui_session_id);
+                // Store session in localStorage via our storage service
+                storageService.set(SESSION_ID_KEY, data.ui_session_id);
                 
                 // Update state
                 setSessionId(data.ui_session_id);
@@ -135,7 +127,11 @@ export const AuthProvider = ({ children }) => {
                 });
                 
                 // Clear the timeout since initialization succeeded
-                clearTimeout(initTimeout);
+                if (sessionInitTimeoutRef.current) {
+                    clearTimeout(sessionInitTimeoutRef.current);
+                    sessionInitTimeoutRef.current = null;
+                }
+                
                 return data.ui_session_id;
             } else {
                 throw new Error('No ui_session_id in response');
@@ -147,14 +143,17 @@ export const AuthProvider = ({ children }) => {
             });
             
             setAuthError(`Session initialization failed: ${error.message}`);
+            
             // Clear the timeout since we've handled the error
-            clearTimeout(initTimeout);
+            if (sessionInitTimeoutRef.current) {
+                clearTimeout(sessionInitTimeoutRef.current);
+                sessionInitTimeoutRef.current = null;
+            }
+            
             return null;
         } finally {
             setIsInitializing(false);
         }
-        // The timeout will be cleared in both success and error cases
-        // No need to clear it here
     };
 
     /**
@@ -163,15 +162,8 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         logger.info('Logging out, removing session', 'AuthContext', { sessionId });
         
-        try {
-            // Remove from localStorage
-            localStorage.removeItem('ui_session_id');
-            logger.debug('Session ID removed from localStorage', 'AuthContext');
-        } catch (error) {
-            logger.error('Error removing session from localStorage', 'AuthContext', { 
-                error: error.message 
-            });
-        }
+        // Remove from localStorage using our storage service
+        storageService.remove(SESSION_ID_KEY);
         
         // Reset auth state
         setSessionId(null);

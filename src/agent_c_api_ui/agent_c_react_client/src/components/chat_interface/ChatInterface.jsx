@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useContext } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { 
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SessionContext } from '@/contexts/SessionContext';
+import { useSessionContext } from '@/hooks/use-session-context';
 import { API_URL } from "@/config/config";
 import { createClipboardContent } from '@/components/chat_interface/utils/htmlChatFormatter';
 import { processMessageStream } from './utils/MessageStreamProcessor';
@@ -60,7 +60,7 @@ const ChatInterfaceInner = ({
     settingsVersion,
     isOptionsOpen,
     setIsOptionsOpen
-  } = useContext(SessionContext);
+  } = useSessionContext('ChatInterfaceInner');
   
   // State for messages and UI
   const [messages, setMessages] = useState([]);
