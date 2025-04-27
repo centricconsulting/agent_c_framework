@@ -135,6 +135,23 @@ const apiService = {
   },
   
   /**
+   * Initialize or reinitialize an agent session
+   * @param {Object} config - Agent configuration 
+   * @returns {Promise<Object>} Initialized agent session information
+   */
+  initializeAgent: (config) => {
+    logger.info('Initializing agent via API', 'apiService', { hasSessionId: !!config.ui_session_id });
+    
+    return fetchWithTimeout('/initialize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(config)
+    });
+  },
+  
+  /**
    * Update session settings
    * @param {string} sessionId - Session ID
    * @param {Object} settings - Settings to update

@@ -2,239 +2,143 @@
 
 ## Overview
 
-This guide explains how to implement the enhanced context diagnostics system to help us diagnose and resolve the application loading issues. The diagnostics system provides detailed tracking of context initialization, state changes, errors, and performance metrics.
+This document provides an overview of the context diagnostics system, which is designed to track and diagnose issues with React context initialization and app state management.
 
-## Implementation Steps
+## How the Diagnostic System Works
 
-### 1. Add the Diagnostic Utility to the Project
+1. **Global Tracking Object**: The system uses `window.__CONTEXT_DIAGNOSTIC` to store context initialization state.
 
-First, add the diagnostic utility functions to your project's existing `diagnostic.js` file:
+2. **Initialization Tracking**: Each context uses these functions to report its status:
+   - `trackContextInitialization(contextName, 'start')` - When a context begins initializing
+   - `trackContextInitialization(contextName, 'update', data)` - For progress updates
+   - `trackContextInitialization(contextName, 'error', {error: 'message'})` - For errors
+   - `trackContextInitialization(contextName, 'complete', data)` - When initialization finishes
+
+3. **Global Completion Signal**: `completeContextInitialization(success, data)` signals that all contexts are ready.
+
+## Using Diagnostic Tools
+
+### From the Browser Console
+
+1. **Get Full Diagnostic Report**:
+   ```javascript
+   window.getContextDiagnostics()
+   // or
+   window.diagnosticReport()
+   ```
+
+2. **Check Chat Interface Visibility Issues**:
+   ```javascript
+   window.checkChatVisibility()
+   ```
+
+3. **Get Model Information**:
+   ```javascript
+   window.getModelInfo()
+   ```
+
+4. **Check If a Specific Context Is Mounted**:
+   ```javascript
+   window.checkContextMounted('SessionContext')
+   ```
+
+5. **Get Raw Context Data**:
+   ```javascript
+   window.getContextData()
+   ```
+
+### Common Issues and Solutions
+
+1. **Chat Interface Not Displaying**:
+   - Check if `SessionContext` and `ModelContext` are both initialized
+   - Verify that `sessionId` exists and `isInitialized` is true
+   - Use `window.checkChatVisibility()` to diagnose
+
+2. **Missing Models**:
+   - Use `window.getModelInfo()` to see model state
+   - Check if emergency fallback model was used
+
+3. **Context Initialization Stuck**:
+   - Look for errors in specific contexts
+   - Check the initialization order for dependency issues
+
+## Adding Tracking to New Contexts
+
+When creating a new context, add these tracking calls:
 
 ```javascript
-// Add these functions to src/lib/diagnostic.js
+import { trackContextInitialization } from '@/lib/diagnostic';
 
-/**
- * Creates and initializes the context diagnostics system.
- * This should be called at application startup before any context providers.
- */
-export function initializeContextDiagnostics() {
-  // Implementation from context_diagnostic_implementation.js
-}
+export const MyNewContext = createContext();
 
-/**
- * Creates a diagnostic wrapper for a context provider function.
- */
-export function withContextDiagnostics(contextName, providerFunction) {
-  // Implementation from context_diagnostic_implementation.js
-}
-
-/**
- * Creates an error boundary component specifically for context providers.
- */
-export function ContextErrorBoundary({ contextName, children, fallback }) {
-  // Implementation from context_diagnostic_implementation.js
-}
-
-/**
- * Logs detailed context state changes for debugging.
- */
-export function logContextStateChange(contextName, prevState, nextState) {
-  // Implementation from context_diagnostic_implementation.js
-}
-
-/**
- * Creates a diagnostic wrapper for useEffect cleanup functions
- */
-export function trackContextConsumer(contextName, componentName) {
-  // Implementation from context_diagnostic_implementation.js
-}
-```
-
-### 2. Initialize Diagnostics in App.jsx
-
-Update your `App.jsx` file to initialize the diagnostics system before any context providers are rendered:
-
-```jsx
-import { initializeContextDiagnostics } from '@/lib/diagnostic';
-
-// Initialize diagnostics at the very start of the application
-if (typeof window !== 'undefined' && !window.__CONTEXT_DIAGNOSTICS) {
-  initializeContextDiagnostics();
-}
-
-function App() {
-  // Existing app code...
-}
-```
-
-### 3. Update Each Context Provider
-
-Update each context provider to use the diagnostic utilities. Here's how to modify each one:
-
-#### ThemeContext.jsx
-
-See the full example in `enhanced_theme_context_example.jsx`. Key changes include:
-
-- Recording context initialization start/success/error
-- Logging state changes
-- Adding error boundaries
-- Tracking when themes are applied
-
-#### AuthContext.jsx
-
-Make similar changes to the AuthContext:
-
-```jsx
-// In the initialization code
-if (window.__CONTEXT_DIAGNOSTICS) {
-  window.__CONTEXT_DIAGNOSTICS.recordContextStart('auth');
-}
-
-// When initialization completes successfully
-if (window.__CONTEXT_DIAGNOSTICS) {
-  window.__CONTEXT_DIAGNOSTICS.recordContextSuccess('auth', { 
-    sessionId, 
-    isAuthenticated: !!sessionId 
-  });
-}
-
-// When errors occur
-if (window.__CONTEXT_DIAGNOSTICS) {
-  window.__CONTEXT_DIAGNOSTICS.recordContextError('auth', error);
-}
-```
-
-#### ModelContext.jsx and SessionContext.jsx
-
-Apply the same pattern to the other contexts, making sure to:
-
-1. Record the start of initialization
-2. Record successful initialization with relevant state
-3. Record any errors that occur
-4. Log important state changes
-
-### 4. Update Context Hooks
-
-Enhance each context hook to track when components consume the contexts:
-
-```jsx
-export function useTheme(componentName = 'UnknownComponent') {
-  const logger = useLogger();
-  const context = useContext(ThemeContext);
+export const MyNewProvider = ({ children }) => {
+  // 1. Track start of initialization
+  trackContextInitialization('MyNewContext', 'start');
   
-  // Track this component as a consumer of ThemeContext
+  // Setup state, functions, etc.
+  
+  // 2. Track initialization progress/updates
   useEffect(() => {
-    return trackContextConsumer('theme', componentName);
-  }, [componentName]);
+    // Your initialization code
+    trackContextInitialization('MyNewContext', 'update', { 
+      someProgress: true 
+    });
+    
+    // 3. Track completion
+    trackContextInitialization('MyNewContext', 'complete', {
+      success: true,
+      importantData: data
+    });
+  }, []);
   
-  if (context === null) {
-    logger.error(`useTheme must be used within a ThemeProvider`, null, componentName);
-    throw new Error(`useTheme must be used within a ThemeProvider`);
-  }
-  
-  return context;
-}
-```
-
-### 5. Add Error Boundaries to App.jsx
-
-Wrap each context provider with an error boundary in App.jsx:
-
-```jsx
-import { ContextErrorBoundary } from '@/lib/diagnostic';
-
-function App() {
   return (
-    <ContextErrorBoundary 
-      contextName="theme"
-      fallback={(error) => (
-        // Light theme fallback UI
-        <div className="theme-error-fallback">
-          <h3>Theme Error</h3>
-          <p>{error.message}</p>
-          <button onClick={() => window.location.reload()}>Reload</button>
-        </div>
-      )}
-    >
-      <ThemeProvider>
-        <ContextErrorBoundary contextName="auth">
-          <AuthProvider>
-            <ContextErrorBoundary contextName="model">
-              <ModelProvider>
-                <ContextErrorBoundary contextName="session">
-                  <SessionProvider>
-                    {/* App content */}
-                  </SessionProvider>
-                </ContextErrorBoundary>
-              </ModelProvider>
-            </ContextErrorBoundary>
-          </AuthProvider>
-        </ContextErrorBoundary>
-      </ThemeProvider>
-    </ContextErrorBoundary>
+    <MyNewContext.Provider value={/* your value */}>
+      {/* Diagnostic element for DOM checking */}
+      <div data-my-new-provider="mounted" style={{ display: 'none' }}>
+        MyNewProvider diagnostic element
+      </div>
+      {children}
+    </MyNewContext.Provider>
   );
-}
+};
 ```
 
-### 6. Using the Diagnostics
+## Maintenance Notes
 
-Once implemented, you can access the diagnostics in the browser console:
+1. **Resetting Diagnostics**: Use `window.clearContextDiagnostics()` to reset tracking during development.
+
+2. **Error Patterns**: Common error patterns to look for:
+   - Contexts with `start` but no `complete` signal
+   - Long gaps between `start` and `complete` (> 2000ms)
+   - Multiple error signals in the same context
+
+3. **Improving Resilience**: All contexts should implement fallback mechanisms:
+   - Default/emergency data when API requests fail
+   - Clear initialization signals even when errors occur
+   - Appropriate user feedback for initialization failures
+
+## Future Improvements
+
+1. **Timeline Visualization**: Add a visual timeline of context initialization
+2. **Automated Dependency Detection**: Auto-detect context dependencies
+3. **Periodic Health Checks**: Regular checks of context health during app runtime
+4. **Expanded Self-Healing**: More automatic recovery mechanisms for common failures
+
+## Common Troubleshooting Commands
 
 ```javascript
-// Get a summary of context initialization
-window.getContextDiagnostics();
+// Full system diagnostic
+window.getContextDiagnostics()
 
-// Access the full diagnostic object
-window.__CONTEXT_DIAGNOSTICS;
+// Check if contexts appear properly mounted
+window.checkContextMounted('ThemeContext')
+window.checkContextMounted('AuthContext')
+window.checkContextMounted('ModelContext')
+window.checkContextMounted('SessionContext')
 
-// See all events in sequence
-window.__CONTEXT_DIAGNOSTICS.sequence.events;
+// Check why chat isn't visible
+window.checkChatVisibility()
 
-// Check for errors
-window.__CONTEXT_DIAGNOSTICS.errors;
+// Reset diagnostic tracking (developer tool)
+window.clearContextDiagnostics()
 ```
-
-## Debugging Loading Issues
-
-When the application fails to load, you can examine the diagnostics to identify exactly where the problem occurs:
-
-1. Look for context initialization failures in `window.__CONTEXT_DIAGNOSTICS.errors`
-2. Check the initialization sequence to see which context was initializing when the problem occurred
-3. Look for circular dependencies by examining the sequence of context consumer mounting
-4. Check for race conditions where a context is accessed before it's fully initialized
-
-## Common Issues and Solutions
-
-### 1. Context Not Initialized
-
-**Symptom**: Error "useX must be used within a XProvider"
-
-**Diagnostic**: Check sequence events to see if provider mounted before consumer
-
-**Solution**: Ensure provider is higher in the component tree than the consumer
-
-### 2. Circular Dependencies
-
-**Symptom**: Infinite render loops or unexpected context values
-
-**Diagnostic**: Examine sequence.events for unusual patterns of context initialization
-
-**Solution**: Use hooks to access contexts instead of direct imports
-
-### 3. Async Initialization Race Conditions
-
-**Symptom**: Context appears to be initialized but has default/empty values
-
-**Diagnostic**: Check timing between context success and first consumer mount
-
-**Solution**: Add loading states and prevent access until initialization completes
-
-## Next Steps
-
-After implementing the diagnostics system:
-
-1. Restart the application and check the console for diagnostic information
-2. Identify the specific issue causing the loading problem
-3. Fix the identified issue
-4. Verify all contexts initialize properly in the correct order
-5. Test all components to ensure they function correctly

@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useRef } from 'react';
 import logger from '@/lib/logger';
 import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
+import { trackContextInitialization } from '@/lib/diagnostic';
 
 // Create the context
 export const AuthContext = createContext();
@@ -32,32 +33,60 @@ export const AuthProvider = ({ children }) => {
         const initStartTime = performance.now();
         logger.init('AuthProvider initializing', 'AuthContext');
         
+        // Track the start of AuthContext initialization
+        trackContextInitialization('AuthContext', 'start', { initStartTime });
+        
         // Set a timeout to ensure initialization doesn't get stuck
         initTimeoutRef.current = setTimeout(() => {
             if (isInitializing) {
                 logger.warn('Auth initialization timed out after 5 seconds', 'AuthContext');
                 setIsInitializing(false);
+                trackContextInitialization('AuthContext', 'error', { 
+                    error: `Authentication initialization timed out after ${INIT_TIMEOUT/1000} seconds`,
+                    timeoutMs: INIT_TIMEOUT
+                });
             }
         }, INIT_TIMEOUT);
         
         // Try to load session from localStorage
-        const storedSessionId = storageService.get(SESSION_ID_KEY);
-        
-        if (storedSessionId) {
-            logger.init('Found stored session ID', 'AuthContext', { sessionId: storedSessionId });
-            setSessionId(storedSessionId);
-            setIsAuthenticated(true);
-        } else {
-            logger.init('No stored session ID found', 'AuthContext');
+        try {
+            const storedSessionId = storageService.getSessionId();
+            
+            if (storedSessionId) {
+                logger.init('Found stored session ID', 'AuthContext', { sessionId: storedSessionId });
+                trackContextInitialization('AuthContext', 'update', { 
+                    foundSessionId: true, 
+                    sessionIdLength: storedSessionId.length
+                });
+                setSessionId(storedSessionId);
+                setIsAuthenticated(true);
+            } else {
+                logger.init('No stored session ID found', 'AuthContext');
+                trackContextInitialization('AuthContext', 'update', { foundSessionId: false });
+            }
+        } catch (error) {
+            logger.error('Error retrieving session ID from storage', 'AuthContext', { error });
+            trackContextInitialization('AuthContext', 'error', { 
+                error: error.message,
+                operation: 'retrieveSessionId'
+            });
         }
         
         // Complete initialization with a small delay to ensure state updates
         setTimeout(() => {
             setIsInitializing(false);
             const initDuration = performance.now() - initStartTime;
+            
             logger.init('Auth initialization complete', 'AuthContext', { 
-                hasSessionId: !!storedSessionId,
+                hasSessionId: !!sessionId,
                 initializationTimeMs: Math.round(initDuration)
+            });
+            
+            // Track successful completion of AuthContext initialization
+            trackContextInitialization('AuthContext', 'complete', {
+                hasSessionId: !!sessionId,
+                initializationTimeMs: Math.round(initDuration),
+                isAuthenticated: !!sessionId
             });
             
             // Clear timeout if initialization completes normally
@@ -84,6 +113,11 @@ export const AuthProvider = ({ children }) => {
      */
     const initializeSession = async (sessionConfig, forceNew = false) => {
         logger.info('Initializing session', 'AuthContext', { forceNew, sessionConfig });
+        trackContextInitialization('AuthContext', 'update', { 
+            operation: 'initializeSession',
+            forceNew,
+            hasConfig: !!sessionConfig
+        });
         
         // Set initializing state to true and clear any previous errors
         setIsInitializing(true);
@@ -98,6 +132,11 @@ export const AuthProvider = ({ children }) => {
             logger.warn('Session initialization timed out', 'AuthContext', { timeoutMs: SESSION_INIT_TIMEOUT });
             setIsInitializing(false);
             setAuthError(`Session initialization timed out after ${SESSION_INIT_TIMEOUT/1000} seconds`);
+            trackContextInitialization('AuthContext', 'error', { 
+                error: `Session initialization timed out after ${SESSION_INIT_TIMEOUT/1000} seconds`,
+                timeoutMs: SESSION_INIT_TIMEOUT,
+                operation: 'initializeSession'
+            });
         }, SESSION_INIT_TIMEOUT);
         
         try {
@@ -115,7 +154,7 @@ export const AuthProvider = ({ children }) => {
             
             if (data.ui_session_id) {
                 // Store session in localStorage via our storage service
-                storageService.set(SESSION_ID_KEY, data.ui_session_id);
+                storageService.saveSessionId(data.ui_session_id);
                 
                 // Update state
                 setSessionId(data.ui_session_id);
@@ -124,6 +163,11 @@ export const AuthProvider = ({ children }) => {
                 
                 logger.info('Session initialized successfully', 'AuthContext', { 
                     sessionId: data.ui_session_id 
+                });
+                
+                trackContextInitialization('AuthContext', 'update', {
+                    sessionInitialized: true,
+                    gotSessionId: true
                 });
                 
                 // Clear the timeout since initialization succeeded
@@ -144,6 +188,12 @@ export const AuthProvider = ({ children }) => {
             
             setAuthError(`Session initialization failed: ${error.message}`);
             
+            trackContextInitialization('AuthContext', 'error', {
+                error: error.message,
+                operation: 'initializeSession',
+                stack: error.stack
+            });
+            
             // Clear the timeout since we've handled the error
             if (sessionInitTimeoutRef.current) {
                 clearTimeout(sessionInitTimeoutRef.current);
@@ -163,7 +213,7 @@ export const AuthProvider = ({ children }) => {
         logger.info('Logging out, removing session', 'AuthContext', { sessionId });
         
         // Remove from localStorage using our storage service
-        storageService.remove(SESSION_ID_KEY);
+        storageService.removeSessionId();
         
         // Reset auth state
         setSessionId(null);
@@ -206,6 +256,9 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={contextValue}>
+            <div data-auth-provider="mounted" style={{ display: 'none' }}>
+                AuthProvider diagnostic element
+            </div>
             {children}
         </AuthContext.Provider>
     );

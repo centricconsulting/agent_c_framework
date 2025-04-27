@@ -10,12 +10,22 @@ export default defineConfig({
     },
     extensions: ['.js', '.jsx', '.ts', '.tsx']
   },
-    define: {
+  define: {
     __API_URL__: JSON.stringify(process.env.VITE_API_URL),
+  },
+  build: {
+    sourcemap: true, // Enable source maps for production builds
   },
   server: {
     host: true,
     strictPort: true,
     allowedHosts: true,
+    sourcemapIgnoreList: (sourcePath) => {
+
+      // Ignore source maps for external libraries
+
+      return sourcePath.includes('node_modules');
+
+    }
   }
 })

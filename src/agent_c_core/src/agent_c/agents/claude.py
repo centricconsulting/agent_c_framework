@@ -161,7 +161,7 @@ class ClaudeChatAgent(BaseAgent):
         """Handle retryable errors with exponential backoff."""
         error_type = type(error).__name__
         await self._raise_system_event(
-            f"{error_type} during `client.messages.stream`. Delaying for {delay} seconds.\n",
+            f"Warning: The Claude streaming API may be under heavy load or you have hit your rate Limit.\n\nDelaying for {delay} seconds.\n",
             **callback_opts
         )
         await self._exponential_backoff(delay)

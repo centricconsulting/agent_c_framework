@@ -14,6 +14,9 @@ import { API_URL } from "@/config/config";
 import { createClipboardContent } from '@/components/chat_interface/utils/htmlChatFormatter';
 import { processMessageStream } from './utils/MessageStreamProcessor';
 import { cn } from "@/lib/utils";
+import logger from '@/lib/logger';
+import { trackComponentRendering, trackChatInterfaceRendering } from '@/lib/diagnostic';
+import storageService from '@/lib/storageService';
 
 // Import our refactored components
 import MessagesList from './MessagesList';
@@ -854,8 +857,149 @@ const ChatInterfaceInner = ({
  * media, and tool calls.
  */
 const ChatInterface = (props) => {
+  console.group('🔍 ChatInterface Mounting');
+  
+  // Prepare props info for logging
+  const propsInfo = {
+    sessionId: props.sessionId,
+    isInitialized: props.isInitialized,
+    hasCustomPrompt: !!props.customPrompt,
+    modelName: props.modelName,
+    hasModelParameters: !!props.modelParameters,
+    propsKeys: Object.keys(props)
+  };
+  
+  console.log('Props received:', propsInfo);
+  
+  // Track component mounting with our enhanced tracking
+  trackChatInterfaceRendering('start', {
+    props: propsInfo,
+    timestamp: Date.now(),
+    isMounting: true
+  });
+  
+  // Check DOM after render using useEffect
+  useEffect(() => {
+    // Log session ID and debug information
+    console.log('📋 Session ID check from ChatInterface:', {
+      propSessionId: props.sessionId,
+      storedSessionId: storageService.getSessionId(),
+      match: props.sessionId === storageService.getSessionId()
+    });
+    
+    // Track the session ID match status
+    trackChatInterfaceRendering('session-id-check', {
+      propSessionId: props.sessionId,
+      storedSessionId: storageService.getSessionId(),
+      match: props.sessionId === storageService.getSessionId(),
+      storage: JSON.stringify({
+        hasSessionId: !!storageService.getSessionId(),
+        sessionIdLength: storageService.getSessionId()?.length
+      })
+    });
+
+    const chatInterfaceElement = document.querySelector('.chat-interface-card');
+    const chatInterfaceContainer = document.querySelector('.chat-interface-container');
+    
+    const domStatus = {
+      cardExists: !!chatInterfaceElement,
+      containerExists: !!chatInterfaceContainer,
+      visible: chatInterfaceElement ? (
+        window.getComputedStyle(chatInterfaceElement).display !== 'none' &&
+        window.getComputedStyle(chatInterfaceElement).visibility !== 'hidden'
+      ) : false
+    };
+    
+    console.log('Chat interface in DOM after mount:', domStatus);
+    
+    // Track mounting with our enhanced tracking
+    trackChatInterfaceRendering('mount', {
+      inDOM: domStatus.cardExists,
+      visible: domStatus.visible,
+      sessionId: props.sessionId,
+      isInitialized: props.isInitialized,
+      timestamp: Date.now()
+    });
+    
+    // Deeper DOM inspection for debugging
+    if (chatInterfaceElement) {
+      // Check parent visibility up to 3 levels
+      let parent = chatInterfaceElement.parentElement;
+      let depth = 0;
+      const parentInfo = [];
+      
+      while (parent && depth < 3) {
+        const style = window.getComputedStyle(parent);
+        parentInfo.push({
+          tag: parent.tagName,
+          className: parent.className,
+          display: style.display,
+          visibility: style.visibility,
+          height: style.height,
+          overflow: style.overflow
+        });
+        parent = parent.parentElement;
+        depth++;
+      }
+      
+      console.log('Chat interface parent elements:', parentInfo);
+    }
+    
+    console.groupEnd();
+    
+    // Setup an interval to check for style changes that might affect visibility
+    const visibilityChecker = setInterval(() => {
+      const element = document.querySelector('.chat-interface-card');
+      if (element) {
+        const style = window.getComputedStyle(element);
+        const isVisible = style.display !== 'none' && style.visibility !== 'hidden';
+        
+        // Only log if visibility state changes
+        if (isVisible !== domStatus.visible) {
+          console.log('Chat interface visibility changed:', { 
+            wasVisible: domStatus.visible, 
+            isNowVisible: isVisible,
+            display: style.display,
+            visibility: style.visibility
+          });
+          
+          // Update tracking
+          trackChatInterfaceRendering('update', {
+            inDOM: true,
+            visible: isVisible,
+            visibilityChanged: true
+          });
+          
+          // Update our stored state
+          domStatus.visible = isVisible;
+        }
+      }
+    }, 2000);
+    
+    return () => {
+      clearInterval(visibilityChecker);
+      logger.debug('ChatInterface unmounting', 'ChatInterface');
+      trackChatInterfaceRendering('unmount', {
+        reason: 'component-unmount',
+        sessionId: props.sessionId
+      });
+    };
+  }, [props.sessionId, props.isInitialized]);
+  
   return (
     <ToolCallProvider>
+      {/* Invisible diagnostic element */}
+      <div 
+        data-testid="chat-interface"
+        data-chat-interface-mounted="true"
+        data-session-id={!!props.sessionId}
+        data-is-initialized={props.isInitialized}
+        data-is-ready={props.isReady}
+        data-session-id-value={props.sessionId || 'missing'}
+        data-stored-session-id={storageService.getSessionId() || 'missing'}
+        style={{ display: 'none' }}
+      />
+      
       <ChatInterfaceInner {...props} />
     </ToolCallProvider>
   );

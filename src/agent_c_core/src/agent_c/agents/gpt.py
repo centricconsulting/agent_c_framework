@@ -236,7 +236,7 @@ class GPTChatAgent(BaseAgent):
         """
         error_type = type(error).__name__
         await self._raise_system_event(
-            f"{error_type} during API call. Delaying for {delay} seconds.\n",
+            f"Warning: The Claude streaming API may be under heavy load or you have hit your rate Limit.\n\n Delaying for {delay} seconds.\n",
             **callback_opts
         )
         await self._exponential_backoff(delay)

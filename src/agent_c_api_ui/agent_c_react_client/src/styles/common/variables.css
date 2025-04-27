@@ -167,6 +167,14 @@
   --success-background: var(--color-green-100);
   --success-foreground: hsl(0 0% 100%);
   
+  /* Color variables needed by debug panel */
+  --success-50: hsl(142, 76%, 97%);
+  --success-200: hsl(142, 76%, 85%);
+  --success-900: hsl(142, 76%, 20%);
+  --destructive-50: hsl(0, 84%, 97%);
+  --destructive-200: hsl(0, 84%, 85%);
+  --destructive-900: hsl(0, 84%, 20%);
+  
   --warning: var(--color-amber-600);
   --warning-background: var(--color-amber-100);
   --warning-foreground: hsl(0 0% 100%);

@@ -1,12 +1,14 @@
-// src/pages/ChatPage.jsx
-import React, { useContext } from 'react';
-import { SessionContext } from '@/contexts/SessionContext';
+// src/pages/ChatPage.jsx - fixed version with enhanced debugging
+import React, { useEffect } from 'react';
+import { useSessionContext } from '@/hooks/use-session-context'; // Use the hook instead of direct context access
 import ChatInterface from '../components/chat_interface/ChatInterface';
-// Remove the CollapsibleOptions import since it will be used directly in ChatInterface
-// import CollapsibleOptions from '@/components/chat_interface//CollapsibleOptions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import logger from '@/lib/logger';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { trackComponentRendering, trackChatInterfaceRendering } from '@/lib/diagnostic';
 
 const ChatPage = () => {
+  // Use the useSessionContext hook for better error handling and logging
   const {
     sessionId,
     error,
@@ -31,9 +33,82 @@ const ChatPage = () => {
     handleProcessingStatus,
     isOptionsOpen,
     setIsOptionsOpen
-  } = useContext(SessionContext);
+  } = useSessionContext('ChatPage'); // Pass component name for better logging
+  
+  // Enhanced debug logging
+  useEffect(() => {
+    // Use our enhanced tracking utility
+    trackComponentRendering('ChatPage', 'rendered', {
+      hasSessionId: !!sessionId,
+      isInitialized,
+      isReady,
+      hasError: !!error,
+      isLoading,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Also track specific chat interface rendering decision
+    trackChatInterfaceRendering('page-render-check', {
+      hasSessionId: !!sessionId,
+      isInitialized,
+      isReady,
+      hasError: !!error,
+      errorMessage: error,
+      isLoading,
+      shouldRender: !!sessionId && !!isInitialized,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Log this to console for immediate visibility
+    console.log('🔎 ChatPage state:', {
+      sessionId: !!sessionId,
+      isInitialized,
+      isReady,
+      error: error || 'none',
+      isLoading,
+      timestamp: new Date().toISOString()
+    });
+  }, [sessionId, isInitialized, isReady, error, isLoading]);
 
+  // Log rendering decision - ensure values are booleans with double negation
+  const shouldRenderChatInterface = !!sessionId && !!isInitialized;
+  console.log('🔎 ChatPage rendering decision:', {
+    sessionId: !!sessionId,
+    isInitialized: !!isInitialized,
+    shouldRenderChatInterface,
+    error: error || 'none',
+    isLoading
+  });
+  
+  // Add global diagnostic functions
+  if (typeof window !== 'undefined') {
+    window.checkChatVisibility = () => {
+      console.log('Chat visibility check:', {
+        sessionId: !!sessionId,
+        isInitialized: !!isInitialized,
+        shouldRender: shouldRenderChatInterface,
+        timestamp: new Date().toISOString()
+      });
+      return shouldRenderChatInterface;
+    };
+  }
+
+  useEffect(() => {
+    // Record chat interface render attempts for debugging
+    if (typeof window !== 'undefined') {
+      window.__CHAT_INTERFACE_RENDER_CHECK = {
+        timestamp: new Date().toISOString(),
+        shouldRender: shouldRenderChatInterface,
+        sessionId: !!sessionId,
+        isInitialized,
+        isReady,
+        error: error || null
+      };
+    }
+  }, [shouldRenderChatInterface, sessionId, isInitialized, isReady, error]);
+  
   if (isLoading) {
+    logger.debug('Rendering loading state', 'ChatPage');
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-lg text-muted-foreground animate-pulse">
@@ -43,8 +118,30 @@ const ChatPage = () => {
     );
   }
 
+  // Prepare chatInterface props for easier debugging and error handling
+  const chatInterfaceProps = {
+    sessionId,
+    customPrompt,
+    modelName,
+    modelParameters,
+    onProcessingStatus: handleProcessingStatus,
+    persona,
+    personas,
+    availableTools,
+    modelConfigs,
+    onEquipTools: handleEquipTools,
+    selectedModel,
+    onUpdateSettings: updateAgentSettings,
+    isInitialized
+  };
+  
+  // Record current props in window for console debugging
+  if (typeof window !== 'undefined') {
+    window.__CHAT_INTERFACE_PROPS = chatInterfaceProps;
+  }
+
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden chat-page">
       <div className="flex flex-col space-y-2 mb-1">
         {error && (
           <Alert variant="destructive" className="mb-2">
@@ -63,28 +160,119 @@ const ChatPage = () => {
         )}
       </div>
 
-      {sessionId && isInitialized && (
+      {/* Diagnostic element - invisible but helps with debugging */}
+      <div 
+        data-chat-page="true"
+        data-should-render-chat="false"
+        data-session-id={!!sessionId ? 'true' : 'false'}
+        data-initialized={!!isInitialized ? 'true' : 'false'}
+        data-ready={!!isReady ? 'true' : 'false'}
+        style={{ display: 'none' }}
+      />
+      
+      {shouldRenderChatInterface === true ? (
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          {/* CollapsibleOptions removed from here since it's now in ChatInterface */}
-          
           <div className="flex-1 overflow-hidden flex flex-col">
-            <ChatInterface
-              sessionId={sessionId}
-              customPrompt={customPrompt}
-              modelName={modelName}
-              modelParameters={modelParameters}
-              onProcessingStatus={handleProcessingStatus}
-              // Added props for options panel
-              persona={persona}
-              personas={personas}
-              availableTools={availableTools}
-              modelConfigs={modelConfigs}
-              onEquipTools={handleEquipTools}
-              selectedModel={selectedModel}
-              onUpdateSettings={updateAgentSettings}
-              isInitialized={isInitialized}
-            />
-            {/* StatusBar moved to ChatInterface component */}
+            {trackChatInterfaceRendering('about-to-render', { shouldRender: true })}
+            <ErrorBoundary 
+              name="ChatInterface"
+              fallback={(error, errorInfo) => (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded">
+                  <h3 className="text-lg font-semibold text-red-700 dark:text-red-300">
+                    Error Rendering Chat Interface
+                  </h3>
+                  <p className="mt-2">
+                    Something went wrong while trying to render the chat interface.
+                  </p>
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-sm font-medium">
+                      Error Details
+                    </summary>
+                    <div className="mt-2 text-xs bg-red-50 dark:bg-red-900/40 p-2 rounded overflow-auto max-h-[200px]">
+                      <div className="font-mono">
+                        {error.toString()}
+                      </div>
+                      {errorInfo && (
+                        <div className="mt-2 font-mono text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                          {errorInfo.componentStack}
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                  <div className="mt-4">
+                    <button 
+                      onClick={() => window.location.reload()} 
+                      className="px-4 py-2 bg-red-100 dark:bg-red-800 rounded hover:bg-red-200 dark:hover:bg-red-700 transition-colors"
+                    >
+                      Reload Page
+                    </button>
+                  </div>
+                </div>
+              )}
+              onError={(error) => {
+                logger.error('Error in ChatInterface', 'ChatPage', {
+                  error: error.message,
+                  stack: error.stack
+                });
+              }}
+            >
+              <ChatInterface 
+                {...chatInterfaceProps}
+              />
+              {trackChatInterfaceRendering('render-attempted', { props: Object.keys(chatInterfaceProps) })}
+            </ErrorBoundary>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="max-w-lg p-6 border border-red-200 dark:border-red-800 rounded-lg bg-white dark:bg-slate-900 shadow-lg">
+            <h2 className="text-xl font-semibold mb-4 text-red-600 dark:text-red-400">Chat Interface Not Available</h2>
+            
+            <div className="text-sm mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-md">
+              {error ? (
+                <div className="text-red-700 dark:text-red-300">Error: {error}</div>
+              ) : isLoading ? (
+                <div className="text-amber-700 dark:text-amber-300">Loading session...</div>
+              ) : (
+                <div className="text-slate-700 dark:text-slate-300">
+                  The chat interface cannot be displayed. This may be due to initialization issues.
+                </div>
+              )}
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-md mb-4">
+              <h3 className="font-medium mb-2 text-slate-700 dark:text-slate-300">Diagnostic Information</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="text-slate-600 dark:text-slate-400">Session ID:</div>
+                <div className={sessionId ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                  {sessionId ? 'Present' : 'Missing'}
+                </div>
+                
+                <div className="text-slate-600 dark:text-slate-400">Initialized:</div>
+                <div className={isInitialized ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                  {isInitialized ? 'Yes' : 'No'}
+                </div>
+                
+                <div className="text-slate-600 dark:text-slate-400">Ready:</div>
+                <div className={isReady ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                  {isReady ? 'Yes' : 'No'}
+                </div>
+                
+                <div className="text-slate-600 dark:text-slate-400">Is Loading:</div>
+                <div className={!isLoading ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}>
+                  {isLoading ? 'Yes' : 'No'}
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-center">
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-4 py-2 bg-blue-100 dark:bg-blue-800 rounded hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors text-blue-700 dark:text-blue-200"
+              >
+                Reload Page
+              </button>
+            </div>
           </div>
         </div>
       )}

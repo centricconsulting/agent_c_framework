@@ -3,6 +3,7 @@ import logger from '@/lib/logger';
 import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
 import { useAuth } from '@/hooks/use-auth';
+import { trackContextInitialization } from '@/lib/diagnostic';
 
 // Create the context
 export const ModelContext = createContext();
@@ -17,6 +18,9 @@ const CONFIG_MAX_AGE_DAYS = 14;
  */
 export const ModelProvider = ({ children }) => {
     logger.info('ModelProvider initializing', 'ModelProvider');
+    
+    // Track the start of ModelContext initialization
+    trackContextInitialization('ModelContext', 'start');
     
     // Get auth context for session information
     const { sessionId, isAuthenticated } = useAuth('ModelProvider');
@@ -40,19 +44,54 @@ export const ModelProvider = ({ children }) => {
             setIsLoading(true);
             logger.debug('Fetching available models', 'ModelContext');
             
-            const data = await apiService.get('/models');
+            const data = await apiService.getModels();
             if (data && Array.isArray(data.models)) {
+                // Log models received for diagnostic purposes
+                logger.debug('Raw models data received', 'ModelContext', { 
+                    count: data.models.length,
+                    firstModel: data.models[0] ? { id: data.models[0].id, name: data.models[0].name } : null
+                });
+                
+                // Check if models array is valid 
+                if (data.models.length === 0) {
+                    logger.warn('Empty models array received from API', 'ModelContext');
+                } else if (!data.models[0].id) {
+                    logger.warn('Invalid model data structure - missing model ID', 'ModelContext', {
+                        sampleModel: data.models[0]
+                    });
+                }
+                
+                // Update model configs in state
                 setModelConfigs(data.models);
                 logger.info('Models fetched successfully', 'ModelContext', { 
                     count: data.models.length
                 });
+                
+                trackContextInitialization('ModelContext', 'update', {
+                    operation: 'fetchModels',
+                    success: true,
+                    modelCount: data.models.length
+                });
+                
                 return data.models;
             } else {
+                // Log what we actually received for diagnostics
+                logger.warn('Invalid models data structure received', 'ModelContext', {
+                    received: data,
+                    hasModelsProperty: data ? 'models' in data : false,
+                    modelsType: data?.models ? typeof data.models : 'undefined'
+                });
                 throw new Error('Invalid models data structure');
             }
         } catch (error) {
             logger.error('Failed to fetch models', 'ModelContext', { error: error.message });
             setError(`Failed to load models: ${error.message}`);
+            
+            trackContextInitialization('ModelContext', 'error', {
+                operation: 'fetchModels',
+                error: error.message
+            });
+            
             return [];
         } finally {
             setIsLoading(false);
@@ -65,7 +104,7 @@ export const ModelProvider = ({ children }) => {
     const saveConfigToStorage = (updatedConfig = {}) => {
         try {
             // Get existing config or create new object
-            const existingConfig = storageService.get(AGENT_CONFIG_KEY) || {};
+            const existingConfig = storageService.getAgentConfig() || {};
             
             // Update with current model settings
             const configToSave = {
@@ -93,7 +132,7 @@ export const ModelProvider = ({ children }) => {
      */
     const loadSavedConfig = () => {
         try {
-            const savedConfig = storageService.get(AGENT_CONFIG_KEY);
+            const savedConfig = storageService.getAgentConfig();
             if (!savedConfig) {
                 return null;
             }
@@ -276,6 +315,13 @@ export const ModelProvider = ({ children }) => {
      */
     const initializeWithModel = async (model = null) => {
         try {
+            // Check and log state first for debugging
+            logger.debug('initializeWithModel called', 'ModelContext', { 
+                hasModelConfigs: !!modelConfigs, 
+                modelConfigsLength: modelConfigs?.length || 0,
+                specificModelProvided: !!model
+            });
+            
             // If specific model provided, use it
             if (model) {
                 setModelName(model.id);
@@ -301,33 +347,77 @@ export const ModelProvider = ({ children }) => {
             // Otherwise try to load saved config
             const savedConfig = loadSavedConfig();
             if (savedConfig && savedConfig.modelName) {
-                // Find the model in configurations
-                const savedModel = modelConfigs.find(m => m.id === savedConfig.modelName);
-                if (savedModel) {
-                    setModelName(savedModel.id);
-                    setSelectedModel(savedModel);
-                    setModelParameters(savedConfig.modelParameters || {});
-                    
-                    logger.info('Restored saved model configuration', 'ModelContext', {
-                        modelName: savedModel.id
-                    });
-                    
-                    return true;
+                // Verify we have model configurations before trying to find saved model
+                if (modelConfigs && modelConfigs.length > 0) {
+                    // Find the model in configurations
+                    const savedModel = modelConfigs.find(m => m.id === savedConfig.modelName);
+                    if (savedModel) {
+                        setModelName(savedModel.id);
+                        setSelectedModel(savedModel);
+                        setModelParameters(savedConfig.modelParameters || {});
+                        
+                        logger.info('Restored saved model configuration', 'ModelContext', {
+                            modelName: savedModel.id
+                        });
+                        
+                        return true;
+                    } else {
+                        logger.warn(`Saved model '${savedConfig.modelName}' not found in available models`, 'ModelContext');
+                    }
+                } else {
+                    logger.warn('Cannot restore saved model - no model configurations available', 'ModelContext');
                 }
             }
             
-            // If no saved config or model not found, use first available model
-            if (modelConfigs.length > 0) {
-                const defaultModel = modelConfigs[0];
-                return await changeModel(defaultModel.id);
+            // Verify we actually have model configs available before trying to use them
+            if (!modelConfigs || modelConfigs.length === 0) {
+                logger.warn('No model configs available for initialization. Using emergency fallback.', 'ModelContext');
+                
+                // Create emergency fallback model
+                const fallbackModel = {
+                    id: 'emergency_fallback_model',
+                    name: 'Emergency Fallback Model',
+                    backend: 'unknown'
+                };
+                setModelName(fallbackModel.id);
+                setSelectedModel(fallbackModel);
+                setModelParameters({
+                    temperature: 0.7
+                });
+                
+                logger.info('Using emergency fallback model due to missing model configs', 'ModelContext', {
+                    modelConfigsState: modelConfigs
+                });
+                return true; // Return success to allow UI to function
             }
             
-            logger.warn('No models available for initialization', 'ModelContext');
-            return false;
+            // Since we know we have model configs, use the first available model
+            logger.debug('Using first available model for initialization', 'ModelContext', {
+                modelCount: modelConfigs.length,
+                firstModelId: modelConfigs[0]?.id,
+                firstModelName: modelConfigs[0]?.name
+            });
+            
+            // Use the first model as default if available
+            return await changeModel(modelConfigs[0].id);
         } catch (error) {
             logger.error('Failed to initialize model', 'ModelContext', { error: error.message });
             setError(`Failed to initialize model: ${error.message}`);
-            return false;
+            
+            // Even in case of error, set a fallback model to prevent UI breakage
+            const fallbackModel = {
+                id: 'error_fallback_model',
+                name: 'Error Recovery Model',
+                backend: 'unknown'
+            };
+            setModelName(fallbackModel.id);
+            setSelectedModel(fallbackModel);
+            setModelParameters({
+                temperature: 0.7
+            });
+            
+            logger.warn('Using error fallback model', 'ModelContext');
+            return true; // Return success to allow UI to continue functioning
         }
     };
     
@@ -343,14 +433,94 @@ export const ModelProvider = ({ children }) => {
     // Load models on mount
     useEffect(() => {
         const initModels = async () => {
-            const models = await fetchModels();
-            if (models.length > 0) {
-                await initializeWithModel();
+            try {
+                const models = await fetchModels();
+                
+                // Log what we received from the API for diagnostics
+                logger.debug('Models received from API', 'ModelContext', { 
+                    count: models.length,
+                    modelIds: models.map(m => m.id).join(', ')
+                });
+                
+                // We now need to WAIT for the state update to complete before initializing
+                if (models.length > 0) {
+                    // Set the models in state and wait for update to complete
+                    // by using a separate useEffect that depends on modelConfigs state
+                } else {
+                    // No models available, so log and use fallback directly
+                    logger.warn('No models returned from API, using fallback', 'ModelContext');
+                    
+                    // Use fallback model
+                    const fallbackModel = {
+                        id: 'emergency_fallback_model',
+                        name: 'Emergency Fallback Model',
+                        backend: 'unknown'
+                    };
+                    setModelName(fallbackModel.id);
+                    setSelectedModel(fallbackModel);
+                    setModelParameters({
+                        temperature: 0.7
+                    });
+                    
+                    // Signal completion with fallback
+                    trackContextInitialization('ModelContext', 'complete', {
+                        modelsLoaded: 0,
+                        initializeSuccess: true,
+                        selectedModel: fallbackModel.id,
+                        usedFallback: true
+                    });
+                }
+            } catch (error) {
+                logger.error('Failed to initialize models', 'ModelContext', { error: error.message });
+                
+                // Try fallback model as error recovery
+                const fallbackModel = {
+                    id: 'emergency_fallback_model',
+                    name: 'Emergency Fallback Model',
+                    backend: 'unknown'
+                };
+                setModelName(fallbackModel.id);
+                setSelectedModel(fallbackModel);
+                setModelParameters({
+                    temperature: 0.7
+                });
+                
+                // Signal completion even with error to avoid blocking UI
+                trackContextInitialization('ModelContext', 'complete', {
+                    error: error.message,
+                    operation: 'initModels',
+                    usedEmergencyFallback: true,
+                    selectedModel: fallbackModel.id
+                });
             }
         };
         
         initModels();
     }, []);
+    
+    // Add a new effect that depends on modelConfigs to handle initialization after state update
+    useEffect(() => {
+        const initializeModelsAfterStateUpdate = async () => {
+            // Only proceed if we have models and initialization hasn't completed yet
+            if (modelConfigs && modelConfigs.length > 0) {
+                logger.debug('Models loaded in state, initializing model', 'ModelContext', { 
+                    count: modelConfigs.length,
+                    firstModel: modelConfigs[0]?.id 
+                });
+                
+                const success = await initializeWithModel();
+                
+                // Signal that ModelContext has completed initialization
+                trackContextInitialization('ModelContext', 'complete', {
+                    modelsLoaded: modelConfigs.length,
+                    initializeSuccess: success,
+                    selectedModel: modelName
+                });
+            }
+        };
+        
+        initializeModelsAfterStateUpdate();
+    }, [modelConfigs]); // This effect runs whenever modelConfigs state changes
     
     return (
         <ModelContext.Provider
@@ -371,6 +541,9 @@ export const ModelProvider = ({ children }) => {
                 initializeWithModel
             }}
         >
+            <div data-model-provider="mounted" style={{ display: 'none' }}>
+                ModelProvider diagnostic element
+            </div>
             {children}
         </ModelContext.Provider>
     );

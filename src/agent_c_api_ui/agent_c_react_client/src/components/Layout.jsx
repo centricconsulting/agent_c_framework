@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import AppSidebar from './AppSidebar';
 import PageHeader from './PageHeader';
 import { cn } from '../lib/utils';
 import { useLogger } from '../hooks/use-logger';
+import EnhancedDebugPanel from './ui/enhanced-debug-panel';
+import logger from '@/lib/logger';
+import { trackComponentRendering } from '@/lib/diagnostic';
 
 /**
  * Main application layout with sidebar and content area
@@ -29,6 +32,23 @@ const Layout = ({
   // Simple component logging
   useLogger('Layout');
 
+  // Log layout rendering for debugging
+  useEffect(() => {
+    logger.debug('Layout rendered', 'Layout', {
+      pathname: location.pathname,
+      isHome,
+      hasTitle: !!title
+    });
+    
+    // Track layout rendering with our diagnostic tool
+    trackComponentRendering('Layout', 'rendered', {
+      pathname: location.pathname,
+      isHome,
+      hasTitle: !!title,
+      timestamp: Date.now()
+    });
+  }, [location.pathname, isHome, title]);
+  
   return (
     <AppSidebar>
       <main className={cn(
@@ -38,6 +58,9 @@ const Layout = ({
       )} style={{ display: 'flex', flexDirection: 'column', flex: '1 1 auto' }}>
         {children}
       </main>
+      
+      {/* Enhanced Debug Panel - always included but conditionally shows */}
+      <EnhancedDebugPanel />
     </AppSidebar>
   );
 };
