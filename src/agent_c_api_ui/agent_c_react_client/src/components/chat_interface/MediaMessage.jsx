@@ -187,4 +187,42 @@ const MediaMessage = ({message}) => {
     );
 };
 
-export default MediaMessage;
+// Create a memoized version of MediaMessage to prevent unnecessary re-renders
+const MemoizedMediaMessage = React.memo(MediaMessage, (prevProps, nextProps) => {
+  // Deep compare the message objects
+  const prevMsg = prevProps.message;
+  const nextMsg = nextProps.message;
+  
+  // Basic content and type checks
+  if (prevMsg.contentType !== nextMsg.contentType) return false;
+  
+  // For non-binary content (SVG, HTML, Markdown), compare the content directly
+  if ([
+    'image/svg+xml', 
+    'text/html', 
+    'text/markdown'
+  ].includes(prevMsg.contentType)) {
+    if (prevMsg.content !== nextMsg.content) return false;
+  } 
+  // For binary content like images, we'll do a simple check
+  else if (prevMsg.contentType?.startsWith('image/')) {
+    // If the content length has changed, it's definitely different
+    if (prevMsg.content.length !== nextMsg.content.length) return false;
+    
+    // For binary data, we could do a more detailed comparison,
+    // but for performance reasons we'll assume it's the same if length matches
+    // since images are typically immutable once rendered
+  }
+  
+  // Check metadata
+  const prevMeta = prevMsg.metadata || {};
+  const nextMeta = nextMsg.metadata || {};
+  
+  if (prevMeta.sent_by_class !== nextMeta.sent_by_class) return false;
+  if (prevMeta.sent_by_function !== nextMeta.sent_by_function) return false;
+  
+  // If we got here, the message content appears to be the same
+  return true;
+});
+
+export default MemoizedMediaMessage;

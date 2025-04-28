@@ -63,4 +63,13 @@ const ThoughtDisplay = ({ content, vendor, className }) => {
     );
 };
 
-export default ThoughtDisplay;
+// Create a memoized version of ThoughtDisplay to prevent unnecessary re-renders
+const MemoizedThoughtDisplay = React.memo(ThoughtDisplay, (prevProps, nextProps) => {
+  // Only re-render if essential props have changed
+  return (
+    prevProps.content === nextProps.content &&
+    prevProps.vendor === nextProps.vendor
+  );
+});
+
+export default MemoizedThoughtDisplay;

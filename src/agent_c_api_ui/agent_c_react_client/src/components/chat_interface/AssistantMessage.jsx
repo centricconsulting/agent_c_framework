@@ -140,4 +140,57 @@ AssistantMessage.propTypes = {
   className: PropTypes.string
 };
 
-export default AssistantMessage;
+// Create a memoized version of AssistantMessage to prevent unnecessary re-renders
+const MemoizedAssistantMessage = React.memo(AssistantMessage, (prevProps, nextProps) => {
+  // Only re-render if essential props have changed
+  
+  // Check message content
+  if (prevProps.content !== nextProps.content) return false;
+  
+  // Check vendor (affects model icon)
+  if (prevProps.vendor !== nextProps.vendor) return false;
+  
+  // Check expansion state
+  if (prevProps.isToolCallsExpanded !== nextProps.isToolCallsExpanded) return false;
+  
+  // Check token usage (shallow comparison is sufficient)
+  const prevTokens = prevProps.tokenUsage;
+  const nextTokens = nextProps.tokenUsage;
+  if (
+    (prevTokens && !nextTokens) || 
+    (!prevTokens && nextTokens) ||
+    (prevTokens && nextTokens && (
+      prevTokens.total !== nextTokens.total ||
+      prevTokens.completion !== nextTokens.completion ||
+      prevTokens.prompt !== nextTokens.prompt
+    ))
+  ) return false;
+  
+  // Deep check tool calls
+  const prevTools = prevProps.toolCalls || [];
+  const nextTools = nextProps.toolCalls || [];
+  
+  if (prevTools.length !== nextTools.length) return false;
+  
+  // If there are tool calls, check if any have changed
+  for (let i = 0; i < prevTools.length; i++) {
+    const prevTool = prevTools[i];
+    const nextTool = nextTools[i];
+    
+    if (
+      prevTool.name !== nextTool.name || 
+      prevTool.id !== nextTool.id || 
+      prevTool.function?.name !== nextTool.function?.name ||
+      JSON.stringify(prevTool.arguments || prevTool.function?.arguments) !== 
+        JSON.stringify(nextTool.arguments || nextTool.function?.arguments) ||
+      JSON.stringify(prevTool.results) !== JSON.stringify(nextTool.results)
+    ) {
+      return false;
+    }
+  }
+  
+  // If we got here, nothing important changed, so prevent re-render
+  return true;
+});
+
+export default MemoizedAssistantMessage;

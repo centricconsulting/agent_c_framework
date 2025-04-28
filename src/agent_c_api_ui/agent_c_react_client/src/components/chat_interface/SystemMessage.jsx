@@ -85,4 +85,14 @@ SystemMessage.propTypes = {
 
 // Default props are now handled via parameter destructuring with default values
 
-export default SystemMessage;
+// Create a memoized version of SystemMessage to prevent unnecessary re-renders
+const MemoizedSystemMessage = React.memo(SystemMessage, (prevProps, nextProps) => {
+  // Only re-render if essential props have changed
+  return (
+    prevProps.content === nextProps.content &&
+    prevProps.isError === nextProps.isError &&
+    prevProps.isCritical === nextProps.isCritical
+  );
+});
+
+export default MemoizedSystemMessage;

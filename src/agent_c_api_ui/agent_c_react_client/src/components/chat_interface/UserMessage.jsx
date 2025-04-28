@@ -98,4 +98,27 @@ UserMessage.propTypes = {
 
 // Default props are now handled via parameter destructuring with default values
 
-export default UserMessage;
+// Create a memoized version of UserMessage to prevent unnecessary re-renders
+const MemoizedUserMessage = React.memo(UserMessage, (prevProps, nextProps) => {
+  // Check message content
+  if (prevProps.content !== nextProps.content) return false;
+  
+  // Check if voice message status changed
+  if (prevProps.isVoiceMessage !== nextProps.isVoiceMessage) return false;
+  
+  // Check files
+  const prevFiles = prevProps.files || [];
+  const nextFiles = nextProps.files || [];
+  
+  if (prevFiles.length !== nextFiles.length) return false;
+  
+  // Check if file names have changed
+  for (let i = 0; i < prevFiles.length; i++) {
+    if (prevFiles[i] !== nextFiles[i]) return false;
+  }
+  
+  // If we got here, nothing important changed, so prevent re-render
+  return true;
+});
+
+export default MemoizedUserMessage;

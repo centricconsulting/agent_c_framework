@@ -173,4 +173,41 @@ MessageItem.propTypes = {
   toggleToolCallExpansion: PropTypes.func.isRequired
 };
 
-export default MessageItem;
+// Create a memoized version of MessageItem to prevent unnecessary re-renders
+const MemoizedMessageItem = React.memo(MessageItem, (prevProps, nextProps) => {
+  // Only re-render if essential props have changed
+  
+  // Check if message has changed (shallow comparison of essential properties)
+  const messageChanged = 
+    prevProps.message.role !== nextProps.message.role ||
+    prevProps.message.content !== nextProps.message.content ||
+    prevProps.message.type !== nextProps.message.type ||
+    prevProps.message.vendor !== nextProps.message.vendor;
+  
+  // Check if the tool call expansion state for this message has changed
+  const wasExpanded = prevProps.expandedToolCallMessages.includes(prevProps.index);
+  const isExpanded = nextProps.expandedToolCallMessages.includes(nextProps.index);
+  const expansionStateChanged = wasExpanded !== isExpanded;
+  
+  // Check if files or tool calls have changed
+  const filesChanged = prevProps.message.files?.length !== nextProps.message.files?.length;
+  const toolCallsChanged = prevProps.message.toolCalls?.length !== nextProps.message.toolCalls?.length;
+  
+  // Check if next message (which might contain tool calls) has changed
+  const prevNextMsg = prevProps.messages[prevProps.index + 1];
+  const nextNextMsg = nextProps.messages[nextProps.index + 1];
+  const nextMsgChanged = 
+    (prevNextMsg?.type !== nextNextMsg?.type) || 
+    (prevNextMsg?.toolCalls?.length !== nextNextMsg?.toolCalls?.length);
+  
+  // Return true if nothing has changed (to prevent re-render)
+  return !(
+    messageChanged || 
+    expansionStateChanged || 
+    filesChanged || 
+    toolCallsChanged || 
+    nextMsgChanged
+  );
+});
+
+export default MemoizedMessageItem;

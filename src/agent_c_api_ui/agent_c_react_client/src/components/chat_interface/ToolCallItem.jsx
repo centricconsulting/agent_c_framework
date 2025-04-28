@@ -176,4 +176,38 @@ ToolCallItem.propTypes = {
 
 // Default props are now handled via parameter destructuring with default values
 
-export default ToolCallItem;
+// Create a memoized version of ToolCallItem to prevent unnecessary re-renders
+const MemoizedToolCallItem = React.memo(ToolCallItem, (prevProps, nextProps) => {
+  // Compare tool properties
+  const prevTool = prevProps.tool;
+  const nextTool = nextProps.tool;
+  
+  if (prevTool.name !== nextTool.name) return false;
+  if (prevTool.id !== nextTool.id) return false;
+  
+  // Compare arguments (could be strings or objects)
+  const prevArgs = prevTool.arguments;
+  const nextArgs = nextTool.arguments;
+  
+  if (typeof prevArgs !== typeof nextArgs) return false;
+  
+  if (typeof prevArgs === 'object' && prevArgs !== null) {
+    if (JSON.stringify(prevArgs) !== JSON.stringify(nextArgs)) return false;
+  } else if (prevArgs !== nextArgs) {
+    return false;
+  }
+  
+  // Compare results (could be any type)
+  // For simplicity and reliability, we'll use JSON.stringify for comparison
+  if (JSON.stringify(prevProps.results) !== JSON.stringify(nextProps.results)) {
+    return false;
+  }
+  
+  // Compare integrated mode
+  if (prevProps.integrated !== nextProps.integrated) return false;
+  
+  // If we got here, nothing important changed, so prevent re-render
+  return true;
+});
+
+export default MemoizedToolCallItem;

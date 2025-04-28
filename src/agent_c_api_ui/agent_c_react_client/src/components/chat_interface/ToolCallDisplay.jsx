@@ -107,4 +107,49 @@ ToolCallDisplay.propTypes = {
   className: PropTypes.string
 };
 
-export default ToolCallDisplay;
+// Create a memoized version of ToolCallDisplay to prevent unnecessary re-renders
+const MemoizedToolCallDisplay = React.memo(ToolCallDisplay, (prevProps, nextProps) => {
+  // First check if toolCalls arrays are different lengths
+  const prevTools = Array.isArray(prevProps.toolCalls) ? prevProps.toolCalls : [];
+  const nextTools = Array.isArray(nextProps.toolCalls) ? nextProps.toolCalls : [];
+  
+  if (prevTools.length !== nextTools.length) return false;
+  
+  // Check each tool call to see if any have changed
+  for (let i = 0; i < prevTools.length; i++) {
+    const prevTool = prevTools[i];
+    const nextTool = nextTools[i];
+    
+    // Basic ID checks
+    if (prevTool.id !== nextTool.id) return false;
+    if (prevTool.tool_call_id !== nextTool.tool_call_id) return false;
+    
+    // Check tool names
+    const prevName = prevTool.name || prevTool.function?.name;
+    const nextName = nextTool.name || nextTool.function?.name;
+    if (prevName !== nextName) return false;
+    
+    // Check arguments (could be string or object)
+    const prevArgs = prevTool.arguments || prevTool.function?.arguments;
+    const nextArgs = nextTool.arguments || nextTool.function?.arguments;
+    
+    // For objects, we need to stringify for comparison
+    // For strings, direct comparison works
+    if (typeof prevArgs === 'object' && typeof nextArgs === 'object') {
+      if (JSON.stringify(prevArgs) !== JSON.stringify(nextArgs)) return false;
+    } else if (prevArgs !== nextArgs) {
+      return false;
+    }
+    
+    // Check results
+    // Since results could be anything, we'll use JSON.stringify for comparison
+    if (JSON.stringify(prevTool.results) !== JSON.stringify(nextTool.results)) {
+      return false;
+    }
+  }
+  
+  // If we got here, all tool calls are identical
+  return true;
+});
+
+export default MemoizedToolCallDisplay;
