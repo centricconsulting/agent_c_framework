@@ -1,28 +1,12 @@
 /**
  * Debug Components
  * 
- * This file exports debug components that are only used in development mode
- * to provide visibility into application state and behavior.
+ * This module exports debug-related components that are only active in development mode.
+ * These components help with debugging and troubleshooting the application.
  */
 
-import { lazy } from 'react';
+export { default as InitializationDebugPanel } from './InitializationDebugPanel';
+export { default as EventMonitor } from './EventMonitor';
 
-// Check if we're in development mode
-const isDevelopment = process.env.NODE_ENV === 'development';
-
-// For production, export no-op components that render nothing
-if (!isDevelopment) {
-  const EmptyComponent = () => null;
-  
-  export const InitializationDebugPanel = EmptyComponent;
-  export default {
-    InitializationDebugPanel: EmptyComponent
-  };
-} else {
-  // In development, lazily load the actual debug components
-  export const InitializationDebugPanel = lazy(() => import('./InitializationDebugPanel'));
-  
-  export default {
-    InitializationDebugPanel
-  };
-}
+// Re-export debug utilities
+export * from '@/lib/debug';

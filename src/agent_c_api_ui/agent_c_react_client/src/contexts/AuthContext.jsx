@@ -6,6 +6,8 @@ import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
 import {trackContextInitialization} from '@/lib/diagnostic';
 import {createInitTracer, InitilizationState} from '@/lib/initTracer';
+import eventBus from '@/lib/eventBus';
+import { AUTH_EVENTS, INIT_EVENTS } from '@/lib/events';
 
 // Create the context
 export const AuthContext = createContext();
@@ -79,6 +81,13 @@ export const AuthProvider = ({children}) => {
         // Signal auth initialization is starting
         initialization.setInitState(InitState.AUTH_PENDING);
         initialization.startAuthPhase();
+        
+        // Publish auth phase started event
+        eventBus.publish(
+            INIT_EVENTS.AUTH_PHASE_STARTED, 
+            { timestamp: Date.now() },
+            { publisherName: 'AuthContext' }
+        );
 
         // Track the start of AuthContext initialization
         trackContextInitialization('AuthContext', 'start', {initStartTime});
@@ -120,6 +129,16 @@ export const AuthProvider = ({children}) => {
             // Signal error in initialization context
             initialization.authError(error.message);
             
+            // Publish auth error event
+            eventBus.publish(
+                INIT_EVENTS.AUTH_PHASE_ERROR,
+                { 
+                    error: error.message,
+                    operation: 'retrieveSessionId'
+                },
+                { publisherName: 'AuthContext' }
+            );
+            
             trackContextInitialization('AuthContext', 'error', {
                 error: error.message,
                 operation: 'retrieveSessionId'
@@ -153,6 +172,17 @@ export const AuthProvider = ({children}) => {
             // Signal auth initialization is complete
             initialization.completeAuthPhase();
             initialization.setInitState(InitState.AUTH_COMPLETE);
+            
+            // Publish auth phase completed event
+            eventBus.publish(
+                INIT_EVENTS.AUTH_PHASE_COMPLETED,
+                { 
+                    hasSessionId: !!sessionId,
+                    initializationTimeMs: Math.round(initDuration),
+                    isAuthenticated: !!sessionId
+                },
+                { publisherName: 'AuthContext' }
+            );
 
             // Clear timeout if initialization completes normally
             if (initTimeoutRef.current) {
@@ -166,6 +196,16 @@ export const AuthProvider = ({children}) => {
             if (initialization.phases.auth.state !== 'complete') {
                 logger.error('Auth initialization timed out in state machine', 'AuthContext');
                 initialization.authError('Initialization timed out');
+                
+                // Publish auth error event
+                eventBus.publish(
+                    INIT_EVENTS.AUTH_PHASE_ERROR,
+                    { 
+                        error: 'Auth initialization timed out in state machine',
+                        timeoutMs: INIT_TIMEOUT + 2000
+                    },
+                    { publisherName: 'AuthContext' }
+                );
             }
         }, INIT_TIMEOUT + 2000); // Give a bit more time than the normal timeout
 
@@ -263,6 +303,13 @@ export const AuthProvider = ({children}) => {
                 setSessionId(data.ui_session_id);
                 setIsAuthenticated(true);
                 setAuthError(null);
+                
+                // Publish session created/updated event
+                eventBus.publish(
+                    sessionId && !forceNew ? AUTH_EVENTS.SESSION_UPDATED : AUTH_EVENTS.SESSION_CREATED, 
+                    { sessionId: data.ui_session_id },
+                    { publisherName: 'AuthContext' }
+                );
 
                 logger.info('Session initialized successfully', 'AuthContext', {
                     sessionId: data.ui_session_id
@@ -289,13 +336,26 @@ export const AuthProvider = ({children}) => {
                 stack: error.stack
             });
 
-            setAuthError(`Session initialization failed: ${error.message}`);
+            const errorMessage = `Session initialization failed: ${error.message}`;
+            setAuthError(errorMessage);
 
             trackContextInitialization('AuthContext', 'error', {
                 error: error.message,
                 operation: 'initializeSession',
                 stack: error.stack
             });
+            
+            // Publish auth error event
+            eventBus.publish(
+                AUTH_EVENTS.AUTH_ERROR,
+                { 
+                    message: errorMessage,
+                    operation: 'initializeSession',
+                    error: error.message,
+                    stack: error.stack
+                },
+                { publisherName: 'AuthContext' }
+            );
 
             // Clear the timeout since we've handled the error
             if (sessionInitTimeoutRef.current) {
@@ -318,6 +378,13 @@ export const AuthProvider = ({children}) => {
         // Remove from localStorage using our storage service
         storageService.removeSessionData();
 
+        // Publish session deleted event before changing state
+        eventBus.publish(
+            AUTH_EVENTS.SESSION_DELETED,
+            { sessionId },
+            { publisherName: 'AuthContext' }
+        );
+
         // Reset auth state
         setSessionId(null);
         setIsAuthenticated(false);
@@ -337,7 +404,20 @@ export const AuthProvider = ({children}) => {
                 error: errorText
             });
 
-            setAuthError(`Authentication error: ${response.status} - ${errorText}`);
+            const errorMessage = `Authentication error: ${response.status} - ${errorText}`;
+            setAuthError(errorMessage);
+            
+            // Publish auth error event
+            eventBus.publish(
+                AUTH_EVENTS.AUTH_ERROR,
+                { 
+                    message: errorMessage,
+                    status: response.status,
+                    responseText: errorText
+                },
+                { publisherName: 'AuthContext' }
+            );
+            
             return true;
         }
         return false;

@@ -5,6 +5,8 @@ import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
 import {useAuth} from '@/hooks/use-auth';
 import {trackContextInitialization} from '@/lib/diagnostic';
+import eventBus from '@/lib/eventBus';
+import { MODEL_EVENTS, INIT_EVENTS, AUTH_EVENTS } from '@/lib/events';
 
 //debug imports/const - 8-10 lines, 24-82
 import {createInitTracer, InitilizationState} from '@/lib/initTracer';
@@ -323,6 +325,18 @@ useEffect(() => {
                 modelName: newModelName,
                 parameters: updatedParameters
             });
+            
+            // Publish model changed event
+            eventBus.publish(
+                MODEL_EVENTS.MODEL_CHANGED,
+                { 
+                    modelName: newModelName,
+                    modelId: newModelName,  // For consistency with the selectedModel.id format
+                    parameters: updatedParameters,
+                    backend: model.backend
+                },
+                { publisherName: 'ModelContext' }
+            );
 
             return true;
         } catch (error) {
@@ -386,6 +400,17 @@ useEffect(() => {
                 updates: parameterUpdates,
                 newParameters: updatedParameters
             });
+            
+            // Publish model parameters updated event
+            eventBus.publish(
+                MODEL_EVENTS.MODEL_PARAMETERS_UPDATED,
+                { 
+                    updates: parameterUpdates,
+                    parameters: updatedParameters,
+                    modelId: modelName
+                },
+                { publisherName: 'ModelContext' }
+            );
 
             return true;
         } catch (error) {
@@ -511,12 +536,27 @@ useEffect(() => {
         }
     };
 
-    // Clean up on unmount
+    // Set up event listeners for cross-context events
     useEffect(() => {
+        // Listen for auth session events that may affect this context
+        const sessionDeletedUnsubscribe = eventBus.subscribe(
+            AUTH_EVENTS.SESSION_DELETED, 
+            () => {
+                logger.debug('Session deleted event received, clearing model preferences', 'ModelContext');
+                // Clear any session-specific model data or preferences if needed
+            },
+            { componentName: 'ModelContext' }
+        );
+        
+        // Return cleanup function to unsubscribe
         return () => {
+            // Clean up debounced timer
             if (debouncedUpdateRef.current) {
                 clearTimeout(debouncedUpdateRef.current);
             }
+            
+            // Unsubscribe from all events
+            sessionDeletedUnsubscribe();
         };
     }, []);
 
@@ -540,6 +580,16 @@ useEffect(() => {
 
                 // We now need to WAIT for the state update to complete before initializing
                 if (models.length > 0) {
+                    // Publish models loaded event
+                    eventBus.publish(
+                        MODEL_EVENTS.MODELS_LOADED,
+                        { 
+                            count: models.length,
+                            models: models.map(m => ({ id: m.id, name: m.name }))
+                        },
+                        { publisherName: 'ModelContext' }
+                    );
+                    
                     // Set the models in state and wait for update to complete
                     // by using a separate useEffect that depends on modelConfigs state
                 } else {
@@ -594,6 +644,30 @@ useEffect(() => {
                 
                 // Signal error in initialization context
                 initialization.modelError(error.message);
+                
+                // Publish model error event
+                eventBus.publish(
+                    MODEL_EVENTS.MODEL_ERROR,
+                    { 
+                        error: error.message,
+                        operation: 'initModels',
+                        stack: error.stack,
+                        usedEmergencyFallback: true,
+                        fallbackModel: fallbackModel.id
+                    },
+                    { publisherName: 'ModelContext' }
+                );
+                
+                // Also publish initialization error event
+                eventBus.publish(
+                    INIT_EVENTS.MODEL_PHASE_ERROR,
+                    { 
+                        error: error.message,
+                        operation: 'initModels',
+                        stack: error.stack
+                    },
+                    { publisherName: 'ModelContext' }
+                );
             }
         };
 
@@ -622,6 +696,17 @@ useEffect(() => {
                 // Signal model initialization is complete
                 initialization.completeModelPhase();
                 initialization.setInitState(InitState.MODEL_COMPLETE);
+                
+                // Publish model phase completed event
+                eventBus.publish(
+                    INIT_EVENTS.MODEL_PHASE_COMPLETED,
+                    { 
+                        modelsLoaded: modelConfigs.length,
+                        initializeSuccess: success,
+                        selectedModel: modelName
+                    },
+                    { publisherName: 'ModelContext' }
+                );
             }
         };
 

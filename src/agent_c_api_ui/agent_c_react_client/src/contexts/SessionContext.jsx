@@ -6,6 +6,8 @@ import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
 import {useAuth} from '@/hooks/use-auth';
 import {useModel} from '@/hooks/use-model';
+import eventBus from '@/lib/eventBus';
+import { SESSION_EVENTS, INIT_EVENTS, MODEL_EVENTS, AUTH_EVENTS } from '@/lib/events';
 import {createInitTracer, InitilizationState} from '@/lib/initTracer'; //debugging
 
 if (!API_URL) {
@@ -242,6 +244,44 @@ useEffect(() => {
     // Initialize logger
     logger.info('SessionProvider initializing', 'SessionProvider');
     
+    // Set up event listeners for events from other contexts
+    useEffect(() => {
+        // Listen for model changes to reinitialize agent with new model
+        const modelChangedUnsubscribe = eventBus.subscribe(
+            MODEL_EVENTS.MODEL_CHANGED,
+            (data) => {
+                logger.debug('Model changed event received', 'SessionContext', { data });
+                if (sessionId && isReady && data.modelName) {
+                    // Automatically reinitialize agent with new model if session is ready
+                    updateAgentSettings('MODEL_CHANGE', {
+                        modelName: data.modelName,
+                        backend: data.backend
+                    }).then(success => {
+                        logger.debug('Agent reinitialized after model change', 'SessionContext', { success });
+                    });
+                }
+            },
+            { componentName: 'SessionContext' }
+        );
+        
+        // Listen for session deletion to clear messages
+        const sessionDeletedUnsubscribe = eventBus.subscribe(
+            AUTH_EVENTS.SESSION_DELETED,
+            () => {
+                logger.debug('Session deleted event received, clearing messages', 'SessionContext');
+                setMessages([]);
+                setIsReady(false);
+            },
+            { componentName: 'SessionContext' }
+        );
+        
+        // Return cleanup function
+        return () => {
+            modelChangedUnsubscribe();
+            sessionDeletedUnsubscribe();
+        };
+    }, [sessionId, isReady, updateAgentSettings]);
+    
     // Wait for Model to complete before starting session initialization
     useEffect(() => {
         // Only proceed when model is complete
@@ -249,6 +289,13 @@ useEffect(() => {
             logger.info('Model initialization complete, starting session initialization', 'SessionContext');
             initialization.setInitState(InitState.SESSION_PENDING);
             initialization.startSessionPhase();
+            
+            // Publish session phase started event
+            eventBus.publish(
+                INIT_EVENTS.SESSION_PHASE_STARTED,
+                { timestamp: Date.now() },
+                { publisherName: 'SessionContext' }
+            );
         }
     }, [initialization.phases.model.state]);
 
@@ -463,6 +510,16 @@ useEffect(() => {
                 // Mark the session as ready now that the backend is initialized
                 setIsReady(true);
                 setError(null);
+                
+                // Publish agent initialized event
+                eventBus.publish(
+                    SESSION_EVENTS.AGENT_INITIALIZED,
+                    {
+                        sessionId: response.ui_session_id,
+                        timestamp: Date.now()
+                    },
+                    { publisherName: 'SessionContext' }
+                );
 
                 return true;
             } else {
@@ -510,6 +567,17 @@ useEffect(() => {
                         toolCount: toolNames.length,
                         changed: true
                     });
+                    
+                    // Publish tools updated event
+                    eventBus.publish(
+                        SESSION_EVENTS.TOOLS_UPDATED,
+                        {
+                            tools: toolNames,
+                            toolCount: toolNames.length,
+                            sessionId: sessionId
+                        },
+                        { publisherName: 'SessionContext' }
+                    );
                 } else {
                     logger.debug('Agent tools unchanged, skipping state update', 'SessionContext', {
                         toolCount: toolNames.length,
@@ -788,6 +856,21 @@ useEffect(() => {
     const handleProcessingStatus = (status) => {
         logger.debug('Processing status updated', 'SessionContext', {isStreaming: status});
         setIsStreaming(status);
+        
+        // Publish streaming started/ended events
+        if (status) {
+            eventBus.publish(
+                SESSION_EVENTS.STREAMING_STARTED,
+                { timestamp: Date.now() },
+                { publisherName: 'SessionContext' }
+            );
+        } else {
+            eventBus.publish(
+                SESSION_EVENTS.STREAMING_ENDED,
+                { timestamp: Date.now() },
+                { publisherName: 'SessionContext' }
+            );
+        }
     };
 
     // Save user settings to local storage
@@ -894,8 +977,35 @@ useEffect(() => {
                                 // Signal session initialization is complete
                                 initialization.completeSessionPhase();
                                 initialization.setInitState(InitState.COMPLETE);
+                                
+                                // Publish session initialization completed event
+                                eventBus.publish(
+                                    INIT_EVENTS.SESSION_PHASE_COMPLETED,
+                                    { timestamp: Date.now() },
+                                    { publisherName: 'SessionContext' }
+                                );
+                                
+                                // Also publish overall initialization completed event
+                                eventBus.publish(
+                                    INIT_EVENTS.INITIALIZATION_COMPLETED,
+                                    { 
+                                        timestamp: Date.now(),
+                                        totalTime: Date.now() - initialization.startTime
+                                    },
+                                    { publisherName: 'SessionContext' }
+                                );
                             } else {
                                 initialization.sessionError('Failed to initialize agent session');
+                                
+                                // Publish session initialization error event
+                                eventBus.publish(
+                                    INIT_EVENTS.SESSION_PHASE_ERROR,
+                                    { 
+                                        error: 'Failed to initialize agent session',
+                                        timestamp: Date.now()
+                                    },
+                                    { publisherName: 'SessionContext' }
+                                );
                             }
                         })
                         .catch(err => {
