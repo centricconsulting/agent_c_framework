@@ -7,6 +7,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ModelProvider } from '@/contexts/ModelContext';
 import logger from '@/lib/logger';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
+import InitializationDebugPanel from '@/components/debug/InitializationDebugPanel';
 
 // Only import debug tools in development mode
 const EnhancedDebugPanel = process.env.NODE_ENV === 'development' 
@@ -29,6 +30,10 @@ function App() {
                     <SessionProvider>
                       <Router>
                         <AppRoutes />
+// Add inside the return statement, at the end
+  <React.Suspense fallback={null}>
+    <InitializationDebugPanel />
+  </React.Suspense>
                         {/* Only render debug panel in development mode */}
                         {process.env.NODE_ENV === 'development' && (
                           <React.Suspense fallback={null}>

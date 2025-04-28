@@ -5,6 +5,7 @@ import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
 import {useAuth} from '@/hooks/use-auth';
 import {useModel} from '@/hooks/use-model';
+import {createInitTracer, InitState} from '@/lib/initTracer'; //debugging
 
 if (!API_URL) {
     logger.error('API_URL is not defined! Environment variables may not be loading correctly.', 'SessionContext', {
@@ -13,6 +14,7 @@ if (!API_URL) {
         'NODE_ENV': process.env?.NODE_ENV
     });
 }
+
 
 // Initial state for the reducer
 const initialState = {
@@ -172,6 +174,68 @@ export const SessionContext = createContext({
  * Theme management is handled by ThemeContext.
  */
 export const SessionProvider = ({children}) => {
+    // Debug lines 177-181,
+const tracer = useMemo(() => createInitTracer('SessionContext'), []);
+
+useEffect(() => {
+    tracer.setState(InitState.INIT_STARTED);
+    tracer.setState(InitState.SESSION_CHECKING_STORAGE);
+
+    let existing = null;
+    try {
+      existing = storageService.getSession();
+      if (existing?.id) {
+        tracer.setState(InitState.SESSION_FOUND);
+        tracer.setState(InitState.SESSION_VALIDATING);
+        apiService.validateSession(existing.id)
+          .then((ok) => {
+            if (!ok) throw new Error('Invalid session');
+            tracer.setState(InitState.SESSION_VALID);
+            setSessionId(existing.id);
+            tracer.setState(InitState.SESSION_LOADING_HISTORY);
+            return apiService.getConversationHistory(existing.id);
+          })
+          .then((history) => {
+            setMessages(history);
+            tracer.setState(InitState.SESSION_HISTORY_LOADED);
+            tracer.setState(InitState.SESSION_LOADING_PREFERENCES);
+            return storageService.getUserPreferences();
+          })
+          .then((prefs) => {
+            setSavedSettings(prefs || {});
+            tracer.setState(InitState.SESSION_READY);
+          })
+          .catch(() => {
+            tracer.setState(InitState.SESSION_CREATING_NEW);
+            createNew();
+          });
+      } else {
+        tracer.setState(InitState.SESSION_NOT_FOUND);
+        tracer.setState(InitState.SESSION_CREATING_NEW);
+        createNew();
+      }
+    } catch (err) {
+      tracer.setError(err);
+      tracer.setState(InitState.SESSION_STORAGE_ERROR);
+      createNew();
+    }
+
+    function createNew() {
+      apiService.initializeSession()
+        .then((newSess) => {
+          tracer.setState(InitState.SESSION_CREATED);
+          setSessionId(newSess.ui_session_id);
+          storageService.saveSession(newSess);
+          setMessages([]);
+          tracer.setState(InitState.SESSION_READY);
+        })
+        .catch((err) => {
+          tracer.setError(err);
+          tracer.setState(InitState.ERROR);
+        });
+    }
+  }, [tracer]);
+
     // Initialize logger
     logger.info('SessionProvider initializing', 'SessionProvider');
 

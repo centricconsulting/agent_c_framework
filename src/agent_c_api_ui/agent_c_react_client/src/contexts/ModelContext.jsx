@@ -1,9 +1,13 @@
-import React, { createContext, useState, useEffect, useRef } from 'react';
+import React, {createContext, useState, useEffect, useRef, useMemo} from 'react'; //Memo for debug
 import logger from '@/lib/logger';
 import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
-import { useAuth } from '@/hooks/use-auth';
-import { trackContextInitialization } from '@/lib/diagnostic';
+import {useAuth} from '@/hooks/use-auth';
+import {trackContextInitialization} from '@/lib/diagnostic';
+
+//debug imports/const - 8-10 lines, 24-82
+import {createInitTracer, InitState} from '@/lib/initTracer';
+
 
 // Create the context
 export const ModelContext = createContext();
@@ -16,14 +20,63 @@ const CONFIG_MAX_AGE_DAYS = 14;
  * ModelProvider manages model selection, configuration, and parameter settings
  * This context is responsible for model-related state and API interactions
  */
-export const ModelProvider = ({ children }) => {
+export const ModelProvider = ({children}) => {
+    // debug 25-83
+    const tracer = useMemo(() => createInitTracer('ModelContext'), []);
+useEffect(() => {
+    const init = async () => {
+      tracer.setState(InitState.INITIALIZING);
+      tracer.setState(InitState.MODEL_FETCHING_AVAILABLE);
+
+      try {
+        const data = await apiService.getModels();
+        tracer.setState(InitState.MODEL_FETCHED_AVAILABLE);
+
+        if (!Array.isArray(data.models) || data.models.length === 0) {
+          throw new Error('No models returned');
+        }
+
+        setModelConfigs(data.models);
+
+        // Load saved preferences
+        tracer.setState(InitState.MODEL_LOADING);
+        const saved = storageService.getModelPreferences();
+
+        if (saved && data.models.some(m => m.id === saved.modelId)) {
+          tracer.setState(InitState.MODEL_FOUND_PREFERENCES);
+          tracer.setState(InitState.MODEL_VALIDATING_PREFERENCES);
+          setModelName(saved.modelId);
+          setSelectedModel(data.models.find(m => m.id === saved.modelId));
+          setModelParameters(saved.parameters || {});
+        } else {
+          tracer.setState(InitState.MODEL_NO_PREFERENCES);
+          // Default to first model
+          const first = data.models[0];
+          setModelName(first.id);
+          setSelectedModel(first);
+          setModelParameters(first.parameters || {});
+        }
+
+        tracer.setState(InitState.MODEL_READY);
+      } catch (err) {
+        tracer.setError(err);
+        tracer.setState(InitState.ERROR);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    init();
+  }, [tracer]);
+
     logger.info('ModelProvider initializing', 'ModelProvider');
 
     // Track the start of ModelContext initialization
     trackContextInitialization('ModelContext', 'start');
 
     // Get auth context for session information
-    const { sessionId, isAuthenticated } = useAuth('ModelProvider');
+    const {sessionId, isAuthenticated} = useAuth('ModelProvider');
 
     // Model configuration state
     const [modelConfigs, setModelConfigs] = useState([]);
@@ -52,7 +105,7 @@ export const ModelProvider = ({ children }) => {
                 // Log models received for diagnostic purposes
                 logger.debug('Raw models data received', 'ModelContext', {
                     count: data.models.length,
-                    firstModel: data.models[0] ? { id: data.models[0].id, name: data.models[0].name } : null
+                    firstModel: data.models[0] ? {id: data.models[0].id, name: data.models[0].name} : null
                 });
 
                 // Check if models array is valid
@@ -87,7 +140,7 @@ export const ModelProvider = ({ children }) => {
                 throw new Error('Invalid models data structure');
             }
         } catch (error) {
-            logger.error('Failed to fetch models', 'ModelContext', { error: error.message });
+            logger.error('Failed to fetch models', 'ModelContext', {error: error.message});
             setError(`Failed to load models: ${error.message}`);
 
             trackContextInitialization('ModelContext', 'error', {
@@ -185,7 +238,7 @@ export const ModelProvider = ({ children }) => {
             setSelectedModel(model);
 
             // Update parameters based on selected model's defaults
-            const updatedParameters = { ...modelParameters };
+            const updatedParameters = {...modelParameters};
 
             // Handle temperature
             if (model.parameters?.temperature) {
@@ -272,7 +325,7 @@ export const ModelProvider = ({ children }) => {
             }
 
             // Apply parameter updates to current model parameters
-            const updatedParameters = { ...modelParameters, ...parameterUpdates };
+            const updatedParameters = {...modelParameters, ...parameterUpdates};
             setModelParameters(updatedParameters);
 
             // If session is ready, send updates to API with debouncing
@@ -296,7 +349,7 @@ export const ModelProvider = ({ children }) => {
 
                         logger.debug('Parameters updated in API', 'ModelContext');
                     } catch (error) {
-                        logger.error('Failed to update parameters in API', 'ModelContext', { error: error.message });
+                        logger.error('Failed to update parameters in API', 'ModelContext', {error: error.message});
                     }
                 }, 300);
             }
@@ -313,7 +366,7 @@ export const ModelProvider = ({ children }) => {
 
             return true;
         } catch (error) {
-            logger.error('Failed to update model parameters', 'ModelContext', { error: error.message });
+            logger.error('Failed to update model parameters', 'ModelContext', {error: error.message});
             setError(`Failed to update parameters: ${error.message}`);
             return false;
         }
@@ -558,7 +611,7 @@ export const ModelProvider = ({ children }) => {
                 initializeWithModel
             }}
         >
-            <div data-model-provider="mounted" style={{ display: 'none' }}>
+            <div data-model-provider="mounted" style={{display: 'none'}}>
                 ModelProvider diagnostic element
             </div>
             {children}

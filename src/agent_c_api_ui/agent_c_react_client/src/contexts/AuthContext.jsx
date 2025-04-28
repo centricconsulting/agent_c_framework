@@ -1,8 +1,10 @@
-import React, {createContext, useState, useEffect, useRef} from 'react';
+import React, {createContext, useState, useEffect, useRef, useMemo} from 'react';
+// {useMemo} from 'react'; // debugging
 import logger from '@/lib/logger';
 import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
 import {trackContextInitialization} from '@/lib/diagnostic';
+import {createInitTracer, InitState} from '@/lib/initTracer';
 
 // Create the context
 export const AuthContext = createContext();
@@ -27,6 +29,43 @@ export const AuthProvider = ({children}) => {
     // References for timeouts
     const initTimeoutRef = useRef(null);
     const sessionInitTimeoutRef = useRef(null);
+
+    // Debug purposes 33-68
+    // Create a tracer for this context
+    const tracer = useMemo(() => createInitTracer('AuthContext'), []);
+
+    // In initialization logic
+    useEffect(() => {
+        tracer.setState(InitState.AUTH_CHECKING_STORAGE);
+
+        let foundSession = false;
+        let storageError  = null;
+
+        try {
+            const stored = storageService.getSessionId();
+            foundSession = Boolean(stored);
+        } catch (err) {
+            storageError = err;
+        }
+
+        // After checking storage
+        if (foundSession) {
+            tracer.setState(InitState.AUTH_SESSION_FOUND);
+        } else {
+            tracer.setState(InitState.AUTH_NO_SESSION);
+        }
+
+        // When creating a new session
+        tracer.setState(InitState.AUTH_CREATING_SESSION);
+
+        // When ready
+        tracer.setState(InitState.AUTH_COMPLETE);
+
+        // When error occurs
+        if (storageError) {
+            tracer.setError(storageError);
+        }
+    }, []);
 
     // Initialize auth from localStorage on mount
     useEffect(() => {

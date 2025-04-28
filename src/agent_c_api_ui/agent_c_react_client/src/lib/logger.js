@@ -1,7 +1,10 @@
 /**
- * Logger utility - Performance optimized version
+ * Logger utility - Performance optimized version with context state tracking
  * 
- * This implementation has been completely rewritten to eliminate performance issues.
+ * This implementation has been enhanced with context state transition tracking
+ * to help diagnose initialization and state management issues.
+ * 
+ * Performance optimization features:
  * - No history tracking in production
  * - No subscribers in production
  * - No complex data processing
@@ -18,6 +21,10 @@ log.setLevel(defaultLevel);
 // Only in development: maintain minimal log history
 const MAX_HISTORY_SIZE = 50;
 const logHistory = isProduction ? null : [];
+
+// State transition history (even more limited)
+const MAX_STATE_HISTORY_SIZE = 20;
+const stateTransitionHistory = isProduction ? null : [];
 
 // High performance logger implementation
 const logger = {
@@ -114,6 +121,44 @@ const logger = {
     }
   },
   
+  /**
+   * Log context state transitions - specialized method for context debugging
+   * @param {string} contextName - Name of the context
+   * @param {string} previousState - Previous state descriptor
+   * @param {string} newState - New state descriptor
+   * @param {Object} details - Additional transition details
+   */
+  contextState: (contextName, previousState, newState, details = {}) => {
+    // Create a formatted message for the log
+    const message = `Context state transition: ${previousState} → ${newState}`;
+    
+    // Always log as info at minimum to ensure visibility
+    log.info(`[${contextName || 'UnknownContext'}] ${message}`);
+    
+    // Skip history tracking in production
+    if (isProduction || !stateTransitionHistory) {
+      return;
+    }
+    
+    // Keep history limited
+    if (stateTransitionHistory.length >= MAX_STATE_HISTORY_SIZE) {
+      stateTransitionHistory.shift();
+    }
+    
+    // Add to state transition history with more details
+    stateTransitionHistory.push({
+      timestamp: Date.now(),
+      contextName: contextName || 'UnknownContext',
+      previousState,
+      newState,
+      details: { ...details },
+      durationMs: details.startTime ? Date.now() - details.startTime : undefined
+    });
+    
+    // Also add to regular history
+    addToMinimalHistory('state', message, contextName);
+  },
+  
   // Simplified utility methods - most are no-ops in production
   setLevel: (level) => log.setLevel(level),
   getLevel: () => log.getLevel(),
@@ -125,6 +170,26 @@ const logger = {
     if (!isProduction && logHistory) {
       logHistory.length = 0;
     }
+  },
+  
+  // State transition history methods
+  getStateHistory: () => isProduction ? [] : [...(stateTransitionHistory || [])],
+  clearStateHistory: () => {
+    if (!isProduction && stateTransitionHistory) {
+      stateTransitionHistory.length = 0;
+    }
+  },
+  getLatestStates: (contextName, limit = 5) => {
+    if (isProduction || !stateTransitionHistory) {
+      return [];
+    }
+    // Filter by context name if provided
+    const filtered = contextName 
+      ? stateTransitionHistory.filter(s => s.contextName === contextName)
+      : stateTransitionHistory;
+    
+    // Return the most recent entries up to the limit
+    return filtered.slice(-limit);
   },
   
   // Subscriber pattern disabled in production
