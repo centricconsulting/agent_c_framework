@@ -1,4 +1,5 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
+import { useToast } from "@/hooks/use-toast";
 import PropTypes from 'prop-types';
 import {Label} from '@/components/ui/label';
 import {Slider} from '@/components/ui/slider';
@@ -31,9 +32,14 @@ const ModelParameterControls = ({
     // For temperature settings - Used by non-reasoning models
     const [temperature, setTemperature] = useState(currentParameters?.temperature);
     const [localTemperature, setLocalTemperature] = useState(currentParameters?.temperature);
+    const [temperatureUpdating, setTemperatureUpdating] = useState(false);
 
     // For reasoning effort settings - OpenAI
     const [reasoningEffort, setReasoningEffort] = useState(currentParameters?.reasoning_effort);
+    const [reasoningEffortUpdating, setReasoningEffortUpdating] = useState(false);
+    
+    // Toast hook for feedback
+    const { toast } = useToast();
 
 
     // Extended thinking states for Anthropic
@@ -42,11 +48,14 @@ const ModelParameterControls = ({
         (selectedModel?.parameters?.extended_thinking?.enabled === true &&
             currentParameters?.extended_thinking !== false)
     );
+    const [extendedThinkingUpdating, setExtendedThinkingUpdating] = useState(false);
+    
     const [budgetTokens, setBudgetTokens] = useState(
         (currentParameters?.extended_thinking && currentParameters?.budget_tokens) ||
         (selectedModel?.parameters?.extended_thinking?.enabled === true ?
             selectedModel?.parameters?.extended_thinking?.budget_tokens?.default : 0) || 0
     );
+    const [budgetTokensUpdating, setBudgetTokensUpdating] = useState(false);
 
     /**
      * Handles real-time temperature slider changes
@@ -62,35 +71,88 @@ const ModelParameterControls = ({
      * Commits temperature changes to the backend
      * @param {number[]} value - Array containing single temperature value
      */
-    const handleTemperatureCommit = (value) => {
-        // console.log('Temperature Commit:', value);
+    const handleTemperatureCommit = useCallback(async (value) => {
         const temp = value[0];
-        setTemperature(temp);  // Update the main temperature state
-        onParameterChange('temperature', temp);
-    };
+        setTemperature(temp);  // Update the main temperature state for UI
+        setTemperatureUpdating(true);
+        
+        try {
+            // Call the API to update the temperature
+            const success = await onParameterChange('temperature', temp);
+            
+            if (!success) {
+                // Update failed - revert to previous value
+                setTemperature(currentParameters?.temperature);
+                setLocalTemperature(currentParameters?.temperature);
+                toast({
+                    title: "Update Failed",
+                    description: "Could not update temperature. Please try again.",
+                    variant: "destructive"
+                });
+            }
+        } catch (err) {
+            // Error handling
+            console.error('Error updating temperature:', err);
+            // Revert to previous value
+            setTemperature(currentParameters?.temperature);
+            setLocalTemperature(currentParameters?.temperature);
+            toast({
+                title: "Error",
+                description: err.message || "An unknown error occurred",
+                variant: "destructive"
+            });
+        } finally {
+            setTemperatureUpdating(false);
+        }
+    }, [onParameterChange, currentParameters?.temperature, toast]);
 
     /**
      * Handles toggling the extended thinking feature
      * @param {boolean} enabled - Whether extended thinking is enabled
      */
-    const handleExtendedThinkingChange = (enabled) => {
-        // Update the UI state first
+    const handleExtendedThinkingChange = useCallback(async (enabled) => {
+        // Update the UI state first for responsiveness
         setExtendedThinkingEnabled(enabled);
-
-        // Update the parent with the enabled state
-        // onParameterChange('extended_thinking', enabled);
-
-        // If disabled, set budget_tokens to 0
-        if (!enabled) {
-            setBudgetTokens(0);
-            onParameterChange('budget_tokens', 0);
-        } else {
-            // When enabling, set to default value
-            const defaultValue = selectedModel?.parameters?.extended_thinking?.budget_tokens?.default || 5000;
-            setBudgetTokens(defaultValue);
-            onParameterChange('budget_tokens', defaultValue);
+        setExtendedThinkingUpdating(true);
+        
+        try {
+            let success;
+            
+            // If disabled, set budget_tokens to 0
+            if (!enabled) {
+                setBudgetTokens(0);
+                success = await onParameterChange('budget_tokens', 0);
+            } else {
+                // When enabling, set to default value
+                const defaultValue = selectedModel?.parameters?.extended_thinking?.budget_tokens?.default || 5000;
+                setBudgetTokens(defaultValue);
+                success = await onParameterChange('budget_tokens', defaultValue);
+            }
+            
+            if (!success) {
+                // Update failed - revert to previous state
+                const previousState = !enabled;
+                setExtendedThinkingEnabled(previousState);
+                toast({
+                    title: "Update Failed",
+                    description: `Could not ${enabled ? 'enable' : 'disable'} extended thinking. Please try again.`,
+                    variant: "destructive"
+                });
+            }
+        } catch (err) {
+            // Error handling
+            console.error('Error updating extended thinking:', err);
+            // Revert to previous state
+            setExtendedThinkingEnabled(!enabled);
+            toast({
+                title: "Error",
+                description: err.message || "An unknown error occurred",
+                variant: "destructive"
+            });
+        } finally {
+            setExtendedThinkingUpdating(false);
         }
-    };
+    }, [onParameterChange, selectedModel?.parameters?.extended_thinking?.budget_tokens?.default, toast]);
 
     /**
      * Handles changes to the budget tokens slider
@@ -105,20 +167,50 @@ const ModelParameterControls = ({
      * Commits budget tokens changes to the backend
      * @param {number[]} value - Array containing single budget tokens value
      */
-    const handleBudgetTokensCommit = (value) => {
+    const handleBudgetTokensCommit = useCallback(async (value) => {
         const tokens = value[0];
-        if (tokens === 0) {
-            setExtendedThinkingEnabled(false);
-            // Notify parent of both changes
-            // onParameterChange('extended_thinking', false);
-            setBudgetTokens(0);
-            onParameterChange('budget_tokens', 0);
-        } else {
-            // Normal case - just update budget tokens
-            setBudgetTokens(tokens);
-            onParameterChange('budget_tokens', tokens);
+        setBudgetTokensUpdating(true);
+        
+        try {
+            let success;
+            
+            if (tokens === 0) {
+                setExtendedThinkingEnabled(false);
+                setBudgetTokens(0);
+                success = await onParameterChange('budget_tokens', 0);
+            } else {
+                // Normal case - just update budget tokens
+                setBudgetTokens(tokens);
+                success = await onParameterChange('budget_tokens', tokens);
+            }
+            
+            if (!success) {
+                // Update failed - revert to previous values
+                const previousTokens = currentParameters?.budget_tokens || 0;
+                setBudgetTokens(previousTokens);
+                setExtendedThinkingEnabled(previousTokens > 0);
+                toast({
+                    title: "Update Failed",
+                    description: "Could not update thinking budget. Please try again.",
+                    variant: "destructive"
+                });
+            }
+        } catch (err) {
+            // Error handling
+            console.error('Error updating budget tokens:', err);
+            // Revert to previous values
+            const previousTokens = currentParameters?.budget_tokens || 0;
+            setBudgetTokens(previousTokens);
+            setExtendedThinkingEnabled(previousTokens > 0);
+            toast({
+                title: "Error",
+                description: err.message || "An unknown error occurred",
+                variant: "destructive"
+            });
+        } finally {
+            setBudgetTokensUpdating(false);
         }
-    };
+    }, [onParameterChange, currentParameters?.budget_tokens, toast]);
 
     useEffect(() => {
         // console.log('Current Parameters:', currentParameters);
@@ -194,10 +286,38 @@ const ModelParameterControls = ({
      * Handles changes to reasoning effort selection - OpenAI
      * @param {string} value - Selected reasoning effort level
      */
-    const handleReasoningEffortChange = (value) => {
+    const handleReasoningEffortChange = useCallback(async (value) => {
+        // Update local state immediately for UI responsiveness
         setReasoningEffort(value);
-        onParameterChange('reasoning_effort', value);
-    };
+        setReasoningEffortUpdating(true);
+        
+        try {
+            // Call the API to update the reasoning effort
+            const success = await onParameterChange('reasoning_effort', value);
+            
+            if (!success) {
+                // Update failed - revert to previous value
+                setReasoningEffort(currentParameters?.reasoning_effort);
+                toast({
+                    title: "Update Failed",
+                    description: "Could not update reasoning effort. Please try again.",
+                    variant: "destructive"
+                });
+            }
+        } catch (err) {
+            // Error handling
+            console.error('Error updating reasoning effort:', err);
+            // Revert to previous value
+            setReasoningEffort(currentParameters?.reasoning_effort);
+            toast({
+                title: "Error",
+                description: err.message || "An unknown error occurred",
+                variant: "destructive"
+            });
+        } finally {
+            setReasoningEffortUpdating(false);
+        }
+    }, [onParameterChange, currentParameters?.reasoning_effort, toast]);
 
 
     /**
@@ -261,12 +381,16 @@ const ModelParameterControls = ({
                             value={[localTemperature]}
                             onValueChange={handleTemperatureChange}  // Smooth UI updates
                             onValueCommit={handleTemperatureCommit}  // Backend update on finish
-                            className="w-full"
+                            className={`w-full ${temperatureUpdating ? 'updating' : ''}`}
+                            disabled={temperatureUpdating}
                             aria-labelledby={temperatureLabelId}
                             aria-valuenow={localTemperature}
                             aria-valuemin={temperatureConfig.min}
                             aria-valuemax={temperatureConfig.max}
                         />
+                        {temperatureUpdating && (
+                            <div className="parameter-updating-indicator">Updating...</div>
+                        )}
                     </div>
                     <div className="parameter-helper-text" id="temperature-helper">
                         Higher values make output more creative but less predictable
@@ -290,14 +414,19 @@ const ModelParameterControls = ({
                     <Select
                         value={reasoningEffort}
                         onValueChange={handleReasoningEffortChange}
+                        disabled={reasoningEffortUpdating}
                         aria-labelledby={reasoningEffortLabelId}
                     >
                         <SelectTrigger
                             id="reasoning-effort"
-                            className="parameter-select-trigger"
+                            className={`parameter-select-trigger ${reasoningEffortUpdating ? 'updating' : ''}`}
                             aria-label="Select reasoning effort level"
                         >
-                            <SelectValue placeholder="Select reasoning effort"/>
+                            {reasoningEffortUpdating ? (
+                                <div className="parameter-updating">Updating...</div>
+                            ) : (
+                                <SelectValue placeholder="Select reasoning effort"/>
+                            )}
                         </SelectTrigger>
                         <SelectContent className="parameter-select-content">
                             {reasoningEffortOptions.map(option => (
@@ -328,13 +457,20 @@ const ModelParameterControls = ({
                         >
                             Extended Thinking
                         </Label>
-                        <Switch
-                            id="extended-thinking"
-                            checked={extendedThinkingEnabled}
-                            onCheckedChange={handleExtendedThinkingChange}
-                            aria-labelledby={extendedThinkingLabelId}
-                            aria-describedby="extended-thinking-description"
-                        />
+                        <div className="switch-container">
+                            <Switch
+                                id="extended-thinking"
+                                checked={extendedThinkingEnabled}
+                                onCheckedChange={handleExtendedThinkingChange}
+                                disabled={extendedThinkingUpdating}
+                                className={extendedThinkingUpdating ? 'updating' : ''}
+                                aria-labelledby={extendedThinkingLabelId}
+                                aria-describedby="extended-thinking-description"
+                            />
+                            {extendedThinkingUpdating && (
+                                <div className="parameter-updating-indicator">Updating...</div>
+                            )}
+                        </div>
                     </div>
                     <div 
                         className="parameter-helper-text"
@@ -364,20 +500,26 @@ const ModelParameterControls = ({
                                     {budgetTokens.toLocaleString()} tokens
                                 </span>
                             </div>
-                            <Slider
-                                id="budget-tokens-slider"
-                                min={budgetTokensConfig.min}
-                                max={budgetTokensConfig.max}
-                                step={budgetTokensConfig.step}
-                                value={[budgetTokens]}
-                                onValueChange={handleBudgetTokensChange}
-                                onValueCommit={handleBudgetTokensCommit}
-                                className="w-full"
-                                aria-labelledby={thinkingBudgetLabelId}
-                                aria-valuenow={budgetTokens}
-                                aria-valuemin={budgetTokensConfig.min}
-                                aria-valuemax={budgetTokensConfig.max}
-                            />
+                            <div className="slider-container">
+                                <Slider
+                                    id="budget-tokens-slider"
+                                    min={budgetTokensConfig.min}
+                                    max={budgetTokensConfig.max}
+                                    step={budgetTokensConfig.step}
+                                    value={[budgetTokens]}
+                                    onValueChange={handleBudgetTokensChange}
+                                    onValueCommit={handleBudgetTokensCommit}
+                                    disabled={budgetTokensUpdating}
+                                    className={`w-full ${budgetTokensUpdating ? 'updating' : ''}`}
+                                    aria-labelledby={thinkingBudgetLabelId}
+                                    aria-valuenow={budgetTokens}
+                                    aria-valuemin={budgetTokensConfig.min}
+                                    aria-valuemax={budgetTokensConfig.max}
+                                />
+                                {budgetTokensUpdating && (
+                                    <div className="parameter-updating-indicator">Updating...</div>
+                                )}
+                            </div>
                             <div 
                                 className="parameter-helper-text"
                                 id="thinking-budget-description"
@@ -442,4 +584,13 @@ ModelParameterControls.propTypes = {
     id: PropTypes.string,
 };
 
-export default ModelParameterControls;
+// Memoize the component to prevent unnecessary re-renders
+const MemoizedModelParameterControls = React.memo(ModelParameterControls, (prevProps, nextProps) => {
+    // Only re-render if model or parameters change
+    return (
+        prevProps.selectedModel?.id === nextProps.selectedModel?.id &&
+        JSON.stringify(prevProps.currentParameters) === JSON.stringify(nextProps.currentParameters)
+    );
+});
+
+export default MemoizedModelParameterControls;

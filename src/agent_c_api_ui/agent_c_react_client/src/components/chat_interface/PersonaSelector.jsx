@@ -1,4 +1,5 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState, useRef} from 'react';
+import { useToast } from "@/hooks/use-toast";
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Textarea} from '@/components/ui/textarea';
 import {
@@ -90,6 +91,15 @@ function PersonaSelector({
     const [error, setError] = useState(null);
     const [selectedPersona, setSelectedPersona] = useState(persona_name || 'default');
     const [localCustomPrompt, setLocalCustomPrompt] = useState(customPrompt);
+    
+    // Loading state indicators
+    const [modelChanging, setModelChanging] = useState(false);
+    const [personaChanging, setPersonaChanging] = useState(false);
+    const [promptUpdating, setPromptUpdating] = useState(false);
+    const promptUpdateTimeoutRef = useRef(null);
+    
+    // Toast hook for feedback
+    const { toast } = useToast();
 
     // Sync local UI state with prop
     useEffect(() => {
@@ -98,21 +108,72 @@ function PersonaSelector({
             setLocalCustomPrompt(customPrompt);
         }
     }, [isInitialized, persona_name, customPrompt]);
+    
+    // Clean up the prompt update timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (promptUpdateTimeoutRef.current) {
+                clearTimeout(promptUpdateTimeoutRef.current);
+            }
+        };
+    }, []);
 
     /**
      * Handles persona selection changes
      * @param {string} value - Selected persona identifier
      */
-    const handlePersonaChange = useCallback((value) => {
-        setSelectedPersona(value);
-        const selectedPersonaData = personas.find(p => p.name === value);
-        if (selectedPersonaData) {
-            onUpdateSettings('SETTINGS_UPDATE', {
-                persona_name: value,
-                customPrompt: selectedPersonaData.content
+    const handlePersonaChange = useCallback(async (value) => {
+        setPersonaChanging(true);
+        setSelectedPersona(value); // Update UI immediately for responsiveness
+        
+        try {
+            const selectedPersonaData = personas.find(p => p.name === value);
+            if (selectedPersonaData) {
+                // Make the API call to update settings
+                const success = await onUpdateSettings('SETTINGS_UPDATE', {
+                    persona_name: value,
+                    customPrompt: selectedPersonaData.content
+                });
+                
+                if (success) {
+                    // Also update the local custom prompt to match
+                    setLocalCustomPrompt(selectedPersonaData.content);
+                    
+                    // Show success message
+                    toast({
+                        title: "Persona Changed",
+                        description: `Now using ${selectedPersonaData.name} persona`,
+                        variant: "success"
+                    });
+                    setError(null); // Clear any existing errors
+                } else {
+                    // Revert UI if the API call failed
+                    setSelectedPersona(persona_name);
+                    setError(`Failed to change persona to ${value}`);
+                    toast({
+                        title: "Persona Change Failed",
+                        description: "Could not change persona. Please try again.",
+                        variant: "destructive"
+                    });
+                }
+            } else {
+                setError(`Could not find persona: ${value}`);
+            }
+        } catch (err) {
+            // Handle errors
+            console.error('Error changing persona:', err);
+            setError(`Error changing persona: ${err.message}`);
+            // Revert UI state on error
+            setSelectedPersona(persona_name);
+            toast({
+                title: "Error",
+                description: err.message || "An unknown error occurred",
+                variant: "destructive"
             });
+        } finally {
+            setPersonaChanging(false);
         }
-    }, [personas, onUpdateSettings]);
+    }, [personas, onUpdateSettings, toast, persona_name]);
 
     /**
      * Handles changes to the custom prompt textarea
@@ -120,9 +181,58 @@ function PersonaSelector({
      */
     const handleCustomPromptChange = useCallback((e) => {
         // Update local state immediately for responsive UI
-        // console.log('Custom Prompt Change:', e.target.value);
         setLocalCustomPrompt(e.target.value);
+        
+        // Clear any existing timeout to implement debouncing
+        if (promptUpdateTimeoutRef.current) {
+            clearTimeout(promptUpdateTimeoutRef.current);
+        }
+        
+        // Set a new timeout for debounced updates
+        promptUpdateTimeoutRef.current = setTimeout(() => {
+            handleCustomPromptUpdate(e.target.value);
+        }, 1000); // 1 second debounce
     }, []);
+    
+    // Separate function to handle the actual update
+    const handleCustomPromptUpdate = useCallback(async (value) => {
+        // Skip if value hasn't changed
+        if (value === customPrompt) return;
+        
+        setPromptUpdating(true);
+        try {
+            // Call the API to update the prompt
+            const success = await onUpdateSettings('SETTINGS_UPDATE', {
+                customPrompt: value
+            });
+            
+            if (success) {
+                // Success case - the prompt was updated
+                setError(null);
+            } else {
+                // Failure case - revert to previous value
+                setLocalCustomPrompt(customPrompt);
+                setError('Failed to update custom prompt');
+                toast({
+                    title: "Update Failed",
+                    description: "Could not update custom prompt. Please try again.",
+                    variant: "destructive"
+                });
+            }
+        } catch (err) {
+            // Error handling
+            console.error('Error updating custom prompt:', err);
+            setLocalCustomPrompt(customPrompt); // Revert to previous value
+            setError(`Error updating prompt: ${err.message}`);
+            toast({
+                title: "Error",
+                description: err.message || "An unknown error occurred",
+                variant: "destructive"
+            });
+        } finally {
+            setPromptUpdating(false);
+        }
+    }, [customPrompt, onUpdateSettings, toast]);
 
     /**
      * Triggers settings update when custom prompt editing is complete
@@ -131,11 +241,15 @@ function PersonaSelector({
         // Only send update if the value has actually changed
         if (localCustomPrompt !== customPrompt) {
             console.log('User Changed Custom Prompt:', localCustomPrompt);
-            onUpdateSettings('SETTINGS_UPDATE', {
-                customPrompt: localCustomPrompt
-            });
+            // Clear any existing timeout first
+            if (promptUpdateTimeoutRef.current) {
+                clearTimeout(promptUpdateTimeoutRef.current);
+                promptUpdateTimeoutRef.current = null;
+            }
+            // Update immediately on blur
+            handleCustomPromptUpdate(localCustomPrompt);
         }
-    }, [localCustomPrompt, customPrompt, onUpdateSettings]);
+    }, [localCustomPrompt, customPrompt]);
 
     /**
      * Handles model parameter changes
@@ -152,17 +266,19 @@ function PersonaSelector({
      * Handles model selection changes
      * @param {string} selectedValue - Selected model identifier
      */
-    const handleModelChange = useCallback((selectedValue) => {
+    const handleModelChange = useCallback(async (selectedValue) => {
         // Debug the incoming value
         console.log('handleModelChange called with selectedValue:', selectedValue);
-
-        // Defensive check: verify safeModelConfigs exists and is an array
-        if (!Array.isArray(safeModelConfigs)) {
-            console.error('handleModelChange: safeModelConfigs is not an array:', safeModelConfigs);
-            return;
-        }
+        setModelChanging(true);
 
         try {
+            // Defensive check: verify safeModelConfigs exists and is an array
+            if (!Array.isArray(safeModelConfigs)) {
+                console.error('handleModelChange: safeModelConfigs is not an array:', safeModelConfigs);
+                setError('Invalid model configuration data');
+                return;
+            }
+
             // Use our safe model configs array that's guaranteed to be an array
             const model = safeModelConfigs.find(model => model && model.id === selectedValue);
             console.log('Found model:', model);
@@ -171,21 +287,51 @@ function PersonaSelector({
                 console.log('Selected model:', model.id, 'backend:', model.backend);
                 if (typeof onUpdateSettings === 'function') {
                     console.log('Calling onUpdateSettings with MODEL_CHANGE action');
-                    onUpdateSettings('MODEL_CHANGE', {
+                    
+                    // Use our enhanced API call with better success/error handling
+                    const success = await onUpdateSettings('MODEL_CHANGE', {
                         modelName: model.id,
                         backend: model.backend
                     });
+
+                    if (success) {
+                        // Show success toast if we have access to toast function
+                        toast({
+                            title: "Model Changed",
+                            description: `Now using ${model.label || model.id}`,
+                            variant: "success"
+                        });
+                        setError(null); // Clear any existing errors
+                    } else {
+                        // Show error toast if we have access to toast function
+                        setError(`Failed to change model to ${model.label || model.id}`);
+                        toast({
+                            title: "Model Change Failed",
+                            description: "Could not change model. Please try again.",
+                            variant: "destructive"
+                        });
+                    }
                 } else {
                     console.error('onUpdateSettings is not a function:', onUpdateSettings);
+                    setError('Internal error: Cannot update model settings');
                 }
             } else {
                 console.error(`Could not find valid model with ID ${selectedValue} in available models`);
                 console.log('Available models:', safeModelConfigs);
+                setError(`Could not find valid model with ID ${selectedValue}`);
             }
         } catch (error) {
             console.error('Error in handleModelChange:', error);
+            setError(`Error changing model: ${error.message}`);
+            toast({
+                title: "Error",
+                description: error.message || "An unknown error occurred",
+                variant: "destructive"
+            });
+        } finally {
+            setModelChanging(false);
         }
-    }, [safeModelConfigs, onUpdateSettings]);
+    }, [safeModelConfigs, onUpdateSettings, toast]);
 
     return (
         <Card className="persona-selector-card" role="region" aria-label="Persona and model settings">
@@ -199,14 +345,19 @@ function PersonaSelector({
                     <Select 
                         value={selectedPersona} 
                         onValueChange={handlePersonaChange}
+                        disabled={personaChanging}
                         aria-label="Select a persona"
                     >
                         <SelectTrigger
                             id="persona-select"
-                            className="persona-selector-select-trigger"
+                            className={`persona-selector-select-trigger ${personaChanging ? 'loading' : ''}`}
                             aria-label="Available personas"
                         >
-                            <SelectValue placeholder="Select a persona"/>
+                            {personaChanging ? (
+                                <div className="persona-selector-loading">Loading...</div>
+                            ) : (
+                                <SelectValue placeholder="Select a persona"/>
+                            )}
                         </SelectTrigger>
                         <SelectContent className="persona-selector-select-content">
                             {personas.map((p) => (
@@ -234,16 +385,22 @@ function PersonaSelector({
                 {/* Custom Instructions */}
                 <div className="persona-selector-section">
                     <Label htmlFor="custom-prompt">Customize Persona Instructions</Label>
-                    <Textarea
-                        id="custom-prompt"
-                        value={localCustomPrompt}
-                        onChange={handleCustomPromptChange}
-                        onBlur={handleCustomPromptBlur}
-                        className="persona-selector-textarea"
-                        placeholder="You are a helpful assistant."
-                        aria-label="Custom persona instructions"
-                        aria-describedby="custom-prompt-description"
-                    />
+                    <div className="prompt-textarea-container">
+                        <Textarea
+                            id="custom-prompt"
+                            value={localCustomPrompt}
+                            onChange={handleCustomPromptChange}
+                            onBlur={handleCustomPromptBlur}
+                            className={`persona-selector-textarea ${promptUpdating ? 'updating' : ''}`}
+                            placeholder="You are a helpful assistant."
+                            aria-label="Custom persona instructions"
+                            aria-describedby="custom-prompt-description"
+                            disabled={promptUpdating}
+                        />
+                        {promptUpdating && (
+                            <div className="prompt-updating-indicator">Saving...</div>
+                        )}
+                    </div>
                     <div id="custom-prompt-description" className="sr-only">
                         Enter custom instructions for the AI to follow during the conversation
                     </div>
@@ -256,14 +413,19 @@ function PersonaSelector({
                         <Select
                             value={modelName}
                             onValueChange={handleModelChange}
+                            disabled={modelChanging}
                             aria-label="Select an AI model"
                         >
                             <SelectTrigger
                                 id="model-select"
-                                className="persona-selector-select-trigger"
+                                className={`persona-selector-select-trigger ${modelChanging ? 'loading' : ''}`}
                                 aria-label="Available AI models"
                             >
-                                <SelectValue placeholder="Select model"/>
+                                {modelChanging ? (
+                                    <div className="persona-selector-loading">Loading...</div>
+                                ) : (
+                                    <SelectValue placeholder="Select model"/>
+                                )}
                             </SelectTrigger>
                             <SelectContent className="persona-selector-select-content">
                                 {safeModelConfigs && safeModelConfigs.length > 0 ? Object.entries(safeModelConfigs.reduce((acc, model) => {
@@ -323,4 +485,16 @@ function PersonaSelector({
     );
 }
 
-export default PersonaSelector;
+// Memoize the PersonaSelector component to prevent unnecessary re-renders
+const MemoizedPersonaSelector = React.memo(PersonaSelector, (prevProps, nextProps) => {
+    // Only re-render if these specific props change
+    return (
+        prevProps.persona_name === nextProps.persona_name &&
+        prevProps.customPrompt === nextProps.customPrompt &&
+        prevProps.modelName === nextProps.modelName &&
+        prevProps.isInitialized === nextProps.isInitialized &&
+        JSON.stringify(prevProps.modelParameters) === JSON.stringify(nextProps.modelParameters)
+    );
+});
+
+export default MemoizedPersonaSelector;
