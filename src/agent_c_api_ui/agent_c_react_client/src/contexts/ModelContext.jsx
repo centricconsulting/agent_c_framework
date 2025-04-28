@@ -170,10 +170,13 @@ useEffect(() => {
                 lastUpdated: new Date().toISOString()
             };
 
-            // Store updated config - use saveAgentConfig method from storageService
-            storageService.saveAgentConfig(configToSave);
+            // Store updated config with unified model data method
+            storageService.saveModelData({
+                modelName: configToSave.modelName,
+                modelParameters: configToSave.modelParameters || {}
+            });
 
-            logger.debug('Saved model configuration to localStorage', 'ModelContext', {
+            logger.debug('Saved model configuration to storage', 'ModelContext', {
                 modelName: configToSave.modelName,
                 parametersKeys: Object.keys(configToSave.modelParameters || {})
             });
@@ -193,15 +196,21 @@ useEffect(() => {
      */
     const loadSavedConfig = () => {
         try {
-            const savedConfig = storageService.getAgentConfig();
-            if (!savedConfig) {
+            const modelData = storageService.getModelData();
+            if (!modelData || Object.keys(modelData).length === 0) {
                 return null;
             }
 
-            logger.debug('Found saved model configuration', 'ModelContext');
+            logger.debug('Found saved model configuration', 'ModelContext', {
+                modelName: modelData.modelName,
+                hasParameters: !!modelData.modelParameters
+            });
 
-            // We don't need to check expiration here as storageService.getAgentConfig()
-            // already handles expiration (14-day check)
+            // Convert to the format expected by the rest of the code
+            const savedConfig = {
+                modelName: modelData.modelName,
+                modelParameters: modelData.modelParameters || {}
+            };
 
             return savedConfig;
         } catch (err) {
@@ -290,8 +299,8 @@ useEffect(() => {
                 }
             }
 
-            // Save changes to localStorage
-            saveConfigToStorage({
+            // Save changes using unified model data storage
+            storageService.saveModelData({
                 modelName: newModelName,
                 modelParameters: updatedParameters
             });
@@ -354,8 +363,8 @@ useEffect(() => {
                 }, 300);
             }
 
-            // Save changes to localStorage
-            saveConfigToStorage({
+            // Save changes using unified model data storage
+            storageService.updateModelData({
                 modelParameters: updatedParameters
             });
 
@@ -400,7 +409,7 @@ useEffect(() => {
                 };
 
                 setModelParameters(initialParameters);
-                saveConfigToStorage({
+                storageService.saveModelData({
                     modelName: model.id,
                     modelParameters: initialParameters
                 });

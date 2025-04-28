@@ -783,23 +783,20 @@ useEffect(() => {
             // Merge new settings with existing settings
             const updatedSettings = {...savedSettings, ...newSettings};
 
-            // Add timestamp for expiration checking
-            updatedSettings.timestamp = Date.now();
-
-            // Update state
+            // Update state first
             setSavedSettings(updatedSettings);
 
             // Add version number to track settings changes
             updatedSettings.version = (updatedSettings.version || 0) + 1;
 
-            // Save to localStorage
-            const saveSuccess = await storageService.saveSettings(updatedSettings);
+            // Save to storage using enhanced unified method
+            const saveSuccess = storageService.saveUserSettings(updatedSettings);
 
             if (!saveSuccess) {
-                logger.warn('Failed to save settings to localStorage', 'SessionContext');
+                logger.warn('Failed to save settings to storage', 'SessionContext');
             }
 
-            logger.debug('User settings saved to localStorage', 'SessionContext', {
+            logger.debug('User settings saved to storage', 'SessionContext', {
                 settingsKeys: Object.keys(updatedSettings),
                 version: updatedSettings.version,
                 success: saveSuccess
@@ -818,26 +815,16 @@ useEffect(() => {
     // Load user settings from local storage
     const loadUserSettings = async () => {
         try {
-            // Load settings from localStorage
-            const loadedSettings = await storageService.loadSettings();
+            // Load settings using enhanced storage service method
+            const loadedSettings = storageService.getUserSettings();
 
-            if (!loadedSettings) {
-                logger.debug('No saved settings found in localStorage', 'SessionContext');
+            if (!loadedSettings || Object.keys(loadedSettings).length === 0) {
+                logger.debug('No saved settings found in storage', 'SessionContext');
                 return false;
             }
 
-            // Check if settings are expired (7 days)
-            const now = Date.now();
-            const timestamp = loadedSettings.timestamp || 0;
-            const expirationTime = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-
-            if (now - timestamp > expirationTime) {
-                logger.debug('Saved settings are expired, ignoring', 'SessionContext', {
-                    age: Math.floor((now - timestamp) / (24 * 60 * 60 * 1000)) + ' days'
-                });
-                return false;
-            }
-
+            // No need to check expiration as getUserSettings already handles that
+            
             // Apply loaded settings where appropriate
             setSavedSettings(loadedSettings);
 

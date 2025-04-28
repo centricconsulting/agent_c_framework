@@ -89,18 +89,22 @@ export const AuthProvider = ({children}) => {
 
         // Try to load session from localStorage
         try {
-            const storedSessionId = storageService.getSessionId();
+            const sessionData = storageService.getSessionData();
 
-            if (storedSessionId) {
-                logger.init('Found stored session ID', 'AuthContext', {sessionId: storedSessionId});
+            if (sessionData && sessionData.sessionId) {
+                logger.init('Found stored session data', 'AuthContext', {
+                    sessionId: sessionData.sessionId,
+                    created: sessionData.created
+                });
                 trackContextInitialization('AuthContext', 'update', {
                     foundSessionId: true,
-                    sessionIdLength: storedSessionId.length
+                    sessionIdLength: sessionData.sessionId.length,
+                    sessionAge: new Date() - new Date(sessionData.created)
                 });
-                setSessionId(storedSessionId);
+                setSessionId(sessionData.sessionId);
                 setIsAuthenticated(true);
             } else {
-                logger.init('No stored session ID found', 'AuthContext');
+                logger.init('No stored session data found', 'AuthContext');
                 trackContextInitialization('AuthContext', 'update', {foundSessionId: false});
             }
         } catch (error) {
@@ -164,7 +168,10 @@ export const AuthProvider = ({children}) => {
             });
 
             // Store session in localStorage via our storage service
-            storageService.saveSessionId(sessionConfig.ui_session_id);
+            storageService.saveSessionData({
+                sessionId: sessionConfig.ui_session_id,
+                created: new Date().toISOString()
+            });
 
             // Update state
             setSessionId(sessionConfig.ui_session_id);
@@ -221,7 +228,12 @@ export const AuthProvider = ({children}) => {
 
             if (data.ui_session_id) {
                 // Store session in localStorage via our storage service
-                storageService.saveSessionId(data.ui_session_id);
+                storageService.saveSessionData({
+                    sessionId: data.ui_session_id,
+                    created: new Date().toISOString(),
+                    // Store any additional session metadata from the API response
+                    apiResponse: data
+                });
 
                 // Update state
                 setSessionId(data.ui_session_id);
@@ -280,7 +292,7 @@ export const AuthProvider = ({children}) => {
         logger.info('Logging out, removing session', 'AuthContext', {sessionId});
 
         // Remove from localStorage using our storage service
-        storageService.removeSessionId();
+        storageService.removeSessionData();
 
         // Reset auth state
         setSessionId(null);
