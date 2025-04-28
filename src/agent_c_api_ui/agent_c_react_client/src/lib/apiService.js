@@ -247,6 +247,15 @@ const apiService = {
   },
   
   /**
+   * Get current agent configuration
+   * @param {string} sessionId - Session ID
+   * @returns {Promise<Object>} Current agent configuration
+   */
+  getAgentConfig: (sessionId) => {
+    return fetchWithTimeout(`/agent_config/${sessionId}`);
+  },
+  
+  /**
    * Fetch available models
    * @returns {Promise<Object>} Available models
    */

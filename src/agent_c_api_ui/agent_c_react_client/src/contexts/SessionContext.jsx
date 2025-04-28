@@ -413,8 +413,24 @@ export const SessionProvider = ({ children }) => {
             
             if (data.status === 'success' && Array.isArray(data.initialized_tools)) {
                 const toolNames = data.initialized_tools.map(tool => tool.class_name);
-                setActiveTools(toolNames);
-                logger.debug('Agent tools fetched successfully', 'SessionContext', { toolCount: toolNames.length });
+                
+                // Only update state if there's an actual change to reduce renders
+                const currentToolsStr = JSON.stringify(activeTools || []);
+                const newToolsStr = JSON.stringify(toolNames);
+                
+                if (currentToolsStr !== newToolsStr) {
+                    setActiveTools(toolNames);
+                    logger.debug('Agent tools updated in state', 'SessionContext', { 
+                        toolCount: toolNames.length,
+                        changed: true 
+                    });
+                } else {
+                    logger.debug('Agent tools unchanged, skipping state update', 'SessionContext', { 
+                        toolCount: toolNames.length,
+                        changed: false 
+                    });
+                }
+                
                 return true;
             } else {
                 logger.warn('Unexpected response from get_agent_tools', 'SessionContext', { data });
@@ -426,7 +442,7 @@ export const SessionProvider = ({ children }) => {
         }
     };
 
-    // Update agent settings (settings update and model changes)
+    // Update agent settings (settings update, model changes, parameter updates)    
     const updateAgentSettings = async (updateType, values) => {
         if (!sessionId || !isReady) {
             logger.warn('Skipping updateAgentSettings - session not ready', 'SessionContext', { sessionId, isReady, updateType });
@@ -439,9 +455,7 @@ export const SessionProvider = ({ children }) => {
                 case 'SETTINGS_UPDATE': {
                     const updatedPersona = values.persona_name || persona;
                     const updatedPrompt = values.customPrompt || customPrompt;
-                    setPersona(updatedPersona);
-                    setCustomPrompt(updatedPrompt);
-
+                    
                     const settings = {
                         model_name: modelName,
                         persona_name: updatedPersona,
@@ -455,7 +469,20 @@ export const SessionProvider = ({ children }) => {
                         promptLength: updatedPrompt?.length 
                     });
 
-                    await apiService.updateSettings(sessionId, settings);
+                    // Make API call and get response
+                    const response = await apiService.updateSettings(sessionId, settings);
+                    
+                    // Verify API call was successful
+                    if (!response || response.error) {
+                        logger.warn('Settings update API call failed', 'SessionContext', { 
+                            error: response?.error || 'No response received'
+                        });
+                        throw new Error(response?.error || 'Failed to update settings');
+                    }
+                    
+                    // Only update state after successful API call
+                    setPersona(updatedPersona);
+                    setCustomPrompt(updatedPrompt);
                     incrementSettingsVersion();
                     
                     // Save user settings to localStorage
@@ -473,7 +500,6 @@ export const SessionProvider = ({ children }) => {
                     // Get the modelName and backend from the values
                     const { modelName: newModelName, backend } = values;
                     
-                    // Add extensive debugging
                     logger.debug('MODEL_CHANGE details', 'SessionContext', { 
                         newModelName, 
                         backend,
@@ -504,9 +530,27 @@ export const SessionProvider = ({ children }) => {
                         throw new Error('Missing sessionId for model change');
                     }
 
+                    // Make API call and get response
                     const response = await apiService.updateSettings(sessionId, settings);
                     logger.debug('Model change API response', 'SessionContext', { response });
 
+                    // Verify API call was successful
+                    if (!response || response.error) {
+                        logger.warn('Model change API call failed', 'SessionContext', { 
+                            error: response?.error || 'No response received',
+                            newModelName
+                        });
+                        throw new Error(response?.error || 'Failed to change model');
+                    }
+                    
+                    // Verify the model was actually changed in the backend
+                    if (response.model_name !== newModelName) {
+                        logger.warn('Model name mismatch after update', 'SessionContext', {
+                            requestedModel: newModelName,
+                            actualModel: response.model_name
+                        });
+                    }
+                    
                     incrementSettingsVersion();
                     
                     // Save user settings to localStorage
@@ -515,7 +559,10 @@ export const SessionProvider = ({ children }) => {
                         lastBackend: backend,
                     });
                     
-                    logger.info('Model changed successfully', 'SessionContext', { newModelName });
+                    logger.info('Model changed successfully', 'SessionContext', { 
+                        newModelName,
+                        confirmedByBackend: response.model_name === newModelName 
+                    });
                     return true;
                 }
                 case 'PARAMETER_UPDATE': {
@@ -535,7 +582,33 @@ export const SessionProvider = ({ children }) => {
                         parameters: values
                     });
                     
-                    await apiService.updateSettings(sessionId, settings);
+                    // Make API call and get response
+                    const response = await apiService.updateSettings(sessionId, settings);
+                    
+                    // Verify API call was successful
+                    if (!response || response.error) {
+                        logger.warn('Parameter update API call failed', 'SessionContext', { 
+                            error: response?.error || 'No response received'
+                        });
+                        throw new Error(response?.error || 'Failed to update parameters');
+                    }
+                    
+                    // Verify parameters were set
+                    const parametersApplied = Object.keys(values).every(key => {
+                        // Skip model_name etc. properties that aren't actual parameters
+                        if (['model_name', 'persona_name', 'custom_prompt'].includes(key)) {
+                            return true;
+                        }
+                        return response[key] === values[key];
+                    });
+                    
+                    if (!parametersApplied) {
+                        logger.warn('Not all parameters were applied', 'SessionContext', {
+                            requestedParams: values,
+                            responseParams: response
+                        });
+                    }
+                    
                     incrementSettingsVersion();
                     
                     // Save user settings to localStorage
@@ -543,7 +616,10 @@ export const SessionProvider = ({ children }) => {
                         lastParameters: values,
                     });
                     
-                    logger.info('Parameters updated successfully', 'SessionContext', { parameters: values });
+                    logger.info('Parameters updated successfully', 'SessionContext', { 
+                        parameters: values,
+                        allApplied: parametersApplied
+                    });
                     return true;
                 }
                 default:
@@ -566,8 +642,35 @@ export const SessionProvider = ({ children }) => {
         
         try {
             logger.info('Equipping tools', 'SessionContext', { toolCount: tools.length });
-            await apiService.updateTools(sessionId, tools);
-            await fetchAgentTools();
+            
+            // Make API call to update tools
+            const response = await apiService.updateTools(sessionId, tools);
+            
+            // Verify API call was successful
+            if (!response || response.error) {
+                logger.warn('Tool update API call failed', 'SessionContext', { 
+                    error: response?.error || 'No response received'
+                });
+                throw new Error(response?.error || 'Failed to update tools');
+            }
+            
+            // Fetch the actual tools that were equipped
+            const refreshedTools = await fetchAgentTools();
+            
+            // Verify that all requested tools were actually equipped
+            if (refreshedTools) {
+                const actualTools = activeTools || [];
+                const missingTools = tools.filter(tool => !actualTools.includes(tool));
+                
+                if (missingTools.length > 0) {
+                    logger.warn('Some requested tools were not equipped', 'SessionContext', {
+                        missingTools,
+                        requestedCount: tools.length,
+                        actualCount: actualTools.length
+                    });
+                }
+            }
+            
             incrementSettingsVersion();
             
             // Save user settings to localStorage
@@ -575,7 +678,10 @@ export const SessionProvider = ({ children }) => {
                 lastActiveTools: tools,
             });
             
-            logger.info('Tools equipped successfully', 'SessionContext');
+            logger.info('Tools equipped successfully', 'SessionContext', {
+                requestedCount: tools.length,
+                actualCount: activeTools?.length || 0
+            });
             return true;
         } catch (err) {
             logger.error("Failed to equip tools", 'SessionContext', { error: err.message, stack: err.stack });
@@ -602,14 +708,23 @@ export const SessionProvider = ({ children }) => {
             // Update state
             setSavedSettings(updatedSettings);
             
+            // Add version number to track settings changes
+            updatedSettings.version = (updatedSettings.version || 0) + 1;
+            
             // Save to localStorage
-            await storageService.saveSettings(updatedSettings);
+            const saveSuccess = await storageService.saveSettings(updatedSettings);
+            
+            if (!saveSuccess) {
+                logger.warn('Failed to save settings to localStorage', 'SessionContext');
+            }
             
             logger.debug('User settings saved to localStorage', 'SessionContext', { 
                 settingsKeys: Object.keys(updatedSettings),
+                version: updatedSettings.version,
+                success: saveSuccess
             });
             
-            return true;
+            return saveSuccess;
         } catch (err) {
             logger.error('Failed to save user settings', 'SessionContext', { 
                 error: err.message, 
@@ -642,11 +757,22 @@ export const SessionProvider = ({ children }) => {
                 return false;
             }
             
-            // Update state with loaded settings
+            // Apply loaded settings where appropriate
             setSavedSettings(loadedSettings);
+            
+            // Apply persona and custom prompt if available
+            if (loadedSettings.lastPersona) {
+                setPersona(loadedSettings.lastPersona);
+            }
+            
+            if (loadedSettings.lastPrompt) {
+                setCustomPrompt(loadedSettings.lastPrompt);
+            }
             
             logger.debug('User settings loaded from localStorage', 'SessionContext', { 
                 settingsKeys: Object.keys(loadedSettings),
+                appliedPersona: !!loadedSettings.lastPersona,
+                appliedPrompt: !!loadedSettings.lastPrompt
             });
             
             return true;
@@ -822,6 +948,75 @@ export const SessionProvider = ({ children }) => {
     // Get modelConfigs directly at the top level - not inside hooks
     const { modelConfigs } = useModel('SessionProvider');
 
+        // Add a method to reconcile UI state with backend state
+    const reconcileState = async () => {
+        if (!sessionId || !isReady) {
+            logger.warn('Cannot reconcile state - session not ready', 'SessionContext');
+            return false;
+        }
+        
+        try {
+            // Fetch current configuration from backend
+            const config = await apiService.getAgentConfig(sessionId);
+            
+            if (!config || config.error) {
+                logger.warn('Failed to fetch agent configuration', 'SessionContext', {
+                    error: config?.error || 'No response received'
+                });
+                return false;
+            }
+            
+            // Update local state if needed
+            let stateChanged = false;
+            
+            // Check and update model name if needed
+            if (config.model_name && config.model_name !== modelName) {
+                logger.info('Updating model name from backend state', 'SessionContext', {
+                    currentModelName: modelName,
+                    backendModelName: config.model_name
+                });
+                // Note: We don't update modelName directly as it's managed by ModelContext
+                stateChanged = true;
+            }
+            
+            // Check and update persona if needed
+            if (config.persona_name && config.persona_name !== persona) {
+                logger.info('Updating persona from backend state', 'SessionContext', {
+                    currentPersona: persona,
+                    backendPersona: config.persona_name
+                });
+                setPersona(config.persona_name);
+                stateChanged = true;
+            }
+            
+            // Check and update custom prompt if needed
+            if (config.custom_prompt && config.custom_prompt !== customPrompt) {
+                logger.info('Updating custom prompt from backend state', 'SessionContext');
+                setCustomPrompt(config.custom_prompt);
+                stateChanged = true;
+            }
+            
+            // Refresh tools
+            const toolsRefreshed = await fetchAgentTools();
+            if (toolsRefreshed) {
+                stateChanged = true;
+            }
+            
+            // Increment settings version if state changed
+            if (stateChanged) {
+                incrementSettingsVersion();
+            }
+            
+            return stateChanged;
+        } catch (err) {
+            logger.error('Error reconciling state with backend', 'SessionContext', {
+                error: err.message,
+                stack: err.stack
+            });
+            return false;
+        }
+    };
+
     // Create a value object with all the state and actions
     const contextValue = useMemo(() => {
         return {
@@ -850,6 +1045,7 @@ export const SessionProvider = ({ children }) => {
             setMessages,
             saveUserSettings,
             loadUserSettings,
+            reconcileState,
             
             // Add modelConfigs directly to ensure it's always available
             modelConfigs: Array.isArray(modelConfigs) ? modelConfigs : []
