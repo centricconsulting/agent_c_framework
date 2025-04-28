@@ -10,7 +10,7 @@ import logger from './logger';
 import eventBus from './eventBus';
 
 // Initialization states as constants
-export const InitState = {
+export const InitilizationState = {
   // General states
   UNKNOWN: 'unknown',
   INITIALIZING: 'initializing',
@@ -80,7 +80,7 @@ export function createInitTracer(contextName) {
   }
   
   // Internal state
-  let currentState = InitState.UNKNOWN;
+  let currentState = InitilizationState.UNKNOWN;
   let startTime = Date.now();
   let lastUpdateTime = startTime;
   let error = null;
@@ -161,32 +161,32 @@ export function createInitTracer(contextName) {
       
       // Publish specific events based on state
       switch (newState) {
-        case InitState.AUTH_COMPLETE:
+        case InitilizationState.AUTH_COMPLETE:
           eventBus.publish(InitEvents.AUTH_COMPLETE, {
             timestamp,
             elapsed
           }, { publisherName: contextName });
           break;
-        case InitState.MODEL_READY:
+        case InitilizationState.MODEL_READY:
           eventBus.publish(InitEvents.MODEL_READY, {
             timestamp,
             elapsed
           }, { publisherName: contextName });
           break;
-        case InitState.SESSION_READY:
+        case InitilizationState.SESSION_READY:
           eventBus.publish(InitEvents.SESSION_READY, {
             timestamp,
             elapsed
           }, { publisherName: contextName });
           break;
-        case InitState.READY:
+        case InitilizationState.READY:
           eventBus.publish(InitEvents.INITIALIZATION_COMPLETE, {
             timestamp,
             elapsed,
             contextName
           }, { publisherName: contextName });
           break;
-        case InitState.ERROR:
+        case InitilizationState.ERROR:
           eventBus.publish(InitEvents.INITIALIZATION_ERROR, {
             timestamp,
             elapsed,
@@ -221,7 +221,7 @@ export function createInitTracer(contextName) {
       };
       
       // Update state to error
-      tracer.setState(InitState.ERROR, {
+      tracer.setState(InitilizationState.ERROR, {
         error: errorDetails,
         ...details
       });
@@ -231,7 +231,7 @@ export function createInitTracer(contextName) {
      * Reset the tracer to its initial state
      */
     reset: () => {
-      currentState = InitState.UNKNOWN;
+      currentState = InitilizationState.UNKNOWN;
       startTime = Date.now();
       lastUpdateTime = startTime;
       error = null;
@@ -245,7 +245,7 @@ export function createInitTracer(contextName) {
      * @param {Object} details - Additional completion details
      */
     markReady: (details = {}) => {
-      tracer.setState(InitState.READY, details);
+      tracer.setState(InitilizationState.READY, details);
     }
   };
   
@@ -304,7 +304,7 @@ export function createGlobalInitTracker() {
       
       return requiredContexts.every(contextName => {
         const context = contextStates.get(contextName);
-        return context && context.state === InitState.READY;
+        return context && context.state === InitilizationState.READY;
       });
     },
     
@@ -321,7 +321,7 @@ export function createGlobalInitTracker() {
       return requiredContexts
         .filter(contextName => {
           const context = contextStates.get(contextName);
-          return !context || context.state !== InitState.READY;
+          return !context || context.state !== InitilizationState.READY;
         })
         .map(contextName => {
           const context = contextStates.get(contextName) || { state: 'unknown' };
@@ -344,7 +344,7 @@ export function createGlobalInitTracker() {
       return contextNames
         .filter(contextName => {
           const context = contextStates.get(contextName);
-          return context && context.state === InitState.ERROR;
+          return context && context.state === InitilizationState.ERROR;
         })
         .map(contextName => {
           const context = contextStates.get(contextName);

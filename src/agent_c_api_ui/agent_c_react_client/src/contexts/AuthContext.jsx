@@ -1,10 +1,11 @@
-import React, {createContext, useState, useEffect, useRef, useMemo} from 'react';
+import React, {createContext, useState, useEffect, useRef, useMemo, useContext} from 'react';
+import { InitializationContext, InitState } from '@/contexts/InitializationContext';
 // {useMemo} from 'react'; // debugging
 import logger from '@/lib/logger';
 import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
 import {trackContextInitialization} from '@/lib/diagnostic';
-import {createInitTracer, InitState} from '@/lib/initTracer';
+import {createInitTracer, InitilizationState} from '@/lib/initTracer';
 
 // Create the context
 export const AuthContext = createContext();
@@ -20,6 +21,9 @@ const SESSION_INIT_TIMEOUT = 10000; // ms for session initialization timeout
  * and related error handling
  */
 export const AuthProvider = ({children}) => {
+    // Access initialization context
+    const initialization = useContext(InitializationContext);
+    
     // Session state
     const [sessionId, setSessionId] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -36,7 +40,7 @@ export const AuthProvider = ({children}) => {
 
     // In initialization logic
     useEffect(() => {
-        tracer.setState(InitState.AUTH_CHECKING_STORAGE);
+        tracer.setState(InitilizationState.AUTH_CHECKING_STORAGE);
 
         let foundSession = false;
         let storageError  = null;
@@ -50,16 +54,16 @@ export const AuthProvider = ({children}) => {
 
         // After checking storage
         if (foundSession) {
-            tracer.setState(InitState.AUTH_SESSION_FOUND);
+            tracer.setState(InitilizationState.AUTH_SESSION_FOUND);
         } else {
-            tracer.setState(InitState.AUTH_NO_SESSION);
+            tracer.setState(InitilizationState.AUTH_NO_SESSION);
         }
 
         // When creating a new session
-        tracer.setState(InitState.AUTH_CREATING_SESSION);
+        tracer.setState(InitilizationState.AUTH_CREATING_SESSION);
 
         // When ready
-        tracer.setState(InitState.AUTH_COMPLETE);
+        tracer.setState(InitilizationState.AUTH_COMPLETE);
 
         // When error occurs
         if (storageError) {
@@ -71,6 +75,10 @@ export const AuthProvider = ({children}) => {
     useEffect(() => {
         const initStartTime = performance.now();
         logger.init('AuthProvider initializing', 'AuthContext');
+
+        // Signal auth initialization is starting
+        initialization.setInitState(InitState.AUTH_PENDING);
+        initialization.startAuthPhase();
 
         // Track the start of AuthContext initialization
         trackContextInitialization('AuthContext', 'start', {initStartTime});
@@ -109,6 +117,9 @@ export const AuthProvider = ({children}) => {
             }
         } catch (error) {
             logger.error('Error retrieving session ID from storage', 'AuthContext', {error});
+            // Signal error in initialization context
+            initialization.authError(error.message);
+            
             trackContextInitialization('AuthContext', 'error', {
                 error: error.message,
                 operation: 'retrieveSessionId'
@@ -138,6 +149,10 @@ export const AuthProvider = ({children}) => {
                 initializationTimeMs: Math.round(initDuration),
                 isAuthenticated: !!sessionId
             });
+            
+            // Signal auth initialization is complete
+            initialization.completeAuthPhase();
+            initialization.setInitState(InitState.AUTH_COMPLETE);
 
             // Clear timeout if initialization completes normally
             if (initTimeoutRef.current) {
@@ -146,12 +161,21 @@ export const AuthProvider = ({children}) => {
             }
         }, 100);
 
+        // Setup a new timeout to detect stuck initialization
+        const initStateTimeout = setTimeout(() => {
+            if (initialization.phases.auth.state !== 'complete') {
+                logger.error('Auth initialization timed out in state machine', 'AuthContext');
+                initialization.authError('Initialization timed out');
+            }
+        }, INIT_TIMEOUT + 2000); // Give a bit more time than the normal timeout
+
         return () => {
             // Cleanup timeouts
             if (initTimeoutRef.current) {
                 clearTimeout(initTimeoutRef.current);
                 initTimeoutRef.current = null;
             }
+            clearTimeout(initStateTimeout);
         };
     }, []);
 

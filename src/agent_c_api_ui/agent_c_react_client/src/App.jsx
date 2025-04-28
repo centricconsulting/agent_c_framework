@@ -5,6 +5,7 @@ import { SessionProvider } from '@/contexts/SessionContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ModelProvider } from '@/contexts/ModelContext';
+import { InitializationProvider } from '@/contexts/InitializationContext';
 import logger from '@/lib/logger';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import InitializationDebugPanel from '@/components/debug/InitializationDebugPanel';
@@ -20,14 +21,16 @@ function App() {
   
   return (
     <ErrorBoundary name="AppRoot">
-      <ErrorBoundary name="ThemeProvider">
-        <ThemeProvider>
-          <ErrorBoundary name="AuthProvider">
-            <AuthProvider>
-              <ErrorBoundary name="ModelProvider">
-                <ModelProvider>
-                  <ErrorBoundary name="SessionProvider">
-                    <SessionProvider>
+      <ErrorBoundary name="InitializationProvider">
+        <InitializationProvider>
+          <ErrorBoundary name="ThemeProvider">
+            <ThemeProvider>
+              <ErrorBoundary name="AuthProvider">
+                <AuthProvider>
+                  <ErrorBoundary name="ModelProvider">
+                    <ModelProvider>
+                      <ErrorBoundary name="SessionProvider">
+                        <SessionProvider>
                       <Router>
                         <AppRoutes />
 // Add inside the return statement, at the end
@@ -41,13 +44,15 @@ function App() {
                           </React.Suspense>
                         )}
                       </Router>
-                    </SessionProvider>
+                        </SessionProvider>
+                      </ErrorBoundary>
+                    </ModelProvider>
                   </ErrorBoundary>
-                </ModelProvider>
+                </AuthProvider>
               </ErrorBoundary>
-            </AuthProvider>
+            </ThemeProvider>
           </ErrorBoundary>
-        </ThemeProvider>
+        </InitializationProvider>
       </ErrorBoundary>
     </ErrorBoundary>
   );

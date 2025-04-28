@@ -1,11 +1,12 @@
-import React, {createContext, useState, useEffect, useRef, useReducer, useMemo} from 'react';
+import React, {createContext, useState, useEffect, useRef, useReducer, useMemo, useContext} from 'react';
+import { InitializationContext, InitState } from '@/contexts/InitializationContext';
 import {API_URL} from '@/config/config';
 import logger from '@/lib/logger';
 import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
 import {useAuth} from '@/hooks/use-auth';
 import {useModel} from '@/hooks/use-model';
-import {createInitTracer, InitState} from '@/lib/initTracer'; //debugging
+import {createInitTracer, InitilizationState} from '@/lib/initTracer'; //debugging
 
 if (!API_URL) {
     logger.error('API_URL is not defined! Environment variables may not be loading correctly.', 'SessionContext', {
@@ -174,70 +175,82 @@ export const SessionContext = createContext({
  * Theme management is handled by ThemeContext.
  */
 export const SessionProvider = ({children}) => {
+    // Access initialization context
+    const initialization = useContext(InitializationContext);
     // Debug lines 177-181,
 const tracer = useMemo(() => createInitTracer('SessionContext'), []);
 
 useEffect(() => {
-    tracer.setState(InitState.INIT_STARTED);
-    tracer.setState(InitState.SESSION_CHECKING_STORAGE);
+    tracer.setState(InitilizationState.INIT_STARTED);
+    tracer.setState(InitilizationState.SESSION_CHECKING_STORAGE);
 
     let existing = null;
     try {
       existing = storageService.getSession();
       if (existing?.id) {
-        tracer.setState(InitState.SESSION_FOUND);
-        tracer.setState(InitState.SESSION_VALIDATING);
+        tracer.setState(InitilizationState.SESSION_FOUND);
+        tracer.setState(InitilizationState.SESSION_VALIDATING);
         apiService.validateSession(existing.id)
           .then((ok) => {
             if (!ok) throw new Error('Invalid session');
-            tracer.setState(InitState.SESSION_VALID);
+            tracer.setState(InitilizationState.SESSION_VALID);
             setSessionId(existing.id);
-            tracer.setState(InitState.SESSION_LOADING_HISTORY);
+            tracer.setState(InitilizationState.SESSION_LOADING_HISTORY);
             return apiService.getConversationHistory(existing.id);
           })
           .then((history) => {
             setMessages(history);
-            tracer.setState(InitState.SESSION_HISTORY_LOADED);
-            tracer.setState(InitState.SESSION_LOADING_PREFERENCES);
+            tracer.setState(InitilizationState.SESSION_HISTORY_LOADED);
+            tracer.setState(InitilizationState.SESSION_LOADING_PREFERENCES);
             return storageService.getUserPreferences();
           })
           .then((prefs) => {
             setSavedSettings(prefs || {});
-            tracer.setState(InitState.SESSION_READY);
+            tracer.setState(InitilizationState.SESSION_READY);
           })
           .catch(() => {
-            tracer.setState(InitState.SESSION_CREATING_NEW);
+            tracer.setState(InitilizationState.SESSION_CREATING_NEW);
             createNew();
           });
       } else {
-        tracer.setState(InitState.SESSION_NOT_FOUND);
-        tracer.setState(InitState.SESSION_CREATING_NEW);
+        tracer.setState(InitilizationState.SESSION_NOT_FOUND);
+        tracer.setState(InitilizationState.SESSION_CREATING_NEW);
         createNew();
       }
     } catch (err) {
       tracer.setError(err);
-      tracer.setState(InitState.SESSION_STORAGE_ERROR);
+      tracer.setState(InitilizationState.SESSION_STORAGE_ERROR);
       createNew();
     }
 
     function createNew() {
       apiService.initializeSession()
         .then((newSess) => {
-          tracer.setState(InitState.SESSION_CREATED);
+          tracer.setState(InitilizationState.SESSION_CREATED);
           setSessionId(newSess.ui_session_id);
           storageService.saveSession(newSess);
           setMessages([]);
-          tracer.setState(InitState.SESSION_READY);
+          tracer.setState(InitilizationState.SESSION_READY);
         })
         .catch((err) => {
           tracer.setError(err);
-          tracer.setState(InitState.ERROR);
+          tracer.setState(InitilizationState.ERROR);
         });
     }
   }, [tracer]);
 
     // Initialize logger
     logger.info('SessionProvider initializing', 'SessionProvider');
+    
+    // Wait for Model to complete before starting session initialization
+    useEffect(() => {
+        // Only proceed when model is complete
+        if (initialization.phases.model.state === 'complete') {
+            logger.info('Model initialization complete, starting session initialization', 'SessionContext');
+            initialization.setInitState(InitState.SESSION_PENDING);
+            initialization.startSessionPhase();
+        }
+    }, [initialization.phases.model.state]);
 
     // LOOP PREVENTION: Add a mounting flag ref to prevent repeated initialization
     const hasInitializedRef = useRef(false);
@@ -863,7 +876,7 @@ useEffect(() => {
     useEffect(() => {
         // Only proceed with fetchInitialData if auth and model contexts are ready
         // AND we haven't initialized yet
-        if (!authInitializing && !modelLoading && !hasInitializedRef.current) {
+        if (!authInitializing && !modelLoading && !hasInitializedRef.current && initialization.phases.model.state === 'complete') {
             logger.debug('Dependencies ready, fetching initial data', 'SessionContext', {
                 hasSessionId: !!sessionId,
                 hasModelName: !!modelName
@@ -875,11 +888,24 @@ useEffect(() => {
                 // initialize because no session exists. By removing the sessionId check, all users should trigger an initialization.
                 if (modelName) {
                     logger.info('Initial data loaded, now initializing agent session with API', 'SessionContext');
-                    initializeAgentSession();
+                    initializeAgentSession()
+                        .then(success => {
+                            if (success) {
+                                // Signal session initialization is complete
+                                initialization.completeSessionPhase();
+                                initialization.setInitState(InitState.COMPLETE);
+                            } else {
+                                initialization.sessionError('Failed to initialize agent session');
+                            }
+                        })
+                        .catch(err => {
+                            logger.error('Error initializing agent session', 'SessionContext', { error: err.message });
+                            initialization.sessionError(err.message);
+                        });
                 }
             });
         }
-    }, [authInitializing, modelLoading]); // Only rerun when these dependencies change
+    }, [authInitializing, modelLoading, initialization.phases.model.state]); // Only rerun when these dependencies change
 
     // Helper to update session ID across all relevant places
     const updateSessionIdAcrossApp = async (newSessionId) => {
@@ -987,6 +1013,11 @@ useEffect(() => {
     useEffect(() => {
         // Skip if the values haven't actually changed, preventing unnecessary reruns
         if (sessionId === lastSessionIdRef.current && modelName === lastModelNameRef.current) {
+            return;
+        }
+        
+        // Skip if model phase isn't complete yet
+        if (initialization.phases.model.state !== 'complete') {
             return;
         }
 

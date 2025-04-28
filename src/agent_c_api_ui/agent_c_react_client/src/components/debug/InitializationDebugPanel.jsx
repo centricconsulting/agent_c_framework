@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { globalInitTracker, InitState } from '@/lib/initTracer';
+import { globalInitTracker, InitilizationState } from '@/lib/initTracer';
 import eventBus from '@/lib/eventBus';
 import logger from '@/lib/logger';
 
@@ -131,7 +131,7 @@ const getStateStyle = (state) => {
   
   if (state.includes('error')) {
     return { ...styles.stateLabel, ...styles.stateError };
-  } else if (state === InitState.READY) {
+  } else if (state === InitilizationState.READY) {
     return { ...styles.stateLabel, ...styles.stateReady };
   } else if (state.startsWith('auth_')) {
     return { ...styles.stateLabel, ...styles.stateAuth };
@@ -139,7 +139,7 @@ const getStateStyle = (state) => {
     return { ...styles.stateLabel, ...styles.stateModel };
   } else if (state.startsWith('session_')) {
     return { ...styles.stateLabel, ...styles.stateSession };
-  } else if (state === InitState.INITIALIZING) {
+  } else if (state === InitilizationState.INITIALIZING) {
     return { ...styles.stateLabel, ...styles.stateInitializing };
   }
   
@@ -227,7 +227,7 @@ const InitializationDebugPanel = ({ isVisible = true }) => {
   // Calculate overall status
   const allContexts = Array.from(contextStates.entries());
   const hasErrors = allContexts.some(([_, data]) => data.state.includes('error'));
-  const allReady = allContexts.length > 0 && allContexts.every(([_, data]) => data.state === InitState.READY);
+  const allReady = allContexts.length > 0 && allContexts.every(([_, data]) => data.state === InitilizationState.READY);
   const status = hasErrors ? 'Error' : allReady ? 'Ready' : 'Initializing';
   
   return (

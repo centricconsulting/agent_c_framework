@@ -1,4 +1,5 @@
-import React, {createContext, useState, useEffect, useRef, useMemo} from 'react'; //Memo for debug
+import React, {createContext, useState, useEffect, useRef, useMemo, useContext} from 'react'; //Memo for debug
+import { InitializationContext, InitState } from '@/contexts/InitializationContext';
 import logger from '@/lib/logger';
 import apiService from '@/lib/apiService';
 import storageService from '@/lib/storageService';
@@ -6,7 +7,7 @@ import {useAuth} from '@/hooks/use-auth';
 import {trackContextInitialization} from '@/lib/diagnostic';
 
 //debug imports/const - 8-10 lines, 24-82
-import {createInitTracer, InitState} from '@/lib/initTracer';
+import {createInitTracer, InitilizationState} from '@/lib/initTracer';
 
 
 // Create the context
@@ -21,16 +22,18 @@ const CONFIG_MAX_AGE_DAYS = 14;
  * This context is responsible for model-related state and API interactions
  */
 export const ModelProvider = ({children}) => {
+    // Access initialization context
+    const initialization = useContext(InitializationContext);
     // debug 25-83
     const tracer = useMemo(() => createInitTracer('ModelContext'), []);
 useEffect(() => {
     const init = async () => {
-      tracer.setState(InitState.INITIALIZING);
-      tracer.setState(InitState.MODEL_FETCHING_AVAILABLE);
+      tracer.setState(InitilizationState.INITIALIZING);
+      tracer.setState(InitilizationState.MODEL_FETCHING_AVAILABLE);
 
       try {
         const data = await apiService.getModels();
-        tracer.setState(InitState.MODEL_FETCHED_AVAILABLE);
+        tracer.setState(InitilizationState.MODEL_FETCHED_AVAILABLE);
 
         if (!Array.isArray(data.models) || data.models.length === 0) {
           throw new Error('No models returned');
@@ -39,17 +42,17 @@ useEffect(() => {
         setModelConfigs(data.models);
 
         // Load saved preferences
-        tracer.setState(InitState.MODEL_LOADING);
+        tracer.setState(InitilizationState.MODEL_LOADING);
         const saved = storageService.getModelPreferences();
 
         if (saved && data.models.some(m => m.id === saved.modelId)) {
-          tracer.setState(InitState.MODEL_FOUND_PREFERENCES);
-          tracer.setState(InitState.MODEL_VALIDATING_PREFERENCES);
+          tracer.setState(InitilizationState.MODEL_FOUND_PREFERENCES);
+          tracer.setState(InitilizationState.MODEL_VALIDATING_PREFERENCES);
           setModelName(saved.modelId);
           setSelectedModel(data.models.find(m => m.id === saved.modelId));
           setModelParameters(saved.parameters || {});
         } else {
-          tracer.setState(InitState.MODEL_NO_PREFERENCES);
+          tracer.setState(InitilizationState.MODEL_NO_PREFERENCES);
           // Default to first model
           const first = data.models[0];
           setModelName(first.id);
@@ -57,10 +60,10 @@ useEffect(() => {
           setModelParameters(first.parameters || {});
         }
 
-        tracer.setState(InitState.MODEL_READY);
+        tracer.setState(InitilizationState.MODEL_READY);
       } catch (err) {
         tracer.setError(err);
-        tracer.setState(InitState.ERROR);
+        tracer.setState(InitilizationState.ERROR);
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -71,9 +74,20 @@ useEffect(() => {
   }, [tracer]);
 
     logger.info('ModelProvider initializing', 'ModelProvider');
+    
+    // Wait for Auth to complete before starting model initialization
+    useEffect(() => {
+        // Only proceed when auth is complete
+        if (initialization.phases.auth.state === 'complete') {
+            logger.info('Auth initialization complete, starting model initialization', 'ModelContext');
+            initialization.setInitState(InitState.MODEL_PENDING);
+            initialization.startModelPhase();
+            
+            // Track the start of ModelContext initialization
+            trackContextInitialization('ModelContext', 'start');
+        }
+    }, [initialization.phases.auth.state]);
 
-    // Track the start of ModelContext initialization
-    trackContextInitialization('ModelContext', 'start');
 
     // Get auth context for session information
     const {sessionId, isAuthenticated} = useAuth('ModelProvider');
@@ -506,10 +520,16 @@ useEffect(() => {
         };
     }, []);
 
-    // Load models on mount
+    // Load models when auth is complete
     useEffect(() => {
+        // Only proceed when auth is complete
+        if (initialization.phases.auth.state !== 'complete') {
+            return; // Wait for auth to complete
+        }
+        
         const initModels = async () => {
             try {
+                initialization.startModelPhase();
                 const models = await fetchModels();
 
                 // Log what we received from the API for diagnostics
@@ -571,11 +591,14 @@ useEffect(() => {
                     usedEmergencyFallback: true,
                     selectedModel: fallbackModel.id
                 });
+                
+                // Signal error in initialization context
+                initialization.modelError(error.message);
             }
         };
 
         initModels();
-    }, []);
+    }, [initialization.phases.auth.state]);
 
     // Add a new effect that depends on modelConfigs to handle initialization after state update
     useEffect(() => {
@@ -595,11 +618,15 @@ useEffect(() => {
                     initializeSuccess: success,
                     selectedModel: modelName
                 });
+                
+                // Signal model initialization is complete
+                initialization.completeModelPhase();
+                initialization.setInitState(InitState.MODEL_COMPLETE);
             }
         };
 
         initializeModelsAfterStateUpdate();
-    }, [modelConfigs]); // This effect runs whenever modelConfigs state changes
+    }, [modelConfigs, initialization]); // This effect runs whenever modelConfigs state changes
 
     return (
         <ModelContext.Provider
