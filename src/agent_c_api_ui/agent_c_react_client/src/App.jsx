@@ -1,36 +1,21 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import AppRoutes from '@/Routes';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ModelProvider } from '@/contexts/ModelContext';
-import { trackContextInitialization, getContextInitializationStatus } from '@/lib/diagnostic';
-import '@/lib/context-diagnostic-console';
 import logger from '@/lib/logger';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 
+// Only import debug tools in development mode
+const EnhancedDebugPanel = process.env.NODE_ENV === 'development' 
+  ? React.lazy(() => import('@/components/ui/enhanced-debug-panel'))
+  : () => null;
+
 function App() {
-  // Initialize diagnostic tracking when the app starts
-  useEffect(() => {
-    // Initialize diagnostics
-    logger.info('Application initializing with diagnostic tracking', 'App');
-    
-    // Add diagnostic utility to window for console access
-    window.diagnosticReport = getContextInitializationStatus;
-    
-    // Run a diagnostic check after the app has been mounted for 10 seconds
-    const timeoutId = setTimeout(() => {
-      const results = getContextInitializationStatus();
-      logger.info('Automatic diagnostic check after 10s', 'App', {
-        contextStatus: results
-      });
-    }, 10000);
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, []);
+  // Log application start - minimal impact
+  logger.info('Application initializing', 'App');
   
   return (
     <ErrorBoundary name="AppRoot">
@@ -44,6 +29,12 @@ function App() {
                     <SessionProvider>
                       <Router>
                         <AppRoutes />
+                        {/* Only render debug panel in development mode */}
+                        {process.env.NODE_ENV === 'development' && (
+                          <React.Suspense fallback={null}>
+                            <EnhancedDebugPanel />
+                          </React.Suspense>
+                        )}
                       </Router>
                     </SessionProvider>
                   </ErrorBoundary>
