@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Icon } from '@/components/ui/icon';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import logger from '@/lib/logger';
 
 /**
  * Displays essential tools that cannot be toggled
@@ -21,7 +22,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
  * @param {Object} props
  * @param {Tool[]} [props.tools=[]] - Array of essential tools
  */
-const EssentialTools = ({ tools = [] }) => (
+const EssentialTools = React.memo(({ tools = [] }) => (
     <div className="essential-tools-container">
         <h3 className="essential-tools-title">Essential Tools</h3>
         <div className="essential-tools-content">
@@ -49,7 +50,7 @@ const EssentialTools = ({ tools = [] }) => (
             </div>
         </div>
     </div>
-);
+));
 
 /**
  * Displays a category of tools with selection capabilities
@@ -60,8 +61,9 @@ const EssentialTools = ({ tools = [] }) => (
  * @param {Set<string>} props.selectedTools - Set of selected tool names
  * @param {string[]} props.activeTools - Array of active tool names
  * @param {(toolName: string) => void} props.onToolToggle - Tool toggle callback
+ * @param {boolean} props.disabled - Whether tool selection is disabled
  */
-const ToolCategory = ({ title, tools = [], selectedTools, activeTools, onToolToggle }) => (
+const ToolCategory = React.memo(({ title, tools = [], selectedTools, activeTools, onToolToggle, disabled = false }) => (
     <div className="tool-category-container">
         <div className="tool-category-content">
             <div className="tool-category-grid">
@@ -75,19 +77,22 @@ const ToolCategory = ({ title, tools = [], selectedTools, activeTools, onToolTog
                                     <div
                                         className={cn(
                                             "tool-item", 
-                                            isActive && "active"
+                                            isActive && "active",
+                                            disabled && "disabled"
                                         )}
                                     >
                                         <Checkbox
                                             id={tool.name}
                                             checked={isSelected}
                                             onCheckedChange={() => onToolToggle(tool.name)}
+                                            disabled={disabled}
                                         />
                                         <label
                                             htmlFor={tool.name}
                                             className={cn(
                                                 "tool-item-label",
-                                                isActive && "active"
+                                                isActive && "active",
+                                                disabled && "disabled"
                                             )}
                                         >
                                             {tool.name}
@@ -110,7 +115,16 @@ const ToolCategory = ({ title, tools = [], selectedTools, activeTools, onToolTog
             </div>
         </div>
     </div>
-);
+), (prevProps, nextProps) => {
+    // Custom comparison function for memoization
+    return (
+        prevProps.title === nextProps.title &&
+        prevProps.tools === nextProps.tools &&
+        prevProps.disabled === nextProps.disabled &&
+        JSON.stringify(Array.from(prevProps.selectedTools)) === JSON.stringify(Array.from(nextProps.selectedTools)) &&
+        JSON.stringify(prevProps.activeTools) === JSON.stringify(nextProps.activeTools)
+    );
+});
 
 /**
  * ToolSelector is a component that manages the selection and equipment of tools for an agent.
@@ -126,26 +140,46 @@ const ToolCategory = ({ title, tools = [], selectedTools, activeTools, onToolTog
  * @param {string} props.sessionId - Current session identifier
  * @param {boolean} props.isReady - Flag indicating if the agent is ready
  */
-const ToolSelector = ({ availableTools, onEquipTools, activeTools = [], sessionId, isReady }) => {
+const ToolSelector = ({
+    availableTools,
+    onEquipTools,
+    activeTools = [],
+    sessionId,
+    isReady
+}) => {
     // Local UI state
-    const [selectedTools, setSelectedTools] = useState(new Set(activeTools));
+    const [selectedTools, setSelectedTools] = useState(() => new Set(activeTools));
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
     const { toast } = useToast();
+
+    // Sync selectedTools with activeTools when they change
+    useEffect(() => {
+        if (activeTools && activeTools.length > 0) {
+            logger.debug('Syncing selected tools with active tools', 'ToolSelector', {
+                activeToolsCount: activeTools.length,
+                selectedToolsCount: selectedTools.size
+            });
+            
+            setSelectedTools(new Set(activeTools));
+        }
+    }, [activeTools]);
 
     /**
      * Toggles a tool's selection state
      * @param {string} toolName - Name of the tool to toggle
      */
-    const handleToolToggle = (toolName) => {
-        if (!isReady) {
+    const handleToolToggle = useCallback((toolName) => {
+        if (!isReady || isLoading || isVerifying) {
             toast({
-                title: 'Agent not ready',
-                description: 'Please wait for agent initialization',
+                title: 'Action not available',
+                description: isLoading || isVerifying ? 'Tool update in progress' : 'Please wait for agent initialization',
                 variant: 'destructive',
             });
             return;
         }
+        
         setSelectedTools((prev) => {
             const newSelected = new Set(prev);
             if (newSelected.has(toolName)) {
@@ -155,42 +189,99 @@ const ToolSelector = ({ availableTools, onEquipTools, activeTools = [], sessionI
             }
             return newSelected;
         });
-    };
+    }, [isReady, isLoading, isVerifying, toast]);
 
     /**
      * Handles the equipping of selected tools
      * @async
      * @throws {Error} When tool equipment fails
      */
-    const handleEquipTools = async () => {
-        if (!isReady) {
+    const handleEquipTools = useCallback(async () => {
+        if (!isReady || isLoading || isVerifying) {
             toast({
-                title: 'Agent not ready',
-                description: 'Please wait for agent initialization',
+                title: 'Action not available',
+                description: isLoading || isVerifying ? 'Tool update already in progress' : 'Please wait for agent initialization',
                 variant: 'destructive',
             });
             return;
         }
+        
         setIsLoading(true);
+        setError(null);
+        
         try {
             const toolsToEquip = Array.from(selectedTools);
-            await onEquipTools(toolsToEquip);
-            toast({
-                title: 'Success',
-                description: 'Tools equipped successfully!',
-            });
+            logger.info('Equipping tools', 'ToolSelector', { toolCount: toolsToEquip.length });
+            
+            // Call the equip tools method from session context
+            const success = await onEquipTools(toolsToEquip);
+            
+            if (!success) {
+                throw new Error('Failed to equip tools - operation returned failure');
+            }
+            
+            // Additional verification step
+            setIsVerifying(true);
+            
+            // Wait a short time to ensure backend state updates
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Get the active tools again to verify changes
+            const newActiveToolsSet = new Set(activeTools);
+            const missingTools = toolsToEquip.filter(tool => !newActiveToolsSet.has(tool));
+            
+            if (missingTools.length > 0) {
+                // Some tools failed to equip
+                logger.warn('Some tools failed to equip', 'ToolSelector', { missingTools });
+                
+                toast({
+                    title: 'Partial success',
+                    description: `Some tools couldn't be equipped: ${missingTools.join(', ')}`,
+                    variant: 'warning',
+                });
+            } else {
+                // All tools successfully equipped
+                toast({
+                    title: 'Success',
+                    description: 'All tools equipped successfully!',
+                });
+                
+                // Update our selected tools to match what was actually equipped
+                setSelectedTools(new Set(activeTools));
+            }
         } catch (error) {
-            console.error('Error equipping tools:', error);
+            logger.error('Error equipping tools', 'ToolSelector', {
+                error: error.message,
+                stack: error.stack
+            });
+            
             setError('Failed to equip tools: ' + error.message);
+            
             toast({
                 title: 'Error',
-                description: 'Failed to equip tools',
+                description: 'Failed to equip tools: ' + error.message,
                 variant: 'destructive',
             });
         } finally {
             setIsLoading(false);
+            setIsVerifying(false);
         }
-    };
+    }, [isReady, isLoading, isVerifying, selectedTools, activeTools, onEquipTools, toast]);
+
+    // Compute default tab value
+    const defaultTabValue = useMemo(() => {
+        if (!availableTools) return '';
+        
+        if (availableTools.categories.includes("core")) {
+            return "core";
+        } else if (availableTools.essential_tools && availableTools.essential_tools.length > 0) {
+            return "essential";
+        } else if (availableTools.categories.length > 0) {
+            return availableTools.categories[0];
+        }
+        
+        return '';
+    }, [availableTools]);
 
     // Render waiting message if not ready
     if (!sessionId || !isReady) {
@@ -225,13 +316,17 @@ const ToolSelector = ({ availableTools, onEquipTools, activeTools = [], sessionI
         );
     }
 
+    // Operation state for UI display
+    const isOperationInProgress = isLoading || isVerifying;
+    const operationStatus = isVerifying ? 'Verifying...' : (isLoading ? 'Updating...' : '');
+
     return (
         <Card className="tool-selector">
             <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                     <span>Available Tools</span>
-                    {isLoading && (
-                        <span className="text-sm text-muted-foreground">Updating...</span>
+                    {operationStatus && (
+                        <span className="text-sm text-muted-foreground">{operationStatus}</span>
                     )}
                 </CardTitle>
             </CardHeader>
@@ -243,18 +338,25 @@ const ToolSelector = ({ availableTools, onEquipTools, activeTools = [], sessionI
                 )}
                 <Button
                     onClick={handleEquipTools}
-                    disabled={!isReady || isLoading}
+                    disabled={!isReady || isOperationInProgress}
                     variant="default"
                     className="tool-selector-equip-button"
                 >
-                    {isLoading ? 'Updating Tools...' : <>
-                        <Icon icon="fa-regular fa-check-circle" hoverIcon="fa-solid fa-check-circle" className="mr-2" />
-                        Equip Selected Tools
-                    </>}
+                    {isOperationInProgress ? (
+                        <>
+                            <Icon icon="fa-regular fa-spinner-third" className="mr-2 animate-spin" />
+                            {operationStatus || 'Updating Tools...'}
+                        </>
+                    ) : (
+                        <>
+                            <Icon icon="fa-regular fa-check-circle" hoverIcon="fa-solid fa-check-circle" className="mr-2" />
+                            Equip Selected Tools
+                        </>
+                    )}
                 </Button>
 
                 <Tabs 
-                    defaultValue={availableTools.categories.includes("core") ? "core" : (availableTools.essential_tools && availableTools.essential_tools.length > 0 ? "essential" : availableTools.categories[0] || "")} 
+                    defaultValue={defaultTabValue} 
                     className="tool-selector-tabs"
                 >
                     <TabsList className="tool-selector-tabs-list">
@@ -292,6 +394,7 @@ const ToolSelector = ({ availableTools, onEquipTools, activeTools = [], sessionI
                                     selectedTools={selectedTools}
                                     activeTools={activeTools}
                                     onToolToggle={handleToolToggle}
+                                    disabled={isOperationInProgress}
                                 />
                             </TabsContent>
                         ))}
@@ -302,4 +405,4 @@ const ToolSelector = ({ availableTools, onEquipTools, activeTools = [], sessionI
     );
 };
 
-export default ToolSelector;
+export default React.memo(ToolSelector);
