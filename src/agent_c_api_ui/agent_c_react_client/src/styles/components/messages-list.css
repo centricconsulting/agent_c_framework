@@ -38,6 +38,60 @@
   text-align: center;
 }
 
+/* MessagesList: Virtualized list styles */
+.messages-list {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.messages-list-virtualizer {
+  width: 100% !important; /* Override inline style from react-window */
+  height: 100% !important; /* Override inline style from react-window */
+}
+
+.messages-list .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--muted-foreground);
+  padding: var(--spacing-4);
+  text-align: center;
+}
+
+.scroll-to-top-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.scroll-to-top-btn.visible {
+  opacity: 0.8;
+}
+
+.scroll-to-top-btn:hover {
+  opacity: 1;
+}
+
 /* MessagesList: Large screen optimizations */
 @media (min-width: 1600px) {
   .messages-list-container {

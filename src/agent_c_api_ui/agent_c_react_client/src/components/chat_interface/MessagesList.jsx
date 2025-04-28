@@ -1,10 +1,11 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ScrollArea } from '../ui/scroll-area';
 import MessageItem from './MessageItem';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
 import { ChevronUp } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import VirtualizedMessagesList from './VirtualizedMessagesList';
 
 // Import component CSS
 import '@/styles/components/messages-list.css';
@@ -33,6 +34,14 @@ const MessagesList = ({
   const viewportRef = useRef(null);
   const [showScrollTopButton, setShowScrollTopButton] = useState(false);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
+  const [shouldUseVirtualList, setShouldUseVirtualList] = useState(false);
+  
+  // Determine if we should use virtualization (> 30 messages or message count growing rapidly)
+  useEffect(() => {
+    if (messages.length > 30) {
+      setShouldUseVirtualList(true);
+    }
+  }, [messages.length]);
   
   // Scroll to bottom when messages change
   const scrollToBottom = (smooth = true) => {
@@ -42,9 +51,14 @@ const MessagesList = ({
   };
   
   // Scroll to top function
-  const scrollToTop = () => {
-    viewportRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const scrollToTop = useCallback(() => {
+    if (shouldUseVirtualList) {
+      // Handled by VirtualizedMessagesList
+      setShowScrollTopButton(false);
+    } else {
+      viewportRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [shouldUseVirtualList]);
   
   // Track scroll position to show/hide scroll to top button
   const handleScroll = () => {
@@ -56,28 +70,67 @@ const MessagesList = ({
   
   // Add event listener for scroll events
   useEffect(() => {
-    const viewport = viewportRef.current;
-    if (viewport) {
-      viewport.addEventListener('scroll', handleScroll);
-      return () => viewport.removeEventListener('scroll', handleScroll);
+    if (!shouldUseVirtualList) {
+      const viewport = viewportRef.current;
+      if (viewport) {
+        viewport.addEventListener('scroll', handleScroll);
+        return () => viewport.removeEventListener('scroll', handleScroll);
+      }
     }
-  }, []);
+  }, [shouldUseVirtualList]);
   
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    setIsAutoScrolling(true);
-    scrollToBottom();
-    const timer = setTimeout(() => setIsAutoScrolling(false), 500);
-    return () => clearTimeout(timer);
-  }, [messages]);
+    if (!shouldUseVirtualList) {
+      setIsAutoScrolling(true);
+      scrollToBottom();
+      const timer = setTimeout(() => setIsAutoScrolling(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, shouldUseVirtualList]);
   
   // Auto-scroll when tool selection indicator appears
   useEffect(() => {
-    if (toolSelectionInProgress) {
+    if (toolSelectionInProgress && !shouldUseVirtualList) {
       scrollToBottom();
     }
-  }, [toolSelectionInProgress]);
+  }, [toolSelectionInProgress, shouldUseVirtualList]);
+
+  // Prepare tool call data for the virtualized list
+  const toolCallData = {
+    expandedToolCallMessages,
+    toggleToolCallExpansion,
+    toolSelectionInProgress,
+    toolSelectionName
+  };
   
+  // If using virtualized list
+  if (shouldUseVirtualList) {
+    return (
+      <div className={cn(
+        "messages-list-container relative flex h-full w-full min-h-0 flex-col overflow-hidden",
+        className
+      )}>
+        <VirtualizedMessagesList
+          messages={messages}
+          onScrollToTop={scrollToTop}
+          toolCallData={toolCallData}
+          isStreaming={false}
+          isLoadingHistory={false}
+        />
+        
+        {/* Tool selection in progress indicator */}
+        {toolSelectionInProgress && (
+          <div className="flex items-center gap-2 text-sm italic ml-8 my-1 text-muted-foreground absolute bottom-2 left-0">
+            <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
+            <span>Preparing to use: {toolSelectionName?.replace(/-/g, ' ') || 'tool'}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Original implementation for smaller message counts
   return (
     <div className={cn(
       "messages-list-container relative flex h-full w-full min-h-0 flex-col overflow-hidden overflow-x-hidden",
@@ -151,4 +204,4 @@ const MessagesList = ({
   );
 };
 
-export default MessagesList;
+export default React.memo(MessagesList);
