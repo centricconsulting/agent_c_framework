@@ -6,6 +6,8 @@ import { Button } from '../ui/button';
 import { ChevronUp } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import VirtualizedMessagesList from './VirtualizedMessagesList';
+import { useMessageContext } from '@/contexts/MessageContext';
+import { useToolCalls } from './ToolCallContext';
 
 // Import component CSS
 import '@/styles/components/messages-list.css';
@@ -15,21 +17,13 @@ import '@/styles/components/messages-list.css';
  * and manages the expanded state of tool calls.
  * 
  * @param {Object} props - Component props
- * @param {Array} props.messages - Array of message objects to display
- * @param {Array} props.expandedToolCallMessages - Array of message indices with expanded tool calls
- * @param {function} props.toggleToolCallExpansion - Function to toggle tool call expansion
- * @param {boolean} props.toolSelectionInProgress - Whether a tool selection is in progress
- * @param {string} props.toolSelectionName - Name of the tool being selected
  * @param {string} props.className - Optional additional CSS classes for the container
  */
-const MessagesList = ({
-  messages,
-  expandedToolCallMessages,
-  toggleToolCallExpansion,
-  toolSelectionInProgress,
-  toolSelectionName,
-  className
-}) => {
+const MessagesList = ({ className }) => {
+  // Get message and tool call contexts
+  const { messages, expandedToolCallMessages, toggleToolCallExpansion } = useMessageContext();
+  const { toolSelectionState } = useToolCalls();
+  
   const messagesEndRef = useRef(null);
   const viewportRef = useRef(null);
   const [showScrollTopButton, setShowScrollTopButton] = useState(false);
@@ -91,17 +85,17 @@ const MessagesList = ({
   
   // Auto-scroll when tool selection indicator appears
   useEffect(() => {
-    if (toolSelectionInProgress && !shouldUseVirtualList) {
+    if (toolSelectionState.inProgress && !shouldUseVirtualList) {
       scrollToBottom();
     }
-  }, [toolSelectionInProgress, shouldUseVirtualList]);
+  }, [toolSelectionState.inProgress, shouldUseVirtualList]);
 
   // Prepare tool call data for the virtualized list
   const toolCallData = {
     expandedToolCallMessages,
     toggleToolCallExpansion,
-    toolSelectionInProgress,
-    toolSelectionName
+    toolSelectionInProgress: toolSelectionState.inProgress,
+    toolSelectionName: toolSelectionState.toolName
   };
   
   // If using virtualized list
@@ -120,10 +114,10 @@ const MessagesList = ({
         />
         
         {/* Tool selection in progress indicator */}
-        {toolSelectionInProgress && (
+        {toolSelectionState.inProgress && (
           <div className="flex items-center gap-2 text-sm italic ml-8 my-1 text-muted-foreground absolute bottom-2 left-0">
             <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
-            <span>Preparing to use: {toolSelectionName?.replace(/-/g, ' ') || 'tool'}</span>
+            <span>Preparing to use: {toolSelectionState.toolName?.replace(/-/g, ' ') || 'tool'}</span>
           </div>
         )}
       </div>
@@ -163,10 +157,10 @@ const MessagesList = ({
               ))}
               
               {/* Tool selection in progress indicator */}
-              {toolSelectionInProgress && (
+              {toolSelectionState.inProgress && (
                 <div className="flex items-center gap-2 text-sm italic ml-8 my-1 text-muted-foreground">
                   <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
-                  <span>Preparing to use: {toolSelectionName?.replace(/-/g, ' ') || 'tool'}</span>
+                  <span>Preparing to use: {toolSelectionState.toolName?.replace(/-/g, ' ') || 'tool'}</span>
                 </div>
               )}
               

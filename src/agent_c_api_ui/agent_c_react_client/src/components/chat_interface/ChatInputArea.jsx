@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useMessageContext } from '@/contexts/MessageContext';
 
 /**
  * ChatInputArea component provides a styled input area for the chat interface
@@ -14,33 +15,28 @@ import { cn } from "@/lib/utils";
  * @param {Object} props - Component props
  * @param {string} props.inputText - Current input text value
  * @param {Function} props.setInputText - Function to update input text
- * @param {boolean} props.isStreaming - Whether a response is currently streaming
- * @param {boolean} props.isUploading - Whether a file is currently uploading
- * @param {Function} props.handleSendMessage - Function to handle sending a message
- * @param {Function} props.handleKeyPress - Function to handle key presses
  * @param {Function} props.openFilePicker - Function to open the file picker
  * @param {Function} props.toggleOptionsPanel - Function to toggle the options panel
  * @param {React.RefObject} props.fileInputRef - Ref for the file input element
  * @param {Function} props.handleFileSelection - Function to handle file selection
- * @param {Function} props.handleCancelStream - Function to cancel streaming response
- * @param {Function} props.handleClipboardPaste - Function to handle pasted files from clipboard
+ * @param {Function} props.handleKeyPress - Function to handle key presses
+ * @param {Function} props.handleSendMessage - Function to handle sending a message
  * @param {string} [props.className] - Additional CSS classes
  */
 const ChatInputArea = ({
   inputText,
   setInputText,
-  isStreaming = false,
-  isUploading = false,
-  handleSendMessage,
-  handleKeyPress,
   openFilePicker,
   toggleOptionsPanel,
   fileInputRef,
   handleFileSelection,
-  handleCancelStream,
-  handleClipboardPaste,
+  handleKeyPress,
+  handleSendMessage,
   className
 }) => {
+  // Get message context
+  const { isStreaming, isUploading, handleCancelStream } = useMessageContext('ChatInputArea');
+  
   const isInputDisabled = isStreaming;
   const isUploadDisabled = isStreaming || isUploading;
   const isSendDisabled = isStreaming || !inputText.trim();
@@ -103,11 +99,22 @@ const ChatInputArea = ({
       // Activate the paste animation
       setPasteAnimating(true);
       
-      // Send files to handler
-      handleClipboardPaste(files);
+      // Handle clipboard paste with files
+      handleClipboardFiles(files);
       return;
     }
-  }, [isInputDisabled, isUploading, handleClipboardPaste]);
+  }, [isInputDisabled, isUploading]);
+  
+  // Handle clipboard files by passing to parent component
+  const handleClipboardFiles = (files) => {
+    if (typeof handleFileSelection === 'function') {
+      handleFileSelection({
+        target: {
+          files: files
+        }
+      });
+    }
+  };
   
   return (
     <div 
@@ -237,19 +244,13 @@ const ChatInputArea = ({
 ChatInputArea.propTypes = {
   inputText: PropTypes.string.isRequired,
   setInputText: PropTypes.func.isRequired,
-  isStreaming: PropTypes.bool,
-  isUploading: PropTypes.bool,
-  handleSendMessage: PropTypes.func.isRequired,
-  handleKeyPress: PropTypes.func.isRequired,
   openFilePicker: PropTypes.func.isRequired,
   toggleOptionsPanel: PropTypes.func.isRequired,
   fileInputRef: PropTypes.oneOfType([PropTypes.func, PropTypes.shape({ current: PropTypes.any })]).isRequired,
   handleFileSelection: PropTypes.func.isRequired,
-  handleCancelStream: PropTypes.func.isRequired,
-  handleClipboardPaste: PropTypes.func.isRequired,
+  handleKeyPress: PropTypes.func.isRequired,
+  handleSendMessage: PropTypes.func.isRequired,
   className: PropTypes.string
 };
-
-// Default props are now handled via parameter destructuring with default values
 
 export default ChatInputArea;

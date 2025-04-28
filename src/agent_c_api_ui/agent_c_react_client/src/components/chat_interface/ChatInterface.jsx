@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { 
   Card,
   CardContent,
@@ -11,9 +11,6 @@ import { X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSessionContext } from '@/hooks/use-session-context';
 import { API_URL } from "@/config/config";
-import { createClipboardContent } from '@/components/chat_interface/utils/htmlChatFormatter';
-import { processMessageStream } from './utils/MessageStreamProcessor';
-import { cn } from "@/lib/utils";
 import logger from '@/lib/logger';
 import { trackComponentRendering, trackChatInterfaceRendering, DEBUG_MODE } from '@/lib/diagnostic';
 import storageService from '@/lib/storageService';
@@ -27,10 +24,11 @@ import ChatInputArea from './ChatInputArea';
 import FileUploadManager from './FileUploadManager';
 import DragDropArea from './DragDropArea';
 import { ToolCallProvider, useToolCalls } from './ToolCallContext';
+import { MessageProvider, useMessageContext } from '@/contexts/MessageContext';
 import ExportHTMLButton from './ExportHTMLButton';
 
 /**
- * Main chat interface inner component that uses the tool calls context
+ * Main chat interface inner component that uses the tool calls context and message context
  */
 const ChatInterfaceInner = ({
   sessionId, 
@@ -50,12 +48,23 @@ const ChatInterfaceInner = ({
   className
 }) => {
   // Access tool call context
-  const { 
-    handleToolStart, 
-    handleToolEnd, 
-    updateToolSelectionState,
-    toolSelectionState
-  } = useToolCalls();
+  const { toolSelectionState } = useToolCalls();
+  
+  // Access message context
+  const {
+    messages,
+    isStreaming,
+    isUploading,
+    expandedToolCallMessages,
+    selectedFiles,
+    handleSendMessage,
+    handleCancelStream,
+    toggleToolCallExpansion,
+    setSelectedFiles,
+    removeSelectedFile,
+    getChatCopyContent,
+    getChatCopyHTML
+  } = useMessageContext('ChatInterfaceInner');
   
   // Access SessionContext for StatusBar props and options panel state
   const { 
@@ -66,13 +75,8 @@ const ChatInterfaceInner = ({
     setIsOptionsOpen
   } = useSessionContext('ChatInterfaceInner');
   
-  // State for messages and UI
-  const [messages, setMessages] = useState([]);
+  // State for input
   const [inputText, setInputText] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [expandedToolCallMessages, setExpandedToolCallMessages] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState([]);
   
   // Refs
   const fileInputRef = useRef(null);
@@ -84,68 +88,6 @@ const ChatInterfaceInner = ({
     }
   }, [isStreaming, onProcessingStatus]);
   
-  // Toggle the expanded state of tool calls for a specific message
-  const toggleToolCallExpansion = (messageIdx) => {
-    setExpandedToolCallMessages(prev => {
-      if (prev.includes(messageIdx)) {
-        return prev.filter(idx => idx !== messageIdx);
-      } else {
-        return [...prev, messageIdx];
-      }
-    });
-  };
-  
-  // Helper function to format a message for copying
-  const formatMessageForCopy = useCallback((msg) => {
-    if (msg.role === 'user') {
-      return `User: ${msg.content}\n`;
-    } else if (msg.role === 'assistant' && msg.type === 'content') {
-      return `Assistant: ${msg.content}\n`;
-    } else if (msg.role === 'assistant' && msg.type === 'thinking') {
-      return `Assistant (thinking): ${msg.content}\n`;
-    } else if (msg.type === 'tool_calls') {
-      // Format tool calls
-      let result = `Assistant (tool): Using ${msg.toolCalls.map(t => t.name || t.function?.name).join(', ')}\n`;
-      msg.toolCalls.forEach(tool => {
-        const toolName = tool.name || tool.function?.name;
-        const toolArgs = tool.arguments || tool.function?.arguments;
-        if (toolArgs) {
-          result += `  ${toolName} Arguments: ${typeof toolArgs === 'string' ? toolArgs : JSON.stringify(toolArgs)}\n`;
-        }
-        if (tool.results) {
-          result += `  ${toolName} Results: ${typeof tool.results === 'string' ? tool.results : JSON.stringify(tool.results)}\n`;
-        }
-      });
-      return result;
-    } else if (msg.type === 'media') {
-      return `Assistant (media): Shared ${msg.contentType} content\n`;
-    } else if (msg.role === 'system') {
-      return `System: ${msg.content}\n`;
-    }
-    return '';
-  }, []);
-  
-  // Format the entire chat for copying
-  const formatChatForCopy = useCallback(() => {
-    return messages.map(formatMessageForCopy).join('\n');
-  }, [messages, formatMessageForCopy]);
-  
-  // Get both text and HTML versions for the entire chat
-  const getChatCopyContent = useCallback(() => {
-    const clipboardContent = createClipboardContent(messages);
-    return clipboardContent.text;
-  }, [messages]);
-  
-  // Get HTML version for rich copying
-  const getChatCopyHTML = useCallback(() => {
-    const clipboardContent = createClipboardContent(messages);
-    return clipboardContent.html;
-  }, [messages]);
-  
-  /**
-   * Handles file drop from drag and drop
-   * @param {FileList} files - The dropped files
-   */
   /**
    * Handles file drop from drag and drop
    * @param {FileList} files - The dropped files
@@ -153,9 +95,6 @@ const ChatInterfaceInner = ({
   const handleFileDrop = (files) => {
     if (files && files.length > 0) {
       if (DEBUG_MODE) console.log('File dropped:', files[0].name);
-      
-      // Set uploading state first
-      setIsUploading(true);
       
       // Since we can only process one file at a time, take the first file
       const file = files[0];
@@ -191,14 +130,9 @@ const ChatInterfaceInner = ({
     if (files && files.length > 0) {
       if (DEBUG_MODE) console.log('File pasted from clipboard:', files[0].name);
       
-      // Set uploading state first
-      setIsUploading(true);
-      
       // Since we can only process one file at a time in the current implementation,
       // take the first file - this can be extended to handle multiple files later
       const file = files[0];
-      
-      // We no longer need to add a message here as the file uploaded message will be sufficient
       
       // Process the pasted file
       // Directly call the file upload function similar to drag and drop handling
@@ -222,46 +156,6 @@ const ChatInterfaceInner = ({
       });
     }
   };
-  
-  /**
-   * Handles file upload notification
-   * @param {Object} file - The file that was uploaded
-   */
-  const handleFileUploaded = (file) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "system",
-        type: "content",
-        content: `File uploaded: ${file.name}`,
-      },
-    ]);
-    setIsUploading(false);
-  };
-  
-  /**
-   * Handles file upload error
-   * @param {string} errorMessage - The error message
-   */
-  const handleFileError = (errorMessage) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "system",
-        type: "error",
-        content: `Error uploading file: ${errorMessage}`,
-      },
-    ]);
-    setIsUploading(false);
-  };
-  
-  /**
-   * Handles changes to selected files
-   * @param {Array} files - The currently selected files
-   */
-  const handleSelectedFilesChange = (files) => {
-    setSelectedFiles(files);
-  };
 
   /**
    * Handles file selection from the file picker or drag and drop
@@ -270,7 +164,6 @@ const ChatInterfaceInner = ({
   const handleFileSelection = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       if (DEBUG_MODE) console.log('File selected:', e.target.files[0].name);
-      setIsUploading(true);
       
       // We need to upload the file directly here instead of relying on FileUploadManager
       // to pick up the change event, which may not be happening reliably
@@ -280,16 +173,6 @@ const ChatInterfaceInner = ({
       const formData = new FormData();
       formData.append("ui_session_id", sessionId);
       formData.append("file", file);
-      
-      // Add the file to the UI first to provide immediate feedback
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          type: "content",
-          content: `Uploading file: ${file.name}...`,
-        },
-      ]);
       
       // Perform the upload
       fetch(`${API_URL}/upload_file`, {
@@ -316,54 +199,14 @@ const ChatInterfaceInner = ({
           processing_error: null
         };
         
-        // Update selected files
-        setSelectedFiles(prev => [...prev, newFile]);
-        
-        // Notify UI of successful upload
-        setMessages((prev) => {
-          // Replace the 'uploading' message with 'uploaded'
-          const lastIndex = prev.length - 1;
-          const lastMessage = prev[lastIndex];
-          
-          if (lastMessage.role === "system" && lastMessage.content.startsWith("Uploading file: ")) {
-            // Replace the last message
-            return [
-              ...prev.slice(0, lastIndex),
-              {
-                role: "system",
-                type: "content",
-                content: `File uploaded: ${file.name}`,
-              },
-            ];
-          }
-          
-          // Or just add a new message
-          return [
-            ...prev,
-            {
-              role: "system",
-              type: "content",
-              content: `File uploaded: ${file.name}`,
-            },
-          ];
-        });
+        // Update selected files in MessageContext
+        setSelectedFiles([...selectedFiles, newFile]);
         
         // Start monitoring the processing status
         checkFileProcessingStatus(data.id);
-        
-        setIsUploading(false);
       })
       .catch(error => {
         console.error("Error uploading file:", error?.message || error);
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "system",
-            type: "error",
-            content: `Error uploading file: ${error.message}`,
-          },
-        ]);
-        setIsUploading(false);
       });
     }
   };
@@ -392,7 +235,7 @@ const ChatInterfaceInner = ({
         if (!fileData) return false;
 
         // Update our selected files with the current status
-        setSelectedFiles(prev => prev.map(file => {
+        setSelectedFiles(selectedFiles.map(file => {
           if (file.id === fileId) {
             return {
               ...file,
@@ -420,7 +263,7 @@ const ChatInterfaceInner = ({
 
         // If we hit max attempts and status is still pending, mark as failed
         if (attempts >= maxAttempts) {
-          setSelectedFiles(prev => prev.map(file => {
+          setSelectedFiles(selectedFiles.map(file => {
             if (file.id === fileId && file.processing_status === "pending") {
               return {
                 ...file,
@@ -443,282 +286,18 @@ const ChatInterfaceInner = ({
   };
   
   /**
-   * Cancels the current streaming response by sending a request to the cancel endpoint
+   * Handles sending a message using the MessageContext
    */
-  const handleCancelStream = async () => {
-    if (!isStreaming) return;
-    
-    try {
-      const formData = new FormData();
-      formData.append("ui_session_id", sessionId);
-      
-      const response = await fetch(`${API_URL}/cancel`, {
-        method: "POST",
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        console.error(`Error cancelling stream: ${response.status}`);
-      } else {
-        if (DEBUG_MODE) console.log("Stream cancelled successfully");
-        // We'll let the stream processing handle setting isStreaming to false
-        // as the stream will close naturally after cancellation
-      }
-    } catch (error) {
-      console.error("Error cancelling stream:", error?.message || error);
-    }
-  };
-  
-  /**
-   * Sends a message to the chat backend and processes the response stream
-   * @returns {Promise<void>}
-   */
-  const handleSendMessage = async () => {
-    // Don't send if empty or already streaming
+  const sendMessage = () => {
     if ((!inputText.trim() && selectedFiles.length === 0) || isStreaming) return;
     
-    try {
-      setIsStreaming(true);
-      
-      // Add user message to the UI
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "user",
-          type: "content",
-          content: inputText,
-          files: selectedFiles.length > 0 ? selectedFiles.map(f => f.name) : undefined
-        },
-      ]);
-      
-      const userText = inputText;
-      setInputText("");
-      
-      // Prepare form data for API request
-      const formData = new FormData();
-      formData.append("ui_session_id", sessionId);
-      formData.append("message", userText);
-      formData.append("custom_prompt", customPrompt || "");
-      
-      if (selectedFiles.length > 0) {
-        formData.append("file_ids", JSON.stringify(selectedFiles.map(f => f.id)));
-      }
-      
-      // Check if modelParameters exists before accessing its properties
-      const params = modelParameters || {};
-      
-      // Add the correct parameter based on model type
-      if (params.temperature !== undefined) {
-        formData.append("temperature", params.temperature);
-      }
-      if (params.reasoning_effort !== undefined) {
-        formData.append("reasoning_effort", params.reasoning_effort);
-      }
-      
-      formData.append("llm_model", modelName);
-      
-      // Make the API request
-      const response = await fetch(`${API_URL}/chat`, {
-        method: "POST",
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      if (!response.body) {
-        throw new Error("No response body");
-      }
-      
-      // Process the message stream with our utility
-      processMessageStream(response.body, {
-        onMessage: ({ content, critical }) => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "system",
-              type: "error",
-              content: `Error: ${content}`,
-              critical: critical || false
-            },
-          ]);
-          setIsStreaming(false);
-        },
-        
-        onToolSelect: (selectionState) => {
-          updateToolSelectionState(selectionState);
-        },
-        
-        onToolCalls: (toolCalls) => {
-          // Filter out 'think' tool calls - they should not be displayed
-          const displayableToolCalls = toolCalls.filter(tool => 
-            tool.name !== 'think' && tool.function?.name !== 'think'
-          );
-          
-          // If all tool calls were 'think' tools, don't display anything
-          if (displayableToolCalls.length === 0) return;
-          
-          const newToolCalls = handleToolStart(displayableToolCalls);
-          
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1];
-            if (lastMessage?.type === "tool_calls") {
-              // Update existing tool calls message
-              return prev.map((msg, i) =>
-                i === prev.length - 1
-                  ? {...msg, toolCalls: [...(msg.toolCalls || []), ...newToolCalls]}
-                  : msg
-              );
-            }
-            // Create new tool calls message
-            return [...prev, {
-              role: "assistant",
-              type: "tool_calls",
-              toolCalls: newToolCalls
-            }];
-          });
-        },
-        
-        onContent: ({ content, vendor }) => {
-          setMessages((prev) => {
-            const last = prev[prev.length - 1];
-            if (last?.role === "assistant" && last?.type === "content") {
-              return prev.map((msg, i) =>
-                i === prev.length - 1
-                  ? {
-                    ...msg,
-                    content: msg.content + content,
-                    vendor: vendor || msg.vendor
-                  }
-                  : msg
-              );
-            }
-            return [...prev, {
-              role: "assistant",
-              type: "content",
-              content: content,
-              vendor: vendor || 'unknown'
-            }];
-          });
-        },
-        
-        onToolResults: (toolResults) => {
-          if (toolResults) {
-            toolResults.forEach((result) => {
-              const updatedCall = handleToolEnd(result);
-              
-              if (updatedCall) {
-                setMessages((prev) => {
-                  return prev.map((message) => {
-                    if (message.type === "tool_calls") {
-                      const updatedToolCalls = message.toolCalls.map((call) => {
-                        if (call.id === updatedCall.id) {
-                          return { ...call, results: updatedCall.results };
-                        }
-                        return call;
-                      });
-                      return { ...message, toolCalls: updatedToolCalls };
-                    }
-                    return message;
-                  });
-                });
-              }
-            });
-          }
-        },
-        
-        onRenderMedia: ({ content, contentType, metadata }) => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              type: "media",
-              content: content,
-              contentType: contentType,
-              metadata: metadata
-            },
-          ]);
-        },
-        
-        onCompletionStatus: ({ running, inputTokens, outputTokens, totalTokens }) => {
-          if (!running && (inputTokens || outputTokens)) {
-            setMessages((prev) => {
-              const lastAssistantMessage = [...prev].reverse().find(
-                (msg) => msg.role === "assistant" && msg.type === "content"
-              );
-              if (!lastAssistantMessage) return prev;
-              return prev.map((msg) => {
-                if (msg === lastAssistantMessage) {
-                  return {
-                    ...msg,
-                    tokenUsage: {
-                      prompt_tokens: inputTokens,
-                      completion_tokens: outputTokens,
-                      total_tokens: inputTokens + outputTokens,
-                    },
-                  };
-                }
-                return msg;
-              });
-            });
-          }
-        },
-        
-        onThoughtDelta: ({ content, vendor }) => {
-          setMessages((prev) => {
-            const last = prev[prev.length - 1];
-            if (last?.role === "assistant" && last?.type === "thinking") {
-              return prev.map((msg, i) =>
-                i === prev.length - 1
-                  ? {
-                    ...msg,
-                    content: msg.content + content,
-                    vendor: vendor || msg.vendor
-                  }
-                  : msg
-              );
-            }
-            return [...prev, {
-              role: "assistant",
-              type: "thinking",
-              content: content,
-              vendor: vendor || 'unknown'
-            }];
-          });
-        },
-        
-        onUnknownType: (data) => {
-          console.warn("Unknown message type:", data.type);
-        }
-      }).catch(error => {
-        console.error("Error processing stream:", error?.message || error);
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "system",
-            type: "error",
-            content: `Error: ${error.message}`,
-          },
-        ]);
-      }).finally(() => {
-        setIsStreaming(false);
-        setSelectedFiles([]);
-      });
-      
-    } catch (error) {
-      console.error("Error in chat:", error?.message || error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          type: "content",
-          content: `Error: ${error.message}`,
-        },
-      ]);
-      setIsStreaming(false);
-      setSelectedFiles([]);
-    }
+    handleSendMessage(inputText, {
+      modelName,
+      modelParameters,
+      customPrompt
+    });
+    
+    setInputText("");
   };
   
   /**
@@ -728,7 +307,7 @@ const ChatInterfaceInner = ({
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      sendMessage();
     }
   };
   
@@ -798,9 +377,6 @@ const ChatInterfaceInner = ({
           {/* File management component */}
           <FileUploadManager
             sessionId={sessionId}
-            onFileUploadComplete={handleFileUploaded}
-            onFileError={handleFileError}
-            onSelectedFilesChange={handleSelectedFilesChange}
             fileInputRef={fileInputRef}
             uploadedFiles={selectedFiles}
           />
@@ -816,7 +392,7 @@ const ChatInterfaceInner = ({
                       variant="ghost" 
                       size="sm" 
                       className="h-4 w-4 p-0 hover:bg-transparent" 
-                      onClick={() => setSelectedFiles(selectedFiles.filter(f => f.id !== file.id))}
+                      onClick={() => removeSelectedFile(file.id)}
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -833,7 +409,7 @@ const ChatInterfaceInner = ({
             setInputText={setInputText}
             isStreaming={isStreaming}
             isUploading={isUploading}
-            handleSendMessage={handleSendMessage}
+            handleSendMessage={sendMessage}
             handleKeyPress={handleKeyPress}
             openFilePicker={openFilePicker}
             toggleOptionsPanel={toggleOptionsPanel}
@@ -987,19 +563,21 @@ const ChatInterface = (props) => {
   
   return (
     <ToolCallProvider>
-      {/* Invisible diagnostic element */}
-      <div 
-        data-testid="chat-interface"
-        data-chat-interface-mounted="true"
-        data-session-id={!!props.sessionId}
-        data-is-initialized={props.isInitialized}
-        data-is-ready={props.isReady}
-        data-session-id-value={props.sessionId || 'missing'}
-        data-stored-session-id={storageService.getSessionId() || 'missing'}
-        style={{ display: 'none' }}
-      />
-      
-      <ChatInterfaceInner {...props} />
+      <MessageProvider>
+        {/* Invisible diagnostic element */}
+        <div 
+          data-testid="chat-interface"
+          data-chat-interface-mounted="true"
+          data-session-id={!!props.sessionId}
+          data-is-initialized={props.isInitialized}
+          data-is-ready={props.isReady}
+          data-session-id-value={props.sessionId || 'missing'}
+          data-stored-session-id={storageService.getSessionId() || 'missing'}
+          style={{ display: 'none' }}
+        />
+        
+        <ChatInterfaceInner {...props} />
+      </MessageProvider>
     </ToolCallProvider>
   );
 };

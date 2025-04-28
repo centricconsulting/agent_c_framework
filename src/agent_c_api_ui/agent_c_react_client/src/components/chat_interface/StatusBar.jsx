@@ -15,6 +15,7 @@ import CopyButton from './CopyButton';
 import ExportHTMLButton from './ExportHTMLButton';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useMessageContext } from '@/contexts/MessageContext';
 
 
 /**
@@ -26,12 +27,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
  * @param {boolean} props.isReady - Whether the agent is ready to process requests
  * @param {Array} props.activeTools - List of currently active tools
  * @param {boolean} props.isInitializing - Whether the application is initializing
- * @param {boolean} props.isProcessing - Whether the agent is processing a request
  * @param {string} props.sessionId - Current session identifier
  * @param {string} props.settingsVersion - Version of the current settings
- * @param {Function} props.getChatCopyContent - Function to get chat content for copying as text
- * @param {Function} props.getChatCopyHTML - Function to get chat content for copying as HTML
- * @param {Array} props.messages - List of chat messages
  * @param {string} props.className - Additional CSS class names
  *
  * @returns {React.ReactElement} A status bar displaying system state and actions
@@ -40,19 +37,18 @@ const StatusBar = ({
     isReady,
     activeTools = [],
     isInitializing = false,
-    isProcessing = false,
     sessionId,
     settingsVersion,
-    getChatCopyContent,
-    getChatCopyHTML,
-    messages,
     className
 }) => {
     // Use mobile detection hook to adapt UI
     const isMobile = useIsMobile();
+    
+    // Get message context
+    const { messages, isStreaming, getChatCopyContent, getChatCopyHTML } = useMessageContext('StatusBar');
 
     const getStatusInfo = () => {
-        if (isProcessing) {
+        if (isStreaming) {
             return {
                 message: 'Processing...',
                 description: 'Agent is processing your request'
@@ -97,7 +93,7 @@ const StatusBar = ({
                                 >
                                     <Activity
                                         className={cn(
-                                            isProcessing 
+                                            isStreaming 
                                                 ? 'status-indicator-icon-processing' 
                                                 : isInitializing || !isReady 
                                                     ? 'status-indicator-icon-initializing' 
@@ -191,12 +187,8 @@ StatusBar.propTypes = {
     isReady: PropTypes.bool,
     activeTools: PropTypes.array,
     isInitializing: PropTypes.bool,
-    isProcessing: PropTypes.bool,
     sessionId: PropTypes.string,
     settingsVersion: PropTypes.number,
-    getChatCopyContent: PropTypes.func,
-    getChatCopyHTML: PropTypes.func,
-    messages: PropTypes.array,
     className: PropTypes.string
 };
 
