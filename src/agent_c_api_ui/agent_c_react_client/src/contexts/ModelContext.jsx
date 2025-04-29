@@ -26,54 +26,8 @@ const CONFIG_MAX_AGE_DAYS = 14;
 export const ModelProvider = ({children}) => {
     // Access initialization context
     const initialization = useContext(InitializationContext);
-    // debug 25-83
+    // Initialize tracer for debugging (but don't trigger initialization here)
     const tracer = useMemo(() => createInitTracer('ModelContext'), []);
-useEffect(() => {
-    const init = async () => {
-      tracer.setState(InitilizationState.INITIALIZING);
-      tracer.setState(InitilizationState.MODEL_FETCHING_AVAILABLE);
-
-      try {
-        const data = await apiService.getModels();
-        tracer.setState(InitilizationState.MODEL_FETCHED_AVAILABLE);
-
-        if (!Array.isArray(data.models) || data.models.length === 0) {
-          throw new Error('No models returned');
-        }
-
-        setModelConfigs(data.models);
-
-        // Load saved preferences
-        tracer.setState(InitilizationState.MODEL_LOADING);
-        const saved = storageService.getModelPreferences();
-
-        if (saved && data.models.some(m => m.id === saved.modelId)) {
-          tracer.setState(InitilizationState.MODEL_FOUND_PREFERENCES);
-          tracer.setState(InitilizationState.MODEL_VALIDATING_PREFERENCES);
-          setModelName(saved.modelId);
-          setSelectedModel(data.models.find(m => m.id === saved.modelId));
-          setModelParameters(saved.parameters || {});
-        } else {
-          tracer.setState(InitilizationState.MODEL_NO_PREFERENCES);
-          // Default to first model
-          const first = data.models[0];
-          setModelName(first.id);
-          setSelectedModel(first);
-          setModelParameters(first.parameters || {});
-        }
-
-        tracer.setState(InitilizationState.MODEL_READY);
-      } catch (err) {
-        tracer.setError(err);
-        tracer.setState(InitilizationState.ERROR);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    init();
-  }, [tracer]);
 
     logger.info('ModelProvider initializing', 'ModelProvider');
     
@@ -744,9 +698,15 @@ useEffect(() => {
                     selectedModel: modelName
                 });
                 
-                // Signal model initialization is complete
-                initialization.completeModelPhase();
-                initialization.setInitState(InitState.MODEL_COMPLETE);
+                // Signal model initialization is complete - but only if we're in the right state to avoid loops
+                if (initialization.state === InitState.MODEL_PENDING) {
+                    initialization.completeModelPhase();
+                    initialization.setInitState(InitState.MODEL_COMPLETE);
+                } else {
+                    logger.warn('Skipping duplicate initialization state transition', 'ModelContext', {
+                        currentState: initialization.state
+                    });
+                }
                 
                 // Publish model phase completed event
                 eventBus.publish(

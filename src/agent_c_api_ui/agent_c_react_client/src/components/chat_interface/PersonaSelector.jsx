@@ -54,6 +54,13 @@ function PersonaSelector({
     // Initialize with a default empty array immediately to prevent undefined errors
     React.useEffect(() => {
         console.log('PersonaSelector received modelConfigs:', modelConfigs);
+        console.log('PersonaSelector current state:', {
+            modelName, 
+            isInitialized,
+            currentParametersSet: !!modelParameters,
+            selectedModelSet: !!selectedModel
+        });
+        
         try {
             if (Array.isArray(modelConfigs)) {
                 // Make sure each model has the required properties
@@ -66,8 +73,17 @@ function PersonaSelector({
                         total: modelConfigs.length,
                         valid: validModels.length
                     });
+                    
+                    // Debug the problematic models
+                    modelConfigs.forEach((model, index) => {
+                        if (!model || !model.id || !model.backend || !model.label) {
+                            console.warn(`Model at index ${index} is invalid:`, model);
+                        }
+                    });
                 }
                 
+                // Additional logging to track what we're setting
+                console.log('Setting safeModelConfigs with valid models:', validModels);
                 setSafeModelConfigs(validModels.length > 0 ? validModels : []);
             } else if (modelConfigs && typeof modelConfigs === 'object') {
                 // Try to convert object to array if possible
@@ -75,17 +91,22 @@ function PersonaSelector({
                 const validModels = modelsArray.filter(model => 
                     model && model.id && model.backend && model.label
                 );
+                console.log('Setting safeModelConfigs from object:', validModels);
                 setSafeModelConfigs(validModels);
             } else {
                 console.warn('PersonaSelector: modelConfigs is not an array or valid object, using empty array');
+                console.log('modelConfigs type:', typeof modelConfigs);
+                console.log('modelConfigs value:', modelConfigs);
                 setSafeModelConfigs([]);
             }
         } catch (err) {
             console.error('Error processing modelConfigs:', err);
+            console.error('Error stack:', err.stack);
+            console.log('modelConfigs that caused error:', modelConfigs);
             setSafeModelConfigs([]);
             setError('Error loading model configurations');
         }
-    }, [modelConfigs]);
+    }, [modelConfigs, modelName, isInitialized, modelParameters, selectedModel]);
 
     // Local UI state only
     const [error, setError] = useState(null);
@@ -498,11 +519,23 @@ function PersonaSelector({
                     </div>
 
                     {/* Model Parameters */}
-                    <ModelParameterControls
-                        selectedModel={selectedModel}
-                        onParameterChange={handleParameterChange}
-                        currentParameters={modelParameters}
-                    />
+                    {isInitialized && safeModelConfigs.length > 0 && (
+                        <ModelParameterControls
+                            selectedModel={
+                                // Find the actual model object that matches the current modelName
+                                safeModelConfigs.find(model => model && model.id === modelName) || 
+                                selectedModel ||
+                                (Array.isArray(safeModelConfigs) && safeModelConfigs.length > 0 ? safeModelConfigs[0] : {
+                                  id: 'default',
+                                  parameters: {
+                                    temperature: { min: 0, max: 1, default: 0.7, step: 0.1 }
+                                  }
+                                }) // Fallback to default model with minimal parameters
+                            }
+                            onParameterChange={handleParameterChange}
+                            currentParameters={modelParameters || {}}
+                        />
+                    )}
                 </div>
             </CardContent>
         </Card>

@@ -29,6 +29,15 @@ const ModelParameterControls = ({
                                     currentParameters = {},
                                     id = 'model-parameters'
                                 }) => {
+    // Debug logging for the received props
+    console.log('ModelParameterControls props:', {
+        hasSelectedModel: !!selectedModel,
+        selectedModelId: selectedModel?.id,
+        hasParameters: !!selectedModel?.parameters,
+        parametersType: selectedModel?.parameters ? typeof selectedModel.parameters : 'undefined',
+        currentParameters: currentParameters
+    });
+
     // For temperature settings - Used by non-reasoning models
     const [temperature, setTemperature] = useState(currentParameters?.temperature);
     const [localTemperature, setLocalTemperature] = useState(currentParameters?.temperature);
@@ -241,7 +250,21 @@ const ModelParameterControls = ({
         }
     }, [selectedModel, currentParameters]);
 
-    if (!selectedModel?.parameters) return null;
+    // Return early with explanation if props are missing
+    if (!selectedModel) {
+        console.warn('ModelParameterControls: Missing selectedModel prop');
+        return <div className="parameter-controls-missing" style={{ color: 'red' }}>Model configuration unavailable</div>;
+    }
+    
+    if (!selectedModel.parameters) {
+        console.warn('ModelParameterControls: selectedModel.parameters is undefined or null', selectedModel);
+        return <div className="parameter-controls-missing">No adjustable parameters for this model</div>;
+    }
+    
+    if (typeof onParameterChange !== 'function') {
+        console.error('ModelParameterControls: onParameterChange is not a function');
+        return <div className="parameter-controls-missing" style={{ color: 'red' }}>Parameter controls unavailable</div>;
+    }
 
     /**
      * Temperature slider configuration
@@ -357,7 +380,7 @@ const ModelParameterControls = ({
                     <div className="parameter-header">
                         <Label className="parameter-label" id={temperatureLabelId}>Temperature</Label>
                         <span className="parameter-value-badge" aria-live="polite">
-                            {localTemperature.toFixed(1)}
+                            {localTemperature !== undefined && localTemperature !== null ? localTemperature.toFixed(1) : '0.0'}
                         </span>
                     </div>
                     <div className="parameter-slider-container">
@@ -375,18 +398,18 @@ const ModelParameterControls = ({
                         </div>
                         <Slider
                             id="temperature-slider"
-                            min={temperatureConfig.min}
-                            max={temperatureConfig.max}
-                            step={temperatureConfig.step}
-                            value={[localTemperature]}
+                            min={temperatureConfig.min !== undefined ? temperatureConfig.min : 0}
+                            max={temperatureConfig.max !== undefined ? temperatureConfig.max : 1}
+                            step={temperatureConfig.step !== undefined ? temperatureConfig.step : 0.1}
+                            value={[localTemperature !== undefined ? localTemperature : (temperatureConfig.default || 0)]}
                             onValueChange={handleTemperatureChange}  // Smooth UI updates
                             onValueCommit={handleTemperatureCommit}  // Backend update on finish
                             className={`w-full ${temperatureUpdating ? 'updating' : ''}`}
                             disabled={temperatureUpdating}
                             aria-labelledby={temperatureLabelId}
-                            aria-valuenow={localTemperature}
-                            aria-valuemin={temperatureConfig.min}
-                            aria-valuemax={temperatureConfig.max}
+                            aria-valuenow={localTemperature !== undefined ? localTemperature : 0}
+                            aria-valuemin={temperatureConfig.min !== undefined ? temperatureConfig.min : 0}
+                            aria-valuemax={temperatureConfig.max !== undefined ? temperatureConfig.max : 1}
                         />
                         {temperatureUpdating && (
                             <div className="parameter-updating-indicator">Updating...</div>
@@ -497,24 +520,24 @@ const ModelParameterControls = ({
                                     className="parameter-value-badge"
                                     aria-live="polite"
                                 >
-                                    {budgetTokens.toLocaleString()} tokens
+                                    {budgetTokens !== undefined && budgetTokens !== null ? budgetTokens.toLocaleString() : '0'} tokens
                                 </span>
                             </div>
                             <div className="slider-container">
                                 <Slider
                                     id="budget-tokens-slider"
-                                    min={budgetTokensConfig.min}
-                                    max={budgetTokensConfig.max}
-                                    step={budgetTokensConfig.step}
-                                    value={[budgetTokens]}
+                                    min={budgetTokensConfig.min !== undefined ? budgetTokensConfig.min : 0}
+                                    max={budgetTokensConfig.max !== undefined ? budgetTokensConfig.max : 10000}
+                                    step={budgetTokensConfig.step !== undefined ? budgetTokensConfig.step : 500}
+                                    value={[budgetTokens !== undefined ? budgetTokens : 0]}
                                     onValueChange={handleBudgetTokensChange}
                                     onValueCommit={handleBudgetTokensCommit}
                                     disabled={budgetTokensUpdating}
                                     className={`w-full ${budgetTokensUpdating ? 'updating' : ''}`}
                                     aria-labelledby={thinkingBudgetLabelId}
-                                    aria-valuenow={budgetTokens}
-                                    aria-valuemin={budgetTokensConfig.min}
-                                    aria-valuemax={budgetTokensConfig.max}
+                                    aria-valuenow={budgetTokens !== undefined ? budgetTokens : 0}
+                                    aria-valuemin={budgetTokensConfig.min !== undefined ? budgetTokensConfig.min : 0}
+                                    aria-valuemax={budgetTokensConfig.max !== undefined ? budgetTokensConfig.max : 10000}
                                 />
                                 {budgetTokensUpdating && (
                                     <div className="parameter-updating-indicator">Updating...</div>
