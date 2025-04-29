@@ -279,16 +279,58 @@ export const SessionProvider = ({children}) => {
         const modelChangedUnsubscribe = eventBus.subscribe(
             MODEL_EVENTS.MODEL_CHANGED,
             (data) => {
-                logger.debug('Model changed event received', 'SessionContext', { data });
+                // Enhanced diagnostic logging for model changed event handling
+                logger.debug('Model changed event received', 'SessionContext', { 
+                    data,
+                    hasModelName: !!data.modelName, 
+                    hasBackend: !!data.backend,
+                    timestamp: Date.now()
+                });
+                
                 const currentSessionId = state.sessionId;
+                
+                logger.debug('Current session state for model change', 'SessionContext', {
+                    currentSessionId,
+                    isReady,
+                    isInitialized: state.isInitialized,
+                    canProceed: !!(currentSessionId && isReady && data.modelName)
+                });
 
                 if (currentSessionId && isReady && data.modelName) {
+                    logger.info('Processing model change event', 'SessionContext', {
+                        newModelName: data.modelName,
+                        backend: data.backend,
+                        sessionId: currentSessionId
+                    });
+                    
                     // Automatically reinitialize agent with new model if session is ready
                     updateAgentSettings('MODEL_CHANGE', {
                         modelName: data.modelName,
                         backend: data.backend
                     }).then(success => {
-                        logger.debug('Agent reinitialized after model change', 'SessionContext', { success });
+                        if (success) {
+                            logger.info('Agent successfully reinitialized after model change', 'SessionContext', {
+                                modelName: data.modelName, 
+                                sessionId: currentSessionId
+                            });
+                        } else {
+                            logger.error('Agent reinitialization failed after model change', 'SessionContext', {
+                                modelName: data.modelName, 
+                                sessionId: currentSessionId
+                            });
+                        }
+                    }).catch(error => {
+                        logger.error('Error during agent reinitialization after model change', 'SessionContext', {
+                            error: error.message,
+                            stack: error.stack,
+                            modelName: data.modelName
+                        });
+                    });
+                } else {
+                    logger.warn('Skipping model change handling - preconditions not met', 'SessionContext', {
+                        hasSessionId: !!currentSessionId,
+                        isReady,
+                        hasModelName: !!data.modelName
                     });
                 }
             },
@@ -676,7 +718,12 @@ export const SessionProvider = ({children}) => {
                     return true;
                 }
                 case 'MODEL_CHANGE': {
-                    logger.info('Model change requested', 'SessionContext', {values});
+                    logger.info('Model change requested through updateAgentSettings', 'SessionContext', {
+                        values,
+                        currentSessionId,
+                        isReady,
+                        timestamp: Date.now()
+                    });
 
                     // Get the modelName and backend from the values
                     const {modelName: newModelName, backend} = values;
@@ -684,6 +731,9 @@ export const SessionProvider = ({children}) => {
                     logger.debug('MODEL_CHANGE details', 'SessionContext', {
                         newModelName,
                         backend,
+                        hasPersona: !!persona,
+                        hasCustomPrompt: !!customPrompt,
+                        requestOrigin: new Error().stack
                     });
 
                     if (!newModelName) {
@@ -691,18 +741,28 @@ export const SessionProvider = ({children}) => {
                         throw new Error('Invalid model name provided');
                     }
 
-                    // For model changes, we directly update via the API
+                    // CRITICAL FIX: For model changes, we directly update via the API
+                    // Ensure backend parameter is always included
+                    // We must use model_name in the API payload (snake_case) rather than modelName (camelCase)
                     const settings = {
-                        model_name: newModelName,
-                        backend: backend,
+                        model_name: newModelName, // Explicitly using snake_case for backend API compatibility
+                        backend: backend || 'unknown', // Ensure backend is always provided
                         persona_name: persona,
                         custom_prompt: customPrompt
                     };
+                    
+                    // Log the key format differences for debug purposes
+                    logger.debug('Key format inspection for MODEL_CHANGE', 'SessionContext', {
+                        providedKeys: Object.keys(values),
+                        constructedKeys: Object.keys(settings),
+                        usesSnakeCase: settings.hasOwnProperty('model_name')
+                    });
 
-                    logger.debug('Model change data being sent', 'SessionContext', {
+                    logger.debug('Model change data being prepared for API', 'SessionContext', {
                         sessionId: currentSessionId,
                         newModelName,
                         backend,
+                        requestPayload: settings
                     });
 
                     // Ensure we have the right data before making the API call
@@ -712,14 +772,27 @@ export const SessionProvider = ({children}) => {
                     }
 
                     // Make API call and get response
+                    logger.debug('Making API call to updateSettings', 'SessionContext', {
+                        endpoint: '/update_settings',
+                        method: 'POST',
+                        sessionId: currentSessionId
+                    });
+                    
                     const response = await apiService.updateSettings(currentSessionId, settings);
-                    logger.debug('Model change API response', 'SessionContext', {response});
+                    
+                    logger.debug('Model change API response received', 'SessionContext', {
+                        response,
+                        hasResponse: !!response,
+                        hasError: !!(response && response.error),
+                        responseModelName: response?.model_name
+                    });
 
                     // Verify API call was successful
                     if (!response || response.error) {
                         logger.warn('Model change API call failed', 'SessionContext', {
                             error: response?.error || 'No response received',
-                            newModelName
+                            newModelName,
+                            apiResponseData: response || null
                         });
                         throw new Error(response?.error || 'Failed to change model');
                     }
@@ -728,10 +801,15 @@ export const SessionProvider = ({children}) => {
                     if (response.model_name !== newModelName) {
                         logger.warn('Model name mismatch after update', 'SessionContext', {
                             requestedModel: newModelName,
-                            actualModel: response.model_name
+                            actualModel: response.model_name,
+                            fullResponse: response
                         });
                     }
 
+                    logger.debug('Incrementing settings version after model change', 'SessionContext', {
+                        currentVersion: settingsVersion,
+                        newVersion: settingsVersion + 1
+                    });
                     incrementSettingsVersion();
 
                     // Save user settings to localStorage
@@ -740,9 +818,11 @@ export const SessionProvider = ({children}) => {
                         lastBackend: backend,
                     });
 
-                    logger.info('Model changed successfully', 'SessionContext', {
+                    logger.info('Model changed successfully via updateAgentSettings', 'SessionContext', {
                         newModelName,
-                        confirmedByBackend: response.model_name === newModelName
+                        confirmedByBackend: response.model_name === newModelName,
+                        modelResponse: response.model_name,
+                        timestamp: Date.now()
                     });
                     return true;
                 }

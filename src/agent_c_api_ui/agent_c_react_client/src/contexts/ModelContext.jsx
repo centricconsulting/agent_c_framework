@@ -246,6 +246,16 @@ useEffect(() => {
      */
     const changeModel = async (newModelName) => {
         try {
+            // Enhanced diagnostic logging for model change request
+            logger.debug('Model change requested', 'ModelContext', {
+                newModelName,
+                currentModelName: modelName,
+                hasModelConfigs: !!modelConfigs,
+                modelConfigsLength: modelConfigs?.length || 0,
+                sessionId,
+                isAuthenticated
+            });
+            
             if (!modelConfigs || modelConfigs.length === 0) {
                 logger.error('Cannot change model - no model configurations available', 'ModelContext');
                 return false;
@@ -255,8 +265,18 @@ useEffect(() => {
             const model = modelConfigs.find(m => m.id === newModelName);
             if (!model) {
                 logger.error(`Model with name ${newModelName} not found in configurations`, 'ModelContext');
+                logger.debug('Available model IDs:', 'ModelContext', {
+                    availableModels: modelConfigs.map(m => m.id).join(', ')
+                });
                 return false;
             }
+
+            logger.debug('Found model configuration', 'ModelContext', {
+                modelId: model.id,
+                modelName: model.name,
+                backend: model.backend,
+                hasParameters: !!model.parameters
+            });
 
             // Set the model name and selected model
             setModelName(newModelName);
@@ -291,6 +311,12 @@ useEffect(() => {
                 }
             }
 
+            // Log updated parameters for debugging
+            logger.debug('Updating model parameters with defaults', 'ModelContext', {
+                updatedParameters,
+                modelId: newModelName
+            });
+
             // Set the updated parameters
             setModelParameters(updatedParameters);
 
@@ -305,14 +331,30 @@ useEffect(() => {
                         ...updatedParameters
                     };
 
+                    logger.debug('Sending model update to API', 'ModelContext', {
+                        endpoint: '/update_settings',
+                        modelUpdateData
+                    });
+
                     // Update model in API
-                    await apiService.post('/update_settings', modelUpdateData);
+                    const response = await apiService.post('/update_settings', modelUpdateData);
+                    
+                    logger.debug('API response for model update', 'ModelContext', {
+                        status: response ? 'received' : 'no response',
+                        response: response
+                    });
                 } catch (apiError) {
                     logger.error('Failed to update model in API', 'ModelContext', {
-                        error: apiError.message
+                        error: apiError.message,
+                        stack: apiError.stack
                     });
                     // Continue despite API error - local model change will work
                 }
+            } else {
+                logger.warn('Skipping API model update - session not ready', 'ModelContext', {
+                    sessionId,
+                    isAuthenticated
+                });
             }
 
             // Save changes using unified model data storage
@@ -327,6 +369,15 @@ useEffect(() => {
             });
             
             // Publish model changed event
+            logger.debug('Publishing MODEL_CHANGED event', 'ModelContext', {
+                eventType: MODEL_EVENTS.MODEL_CHANGED,
+                payload: {
+                    modelName: newModelName,
+                    modelId: newModelName,
+                    backend: model.backend
+                }
+            });
+            
             eventBus.publish(
                 MODEL_EVENTS.MODEL_CHANGED,
                 { 

@@ -33,7 +33,6 @@ function App() {
                         <SessionProvider>
                       <Router>
                         <AppRoutes />
-// Add inside the return statement, at the end
   <React.Suspense fallback={null}>
     <InitializationDebugPanel />
   </React.Suspense>

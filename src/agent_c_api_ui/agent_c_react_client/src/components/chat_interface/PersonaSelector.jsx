@@ -267,35 +267,55 @@ function PersonaSelector({
      * @param {string} selectedValue - Selected model identifier
      */
     const handleModelChange = useCallback(async (selectedValue) => {
-        // Debug the incoming value
+        // Enhanced diagnostic logging
+        console.group('📊 Model Change Request');
         console.log('handleModelChange called with selectedValue:', selectedValue);
+        console.log('Current session state:', { sessionId, modelName, selectedModel: selectedModel?.id });
         setModelChanging(true);
 
         try {
             // Defensive check: verify safeModelConfigs exists and is an array
             if (!Array.isArray(safeModelConfigs)) {
                 console.error('handleModelChange: safeModelConfigs is not an array:', safeModelConfigs);
+                console.log('safeModelConfigs type:', typeof safeModelConfigs);
                 setError('Invalid model configuration data');
                 return;
             }
+
+            console.log('Available models:', safeModelConfigs.map(m => ({ id: m.id, label: m.label })));
 
             // Use our safe model configs array that's guaranteed to be an array
             const model = safeModelConfigs.find(model => model && model.id === selectedValue);
             console.log('Found model:', model);
             
             if (model && model.id && model.backend) {
-                console.log('Selected model:', model.id, 'backend:', model.backend);
+                console.log('Selected model details:', {
+                    id: model.id,
+                    backend: model.backend,
+                    label: model.label,
+                    hasParameters: !!model.parameters
+                });
+                
                 if (typeof onUpdateSettings === 'function') {
                     console.log('Calling onUpdateSettings with MODEL_CHANGE action');
                     
+                    // CRITICAL FIX: Use our enhanced API call with better success/error handling
+                    // Ensure we are using the correct parameter names and including all required parameters
+                    const updatePayload = {
+                        modelName: model.id,  // This should be converted to model_name in apiService
+                        backend: model.backend || 'unknown' // Ensure backend is always provided
+                    };
+                    
+                    console.log('Update payload for model change:', updatePayload);
+                    
                     // Use our enhanced API call with better success/error handling
-                    const success = await onUpdateSettings('MODEL_CHANGE', {
-                        modelName: model.id,
-                        backend: model.backend
-                    });
+                    const success = await onUpdateSettings('MODEL_CHANGE', updatePayload);
+                    
+                    console.log('onUpdateSettings result:', { success });
 
                     if (success) {
                         // Show success toast if we have access to toast function
+                        console.log('Model change successful, showing success toast');
                         toast({
                             title: "Model Changed",
                             description: `Now using ${model.label || model.id}`,
@@ -304,6 +324,7 @@ function PersonaSelector({
                         setError(null); // Clear any existing errors
                     } else {
                         // Show error toast if we have access to toast function
+                        console.error('Model change failed');
                         setError(`Failed to change model to ${model.label || model.id}`);
                         toast({
                             title: "Model Change Failed",
@@ -313,15 +334,17 @@ function PersonaSelector({
                     }
                 } else {
                     console.error('onUpdateSettings is not a function:', onUpdateSettings);
+                    console.log('onUpdateSettings type:', typeof onUpdateSettings);
                     setError('Internal error: Cannot update model settings');
                 }
             } else {
                 console.error(`Could not find valid model with ID ${selectedValue} in available models`);
-                console.log('Available models:', safeModelConfigs);
+                console.log('Available models:', safeModelConfigs.map(m => m?.id));
                 setError(`Could not find valid model with ID ${selectedValue}`);
             }
         } catch (error) {
             console.error('Error in handleModelChange:', error);
+            console.log('Error stack:', error.stack);
             setError(`Error changing model: ${error.message}`);
             toast({
                 title: "Error",
@@ -330,8 +353,9 @@ function PersonaSelector({
             });
         } finally {
             setModelChanging(false);
+            console.groupEnd();
         }
-    }, [safeModelConfigs, onUpdateSettings, toast]);
+    }, [safeModelConfigs, onUpdateSettings, toast, sessionId, modelName]);
 
     return (
         <Card className="persona-selector-card" role="region" aria-label="Persona and model settings">

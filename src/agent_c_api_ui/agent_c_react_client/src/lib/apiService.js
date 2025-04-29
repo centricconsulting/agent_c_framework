@@ -582,21 +582,33 @@ const apiService = {
       ...settings
     };
     
+    // CRITICAL FIX: Ensure model_name parameter is properly set for API compatibility
+    // The backend expects model_name, but we might be receiving modelName from our contexts
+    if (settings.modelName && !settings.model_name) {
+      payload.model_name = settings.modelName;
+      logger.debug('Fixed model parameter naming inconsistency', 'apiService', {
+        original: 'modelName',
+        corrected: 'model_name',
+        value: settings.modelName
+      });
+    }
+    
     // Add extra detailed logging specifically for model changes
-    if (settings.model_name) {
+    if (payload.model_name) {
       logger.info('Updating model settings via API', 'apiService', {
         sessionId,
-        modelName: settings.model_name,
-        backend: settings.backend,
-        payloadKeys: Object.keys(payload)
+        modelName: payload.model_name,
+        backend: payload.backend,
+        payloadKeys: Object.keys(payload),
+        originalRequest: Object.keys(settings)
       });
       
       // Add specific handling for MODEL_CHANGE operations
-      if (settings.backend) {
+      if (payload.backend) {
         logger.debug('Processing model change operation', 'apiService', {
           sessionId,
-          modelName: settings.model_name,
-          backend: settings.backend,
+          modelName: payload.model_name,
+          backend: payload.backend,
           fullPayload: JSON.stringify(payload)
         });
       }
@@ -604,12 +616,16 @@ const apiService = {
       logger.info('Updating settings via API', 'apiService', {
         sessionId,
         settingsKeys: Object.keys(settings),
-        hasModelName: !!settings.model_name
+        hasModelName: !!(settings.model_name || settings.modelName)
       });
     }
     
     // Log the full payload in debug mode
-    logger.debug('Settings update payload', 'apiService', JSON.stringify(payload));
+    logger.debug('Settings update payload', 'apiService', {
+      endpoint: '/update_settings', 
+      payload: payload, 
+      payloadJSON: JSON.stringify(payload)
+    });
     
     return fetchWithRetry('/update_settings', {
       method: 'POST',
@@ -624,8 +640,8 @@ const apiService = {
       logger.info('Settings updated successfully', 'apiService', {
         statusCode: response.status || 200,
         settingsUpdated: Object.keys(settings),
-        modelChanged: !!settings.model_name,
-        modelName: settings.model_name || 'not-changed'
+        modelChanged: !!(payload.model_name),
+        modelName: payload.model_name || 'not-changed'
       });
       return response;
     }).catch(error => {
@@ -634,7 +650,8 @@ const apiService = {
         errorStack: error.stack,
         sessionId,
         settingsKeys: Object.keys(settings),
-        modelName: settings.model_name || 'not-specified'
+        payloadKeys: Object.keys(payload),
+        modelName: payload.model_name || 'not-specified'
       });
       throw error;
     });
