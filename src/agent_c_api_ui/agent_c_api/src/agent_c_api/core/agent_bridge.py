@@ -263,7 +263,7 @@ class AgentBridge:
         self.logger.info(f"Requesting new tool list for agent {self.agent_name} to: {new_tools}")
 
         # Remove duplicates and ensure essential tools are included
-        all_tools = list(set(self.essential_toolsets + new_tools))
+        all_tools = list(set(list(self.tool_chest.active_tools.keys()) + new_tools))
 
         self.additional_toolsets = [t for t in new_tools if t not in self.essential_toolsets]
         self.selected_tools = all_tools
@@ -890,7 +890,7 @@ class AgentBridge:
             # Set the agent’s streaming callback to our consolidated version.
             original_callback = self.agent.streaming_callback
             self.agent.streaming_callback = self.consolidated_streaming_callback
-
+            self.agent.prompt_builder.tool_sections = self.tool_chest.active_tool_sections
             prompt_metadata = await self.__build_prompt_metadata()
 
             # Prepare chat parameters
@@ -965,6 +965,9 @@ class AgentBridge:
                     break
 
             await chat_task
+            # Agent may have changed the selected tools...
+            self.selected_tools = list(self.tool_chest.active_tools.keys())
+
             # Restore the original callback
             self.agent.streaming_callback = original_callback
             await self.session_manager.flush()
