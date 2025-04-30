@@ -1,54 +1,20 @@
-# SessionContext Refactor - Phase 3 (Revised): ModelContext Implementation
+Based on my comprehensive inventory of the chat interface components and their interactions with model-related state, I've identified the key issues that have caused race conditions in previous attempts. Here's my plan for safely implementing Phase 3:
 
-## Introduction
+## Race Condition Analysis
 
-After careful analysis of the codebase and reviewing the execution of Phase 2, we've identified several critical issues that must be addressed in our Phase 3 implementation. The original plan failed to account for complex interactions between components, potential race conditions, and the intricate interdependencies of model-related state management.
+1. **Initialization Sequencing**: The ModelContext must wait for SessionContext to be fully initialized before attempting its own initialization
+   
+2. **State Ownership Conflict**: Both contexts were trying to manage the same state
+   
+3. **API Call Redundancy**: Both contexts may try to make the same API calls
 
-This revised plan provides a more robust approach to implementing the ModelContext with focus on preventing race conditions, maintaining state synchronization, and ensuring a smooth transition for components.
+4. **Component Dependencies**: Components in the chat interface need to access model state consistently
 
-## Critical Issues Identified
+## Safe Implementation Plan
 
-1. **Initialization Race Conditions**: The SessionContext and ModelContext have complex initialization dependencies. ModelContext needs session information but must initialize at the right moment to prevent errors.
+Let's approach this methodically with a focus on preventing race conditions:
 
-2. **State Synchronization Problems**: Both LegacySessionContext and ModelContext could maintain duplicate model state, creating synchronization issues when changes occur in either context.
-
-3. **Conflicting Storage Operations**: Both contexts might interact with the same localStorage keys for persisting preferences.
-
-4. **API Call Redundancy**: Changes to model parameters could trigger redundant API calls from different contexts.
-
-5. **Model Parameter Complexity**: Different model types have varying parameter requirements and validation rules that need careful handling.
-
-6. **Update Propagation**: Changes in the ModelContext need to be correctly propagated to components that still use the LegacySessionContext.
-
-## Revised Implementation Strategy
-
-### 1. Clear State Ownership and Responsibility
-
-- **SessionContext**: Single source of truth for session identity and status
-- **ModelContext**: Single source of truth for all model-related state and operations
-- **LegacySessionContext**: Acts as a bridge during transition, proxying to both contexts but not duplicating state
-
-### 2. Controlled Initialization Sequence
-
-- ModelContext must initialize only after SessionContext is ready
-- ModelContext will handle its own initialization logic when given a valid session
-- Error and loading states will be properly maintained during complex initialization
-
-### 3. Unified API Call Paths
-
-- All model-related API calls will go exclusively through ModelContext
-- LegacySessionContext will proxy model operations to ModelContext
-- Single implementation of debouncing for parameter updates
-
-### 4. Detailed Validation and Error Handling
-
-- Comprehensive validation for all model parameters
-- Clear error messages for initialization and operation failures
-- Consistent error handling across all API calls
-
-## Implementation Plan
-
-### Step 1: Create Core ModelContext Implementation
+### Step 1: Create the ModelContext with Clear Initialization Logic
 
 ```jsx
 // src/contexts/ModelContext.jsx
@@ -57,15 +23,16 @@ import { SessionContext } from './SessionContext';
 import { model as modelService } from '../services';
 import { useToast } from '../hooks/use-toast';
 
-// Constants
-const MODEL_PARAM_UPDATE_DEBOUNCE = 500; // ms
-const LOCAL_STORAGE_MODEL_KEY = 'agent-c-model-preference';
-
 export const ModelContext = createContext(null);
 
 export const ModelProvider = ({ children }) => {
-  // Core dependencies
-  const { sessionId, isAuthenticated, isReady: isSessionReady } = useContext(SessionContext);
+  // Get session information from SessionContext
+  const { 
+    sessionId, 
+    isAuthenticated, 
+    isReady: isSessionReady 
+  } = useContext(SessionContext);
+  
   const { toast } = useToast();
   
   // State management
@@ -79,32 +46,70 @@ export const ModelProvider = ({ children }) => {
   const [modelParameters, setModelParameters] = useState({});
   const [selectedModel, setSelectedModel] = useState(null);
   
-  // Refs for internal operations
+  // Critical refs for managing initialization and updates
   const paramUpdateTimeoutRef = useRef(null);
   const modelInitAttempted = useRef(false);
+  const modelInitComplete = useRef(false);
   
-  // Clear any error state
+  // Clear error state
   const clearError = useCallback(() => {
     if (error) setError(null);
   }, [error]);
 
-  // Load saved model preference from localStorage
+  // Get saved model preference
   const getSavedModelPreference = useCallback(() => {
     try {
-      const savedModel = localStorage.getItem(LOCAL_STORAGE_MODEL_KEY);
-      return savedModel ? JSON.parse(savedModel) : null;
+      const savedConfig = localStorage.getItem("agent_config");
+      if (!savedConfig) return null;
+      
+      const parsedConfig = JSON.parse(savedConfig);
+      
+      // Check if the configuration is expired (14 days)
+      if (parsedConfig.lastUpdated) {
+        const configAge = new Date() - new Date(parsedConfig.lastUpdated);
+        const maxAgeMs = 14 * 24 * 60 * 60 * 1000; // 14 days
+        if (configAge > maxAgeMs) {
+          console.log('ModelContext: Saved configuration is too old (>14 days)');
+          return null;
+        }
+      }
+      
+      return {
+        modelName: parsedConfig.modelName,
+        modelParameters: parsedConfig.modelParameters
+      };
     } catch (e) {
-      console.warn('Failed to parse saved model preference', e);
+      console.warn('ModelContext: Failed to parse saved model preference', e);
       return null;
     }
   }, []);
   
-  // Save model preference to localStorage
-  const saveModelPreference = useCallback((modelId) => {
+  // Save model preference
+  const saveModelPreference = useCallback((modelConfig) => {
     try {
-      localStorage.setItem(LOCAL_STORAGE_MODEL_KEY, JSON.stringify(modelId));
+      const existingConfig = localStorage.getItem("agent_config");
+      let newConfig = {
+        lastUpdated: new Date().toISOString()
+      };
+      
+      if (existingConfig) {
+        try {
+          newConfig = {
+            ...JSON.parse(existingConfig),
+            ...newConfig
+          };
+        } catch (e) {
+          console.warn('ModelContext: Failed to parse existing config', e);
+        }
+      }
+      
+      // Update only the model-related parts
+      newConfig.modelName = modelConfig.modelName || newConfig.modelName;
+      newConfig.modelParameters = modelConfig.modelParameters || newConfig.modelParameters;
+      
+      localStorage.setItem("agent_config", JSON.stringify(newConfig));
     } catch (e) {
-      console.warn('Failed to save model preference', e);
+      console.warn('ModelContext: Failed to save model preference', e);
     }
   }, []);
 
@@ -135,49 +140,8 @@ export const ModelProvider = ({ children }) => {
     }
   }, [sessionId, isAuthenticated, clearError, toast]);
 
-  // Initialize model with saved preference or default
-  const initializeModel = useCallback(async () => {
-    if (!sessionId || !isAuthenticated || !isSessionReady || modelInitAttempted.current) {
-      return;
-    }
-    
-    modelInitAttempted.current = true;
-    setIsLoading(true);
-    clearError();
-    
-    try {
-      console.log('ModelContext: Initializing model configuration');
-      const models = await fetchModels();
-      
-      if (!models || models.length === 0) {
-        throw new Error('No models available');
-      }
-      
-      // Get saved preference or use first available model
-      const savedPreference = getSavedModelPreference();
-      const modelToUse = savedPreference && models.find(m => m.id === savedPreference) 
-        ? savedPreference
-        : models[0].id;
-      
-      await selectModel(modelToUse);
-      setIsInitialized(true);
-      console.log(`ModelContext: Successfully initialized with model ${modelToUse}`);
-    } catch (err) {
-      const errorMsg = `Model initialization failed: ${err.message || 'Unknown error'}`;
-      console.error('ModelContext:', errorMsg, err);
-      setError(errorMsg);
-      toast({
-        title: 'Error',
-        description: 'Failed to initialize model configuration',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [sessionId, isAuthenticated, isSessionReady, fetchModels, getSavedModelPreference, toast, clearError]);
-
   // Select a model by ID
-  const selectModel = useCallback(async (modelId) => {
+  const selectModel = useCallback(async (modelId, customParameters = null) => {
     if (!sessionId || !isAuthenticated || !modelId) {
       console.warn('ModelContext: Cannot select model - invalid state or modelId');
       return;
@@ -198,21 +162,54 @@ export const ModelProvider = ({ children }) => {
       setModelName(modelId);
       setSelectedModel(targetModel);
       
-      // Set default parameters for the model
-      const defaultParams = modelService.getDefaultParameters(targetModel);
-      setModelParameters(defaultParams);
+      // Determine parameters to use - either custom provided or defaults
+      let parameters;
+      if (customParameters) {
+        parameters = customParameters;
+      } else {
+        // Get default parameters for the model
+        parameters = {};
+        
+        // Extract temperature if available
+        if (targetModel.parameters?.temperature) {
+          parameters.temperature = targetModel.parameters.temperature.default;
+        }
+        
+        // Extract reasoning effort if available
+        if (targetModel.parameters?.reasoning_effort) {
+          parameters.reasoning_effort = targetModel.parameters.reasoning_effort.default;
+        }
+        
+        // Extract extended thinking if available
+        if (targetModel.parameters?.extended_thinking) {
+          const extThinking = targetModel.parameters.extended_thinking;
+          parameters.extended_thinking = extThinking.enabled === true;
+          
+          if (parameters.extended_thinking && extThinking.budget_tokens) {
+            parameters.budget_tokens = extThinking.budget_tokens.default;
+          } else {
+            parameters.budget_tokens = 0;
+          }
+        }
+      }
+      
+      setModelParameters(parameters);
       
       // Update session with the model selection
-      await modelService.setModel({ 
-        sessionId, 
-        modelName: modelId,
-        parameters: defaultParams
-      });
+      // This will be called by LegacySessionContext to avoid duplication
+      // when initializing - but for direct model change we need to call it
+      if (modelInitComplete.current) {
+        await modelService.setModel({ 
+          sessionId, 
+          modelName: modelId,
+          parameters
+        });
+      }
       
       // Save preference
-      saveModelPreference(modelId);
+      saveModelPreference({ modelName: modelId, modelParameters: parameters });
       
-      console.log(`ModelContext: Model ${modelId} successfully selected`);
+      console.log(`ModelContext: Model ${modelId} successfully selected with parameters:`, parameters);
     } catch (err) {
       const errorMsg = `Failed to select model: ${err.message || 'Unknown error'}`;
       console.error('ModelContext:', errorMsg, err);
@@ -227,10 +224,80 @@ export const ModelProvider = ({ children }) => {
     }
   }, [sessionId, isAuthenticated, modelConfigs, clearError, saveModelPreference, toast]);
 
-  // Change model (public method alias for selectModel)
-  const changeModel = useCallback((newModelId) => {
-    return selectModel(newModelId);
-  }, [selectModel]);
+  // Initialize model with saved preference or default
+  const initializeModel = useCallback(async () => {
+    // CRITICAL: Only proceed if:
+    // 1. We have a valid session
+    // 2. Session is ready
+    // 3. This is our first attempt (prevents multiple initialization)
+    if (!sessionId || !isAuthenticated || !isSessionReady || modelInitAttempted.current) {
+      console.log('ModelContext: Not initializing model - conditions not met', {
+        sessionId: !!sessionId,
+        isAuthenticated,
+        isSessionReady,
+        alreadyAttempted: modelInitAttempted.current
+      });
+      return;
+    }
+    
+    console.log('ModelContext: Starting initialization sequence...');
+    modelInitAttempted.current = true;
+    setIsLoading(true);
+    clearError();
+    
+    try {
+      console.log('ModelContext: Fetching available models');
+      const models = await fetchModels();
+      
+      if (!models || models.length === 0) {
+        throw new Error('No models available');
+      }
+      
+      // Get saved preference
+      const savedPreference = getSavedModelPreference();
+      console.log('ModelContext: Saved preference:', savedPreference);
+      
+      if (savedPreference && savedPreference.modelName) {
+        // Check if saved model exists in available models
+        const modelExists = models.some(m => m.id === savedPreference.modelName);
+        
+        if (modelExists) {
+          console.log(`ModelContext: Found saved model ${savedPreference.modelName}`);
+          await selectModel(savedPreference.modelName, savedPreference.modelParameters);
+        } else {
+          console.log(`ModelContext: Saved model ${savedPreference.modelName} not found, using first available`);
+          await selectModel(models[0].id);
+        }
+      } else {
+        console.log('ModelContext: No saved preference, using first available model');
+        await selectModel(models[0].id);
+      }
+      
+      modelInitComplete.current = true;
+      setIsInitialized(true);
+      console.log('ModelContext: Initialization complete');
+    } catch (err) {
+      const errorMsg = `Model initialization failed: ${err.message || 'Unknown error'}`;
+      console.error('ModelContext:', errorMsg, err);
+      setError(errorMsg);
+      toast({
+        title: 'Error',
+        description: 'Failed to initialize model configuration',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    sessionId, 
+    isAuthenticated, 
+    isSessionReady, 
+    fetchModels, 
+    getSavedModelPreference,
+    selectModel, 
+    clearError, 
+    toast
+  ]);
 
   // Update model parameters with debouncing
   const updateModelParameters = useCallback((newParams) => {
@@ -245,26 +312,30 @@ export const ModelProvider = ({ children }) => {
     }
     
     // Update state immediately for responsive UI
-    setModelParameters(currentParams => ({
-      ...currentParams,
-      ...newParams
-    }));
+    setModelParameters(currentParams => {
+      const updatedParams = {
+        ...currentParams,
+        ...newParams
+      };
+      return updatedParams;
+    });
     
     // Debounce the API call
     paramUpdateTimeoutRef.current = setTimeout(async () => {
       clearError();
       try {
-        console.log('ModelContext: Updating model parameters', newParams);
-        const updatedParams = {
-          ...modelParameters,
-          ...newParams
-        };
+        // Get the latest parameters from state to ensure we have the most recent
+        const latestParams = { ...modelParameters, ...newParams };
+        console.log('ModelContext: Updating model parameters', latestParams);
         
         await modelService.updateParameters({
           sessionId,
           modelName,
-          parameters: updatedParams
+          parameters: latestParams
         });
+        
+        // Save to local storage
+        saveModelPreference({ modelParameters: latestParams });
         
         console.log('ModelContext: Parameters updated successfully');
       } catch (err) {
@@ -277,16 +348,16 @@ export const ModelProvider = ({ children }) => {
           variant: 'destructive',
         });
       }
-    }, MODEL_PARAM_UPDATE_DEBOUNCE);
-  }, [sessionId, isAuthenticated, modelName, modelParameters, clearError, toast]);
-
-  // Reset model parameters to defaults
-  const resetModelParameters = useCallback(() => {
-    if (!selectedModel) return;
-    
-    const defaultParams = modelService.getDefaultParameters(selectedModel);
-    updateModelParameters(defaultParams);
-  }, [selectedModel, updateModelParameters]);
+    }, 500); // 500ms debounce
+  }, [
+    sessionId,
+    isAuthenticated,
+    modelName,
+    modelParameters,
+    clearError,
+    saveModelPreference,
+    toast
+  ]);
 
   // Initialization effect - runs when session is ready
   useEffect(() => {
@@ -305,6 +376,20 @@ export const ModelProvider = ({ children }) => {
     };
   }, []);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('ModelContext state change:', {
+      isInitialized,
+      isLoading,
+      modelName,
+      hasParameters: !!Object.keys(modelParameters).length,
+      hasSelectedModel: !!selectedModel,
+      sessionReady: isSessionReady,
+      initiated: modelInitAttempted.current,
+      completed: modelInitComplete.current
+    });
+  }, [isInitialized, isLoading, modelName, modelParameters, selectedModel, isSessionReady]);
+
   // The context value
   const contextValue = {
     // State
@@ -318,9 +403,8 @@ export const ModelProvider = ({ children }) => {
     
     // Actions
     fetchModels,
-    changeModel,
+    changeModel: selectModel,
     updateModelParameters,
-    resetModelParameters,
     clearError,
   };
 
@@ -332,77 +416,38 @@ export const ModelProvider = ({ children }) => {
 };
 ```
 
-### Step 2: Create a ModelService Utility for Parameter Management
+### Step 2: Update App.jsx to Properly Nest the Context Providers
 
-```js
-// src/services/model-api.js
-import { api } from './api';
+```jsx
+// src/App.jsx
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import AppRoutes from '@/Routes';
+import { SessionProvider } from '@/contexts/SessionContext';
+import { ModelProvider } from '@/contexts/ModelContext';
+import { LegacySessionProvider } from '@/contexts/LegacySessionContext';
+import { ThemeProvider } from '@/contexts/ThemeProvider';
 
-// Helper to get default parameters for a model
-function getDefaultParameters(modelConfig) {
-  if (!modelConfig) return {};
-  
-  const defaultParams = {};
-  
-  // Handle different parameter types appropriately
-  if (modelConfig.parameters) {
-    modelConfig.parameters.forEach(param => {
-      defaultParams[param.id] = param.default !== undefined ? param.default : null;
-    });
-  }
-  
-  return defaultParams;
+function App() {
+  return (
+    <SessionProvider>
+      <ModelProvider>
+        <LegacySessionProvider>
+          <ThemeProvider>
+            <Router>
+              <AppRoutes />
+            </Router>
+          </ThemeProvider>
+        </LegacySessionProvider>
+      </ModelProvider>
+    </SessionProvider>
+  );
 }
 
-// Get available models
-async function getModels() {
-  return api.get('/models');
-}
-
-// Set active model for session
-async function setModel({ sessionId, modelName, parameters = {} }) {
-  return api.post(`/session/${sessionId}/model`, {
-    model_name: modelName,
-    parameters
-  });
-}
-
-// Update model parameters
-async function updateParameters({ sessionId, modelName, parameters = {} }) {
-  return api.patch(`/session/${sessionId}/model`, {
-    model_name: modelName,
-    parameters
-  });
-}
-
-// Export the service
-export const model = {
-  getModels,
-  setModel,
-  updateParameters,
-  getDefaultParameters
-};
+export default App;
 ```
 
-### Step 3: Create useModel Hook
-
-```js
-// src/hooks/use-model.js
-import { useContext } from 'react';
-import { ModelContext } from '../contexts/ModelContext';
-
-export function useModel() {
-  const context = useContext(ModelContext);
-  
-  if (!context) {
-    throw new Error('useModel must be used within a ModelProvider');
-  }
-  
-  return context;
-}
-```
-
-### Step 4: Update LegacySessionContext to Use ModelContext
+### Step 3: Update LegacySessionContext to Proxy Model Operations
 
 ```jsx
 // Partial update to LegacySessionContext.jsx
@@ -417,137 +462,239 @@ export const LegacySessionProvider = ({ children }) => {
   
   // ... existing state management ...
   
-  // Proxy model-related properties from ModelContext
-  // This ensures the legacy context reflects the ModelContext state
-  useEffect(() => {
-    if (model.isInitialized) {
-      setSelectedModel(model.selectedModel);
-      setModelName(model.modelName);
-      setModelParameters(model.modelParameters);
+  // Critical change: For model initialization, use ModelContext
+  const initializeSession = async (forceNew = false, initialModel = null, modelConfigsData = null) => {
+    try {
+      // First validate models are available
+      const models = modelConfigsData || model.modelConfigs;
+      if (!models || models.length === 0) {
+        throw new Error("No model configurations available");
+      }
+
+      // Determine which model to use based on initialModel or current model state
+      let currentModelId = null;
+      let parameters = null;
+
+      if (initialModel && initialModel.id) {
+        currentModelId = initialModel.id;
+        
+        // Extract parameters from initialModel
+        parameters = {
+          temperature: initialModel.temperature,
+          reasoning_effort: initialModel.reasoning_effort,
+          extended_thinking: initialModel.extended_thinking,
+          budget_tokens: initialModel.budget_tokens
+        };
+      } else if (model.modelName) {
+        currentModelId = model.modelName;
+        parameters = model.modelParameters;
+      } else if (models.length > 0) {
+        currentModelId = models[0].id;
+      }
+
+      if (!currentModelId) {
+        throw new Error('No valid model configuration available');
+      }
+
+      // Build session configuration
+      const sessionConfig = {
+        model_name: currentModelId,
+        backend: models.find(m => m.id === currentModelId)?.backend,
+        persona_name: initialModel?.persona_name || persona || 'default'
+      };
+
+      // If we have an existing session and we're not forcing a new one, include the session ID
+      if (sessionId && !forceNew) {
+        sessionConfig.ui_session_id = sessionId;
+      }
+
+      // Determine which custom prompt to use
+      let promptToUse = null;
+      if (initialModel && (initialModel.custom_prompt || initialModel.customPrompt)) {
+        promptToUse = initialModel.custom_prompt || initialModel.customPrompt;
+      } else if (customPrompt) {
+        promptToUse = customPrompt;
+      }
+      if (promptToUse) {
+        sessionConfig.custom_prompt = promptToUse;
+      }
+
+      // Add model parameters
+      if (parameters) {
+        if (parameters.temperature !== undefined) {
+          sessionConfig.temperature = parameters.temperature;
+        }
+        if (parameters.reasoning_effort !== undefined) {
+          sessionConfig.reasoning_effort = parameters.reasoning_effort;
+        }
+        if (parameters.extended_thinking !== undefined) {
+          sessionConfig.extended_thinking = parameters.extended_thinking;
+        }
+        if (parameters.budget_tokens !== undefined) {
+          sessionConfig.budget_tokens = parameters.budget_tokens;
+        }
+      }
+
+      console.log('initializeSession data being sent:', sessionConfig);
+
+      // Initialize the core session
+      await coreInitializeSession(sessionConfig);
+      
+      // No need to directly update model here - ModelContext will handle this via its own initialization
+      // or update mechanisms. This prevents race conditions and redundant API calls.
+    } catch (err) {
+      console.error("Session initialization failed:", err);
+      setError(`Session initialization failed: ${err.message}`);
+      showErrorToast(err, 'Session initialization failed');
+      throw err;
     }
-  }, [
-    model.isInitialized,
-    model.selectedModel,
-    model.modelName,
-    model.modelParameters
-  ]);
+  };
   
   // Proxy model operations to ModelContext
   const handleModelChange = useCallback((newModelName) => {
-    // Forward to ModelContext
     return model.changeModel(newModelName);
   }, [model]);
   
   const handleModelParameterChange = useCallback((paramName, paramValue) => {
-    // Forward to ModelContext
     return model.updateModelParameters({ [paramName]: paramValue });
   }, [model]);
   
-  // ... existing code ...
-  
-  // Include model-related properties in the legacy context
-  const legacyContextValue = {
-    // ... existing properties ...
-    
-    // Model properties proxied from ModelContext
-    modelName: model.modelName,
-    modelParameters: model.modelParameters,
-    models: model.modelConfigs,
-    selectedModel: model.selectedModel,
-    
-    // Model actions that delegate to ModelContext
-    changeModel: handleModelChange,
-    updateModelParameter: handleModelParameterChange,
-    
-    // ... other existing properties ...
+  // For model-related updates in updateAgentSettings
+  const updateAgentSettings = async (updateType, values) => {
+    if (!sessionId || !isReady) return;
+    try {
+      switch (updateType) {
+        case 'MODEL_CHANGE': 
+          // Forward to ModelContext instead of handling here
+          await model.changeModel(values.modelName);
+          setSettingsVersion(v => v + 1);
+          break;
+        
+        case 'SETTINGS_UPDATE': {
+          // This is still handled here since it's not model-specific
+          const updatedPersona = values.persona_name || persona;
+          const updatedPrompt = values.customPrompt || customPrompt;
+          setPersona(updatedPersona);
+          setCustomPrompt(updatedPrompt);
+
+          const updateData = {
+            ui_session_id: sessionId,
+            model_name: model.modelName, // Use from ModelContext
+            backend: model.selectedModel?.backend,
+            persona_name: updatedPersona,
+            custom_prompt: updatedPrompt
+          };
+
+          console.log('Settings update data being sent:', updateData);
+          await sessionService.updateSession(sessionId, updateData);
+          
+          setSettingsVersion(v => v + 1);
+          saveConfigToStorage({
+            persona: updatedPersona,
+            customPrompt: updatedPrompt
+          });
+          break;
+        }
+          
+        case 'PARAMETER_UPDATE':
+          // Forward to ModelContext
+          model.updateModelParameters(values);
+          setSettingsVersion(v => v + 1);
+          break;
+          
+        default:
+          break;
+      }
+    } catch (err) {
+      setError(`Failed to update settings: ${err.message}`);
+      showErrorToast(err, 'Failed to update settings');
+    }
   };
   
+  // Sync with ModelContext state
+  useEffect(() => {
+    if (model.isInitialized) {
+      setModelName(model.modelName);
+      setSelectedModel(model.selectedModel);
+      setModelParameters(model.modelParameters);
+      setIsInitialized(model.isInitialized);
+    }
+  }, [
+    model.isInitialized,
+    model.modelName,
+    model.selectedModel,
+    model.modelParameters
+  ]);
+  
+  // Other LegacySessionContext code...
+  
   return (
-    <LegacySessionContext.Provider value={legacyContextValue}>
+    <LegacySessionContext.Provider
+      value={{
+        // Forward the core session state
+        sessionId,
+        isReady,
+        error,
+        
+        // Include model state from ModelContext
+        modelName: model.modelName,
+        modelParameters: model.modelParameters,
+        modelConfigs: model.modelConfigs,
+        selectedModel: model.selectedModel,
+        
+        // Rest of the context value
+        settingsVersion,
+        isOptionsOpen,
+        setIsOptionsOpen,
+        isStreaming,
+        isLoading,
+        isInitialized: model.isInitialized,
+        persona,
+        temperature,
+        customPrompt,
+        personas,
+        availableTools,
+        activeTools,
+        theme,
+        handleThemeChange,
+        fetchAgentTools,
+        updateAgentSettings,
+        handleEquipTools,
+        handleProcessingStatus,
+        handleSessionsDeleted,
+        initializeSession,
+        setIsInitialized,
+        
+        // Add model-specific operations
+        changeModel: handleModelChange,
+        updateModelParameter: handleModelParameterChange
+      }}
+    >
       {children}
     </LegacySessionContext.Provider>
   );
 };
 ```
 
-### Step 5: Update App Context Hierarchy
+## Implementation Plan
 
-```jsx
-// src/App.jsx
-import { SessionProvider } from './contexts/SessionContext';
-import { ModelProvider } from './contexts/ModelContext';
-import { LegacySessionProvider } from './contexts/LegacySessionContext';
-import { ThemeProvider } from './contexts/ThemeProvider';
+1. First, I'll create the ModelContext.jsx file with robust initialization logic that includes proper synchronization with SessionContext
 
-function App() {
-  return (
-    <SessionProvider>
-      <ModelProvider>
-        <LegacySessionProvider>
-          <ThemeProvider>
-            {/* Router and other app content */}
-          </ThemeProvider>
-        </LegacySessionProvider>
-      </ModelProvider>
-    </SessionProvider>
-  );
-}
-```
+2. Then I'll update App.jsx to include the ModelProvider in the proper nesting order
 
-## Component Update Strategy
+3. Next, I'll modify the LegacySessionContext to proxy model operations to the ModelContext
 
-Instead of trying to migrate all components at once, we'll follow a phased approach:
+4. Finally, I'll test the implementation by ensuring:
+   - The initialization sequence works correctly
+   - Model changes work properly
+   - Parameter updates are correctly reflected
+   - All components display the same model state
+   - No race conditions occur between contexts
 
-1. **Identify Key Components**: First, identify components that directly interact with model state and operations:
-   - ModelParameterControls
-   - ModelSelector components
-   - Any components that display or modify model parameters
+This approach addresses the critical issues by:
 
-2. **Targeted Migrations**: Update these key components one by one to use the useModel hook instead of the legacy context. For example:
+1. Ensuring clear ownership of model state (ModelContext is the source of truth)
+2. Establishing a proper initialization sequence (ModelContext waits for SessionContext)
+3. Preventing redundant API calls (operations are proxied, not duplicated)
+4. Maintaining backward compatibility (LegacySessionContext continues to work)
 
-```jsx
-// Before
-const { modelParameters, updateModelParameter } = useContext(LegacySessionContext);
-
-// After
-const { modelParameters, updateModelParameters } = useModel();
-// Note: API signature change from updateModelParameter to updateModelParameters
-```
-
-3. **Compatibility Layer**: Where needed, create thin adapter functions to handle API differences between the old and new contexts.
-
-## Debug Support
-
-To aid in troubleshooting during this complex transition, we'll add enhanced logging:
-
-1. **Initialization Logging**: Detailed logging of the initialization sequence and state changes
-2. **Context State Diffing**: Log when model state differs between contexts
-3. **API Call Logging**: Clear logging of all model-related API calls
-
-## Testing Strategy
-
-1. **Initialization Tests**: Verify ModelContext initializes correctly with SessionContext
-2. **State Synchronization Tests**: Ensure model state remains consistent between contexts
-3. **Component Integration Tests**: Test components with both contexts
-4. **API Call Tests**: Verify correct API endpoints are called with proper parameters
-
-## Risk Mitigation
-
-1. **Fallback Mechanism**: Components should fall back to LegacySessionContext if ModelContext is unavailable
-2. **Graceful Error Handling**: All errors should be caught and displayed appropriately
-3. **State Recovery**: Implement recovery mechanisms for initialization failures
-
-## Implementation Checklist
-
-- [ ] Core ModelContext implementation
-- [ ] ModelService utility functions
-- [ ] useModel hook implementation
-- [ ] LegacySessionContext integration with ModelContext
-- [ ] App context hierarchy update
-- [ ] Update at least one key component to use ModelContext directly
-- [ ] Enhanced logging and debugging support
-- [ ] Basic testing of the integration
-
-## Next Steps
-
-After completing Phase 3, we will proceed to Phase 4: Creating UIStateContext, which will follow a similar pattern but focus on UI state.
