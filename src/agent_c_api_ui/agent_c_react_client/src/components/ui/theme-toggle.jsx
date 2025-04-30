@@ -1,11 +1,11 @@
 import React, { useContext } from 'react';
 import { Button } from './button';
 import { Icon } from './icon';
-import { SessionContext } from '../../contexts/SessionContext';
+import { LegacySessionContext } from '../../contexts/LegacySessionContext';
 import '../../styles/components/icon.css';
 
 export function ThemeToggle() {
-  const { theme, handleThemeChange } = useContext(SessionContext);
+  const { theme, handleThemeChange } = useContext(LegacySessionContext);
 
   return (
     <div className="flex items-center space-x-1 border dark:border-gray-700 rounded-lg p-0.5 bg-white/10 dark:bg-gray-800/20 backdrop-blur-sm">

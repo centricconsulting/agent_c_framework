@@ -1,151 +1,77 @@
-# SessionContext Refactor Phase 2 Debugging Guide
+# Phase 2 Debugging Notes
 
-This document provides debugging strategies for Phase 2 of the SessionContext refactor.
+## Issues Encountered and Fixed
 
-## Common Issues
+### 1. 404 Error Spam in Console
 
-### Session Initialization Failures
+**Problem:** When validating sessions, 404 responses were being logged to the console as errors, even though these are normal flow conditions for session validation.
 
-**Symptoms:**
-- Application stuck in loading state
-- Error messages related to session initialization
-- Components not rendering correctly
+**Solution:**
+- Modified the `getSession` function in `session-api.js` to handle 404 errors silently when requested with the `silent404` option
+- Updated the `validateSession` function in `SessionContext.jsx` to use the silent404 option
+- Added silent option to the `processApiError` function to prevent logging for expected conditions
 
-**Debugging Steps:**
-1. Check browser console for errors
-2. Verify the order of initialization in the React component tree
-3. Check Network tab for API responses to `/initialize` endpoint
-4. Add console logs to track the initialization flow:
-
+**Key Code Changes:**
 ```javascript
-// Add to SessionContext.jsx
-const initializeSession = async (config) => {
-  console.log('Core SessionContext: initializing session with config:', config);
-  setIsReady(false);
+// In session-api.js
+export async function getSession(sessionId, options = {}) {
   try {
-    const data = await sessionService.initialize(config);
-    console.log('Core SessionContext: session initialized successfully:', data);
-    // ...
-  } catch (err) {
-    console.error('Core SessionContext: session initialization failed:', err);
-    // ...
-  }
-};
-```
-
-### Context Dependency Issues
-
-**Symptoms:**
-- "Cannot read property X of undefined" errors
-- Components using legacy context failing
-
-**Debugging Steps:**
-1. Verify provider order in App.jsx
-2. Check that LegacySessionContext correctly forwards core session state
-3. Add context existence checks:
-
-```javascript
-const contextValue = useContext(LegacySessionContext);
-console.log('Context value available:', Boolean(contextValue));
-```
-
-### localStorage Issues
-
-**Symptoms:**
-- Sessions not persisting between refreshes
-- Multiple sessions being created
-
-**Debugging Steps:**
-1. Check Application tab > Storage > localStorage in dev tools
-2. Verify that ui_session_id is being stored correctly
-3. Add storage event listeners to debug writes:
-
-```javascript
-useEffect(() => {
-  const handleStorage = (e) => {
-    if (e.key === 'ui_session_id') {
-      console.log('ui_session_id changed:', e.oldValue, '->', e.newValue);
+    return await api.get(`/session/${sessionId}`);
+  } catch (error) {
+    // For session validation, we want to silently handle 404s
+    const statusCode = error.statusCode || (error.originalError && error.originalError.statusCode);
+    if (options.silent404 && (statusCode === 404 || (error.message && error.message.includes('status 404')))) {
+      return null;
     }
-  };
-  window.addEventListener('storage', handleStorage);
-  return () => window.removeEventListener('storage', handleStorage);
-}, []);
-```
-
-## Debugging Tools
-
-### Session Debug Component
-
-Create a simple debug component to display session state:
-
-```jsx
-const SessionDebug = () => {
-  const sessionContext = useContext(SessionContext);
-  const legacyContext = useContext(LegacySessionContext);
-  
-  return (
-    <div style={{ position: 'fixed', bottom: 0, right: 0, background: '#f0f0f0', padding: '10px', zIndex: 9999, fontSize: '12px' }}>
-      <h4>Session Debug</h4>
-      <div>Core Session ID: {sessionContext?.sessionId || 'none'}</div>
-      <div>Core Ready: {String(sessionContext?.isReady)}</div>
-      <div>Legacy Session ID: {legacyContext?.sessionId || 'none'}</div>
-      <div>Legacy Ready: {String(legacyContext?.isReady)}</div>
-      <div>Legacy Initialized: {String(legacyContext?.isInitialized)}</div>
-    </div>
-  );
-};
-```
-
-### API Call Tracing
-
-Add this to your development environment to trace API calls:
-
-```javascript
-// In services/api.js development mode
-const traceApiCall = (method, url, data) => {
-  const timestamp = new Date().toISOString().substr(11, 12);
-  console.group(`🌐 API ${method.toUpperCase()} ${url} [${timestamp}]`);
-  if (data) console.log('Request data:', data);
-  console.groupEnd();
-};
-
-// Then in each method
-async function get(url, config = {}) {
-  if (process.env.NODE_ENV !== 'production') {
-    traceApiCall('get', url, config);
+    // For non-validation calls, or for other errors, process normally
+    throw api.processApiError(error, 'Failed to retrieve session', { silent: options.silent404 });
   }
-  // ... rest of method
 }
 ```
 
-### React DevTools Profiling
+### 2. Theme Toggle Functionality Broken
 
-1. Install React DevTools browser extension
-2. Use the Profiler tab to record renders
-3. Look for unexpected renders or render cascades
-4. Check the Components tab to inspect context values
+**Problem:** After refactoring, clicking the theme toggle buttons resulted in an error: `Uncaught TypeError: handleThemeChange is not a function`
 
-## Rollback Strategy
+**Solution:**
+- Updated the `ThemeProvider` component to use `LegacySessionContext` instead of `SessionContext`
+- Updated the `theme-toggle.jsx` component to import from `LegacySessionContext` instead of `SessionContext`
 
-If critical issues are encountered, follow this rollback procedure:
+**Key Code Changes:**
+```jsx
+// In ThemeProvider.jsx
+import { LegacySessionContext } from './LegacySessionContext';
 
-1. Restore the original SessionContext.jsx from .scratch/SessionContext.jsx.OLD
-2. Revert App.jsx changes
-3. Remove any new files created (useSession.js)
+export const ThemeProvider = ({ children }) => {
+  const { theme } = useContext(LegacySessionContext);
+  // ...
+}
 
-## Performance Monitoring
+// In theme-toggle.jsx
+import { LegacySessionContext } from '../../contexts/LegacySessionContext';
 
-Watch for these performance issues during testing:
+export function ThemeToggle() {
+  const { theme, handleThemeChange } = useContext(LegacySessionContext);
+  // ...
+}
+```
 
-1. **Render cascades** - when context changes trigger many components to re-render
-2. **Multiple session initializations** - check network tab for duplicate calls
-3. **Memory leaks** - watch for components not cleaning up effects or timeouts
+## Potential Future Issues
 
-## Testing Checklist
+### 1. Component Dependency Order
 
-- [ ] Session persists across page refreshes
-- [ ] Initialization with saved configuration works
-- [ ] New session creation works
-- [ ] Error states are properly handled and displayed
-- [ ] No console errors during normal operation
-- [ ] No duplicate API calls for the same operation
+Components that rely on both session and theme data must be careful of the context hierarchy. Since ThemeProvider now depends on LegacySessionContext, components must ensure they're accessing these contexts in the correct order.
+
+### 2. Error State Synchronization
+
+Errors are tracked in both SessionContext and LegacySessionContext. Care must be taken to ensure these error states remain synchronized, especially for session initialization errors.
+
+### 3. Session Initialization Race Conditions
+
+We need to be careful about potential race conditions during session initialization. The current implementation initializes first in useEffect, and LegacySessionContext defers to the core SessionContext, which helps mitigate this risk.
+
+## Performance Considerations
+
+- **Context Nesting Depth:** The triple-nested context structure (SessionContext → LegacySessionContext → ThemeProvider) is a temporary structure during refactoring. We should monitor for any performance impacts.
+
+- **State Synchronization:** We're duplicating some state between contexts, which is not ideal for performance but necessary during the transition phase.

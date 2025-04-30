@@ -69,8 +69,8 @@ export const SessionProvider = ({ children }) => {
       const result = await sessionService.getSession(sessionIdToCheck, { silent404: true });
       return result !== null;
     } catch (err) {
-      // We're silently handling 404s, so any error here is unexpected
-      console.error("Unexpected error during session validation:", err);
+      // We should never get here since 404s are handled in the service layer
+      // But just in case, silently handle any other errors during validation
       return false;
     }
   };

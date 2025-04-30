@@ -1,8 +1,8 @@
 import React, { useContext, useEffect } from 'react';
-import { SessionContext } from './SessionContext';
+import { LegacySessionContext } from './LegacySessionContext';
 
 export const ThemeProvider = ({ children }) => {
-  const { theme } = useContext(SessionContext);
+  const { theme } = useContext(LegacySessionContext);
 
   // Apply theme class to the document root
   useEffect(() => {
