@@ -1,67 +1,14 @@
-# Phase 2 Implementation Plan: Creating Core SessionContext
+# SessionContext Refactor Phase 2 Implementation Guide
 
-This document provides detailed step-by-step instructions for implementing Phase 2 of the SessionContext refactoring project. The plan is structured to provide a safe, incremental approach with clear verification points.
+This document provides step-by-step instructions for implementing Phase 2 of the SessionContext refactoring.
 
-## Implementation Steps
+## Step 1: Create the New SessionContext
 
-### Step 1: Create the new SessionContext
-
-1. Create the new `SessionContext.jsx` file with focused state and functionality:
-   - Create the file at `src/contexts/SessionContext.jsx.new`
-   - Implement core state: sessionId, isReady, isInitialized, error
-   - Implement core functions: initializeSession, handleSessionsDeleted
-   - Add session validation and error recovery mechanisms
-   - See the design in the tracker document
-
-2. Create a custom hook for accessing the SessionContext:
-   - Create the file at `src/hooks/useSession.js`
-   - Implement a hook that accesses the SessionContext and provides error checking
-   - See the design in the tracker document
-
-### Step 2: Create the LegacySessionContext
-
-1. Duplicate the existing SessionContext:
-   - Rename `src/contexts/SessionContext.jsx` to `src/contexts/LegacySessionContext.jsx`
-   - Update exports to use `LegacySessionContext` and `LegacySessionProvider` names
-   - Update import references within the file
-
-2. Update LegacySessionContext to use the new SessionContext:
-   - Import the new SessionContext provider and hook
-   - Remove duplicated state and functions
-   - Forward session state and functions to/from the SessionContext
-   - Ensure it maintains the same interface for backward compatibility
-
-### Step 3: Update App entry point
-
-1. Replace the temporary SessionContext files:
-   - Move `src/contexts/SessionContext.jsx.new` to `src/contexts/SessionContext.jsx`
-
-2. Update the App component to use both providers:
-   - Update `src/App.jsx` to nest the providers correctly
-   - Ensure proper provider order (SessionProvider must be higher in the tree)
-
-### Step 4: Test and verify
-
-1. Test session initialization:
-   - Verify a new session can be created
-   - Verify session state is stored in localStorage
-   - Verify both contexts have access to session data
-
-2. Test session restoration:
-   - Verify a session can be restored from localStorage
-   - Verify session validation works correctly
-
-3. Test error handling:
-   - Verify initialization errors are handled correctly
-   - Verify recovery mechanisms work properly
-
-## Detailed Implementation Instructions
-
-### Step 1.1: Create the new SessionContext
+Create a focused SessionContext that handles only core session management.
 
 ```jsx
 // src/contexts/SessionContext.jsx.new
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import { session as sessionService } from '../services';
 
 export const SessionContext = createContext();
@@ -72,99 +19,100 @@ export const SessionProvider = ({ children }) => {
   const [isReady, setIsReady] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState(null);
-  const [isValidating, setIsValidating] = useState(false);
 
-  // Initialize a session with the given configuration
-  const initializeSession = useCallback(async (config) => {
+  // Initialize a session with the provided configuration
+  const initializeSession = async (config) => {
     setIsReady(false);
     try {
-      console.log('SessionContext: Initializing session with config:', config);
       const data = await sessionService.initialize(config);
-      if (data && data.ui_session_id) {
+      if (data.ui_session_id) {
         localStorage.setItem("ui_session_id", data.ui_session_id);
         setSessionId(data.ui_session_id);
         setIsReady(true);
         setError(null);
-        console.log(`SessionContext: Session initialized with ID ${data.ui_session_id}`);
         return data.ui_session_id;
       } else {
         throw new Error("No ui_session_id in response");
       }
     } catch (err) {
-      console.error("SessionContext: Session initialization failed:", err);
       setIsReady(false);
       setError(`Session initialization failed: ${err.message}`);
       throw err;
     }
-  }, []);
+  };
 
-  // Validate an existing session
-  const validateSession = useCallback(async (sessionId) => {
-    if (!sessionId) return false;
-    
-    setIsValidating(true);
-    try {
-      console.log(`SessionContext: Validating session ${sessionId}`);
-      const session = await sessionService.getSession(sessionId);
-      setIsValidating(false);
-      return !!session;
-    } catch (err) {
-      console.error("SessionContext: Session validation failed:", err);
-      setIsValidating(false);
-      return false;
-    }
-  }, []);
-
-  // Clear session data when sessions are deleted
-  const handleSessionsDeleted = useCallback(() => {
-    console.log('SessionContext: Clearing session data');
+  // Clear session when sessions are deleted
+  const handleSessionsDeleted = () => {
     localStorage.removeItem("ui_session_id");
     setSessionId(null);
     setIsReady(false);
     setError(null);
-  }, []);
+  };
+
+  // Validate session by checking with backend
+  const validateSession = async (sessionId) => {
+    try {
+      await sessionService.getSession(sessionId);
+      return true;
+    } catch (err) {
+      console.error("Session validation failed:", err);
+      return false;
+    }
+  };
 
   // Check for existing session on mount
   useEffect(() => {
-    const savedSessionId = localStorage.getItem("ui_session_id");
-    if (savedSessionId) {
-      console.log(`SessionContext: Found saved session ID ${savedSessionId}`);
-      // Set the session ID immediately
-      setSessionId(savedSessionId);
-      setIsReady(true);
-      
-      // Validate the session asynchronously
-      validateSession(savedSessionId).then(isValid => {
-        if (!isValid) {
-          console.warn(`SessionContext: Saved session ${savedSessionId} is invalid`);
-          handleSessionsDeleted();
+    const checkExistingSession = async () => {
+      const savedSessionId = localStorage.getItem("ui_session_id");
+      if (savedSessionId) {
+        try {
+          // Optional: validate session with backend
+          const isValid = await validateSession(savedSessionId);
+          if (isValid) {
+            setSessionId(savedSessionId);
+            setIsReady(true);
+          } else {
+            // Session no longer valid on backend
+            localStorage.removeItem("ui_session_id");
+            setSessionId(null);
+            setIsReady(false);
+          }
+        } catch (err) {
+          // Error during validation, clear session
+          localStorage.removeItem("ui_session_id");
+          setError(`Session validation failed: ${err.message}`);
+          setSessionId(null);
+          setIsReady(false);
         }
-      });
-    }
-  }, [validateSession, handleSessionsDeleted]);
+      }
+    };
 
-  const contextValue = {
-    sessionId,
-    isReady,
-    isInitialized,
-    setIsInitialized,
-    error,
-    setError,
-    isValidating,
-    initializeSession,
-    handleSessionsDeleted,
-    validateSession
-  };
+    checkExistingSession();
+  }, []);
 
   return (
-    <SessionContext.Provider value={contextValue}>
+    <SessionContext.Provider
+      value={{
+        sessionId,
+        isReady,
+        isInitialized,
+        setIsInitialized,
+        error,
+        setError,
+        initializeSession,
+        handleSessionsDeleted,
+        validateSession
+      }}
+    >
       {children}
     </SessionContext.Provider>
   );
 };
 ```
 
-### Step 1.2: Create useSession hook
+## Step 2: Create useSession Hook
+
+Implement a custom hook for accessing the SessionContext.
 
 ```jsx
 // src/hooks/useSession.js
@@ -173,20 +121,23 @@ import { SessionContext } from '../contexts/SessionContext';
 
 export function useSession() {
   const context = useContext(SessionContext);
+  
   if (context === undefined) {
     throw new Error('useSession must be used within a SessionProvider');
   }
+  
   return context;
 }
 ```
 
-### Step 2.1: Rename existing SessionContext to LegacySessionContext
+## Step 3: Rename Current SessionContext to LegacySessionContext
 
-Create a new file `src/contexts/LegacySessionContext.jsx` based on the current SessionContext.jsx, changing the exports:
+1. Move the current SessionContext to a new file:
 
 ```jsx
-// Beginning of the file
-import React, { createContext, useState, useEffect, useRef } from 'react';
+// src/contexts/LegacySessionContext.jsx
+import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
+import { SessionContext } from './SessionContext';
 
 // Import services from the API service layer
 import {
@@ -198,74 +149,88 @@ import {
     showErrorToast
 } from '../services';
 
-// Change export name
-export const LegacySessionContext = createContext();
-
-// Change provider name
-export const LegacySessionProvider = ({ children }) => {
-    // ... existing implementation ...
-    
-    return (
-        <LegacySessionContext.Provider
-            value={{
-                // ... existing values ...
-            }}
-        >
-            {children}
-        </LegacySessionContext.Provider>
-    );
-};
-```
-
-### Step 2.2: Update LegacySessionContext to use the new SessionContext
-
-Modify `src/contexts/LegacySessionContext.jsx` to use the new SessionContext:
-
-```jsx
-// Near the top of the file
-import { useSession } from '../hooks/useSession';
-
 export const LegacySessionContext = createContext();
 
 export const LegacySessionProvider = ({ children }) => {
-    // Use the new SessionContext
+    // Use the core SessionContext
     const {
-        sessionId,
-        isReady,
-        error: sessionError,
+        sessionId, 
+        isReady, 
+        error: sessionError, 
         setError: setSessionError,
         initializeSession: coreInitializeSession,
         handleSessionsDeleted: coreHandleSessionsDeleted
-    } = useSession();
+    } = useContext(SessionContext);
     
-    // Remove duplicated state
-    // const [sessionId, setSessionId] = useState(null);
-    // const [isReady, setIsReady] = useState(false);
-    // Keep the rest of the state
-    
+    // Legacy state that will be moved to other contexts later
     const debouncedUpdateRef = useRef(null);
     const [error, setError] = useState(null);
-    // ... rest of the state ...
-    
-    // Use the error from SessionContext
+    const [settingsVersion, setSettingsVersion] = useState(0);
+    const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isInitialized, setIsInitialized] = useState(false);
+    const [theme, setTheme] = useState(() => {
+        // Check for saved theme preference in localStorage
+        const savedTheme = localStorage.getItem('theme');
+        return savedTheme || 'system';
+    });
+
+    // Agent settings & configuration
+    const [persona, setPersona] = useState("");
+    const [temperature, setTemperature] = useState(null);
+    const [customPrompt, setCustomPrompt] = useState("");
+    const [modelConfigs, setModelConfigs] = useState([]);
+    const [modelName, setModelName] = useState("");
+    const [modelParameters, setModelParameters] = useState({});
+    const [selectedModel, setSelectedModel] = useState(null);
+
+    // Data from backend
+    const [personas, setPersonas] = useState([]);
+    const [availableTools, setAvailableTools] = useState({
+        essential_tools: [],
+        groups: {},
+        categories: []
+    });
+    const [activeTools, setActiveTools] = useState([]);
+
+    // Synchronize error states
     useEffect(() => {
         if (sessionError) {
             setError(sessionError);
         }
     }, [sessionError]);
+
+    // Synchronize ready state
+    useEffect(() => {
+        if (!isReady) {
+            // If core session is not ready, set initialized to false
+            setIsInitialized(false);
+        }
+    }, [isReady]);
     
-    // Update the initializeSession function to use the core version
+    // Rest of current SessionContext implementation...
+    // (Include all other methods and effects from the current SessionContext)
+    
+    // Modify initializeSession to use the core session context's method
     const initializeSession = async (forceNew = false, initialModel = null, modelConfigsData = null) => {
         try {
-            // ... existing model validation logic ...
-            
-            // Build session configuration
-            const sessionConfig = { /* ... */ };
-            
-            // Use the core initializeSession
+            // First, validate that we have model configurations available
+            const models = modelConfigsData || modelConfigs;
+            if (!models || models.length === 0) {
+                throw new Error("No model configurations available");
+            }
+
+            // Determine which model to use
+            let currentModel = null; // Initialize as null to ensure proper checking
+
+            // Build session configuration (similar to current implementation)
+            // ...
+
+            // Use core initializeSession instead of direct API call
             await coreInitializeSession(sessionConfig);
             
-            // Update local state that's not in the core context
+            // Update modelName state to reflect the current model
             setModelName(currentModel.id);
             setSelectedModel(currentModel);
         } catch (err) {
@@ -274,32 +239,68 @@ export const LegacySessionProvider = ({ children }) => {
             showErrorToast(err, 'Session initialization failed');
         }
     };
-    
-    // Update handleSessionsDeleted to use the core version
+
+    // Modify handleSessionsDeleted to use the core context's method
     const handleSessionsDeleted = () => {
-        // Call the core function
+        // Call core method first
         coreHandleSessionsDeleted();
-        
-        // Handle additional cleanup
+
+        // Additional cleanup specific to LegacySessionContext
         localStorage.removeItem("agent_config");
         setActiveTools([]);
-        setError(null);
         setModelName("");
         setSelectedModel(null);
+        setError(null);
     };
     
-    // ... rest of the implementation ...
+    // Return the complete context value
+    return (
+        <LegacySessionContext.Provider
+            value={{
+                // Forward the core session state
+                sessionId,
+                isReady,
+                error,
+                
+                // Legacy state and methods
+                settingsVersion,
+                isOptionsOpen,
+                setIsOptionsOpen,
+                isStreaming,
+                isLoading,
+                isInitialized,
+                persona,
+                temperature,
+                customPrompt,
+                modelConfigs,
+                modelName,
+                modelParameters,
+                selectedModel,
+                personas,
+                availableTools,
+                activeTools,
+                theme,
+                handleThemeChange,
+                fetchAgentTools,
+                updateAgentSettings,
+                handleEquipTools,
+                handleProcessingStatus,
+                handleSessionsDeleted,
+                initializeSession,
+                setIsInitialized
+            }}
+        >
+            {children}
+        </LegacySessionContext.Provider>
+    );
 };
 ```
 
-### Step 3.1: Rename the temporary file to the final location
+## Step 4: Update App.jsx
 
-Rename `src/contexts/SessionContext.jsx.new` to `src/contexts/SessionContext.jsx`, replacing the old file.
-
-### Step 3.2: Update App.jsx
+Update the entry point to use both providers:
 
 ```jsx
-// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import AppRoutes from '@/Routes';
@@ -324,27 +325,19 @@ function App() {
 export default App;
 ```
 
-## Verification Steps
+## Step 5: Implementation Strategy
 
-After each implementation step, verify:
+1. First, create the new files in the .scratch directory:
+   - `//ui/.scratch/SessionContext.jsx.new`
+   - `//ui/.scratch/useSession.js`
+   - `//ui/.scratch/LegacySessionContext.jsx`
 
-1. The application builds without errors
-2. The application loads correctly
-3. Session initialization works
-4. Session restoration works
-5. All existing functionality continues to work
+2. Review and test these files thoroughly for correctness
 
-## Rollback Plan
+3. Make the actual changes:
+   - Create `src/hooks/useSession.js`
+   - Rename `src/contexts/SessionContext.jsx` to `src/contexts/LegacySessionContext.jsx`
+   - Create new `src/contexts/SessionContext.jsx`
+   - Update `src/App.jsx`
 
-If issues are encountered:
-
-1. Revert changes to `App.jsx`
-2. Restore the original `SessionContext.jsx` from the renamed file
-3. Delete the new files (useSession.js, LegacySessionContext.jsx)
-
-## Success Criteria
-
-- The application works with both the new SessionContext and LegacySessionContext
-- Session initialization, validation, and deletion work correctly
-- Error handling is improved
-- Code is more maintainable with clear separation of concerns
+4. Test the application to ensure all functionality works correctly

@@ -38,13 +38,21 @@ export async function createSession(config = {}) {
 /**
  * Get an existing session by ID
  * @param {string} sessionId - Session identifier
- * @returns {Promise<Object>} Session data
+ * @param {Object} options - Options for retrieval
+ * @param {boolean} options.silent404 - If true, don't process 404 errors (for validation)
+ * @returns {Promise<Object|null>} Session data or null if not found with silent404
  */
-export async function getSession(sessionId) {
+export async function getSession(sessionId, options = {}) {
   try {
     return await api.get(`/session/${sessionId}`);
   } catch (error) {
-    throw api.processApiError(error, 'Failed to retrieve session');
+    // For session validation, we want to silently handle 404s
+    const statusCode = error.statusCode || (error.originalError && error.originalError.statusCode);
+    if (options.silent404 && (statusCode === 404 || (error.message && error.message.includes('status 404')))) {
+      return null;
+    }
+    // For non-validation calls, or for other errors, process normally
+    throw api.processApiError(error, 'Failed to retrieve session', { silent: options.silent404 });
   }
 }
 

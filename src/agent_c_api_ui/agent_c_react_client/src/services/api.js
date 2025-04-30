@@ -46,8 +46,11 @@ async function parseResponse(response) {
  * @param {string} fallbackMessage - Default message if error details are unavailable
  * @returns {Error} Enhanced error object with additional context
  */
-export function processApiError(error, fallbackMessage = 'An unexpected error occurred') {
-  console.error('API Error:', error);
+export function processApiError(error, fallbackMessage = 'An unexpected error occurred', options = {}) {
+  // Only log errors if not silenced (for expected error cases like 404 validations)
+  if (!options.silent) {
+    console.error('API Error:', error);
+  }
   
   // If it's already a processed error, return it
   if (error && error.isProcessed) {
@@ -158,6 +161,10 @@ export async function apiRequest(endpoint, options = {}) {
     
     return await parseResponse(response);
   } catch (error) {
+    // Check if this is a regular Error with a statusCode property (added by processApiError)
+    if (error instanceof Error && error.statusCode) {
+      throw error; // Already processed
+    }
     // Process all other errors (network issues, etc.)
     throw processApiError(error);
   }

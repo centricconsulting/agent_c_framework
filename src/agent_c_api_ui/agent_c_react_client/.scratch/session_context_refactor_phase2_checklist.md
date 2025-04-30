@@ -1,82 +1,102 @@
-# Phase 2 Implementation Checklist
+# SessionContext Refactor Phase 2 Checklist
 
-Use this checklist to track progress and verify completion of each step in Phase 2 of the SessionContext refactoring.
+This checklist helps verify each step of the Phase 2 refactoring has been completed correctly.
 
-## Step 1: Create New SessionContext and Hook
+## 1. New SessionContext Implementation
 
-### Create SessionContext.jsx.new
-- [ ] Create file with focused session state
-- [ ] Implement initializeSession function
-- [ ] Implement handleSessionsDeleted function
-- [ ] Add session validation
-- [ ] Add error recovery mechanisms
-- [ ] Add debug logging
-- [ ] Verify component builds without errors
+### Core Functionality
+- [ ] Context correctly exposes sessionId
+- [ ] isReady state works as expected
+- [ ] Error handling is implemented
+- [ ] initializeSession function works correctly
+- [ ] handleSessionsDeleted function clears state properly
+- [ ] Context persistence with localStorage works
 
-### Create useSession.js Hook
-- [ ] Create hook file
-- [ ] Implement context usage with error checking
-- [ ] Verify hook builds without errors
+### API Integration
+- [ ] Uses session-api service correctly
+- [ ] Properly handles API errors
+- [ ] Session validation is implemented
 
-## Step 2: Create LegacySessionContext
+### Implementation Review
+- [ ] No dependencies on other contexts
+- [ ] Focused only on session management
+- [ ] Clear and consistent naming conventions
+- [ ] Comprehensive error handling
+- [ ] Performance optimizations where appropriate
 
-### Rename Current SessionContext
-- [ ] Copy SessionContext.jsx to LegacySessionContext.jsx
-- [ ] Update context and provider names
-- [ ] Update internal references
-- [ ] Verify component builds without errors
+## 2. useSession Hook
 
-### Update LegacySessionContext to Use New Context
-- [ ] Import useSession hook
-- [ ] Remove duplicated state (sessionId, isReady, etc.)
-- [ ] Update initializeSession to use core version
-- [ ] Update handleSessionsDeleted to use core version
-- [ ] Forward error states between contexts
-- [ ] Verify component builds without errors
+- [ ] Implements context consumption correctly
+- [ ] Provides proper error if used outside provider
+- [ ] Includes appropriate TypeScript-like validation
+- [ ] Follows React hooks best practices
 
-## Step 3: Update Application Entry Point
+## 3. LegacySessionContext Implementation
 
-### Finalize SessionContext
-- [ ] Move SessionContext.jsx.new to SessionContext.jsx
-- [ ] Verify file overwrites the old version
+### Core Integration
+- [ ] Properly consumes the new SessionContext
+- [ ] Correctly forwards state from core context
+- [ ] Properly synchronizes error states
 
-### Update App.jsx
-- [ ] Import both providers
-- [ ] Nest providers in correct order
-- [ ] Verify App builds without errors
+### Backward Compatibility
+- [ ] Maintains all original functionality
+- [ ] All public methods are preserved
+- [ ] State management mirrors original implementation
+- [ ] Compatible with existing components
 
-## Step 4: Testing and Verification
+### Implementation Review
+- [ ] Clear separation between core session logic and other functionality
+- [ ] Error handling is consistent
+- [ ] Dependencies are properly managed
 
-### Basic Functionality Tests
-- [ ] Application loads without errors
-- [ ] New session is created on first load
-- [ ] Session ID is stored in localStorage
-- [ ] Session is restored on reload
+## 4. App.jsx Updates
 
-### Advanced Functionality Tests
-- [ ] Model selection works
-- [ ] Parameter updates work
-- [ ] Tool selection works
-- [ ] Chat functionality works
+- [ ] Provider nesting order is correct
+- [ ] No duplicate providers
+- [ ] Proper context hierarchy
 
-### Error Handling Tests
-- [ ] API errors are handled gracefully
-- [ ] Error messages are displayed to user
-- [ ] Application can recover from errors
+## 5. Testing
 
-### Performance Verification
-- [ ] No noticeable performance degradation
-- [ ] No memory leaks (check React DevTools)
-- [ ] No excessive re-renders
+### Core Session Management
+- [ ] Session initialization works
+- [ ] Session persistence works between page refreshes
+- [ ] Session errors are handled correctly
+- [ ] Session deletion works correctly
+
+### Backward Compatibility
+- [ ] Existing components still work with LegacySessionContext
+- [ ] No regressions in UI functionality
+- [ ] Model/persona selection still works
+- [ ] Tools management still works
+
+### Error Handling
+- [ ] API errors are properly displayed
+- [ ] UI gracefully handles error states
+- [ ] Recovery from errors works as expected
+
+## 6. Code Quality
+
+- [ ] No console.log statements left in production code
+- [ ] No TODO comments left unaddressed
+- [ ] Code is properly documented
+- [ ] Variable naming is clear and consistent
+- [ ] Function responsibility is clear and focused
+
+## 7. Performance
+
+- [ ] No unnecessary re-renders
+- [ ] No duplicate API calls
+- [ ] Memory usage is reasonable
+- [ ] No memory leaks identified
 
 ## Final Approval
 
-- [ ] Code review completed
+- [ ] Code has been reviewed
 - [ ] All tests pass
-- [ ] Documentation updated
-- [ ] No console errors or warnings
-- [ ] Phase 2 considered complete
+- [ ] No regressions in functionality
+- [ ] No new console errors
+- [ ] Documentation has been updated if necessary
 
-## Notes and Observations
+## Notes
 
-(Add any notes, challenges, or observations here during implementation)
+Add any implementation notes or caveats here:

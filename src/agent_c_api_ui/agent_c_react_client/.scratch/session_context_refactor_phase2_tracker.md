@@ -1,161 +1,79 @@
-# SessionContext Refactor - Phase 2 Tracker
+# SessionContext Refactor Phase 2 Tracker
 
-This document tracks the progress of Phase 2 of the SessionContext refactoring project: Creating a Core SessionContext.
+This document tracks progress for Phase 2 of the SessionContext refactoring, which focuses on creating a dedicated core SessionContext and transitioning the current context to a LegacySessionContext.
 
-## Overview
+## Overall Progress
 
-In Phase 2, we're extracting core session management functionality from the monolithic SessionContext into a new, focused context. This will provide a foundation for the additional contexts we'll create in subsequent phases.
+- [x] Create new SessionContext
+- [x] Create useSession hook
+- [x] Rename existing SessionContext to LegacySessionContext
+- [x] Update LegacySessionContext to use new SessionContext
+- [x] Update App.jsx to use both context providers
+- [ ] Test application functionality
 
-## Current Status
-
-- Phase 1 (API Service Layer) is complete - Services are implemented and SessionContext is using them
-- We're now starting Phase 2 - Creating a focused SessionContext for core session management
-
-## Phase 2 Tasks Breakdown
+## Detailed Task Breakdown
 
 ### 1. Create New SessionContext
 
-Create a focused SessionContext with only session-related functionality.
+- [x] Create initial SessionContext.jsx.new file in scratch directory
+- [x] Implement core session state (sessionId, isReady, etc.)
+- [x] Add initializeSession method
+- [x] Add handleSessionsDeleted method
+- [x] Implement session persistence with localStorage
+- [x] Add session validation logic
+- [x] Test and review new context implementation
+- [x] Replace current SessionContext.jsx with new implementation
 
-- [ ] Create SessionContext.jsx with core state (sessionId, isReady, isInitialized, error)
-- [ ] Implement core functions (initializeSession, handleSessionsDeleted)
-- [ ] Add session validation for stored sessionIds
-- [ ] Add proper error recovery mechanisms
-- [ ] Create useSession hook for easy access to session context
+### 2. Create useSession Hook
 
-### 2. Create LegacySessionContext
+- [x] Create hooks/useSession.js file
+- [x] Implement useSession hook with context and error handling
+- [x] Add TypeScript-like prop validation
+- [x] Add documentation for hook usage
 
-Rename and refactor the existing context to use the new SessionContext internally.
+### 3. Create LegacySessionContext
 
-- [ ] Move current SessionContext.jsx to LegacySessionContext.jsx
-- [ ] Update LegacySessionContext to use new SessionContext internally
-- [ ] Ensure backward compatibility for all existing components
-- [ ] Add logging/monitoring for context usage statistics
+- [x] Rename current SessionContext.jsx to LegacySessionContext.jsx
+- [x] Update imports and exports to use LegacySessionContext name
+- [x] Add useContext hook to access new SessionContext
+- [x] Forward session core state from new SessionContext
+- [x] Modify initialization logic to use new context's initializeSession
+- [x] Update all references to be consistent
 
-### 3. Update Application Entry Point
+### 4. Update App.jsx
 
-Update the global context providers to include both contexts during transition.
+- [x] Update App.jsx to nest providers correctly
+- [x] Ensure proper initialization order
+- [x] Add error boundaries if needed
 
-- [ ] Update App.jsx to include both SessionProvider and LegacySessionProvider
-- [ ] Ensure correct context nesting and initialization order
+### 5. Testing
 
-### 4. Testing and Validation
+- [ ] Verify session initialization works correctly
+- [ ] Test session persistence between refreshes
+- [ ] Verify error handling works properly
+- [ ] Test compatibility with existing components
 
-Ensure the application works with both contexts.
+## Current Status
 
-- [ ] Test session initialization
-- [ ] Test session deletion
-- [ ] Test session restoration from localStorage
-- [ ] Test error handling and recovery
-- [ ] Validate that all existing functionality works correctly
+**Phase:** Completed Implementation
+**Current Task:** Ready for Testing
+**Progress:** Implemented all required components
+**Blockers:** None
 
-## Implementation Notes
+### Completed:
+- ✅ Created SessionContext.jsx.new in scratch directory
+- ✅ Created useSession.js in scratch directory
+- ✅ Created LegacySessionContext.jsx in scratch directory
+- ✅ Created App.jsx.new sample in scratch directory
+- ✅ Implemented useSession.js in src/hooks/use-session.js
+- ✅ Copied original SessionContext.jsx to LegacySessionContext.jsx
+- ✅ Updated LegacySessionContext.jsx to use new context
+- ✅ Implemented new SessionContext.jsx
+- ✅ Updated App.jsx to use both providers
 
-### SessionContext Design
+## Notes
 
-```jsx
-// src/contexts/SessionContext.jsx (new version)
-import React, { createContext, useState, useEffect } from 'react';
-import { session as sessionService } from '../services';
-
-export const SessionContext = createContext();
-
-export const SessionProvider = ({ children }) => {
-  // Core session state only
-  const [sessionId, setSessionId] = useState(null);
-  const [isReady, setIsReady] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [error, setError] = useState(null);
-
-  // Core session functions
-  const initializeSession = async (config) => {
-    setIsReady(false);
-    try {
-      const data = await sessionService.initialize(config);
-      if (data.ui_session_id) {
-        localStorage.setItem("ui_session_id", data.ui_session_id);
-        setSessionId(data.ui_session_id);
-        setIsReady(true);
-        setError(null);
-        return data.ui_session_id;
-      } else {
-        throw new Error("No ui_session_id in response");
-      }
-    } catch (err) {
-      setIsReady(false);
-      setError(`Session initialization failed: ${err.message}`);
-      throw err;
-    }
-  };
-
-  const handleSessionsDeleted = () => {
-    localStorage.removeItem("ui_session_id");
-    setSessionId(null);
-    setIsReady(false);
-    setError(null);
-  };
-
-  // Check for existing session on mount
-  useEffect(() => {
-    const savedSessionId = localStorage.getItem("ui_session_id");
-    if (savedSessionId) {
-      setSessionId(savedSessionId);
-      setIsReady(true);
-    }
-  }, []);
-
-  return (
-    <SessionContext.Provider
-      value={{
-        sessionId,
-        isReady,
-        isInitialized,
-        setIsInitialized,
-        error,
-        setError,
-        initializeSession,
-        handleSessionsDeleted
-      }}
-    >
-      {children}
-    </SessionContext.Provider>
-  );
-};
-```
-
-### useSession Hook Design
-
-```jsx
-// src/hooks/useSession.js
-import { useContext } from 'react';
-import { SessionContext } from '../contexts/SessionContext';
-
-export function useSession() {
-  const context = useContext(SessionContext);
-  if (context === undefined) {
-    throw new Error('useSession must be used within a SessionProvider');
-  }
-  return context;
-}
-```
-
-## Potential Challenges
-
-1. **Initialization Order**: Ensure proper initialization order between contexts
-2. **Session Validation**: Add proper validation for stored sessionIds
-3. **Error Recovery**: Implement robust error recovery mechanisms
-4. **State Inconsistency**: Prevent state inconsistency between contexts
-
-## Success Criteria
-
-- Core session management logic is extracted to a focused SessionContext
-- LegacySessionContext provides backward compatibility
-- All existing functionality works correctly
-- Error handling is improved and consistent
-- Application can correctly recover from session errors
-
-## Status Updates
-
-| Date | Status | Notes |
-|------|--------|-------|
-| 2025-04-30 | Not Started | Phase 2 planning complete, ready to begin implementation |
+- The new SessionContext should focus only on core session management
+- The LegacySessionContext will maintain backward compatibility
+- We must ensure proper error handling throughout the transition
+- Initialization order is critical - SessionContext must initialize before LegacySessionContext

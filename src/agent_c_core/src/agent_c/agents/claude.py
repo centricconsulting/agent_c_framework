@@ -192,6 +192,8 @@ class ClaudeChatAgent(BaseAgent):
                 if state['complete'] and state['stop_reason'] != 'tool_use':
                     await self._raise_history_event(messages, **callback_opts)
                     await self._raise_interaction_end(id=state['interaction_id'], **callback_opts)
+                    if state['stop_reason'] == "client_cancel":
+                        await stream.close()
                     return messages, state
 
                 # If we've reached the end of a tool call response, continue after processing tool calls
