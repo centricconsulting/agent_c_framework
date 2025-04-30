@@ -56,135 +56,197 @@ Remove the transitional monolithic context and ensure all components use the new
 - `//api/docs/API_DOCUMENTATION.md` contains the full endpoint documentation for our API.
 
 
-# Phase 2 details: Creating Core SessionContext
+# SessionContext Refactor - Phase 3 Plan
 
-## Current State
+After successfully completing Phase 2, this document outlines the plan for Phase 3: Creating the ModelContext.
 
-The API Service Layer (Phase 1) has been successfully completed:
-- We have a comprehensive set of API services organized by domain
-- The services follow consistent patterns with proper error handling
-- The current SessionContext is already using these services
-- We have detailed API documentation to guide our work
+## Phase 2 Review
 
-## Plan for Phase 2
+Phase 2 involved:
+1. Creating a new focused SessionContext for core session management
+2. Renaming the original SessionContext to LegacySessionContext
+3. Making LegacySessionContext use the new SessionContext internally
+4. Fixing bugs and ensuring backward compatibility
 
-Phase 2 requires extracting core session management into a dedicated context. Based on our API services and the current SessionContext implementation, here's my recommendation for proceeding:
+We encountered several challenges:
+- Components using the wrong context reference
+- API error handling issues during session validation
+- Context initialization and dependency management
 
-### 1. Create a New Core SessionContext
+## Phase 3 Overview: ModelContext
 
-The new SessionContext should be focused exclusively on core session management:
+Phase 3 will extract model-related functionality from LegacySessionContext into a dedicated ModelContext. This will include:
+
+- Model selection
+- Model parameters management
+- Model initialization and configuration
+- API interactions specific to models
+
+## Detailed Implementation Plan
+
+### 1. Create the ModelContext
 
 ```jsx
-// src/contexts/SessionContext.jsx (new version)
-import React, { createContext, useState, useEffect } from 'react';
-import { session as sessionService } from '../services';
+// src/contexts/ModelContext.jsx
+import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
+import { SessionContext } from './SessionContext';
+import { model as modelService, showErrorToast } from '../services';
 
-export const SessionContext = createContext();
+export const ModelContext = createContext();
 
-export const SessionProvider = ({ children }) => {
-  // Core session state only
-  const [sessionId, setSessionId] = useState(null);
-  const [isReady, setIsReady] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+export const ModelProvider = ({ children }) => {
+  // Use the core SessionContext
+  const { sessionId, isReady } = useContext(SessionContext);
+  
+  // State for model configuration
+  const [modelConfigs, setModelConfigs] = useState([]);
+  const [modelName, setModelName] = useState("");
+  const [modelParameters, setModelParameters] = useState({});
+  const [selectedModel, setSelectedModel] = useState(null);
   const [error, setError] = useState(null);
-
-  // Core session functions
-  const initializeSession = async (config) => {
-    setIsReady(false);
+  
+  // Helper for debouncing parameter updates
+  const debouncedUpdateRef = useRef(null);
+  
+  // Fetch available models
+  const fetchModels = async () => {
     try {
-      const data = await sessionService.initialize(config);
-      if (data.ui_session_id) {
-        localStorage.setItem("ui_session_id", data.ui_session_id);
-        setSessionId(data.ui_session_id);
-        setIsReady(true);
-        setError(null);
-        return data.ui_session_id;
-      } else {
-        throw new Error("No ui_session_id in response");
-      }
+      const data = await modelService.getModels();
+      setModelConfigs(data.models);
+      return data.models;
     } catch (err) {
-      setIsReady(false);
-      setError(`Session initialization failed: $${err.message}`);
-      throw err;
+      setError(`Failed to fetch models: $${err.message}`);
+      showErrorToast(err, 'Failed to fetch models');
+      return [];
     }
   };
-
-  const handleSessionsDeleted = () => {
-    localStorage.removeItem("ui_session_id");
-    setSessionId(null);
-    setIsReady(false);
-    setError(null);
-  };
-
-  // Check for existing session on mount
-  useEffect(() => {
-    const savedSessionId = localStorage.getItem("ui_session_id");
-    if (savedSessionId) {
-      setSessionId(savedSessionId);
-      setIsReady(true);
+  
+  // Change the active model
+  const changeModel = async (newModelName) => {
+    if (!sessionId || !isReady) return;
+    
+    try {
+      const newModel = modelConfigs.find(model => model.id === newModelName);
+      if (!newModel) throw new Error('Invalid model configuration');
+      
+      // Update the state first
+      setModelName(newModelName);
+      setSelectedModel(newModel);
+      
+      // ... implementation continues
+    } catch (err) {
+      setError(`Failed to change model: $${err.message}`);
+      showErrorToast(err, 'Failed to change model');
     }
-  }, []);
-
+  };
+  
+  // Update model parameters
+  const updateModelParameters = async (newParameters) => {
+    // ... implementation
+  };
+  
+  // Effects and other logic
+  // ...
+  
   return (
-    <SessionContext.Provider
+    <ModelContext.Provider
       value={{
-        sessionId,
-        isReady,
-        isInitialized,
-        setIsInitialized,
+        modelConfigs,
+        modelName,
+        modelParameters, 
+        selectedModel,
         error,
-        setError,
-        initializeSession,
-        handleSessionsDeleted
+        fetchModels,
+        changeModel,
+        updateModelParameters
       }}
     >
       {children}
-    </SessionContext.Provider>
+    </ModelContext.Provider>
   );
 };
 ```
 
-### 2. Create a Transitional Context (LegacySessionContext)
+### 2. Create useModel Hook
 
-To maintain backward compatibility, we should:
+```jsx
+// src/hooks/use-model.js
+import { useContext } from 'react';
+import { ModelContext } from '../contexts/ModelContext';
 
-1. Rename the current SessionContext to LegacySessionContext
-2. Make LegacySessionContext use the new SessionContext internally
-3. Gradually migrate components from LegacySessionContext to the new contexts
+export function useModel() {
+  const context = useContext(ModelContext);
+  
+  if (!context) {
+    throw new Error('useModel must be used within a ModelProvider');
+  }
+  
+  return context;
+}
+```
 
-### 3. Implementation Steps for Phase 2
+### 3. Update LegacySessionContext
 
-1. Create the new SessionContext with focused state and functionality
-2. Rename the existing SessionContext to LegacySessionContext
-3. Update LegacySessionContext to use the new SessionContext
-4. Create a custom hook for accessing SessionContext
-5. Update global context providers in App.jsx
-6. Test the application to ensure all functionality works
+Modify LegacySessionContext to use ModelContext for model-related state and operations.
 
-### 4. Adjustments Needed Based on API Services
+### 4. Update App.jsx
 
-Now that we have clear API services, we can make some optimizations to our plan:
+Add ModelProvider to the context hierarchy:
 
-1. **Simplified initialization**: The session-api service provides clear methods for session creation and management, so we can simplify our initialization logic
-2. **Better error handling**: We can leverage the consistent error handling in our API services
-3. **Cleaner interfaces**: We can provide cleaner interfaces through our context by wrapping service methods
+```jsx
+// src/App.jsx
+import { SessionProvider } from '@/contexts/SessionContext';
+import { ModelProvider } from '@/contexts/ModelContext';
+import { LegacySessionProvider } from '@/contexts/LegacySessionContext';
+import { ThemeProvider } from '@/contexts/ThemeProvider';
 
-## Remaining Concerns
+function App() {
+  return (
+    <SessionProvider>
+      <ModelProvider>
+        <LegacySessionProvider>
+          <ThemeProvider>
+            <Router>
+              <AppRoutes />
+            </Router>
+          </ThemeProvider>
+        </LegacySessionProvider>
+      </ModelProvider>
+    </SessionProvider>
+  );
+}
+```
 
-1. **Initialization Order**: We need to carefully manage the initialization order between contexts
-2. **Session Validation**: We should consider adding session validation when using a saved sessionId
-3. **Error Recovery**: We should implement better error recovery strategies
+### 5. Update Components
 
-## Recommendation
+Gradually update components to use the new ModelContext directly instead of going through LegacySessionContext.
 
-We can proceed with Phase 2 as outlined above, with particular attention to:
+## Implementation Strategy
 
-1. Making the new SessionContext as focused as possible on session management only
-2. Providing a clean migration path for components via the transitional LegacySessionContext
-3. Taking advantage of our new API services for cleaner implementations
-4. Adding proper error boundaries and recovery mechanisms
+1. **Parallel Development**: Implement the new ModelContext while maintaining LegacySessionContext
+2. **Incremental Migration**: Update components one by one to use the new context
+3. **Thorough Testing**: Test each component after updating
+4. **Backward Compatibility**: Ensure LegacySessionContext remains functional throughout the process
 
+## Potential Challenges
 
+1. **State Synchronization**: Keeping model state synchronized between contexts during transition
+2. **Initialization Order**: Ensuring contexts initialize in the correct order
+3. **Session-Model Interaction**: Managing the interaction between session and model contexts
+4. **API Integration**: Properly separating model API calls from session API calls
+
+## Expected Outcome
+
+After completing Phase 3, we will have:
+
+1. A focused ModelContext that handles all model-related functionality
+2. Components that directly use ModelContext for model operations
+3. A cleaner LegacySessionContext with reduced responsibilities
+4. Better separation of concerns between session and model management
+
+## Next Steps
+
+After completing Phase 3, we will proceed to Phase 4: Creating UIStateContext.
 
 
 # CRITICAL DELIBERATION PROTOCOL
