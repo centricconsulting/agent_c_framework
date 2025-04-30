@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SessionContext } from '@/contexts/SessionContext';
+import { LegacySessionContext } from '@/contexts/LegacySessionContext';
 import { API_URL } from "@/config/config";
 import { createClipboardContent } from '@/components/chat_interface/utils/htmlChatFormatter';
 import { processMessageStream } from './utils/MessageStreamProcessor';
@@ -53,14 +53,14 @@ const ChatInterfaceInner = ({
     toolSelectionState
   } = useToolCalls();
   
-  // Access SessionContext for StatusBar props and options panel state
+  // Access LegacySessionContext for StatusBar props and options panel state
   const { 
     isReady, 
     activeTools, 
     settingsVersion,
     isOptionsOpen,
     setIsOptionsOpen
-  } = useContext(SessionContext);
+  } = useContext(LegacySessionContext);
   
   // State for messages and UI
   const [messages, setMessages] = useState([]);

@@ -1,6 +1,6 @@
 // src/pages/ChatPage.jsx
 import React, { useContext } from 'react';
-import { SessionContext } from '@/contexts/SessionContext';
+import { LegacySessionContext } from '@/contexts/LegacySessionContext';
 import ChatInterface from '../components/chat_interface/ChatInterface';
 // Remove the CollapsibleOptions import since it will be used directly in ChatInterface
 // import CollapsibleOptions from '@/components/chat_interface//CollapsibleOptions';
@@ -31,7 +31,7 @@ const ChatPage = () => {
     handleProcessingStatus,
     isOptionsOpen,
     setIsOptionsOpen
-  } = useContext(SessionContext);
+  } = useContext(LegacySessionContext);
 
   if (isLoading) {
     return (
