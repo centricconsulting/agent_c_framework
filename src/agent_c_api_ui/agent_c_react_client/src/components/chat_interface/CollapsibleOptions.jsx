@@ -129,29 +129,33 @@ const CollapsibleOptions = ({
                             </TabsList>
                             
                             <TabsContent value="settings" className="mt-0">
-                                <PersonaSelector
-                                    persona_name={persona}
-                                    personas={personas}
-                                    customPrompt={customPrompt}
-                                    temperature={temperature}
-                                    modelName={modelName}
-                                    modelConfigs={modelConfigs}
-                                    sessionId={sessionId}
-                                    modelParameters={modelParameters}
-                                    selectedModel={selectedModel}
-                                    onUpdateSettings={onUpdateSettings}
-                                    isInitialized={isInitialized}
-                                />
+                                {isOpen && (
+                                    <PersonaSelector
+                                        persona_name={persona}
+                                        personas={personas}
+                                        customPrompt={customPrompt}
+                                        temperature={temperature}
+                                        modelName={modelName}
+                                        modelConfigs={modelConfigs}
+                                        sessionId={sessionId}
+                                        modelParameters={modelParameters}
+                                        selectedModel={selectedModel}
+                                        onUpdateSettings={onUpdateSettings}
+                                        isInitialized={isInitialized}
+                                    />
+                                )}
                             </TabsContent>
                             
                             <TabsContent value="tools" className="mt-0">
-                                <ToolSelector
-                                    availableTools={availableTools}
-                                    onEquipTools={onEquipTools}
-                                    activeTools={activeTools}
-                                    sessionId={sessionId}
-                                    isReady={isReady}
-                                />
+                                {isOpen && (
+                                    <ToolSelector
+                                        availableTools={availableTools}
+                                        onEquipTools={onEquipTools}
+                                        activeTools={activeTools}
+                                        sessionId={sessionId}
+                                        isReady={isReady}
+                                    />
+                                )}
                             </TabsContent>
                         </Tabs>
                     </CollapsibleContent>

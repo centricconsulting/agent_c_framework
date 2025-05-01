@@ -121,17 +121,27 @@ const ModelParameterControls = ({
     };
 
     useEffect(() => {
-        // console.log('Current Parameters:', currentParameters);
-        // console.log('Selected Model Parameters:', selectedModel?.parameters);
-        if (selectedModel?.parameters) {
+        // SUPER Defensive programming - if we don't have parameters or current parameters, don't do anything
+        if (!selectedModel?.parameters || !currentParameters) {
+            console.log('ModelParameterControls: Missing required parameters, skipping initialization');
+            return;
+        }
+        
+        try {    
             // Set temperature based on current or default value
-            const defaultTemp = selectedModel.parameters?.temperature?.default;
-            console.log('Default Temperature:', defaultTemp);
-            setLocalTemperature(currentParameters?.temperature ?? defaultTemp);
+            if (selectedModel.parameters?.temperature) {
+                const defaultTemp = selectedModel.parameters?.temperature?.default || 0.7;
+                const currentTemp = currentParameters?.temperature;
+                setLocalTemperature(currentTemp !== undefined ? currentTemp : defaultTemp);
+                setTemperature(currentTemp !== undefined ? currentTemp : defaultTemp);
+            }
 
             // Set reasoning effort based on current or default value
-            const defaultEffort = selectedModel.parameters?.reasoning_effort?.default;
-            setReasoningEffort(currentParameters?.reasoning_effort ?? defaultEffort);
+            if (selectedModel.parameters?.reasoning_effort) {
+                const defaultEffort = selectedModel.parameters?.reasoning_effort?.default || 'medium';
+                const currentEffort = currentParameters?.reasoning_effort;
+                setReasoningEffort(currentEffort !== undefined ? currentEffort : defaultEffort);
+            }
 
             // Set extended thinking parameters based on model config or default
             if (selectedModel.parameters?.extended_thinking) {
@@ -146,6 +156,8 @@ const ModelParameterControls = ({
                 setExtendedThinkingEnabled(false);
                 setBudgetTokens(0);
             }
+        } catch (err) {
+            console.error('ModelParameterControls: Error initializing parameters', err);
         }
     }, [selectedModel, currentParameters]);
 

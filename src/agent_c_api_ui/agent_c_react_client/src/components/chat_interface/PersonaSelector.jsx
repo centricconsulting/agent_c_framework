@@ -242,11 +242,13 @@ function PersonaSelector({
                     </div>
 
                     {/* Model Parameters */}
-                    <ModelParameterControls
-                        selectedModel={selectedModel}
-                        onParameterChange={handleParameterChange}
-                        currentParameters={modelParameters}
-                    />
+                    {selectedModel && (
+                        <ModelParameterControls
+                            selectedModel={selectedModel}
+                            onParameterChange={handleParameterChange}
+                            currentParameters={modelParameters}
+                        />
+                    )}
                 </div>
             </CardContent>
         </Card>

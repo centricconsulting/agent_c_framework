@@ -12,6 +12,7 @@ import { session as sessionService } from '../services';
 export const SessionContext = createContext();
 
 export const SessionProvider = ({ children }) => {
+  console.log('SessionContext: Provider initializing');
   // Core session state only
   const [sessionId, setSessionId] = useState(null);
   const [isReady, setIsReady] = useState(false);
@@ -75,7 +76,7 @@ export const SessionProvider = ({ children }) => {
     }
   };
 
-  // Check for existing session on mount
+  // Check for existing session on mount and initialize if needed
   useEffect(() => {
     const checkExistingSession = async () => {
       const savedSessionId = localStorage.getItem("ui_session_id");
@@ -89,22 +90,65 @@ export const SessionProvider = ({ children }) => {
             setIsReady(true);
             setError(null);
           } else {
-            // Session no longer valid on backend - this is normal, not an error
-            // Just clear it silently and we'll create a new one when needed
+            // Session no longer valid on backend - create a new one
             localStorage.removeItem("ui_session_id");
             setSessionId(null);
             setIsReady(false);
-            // Don't set an error for a normal condition
             setError(null);
+            
+            // Auto-initialize a new session with minimal config
+            console.log('SessionContext: Invalid saved session, auto-initializing a new one');
+            try {
+              // Initialize with minimal default configuration including required model_name
+              // The full configuration will be updated later by LegacySessionContext
+              await initializeSession({
+                model_name: 'gpt-4',  // Default model as fallback
+                backend: 'openai',    // Default backend
+                persona_name: 'default',
+                temperature: 0.7
+              });
+            } catch (initErr) {
+              console.error('Failed to auto-initialize session:', initErr);
+              setError(`Failed to initialize session: ${initErr.message}`);
+            }
           }
         } catch (err) {
-          // Unexpected error during validation, clear session
+          // Unexpected error during validation, clear session and try to create new one
           localStorage.removeItem("ui_session_id");
           setError(`Session validation error: ${err.message}`);
           setSessionId(null);
           setIsReady(false);
+          
+          // Try to auto-initialize a new session
+          console.log('SessionContext: Error during validation, auto-initializing a new session');
+          try {
+            await initializeSession({
+              model_name: 'gpt-4',  // Default model as fallback
+              backend: 'openai',    // Default backend
+              persona_name: 'default',
+              temperature: 0.7
+            });
+          } catch (initErr) {
+            console.error('Failed to auto-initialize session:', initErr);
+            // Keep original error to not mask the root cause
+          }
         } finally {
           setIsValidating(false);
+        }
+      } else {
+        // No existing session, create a new one automatically
+        console.log('SessionContext: No existing session, auto-initializing');
+        try {
+          // Initialize with minimal default configuration including required model_name
+          await initializeSession({
+            model_name: 'gpt-4',  // Default model as fallback
+            backend: 'openai',    // Default backend
+            persona_name: 'default',
+            temperature: 0.7
+          });
+        } catch (initErr) {
+          console.error('Failed to auto-initialize session:', initErr);
+          setError(`Failed to initialize session: ${initErr.message}`);
         }
       }
     };

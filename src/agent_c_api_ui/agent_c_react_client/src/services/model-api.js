@@ -49,15 +49,17 @@ export async function getModelParameters(modelId) {
 
 /**
  * Set the model for an existing session
- * @param {string} sessionId - Session identifier
- * @param {string} modelId - Model identifier
- * @param {Object} parameters - Optional model parameters to set
+ * @param {Object} options - Options containing session and model details
+ * @param {string} options.sessionId - Session identifier
+ * @param {string} options.modelName - Model identifier
+ * @param {Object} options.parameters - Optional model parameters to set
  * @returns {Promise<Object>} Updated session
  */
-export async function setSessionModel(sessionId, modelId, parameters = {}) {
+export async function setModel({ sessionId, modelName, parameters = {} }) {
   try {
+    console.log('model-api.js: Setting model', { sessionId, modelName, parameters });
     return await api.put(`/session/${sessionId}/model`, {
-      model_id: modelId,
+      model_id: modelName,
       parameters
     });
   } catch (error) {
@@ -67,12 +69,15 @@ export async function setSessionModel(sessionId, modelId, parameters = {}) {
 
 /**
  * Update model parameters for a session
- * @param {string} sessionId - Session identifier
- * @param {Object} parameters - Model parameters to update
+ * @param {Object} options - Options containing session, model, and parameter details
+ * @param {string} options.sessionId - Session identifier
+ * @param {string} options.modelName - The model name/ID
+ * @param {Object} options.parameters - Model parameters to update
  * @returns {Promise<Object>} Updated parameters
  */
-export async function updateModelParameters(sessionId, parameters) {
+export async function updateParameters({ sessionId, modelName, parameters }) {
   try {
+    console.log('model-api.js: Updating parameters', { sessionId, modelName, parameters });
     return await api.put(`/session/${sessionId}/parameters`, parameters);
   } catch (error) {
     throw api.processApiError(error, 'Failed to update model parameters');
@@ -96,7 +101,7 @@ export default {
   getModels,
   getModelDetails,
   getModelParameters,
-  setSessionModel,
-  updateModelParameters,
+  setModel,
+  updateParameters,
   getDefaultParameters,
 };

@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect, useRef, useContext } from 'react';
+import React, { createContext, useState, useEffect, useRef, useContext, useCallback } from 'react';
 import { SessionContext } from './SessionContext';
+import { useModel } from '../hooks/use-model';
 
 // Import services from the API service layer
 import {
@@ -20,6 +21,7 @@ import {
 export const LegacySessionContext = createContext();
 
 export const LegacySessionProvider = ({ children }) => {
+    console.log('🔥🔥🔥 LegacySessionContext MOUNT - PROVIDER INITIALIZING 🔥🔥🔥');
     // Use the core SessionContext
     const {
         sessionId, 
@@ -31,6 +33,40 @@ export const LegacySessionProvider = ({ children }) => {
         isInitialized: coreIsInitialized,
         setIsInitialized: coreSetIsInitialized
     } = useContext(SessionContext);
+    
+    console.log('🔴 LegacySessionContext attempting to use model hook');
+    
+    // Try to use ModelContext if available, otherwise use empty defaults
+    let modelData = {};
+    let isModelReady = false;
+    
+    try {
+        // Use the ModelContext via the hook for better safety
+        modelData = useModel();
+        isModelReady = modelData.isReady;
+        console.log('🔴 LegacySessionContext: useModel hook returned isReady =', isModelReady);
+    } catch (err) {
+        console.error('🔴 LegacySessionContext: ModelContext not available yet:', err.message);
+        // Provide empty defaults
+        modelData = {
+            modelName: '',
+            modelParameters: {},
+            modelConfigs: [],
+            selectedModel: null,
+            changeModel: () => Promise.reject(new Error('ModelContext not initialized')),
+            updateModelParameters: () => Promise.reject(new Error('ModelContext not initialized'))
+        };
+    }
+    
+    // Destructure model data with defaults for safety
+    const { 
+      modelName = '',
+      modelParameters = {},
+      modelConfigs = [],
+      selectedModel = null,
+      changeModel = () => Promise.reject(new Error('ModelContext unavailable')),
+      updateModelParameters = () => Promise.reject(new Error('ModelContext unavailable'))
+    } = modelData;
     
     // Global session & UI state that will be moved to other contexts later
     const debouncedUpdateRef = useRef(null);
@@ -50,10 +86,6 @@ export const LegacySessionProvider = ({ children }) => {
     const [persona, setPersona] = useState("");
     const [temperature, setTemperature] = useState(null);
     const [customPrompt, setCustomPrompt] = useState("");
-    const [modelConfigs, setModelConfigs] = useState([]);
-    const [modelName, setModelName] = useState("");
-    const [modelParameters, setModelParameters] = useState({});
-    const [selectedModel, setSelectedModel] = useState(null);
 
     // Data from backend
     const [personas, setPersonas] = useState([]);
@@ -76,128 +108,61 @@ export const LegacySessionProvider = ({ children }) => {
         coreSetIsInitialized(isInitialized);
     }, [isInitialized, coreSetIsInitialized]);
     
-    // Fetch initial data (personas, tools, models)
+    // Fetch initial data (personas, tools)
     const fetchInitialData = async () => {
         try {
-            console.log('Starting fetchInitialData');
+            console.log('Starting fetchInitialData for non-model data');
             setIsLoading(true);
-            setIsInitialized(false);
-
-            // Parallel fetching using the new service layer
-            const [personasData, toolsData, modelsData] = await Promise.all([
+            
+            // Only fetch personas and tools - model data is handled by ModelContext
+            const [personasData, toolsData] = await Promise.all([
                 personaService.getPersonas(),
-                toolsService.getTools(),
-                modelService.getModels()
+                toolsService.getTools()
             ]);
             
             // Store data returned from backend into their data structures
             setPersonas(personasData);
             setAvailableTools(toolsData);
-            setModelConfigs(modelsData.models);
-
-            // Try pulling config from localstorage and applying
+            
+            // Try pulling saved persona/prompt config from localstorage
             const savedConfig = localStorage.getItem("agent_config");
             if (savedConfig) {
                 try {
                     const parsedConfig = JSON.parse(savedConfig);
-
+                    
                     // Check if the configuration is expired (14 days)
                     if (parsedConfig.lastUpdated) {
                         const configAge = new Date() - new Date(parsedConfig.lastUpdated);
                         const maxAgeMs = 14 * 24 * 60 * 60 * 1000; // 14 days
-
-                        if (configAge > maxAgeMs) {
-                            console.log('Saved configuration is too old (>14 days), using defaults');
-                            localStorage.removeItem("agent_config");
-                        } else {
-                            // Verify the saved model still exists in the available models
-                            const savedModel = modelsData.models.find(m => m.id === parsedConfig.modelName);
-
-                            if (savedModel) {
-                                console.log('Loading saved configuration:', parsedConfig);
-                                // Use the saved model as the initial model
-                                const initialModel = {
-                                    id: savedModel.id,
-                                    backend: savedModel.backend,
-                                    persona_name: parsedConfig.persona || 'default',
-                                    custom_prompt: parsedConfig.customPrompt || '',
-                                    temperature: parsedConfig.modelParameters?.temperature,
-                                    reasoning_effort: parsedConfig.modelParameters?.reasoning_effort,
-                                    extended_thinking: parsedConfig.modelParameters?.extended_thinking,
-                                    budget_tokens: parsedConfig.modelParameters?.budget_tokens
-                                };
-
-                                // Set state with saved values
-                                setModelName(savedModel.id);
-                                setSelectedModel(savedModel);
-                                setPersona(parsedConfig.persona || 'default');
-                                setCustomPrompt(parsedConfig.customPrompt || '');
-                                setModelParameters(parsedConfig.modelParameters || {});
-
-                                // Initialize session with saved configuration
-                                await initializeSession(false, initialModel, modelsData.models);
-                                setIsInitialized(true);
-                                return; // Exit early as we've handled initialization
-                            } else {
-                                console.log('Saved model not found in available models, using defaults');
+                        
+                        if (configAge <= maxAgeMs) {
+                            // Apply saved persona settings
+                            if (parsedConfig.persona) {
+                                setPersona(parsedConfig.persona);
                             }
+                            
+                            if (parsedConfig.customPrompt) {
+                                setCustomPrompt(parsedConfig.customPrompt);
+                            }
+                        } else {
+                            console.log('Saved configuration is too old (>14 days), using defaults');
                         }
                     }
                 } catch (err) {
                     console.error('Error parsing saved configuration:', err);
-                    // Continue with default initialization if parsing fails
                 }
             }
-
-            // This is the default initialization path if a config is not saved
-            if (modelsData.models.length > 0) {
-                const initialModel = modelsData.models[0];
-                setModelName(initialModel.id);
-                setSelectedModel(initialModel);
-
-                // non-reasoning model parameters
-                const initialTemperature = initialModel.parameters?.temperature?.default ?? 0.3;
-                // openai reasoning model parameters
-                const initialReasoningEffort = initialModel.parameters?.reasoning_effort?.default;
-
-                // claude reasoning model parameters
-                const hasExtendedThinking = !!initialModel.parameters?.extended_thinking;
-                const initialExtendedThinking = hasExtendedThinking ?
-                    initialModel.parameters.extended_thinking.enabled === true : false;
-                const initialBudgetTokens = hasExtendedThinking && initialExtendedThinking ?
-                    initialModel.parameters.extended_thinking.budget_tokens?.default || 4000 : 0;
-
-                const initialParameters = {
-                    temperature: initialTemperature,
-                    reasoning_effort: initialReasoningEffort,
-                    extended_thinking: initialExtendedThinking,
-                    budget_tokens: initialBudgetTokens
-                };
-
-                setModelParameters(initialParameters);
-
-                // Choose a default persona (or fall back to the first)
-                if (personasData.length > 0) {
-                    const defaultPersona = personasData.find(p => p.name === 'default');
-                    const initialPersona = defaultPersona || personasData[0];
-                    setPersona(initialPersona.name);
-                    setCustomPrompt(initialPersona.content);
-                }
-
-                // Verify that the persona exists in the list of available personas
-                const personaExists = personasData.some(p => p.name === initialModel.persona_name);
-                if (!personaExists && initialModel.persona_name && initialModel.persona_name !== 'default') {
-                    console.warn(`Persona '${initialModel.persona_name}' not found in available personas, falling back to default`);
-                    initialModel.persona_name = 'default';
-                    setPersona('default');
-                }
-
-                // Initialize a session with the initial model
-                await initializeSession(false, initialModel, modelsData.models);
-                setIsInitialized(true);
-            } else {
-                throw new Error('No models available');
+            
+            // Choose a default persona if none was loaded (or fall back to the first)
+            if (!persona && personasData.length > 0) {
+                const defaultPersona = personasData.find(p => p.name === 'default');
+                const initialPersona = defaultPersona || personasData[0];
+                setPersona(initialPersona.name);
+                setCustomPrompt(initialPersona.content);
             }
+            
+            // The session itself will be initialized by SessionContext and ModelContext
+            // This avoids race conditions and ensures proper order of operations
         } catch (err) {
             console.error('Error fetching initial data:', err);
             setError(`Failed to load initial data: ${err.message}`);
@@ -207,147 +172,153 @@ export const LegacySessionProvider = ({ children }) => {
         }
     };
 
-    // Initialize (or reinitialize) a session - Modified to use core context
+    // Initialize (or reinitialize) a session - Modified to use core context and ModelContext
     const initializeSession = async (forceNew = false, initialModel = null, modelConfigsData = null) => {
         try {
-            // First, validate that we have model configurations available
-            const models = modelConfigsData || modelConfigs;
+            console.log('LegacySessionContext: Starting session initialization with forceNew=', forceNew);
+            
+            // First, ensure we have model configurations available - use useModel hook data
+            let models = modelConfigsData || modelConfigs;
+            
+            // If we still don't have models, fetch them directly
             if (!models || models.length === 0) {
-                throw new Error("No model configurations available");
+                console.log('LegacySessionContext: No model configurations, fetching models');
+                try {
+                    const modelData = await modelService.getModels();
+                    models = modelData.models || [];
+                    if (models.length > 0) {
+                        console.log('LegacySessionContext: Successfully fetched models:', models.map(m => m.id).join(', '));
+                        // Models will be managed by ModelContext
+                    } else {
+                        console.error('LegacySessionContext: API returned no models');
+                        throw new Error("No model configurations available from API");
+                    }
+                } catch (modelErr) {
+                    console.error('LegacySessionContext: Failed to fetch models:', modelErr);
+                    throw new Error("Could not retrieve model configurations");
+                }
+            } else {
+                console.log('LegacySessionContext: Using existing models:', models.map(m => m.id).join(', '));
             }
 
             // Determine which model to use
-            let currentModel = null; // Initialize as null to ensure proper checking
+            let currentModelId = null;
+            let parameters = null;
 
-            if (initialModel) {
-                // Find the model in modelConfigs when we have an initialModel with an id
-                if ('id' in initialModel && initialModel.id) {
-                    currentModel = models.find(model => model.id === initialModel.id);
-                    if (!currentModel) {
-                        console.warn(`Model with id ${initialModel.id} not found in configurations, falling back to first model`);
-                        // Fallback to the first model
-                        if (models.length > 0) {
-                            currentModel = models[0];
-                            setModelName(currentModel.id);
+            if (initialModel && initialModel.id) {
+                console.log(`LegacySessionContext: Using initialModel with id ${initialModel.id}`);
+                currentModelId = initialModel.id;
+                
+                // Extract parameters from initialModel
+                parameters = {
+                    temperature: initialModel.temperature,
+                    reasoning_effort: initialModel.reasoning_effort,
+                    extended_thinking: initialModel.extended_thinking,
+                    budget_tokens: initialModel.budget_tokens
+                };
+                console.log('LegacySessionContext: Using parameters from initialModel:', parameters);
+            } else if (isModelReady && modelName) {
+                console.log(`LegacySessionContext: Using model from ModelContext: ${modelName}`);
+                currentModelId = modelName;
+                parameters = modelParameters;
+            } else if (modelName) {
+                console.log(`LegacySessionContext: Using fallback model from local state: ${modelName}`);
+                // Fallback to local state if ModelContext isn't initialized yet
+                currentModelId = modelName;
+                parameters = modelParameters;
+            } else if (models.length > 0) {
+                // Last resort: use the first available model
+                currentModelId = models[0].id;
+                console.log(`LegacySessionContext: Using first available model: ${currentModelId}`);
+                
+                // Get default parameters for the model
+                const defaultModel = models.find(m => m.id === currentModelId);
+                if (defaultModel && defaultModel.parameters) {
+                    parameters = {};
+                    
+                    // Extract temperature if available
+                    if (defaultModel.parameters.temperature) {
+                        parameters.temperature = defaultModel.parameters.temperature.default;
+                    }
+                    
+                    // Extract reasoning effort if available
+                    if (defaultModel.parameters.reasoning_effort) {
+                        parameters.reasoning_effort = defaultModel.parameters.reasoning_effort.default;
+                    }
+                    
+                    // Extract extended thinking if available
+                    if (defaultModel.parameters.extended_thinking) {
+                        const extThinking = defaultModel.parameters.extended_thinking;
+                        parameters.extended_thinking = extThinking.enabled === true;
+                        
+                        if (parameters.extended_thinking && extThinking.budget_tokens) {
+                            parameters.budget_tokens = extThinking.budget_tokens.default;
+                        } else {
+                            parameters.budget_tokens = 0;
                         }
                     }
-                } else {
-                    currentModel = initialModel;
-                }
-            } else if (modelName) {
-                // Find the model by the current modelName state
-                currentModel = models.find(model => model.id === modelName);
-                if (!currentModel) {
-                    console.warn(`Model with name ${modelName} not found in configurations. Falling back to first model`);
-                    // Fallback to the first model
-                    if (models.length > 0) {
-                        currentModel = models[0];
-                        setModelName(currentModel.id);
-                    }
-                }
-            } else {
-                // No model specified, use the first available model
-                if (models.length > 0) {
-                    currentModel = models[0];
-                    console.log('No model specified, using default:', currentModel.id);
-                    setModelName(currentModel.id);
+                    
+                    console.log('LegacySessionContext: Using default parameters for model:', parameters);
                 }
             }
 
-            // Additional check to ensure we have a valid model before proceeding
-            if (!currentModel) {
+            if (!currentModelId) {
+                console.error('LegacySessionContext: No valid model available');
                 throw new Error('No valid model configuration available');
             }
 
-            console.log('Initializing session with model:', currentModel);
-
             // Build session configuration
             const sessionConfig = {
-                model_name: currentModel.id,
-                backend: currentModel.backend,
-                persona_name: initialModel && initialModel.persona_name ? initialModel.persona_name : (persona || 'default')
+                model_name: currentModelId,
+                backend: models.find(m => m.id === currentModelId)?.backend,
+                persona_name: initialModel?.persona_name || persona || 'default'
             };
 
             // If we have an existing session and we're not forcing a new one, include the session ID
             if (sessionId && !forceNew) {
                 sessionConfig.ui_session_id = sessionId;
-                console.log(`Using existing session ID: ${sessionId} for model change`);
             }
 
             // Determine which custom prompt to use
             let promptToUse = null;
-
-            // First priority: custom prompt from initialModel if provided
-            if (initialModel && ('custom_prompt' in initialModel || 'customPrompt' in initialModel)) {
+            if (initialModel && (initialModel.custom_prompt || initialModel.customPrompt)) {
                 promptToUse = initialModel.custom_prompt || initialModel.customPrompt;
-                console.log('Using custom prompt from initialModel');
-            }
-            // Second priority: current state's custom prompt
-            else if (customPrompt) {
+            } else if (customPrompt) {
                 promptToUse = customPrompt;
             }
-
-            // Always include custom prompt if available
             if (promptToUse) {
                 sessionConfig.custom_prompt = promptToUse;
             }
 
-            // Use parameters directly from initialModel if provided, otherwise use model config
-            if (initialModel && typeof initialModel === 'object') {
-                // Add temperature if available from initialModel
-                if ('temperature' in initialModel) {
-                    sessionConfig.temperature = initialModel.temperature;
+            // Add model parameters
+            if (parameters) {
+                if (parameters.temperature !== undefined) {
+                    sessionConfig.temperature = parameters.temperature;
                 }
-
-                // Add reasoning_effort if available from initialModel
-                if ('reasoning_effort' in initialModel) {
-                    sessionConfig.reasoning_effort = initialModel.reasoning_effort;
+                if (parameters.reasoning_effort !== undefined) {
+                    sessionConfig.reasoning_effort = parameters.reasoning_effort;
                 }
-
-                // Handle extended_thinking (either as boolean or object)
-                if ('extended_thinking' in initialModel) {
-                    const extThinking = initialModel.extended_thinking;
-
-                    // Handle both object and boolean formats
-                    if (typeof extThinking === 'object') {
-                        // It's an object with enabled property
-                        sessionConfig.extended_thinking = extThinking.enabled;
-
-                        // If enabled is true, add budget_tokens
-                        if (extThinking.enabled && ('budget_tokens' in initialModel)) {
-                            sessionConfig.budget_tokens = initialModel.budget_tokens;
-                        } else if (extThinking.enabled && ('budget_tokens' in extThinking)) {
-                            sessionConfig.budget_tokens = extThinking.budget_tokens;
-                        }
-
-                        console.log(`Setting initial extended_thinking as object with enabled=${extThinking.enabled}`);
-                    } else {
-                        // It's a boolean
-                        sessionConfig.extended_thinking = extThinking;
-
-                        // If enabled is true, add budget_tokens
-                        if (extThinking && ('budget_tokens' in initialModel)) {
-                            sessionConfig.budget_tokens = initialModel.budget_tokens;
-                        }
-                    }
+                if (parameters.extended_thinking !== undefined) {
+                    sessionConfig.extended_thinking = parameters.extended_thinking;
                 }
-                // Fallback to addModelParameters when no direct parameters were provided
-                else {
-                    addModelParameters(sessionConfig, currentModel);
+                if (parameters.budget_tokens !== undefined) {
+                    sessionConfig.budget_tokens = parameters.budget_tokens;
                 }
-            } else {
-                // Use model config parameters
-                addModelParameters(sessionConfig, currentModel);
             }
 
-            console.log('initializeSession data being sent:', sessionConfig);
+            console.log('LegacySessionContext: initializeSession data being sent:', sessionConfig);
 
-            // Call the core initializeSession instead of directly calling the service
+            // Initialize the core session
             await coreInitializeSession(sessionConfig);
+            console.log('LegacySessionContext: Core session initialized');
             
-            // Update modelName state to reflect the current model
-            setModelName(currentModel.id);
-            setSelectedModel(currentModel);
+            // Model state is now managed by ModelContext
+            // The ModelContext will be updated through its own initialization flow
+            
+            // Explicitly set our initialization flag to true so the UI can proceed
+            // even if ModelContext is still initializing
+            setIsInitialized(true);
+            console.log('LegacySessionContext: Session initialization complete');
             
         } catch (err) {
             console.error("Session initialization failed:", err);
@@ -419,50 +390,15 @@ export const LegacySessionProvider = ({ children }) => {
         try {
             switch (updateType) {
                 case 'MODEL_CHANGE': {
-                    const newModel = modelConfigs.find(model => model.id === values.modelName);
-                    if (!newModel) throw new Error('Invalid model configuration');
-
-                    // Update the state first
-                    setModelName(values.modelName);
-                    setSelectedModel(newModel);
-
-                    // Determine extended thinking parameters based on new model
-                    const hasExtendedThinking = !!newModel.parameters?.extended_thinking;
-                    const extendedThinkingDefault = hasExtendedThinking ?
-                        newModel.parameters.extended_thinking.enabled === true : false;
-
-                    const budgetTokensDefault = hasExtendedThinking && extendedThinkingDefault ?
-                        newModel.parameters.extended_thinking.budget_tokens?.default || 5000 : 0;
-
-                    const newParameters = {
-                        temperature: newModel.parameters?.temperature?.default ?? modelParameters.temperature,
-                        reasoning_effort: newModel.parameters?.reasoning_effort?.default ?? modelParameters.reasoning_effort,
-                        extended_thinking: extendedThinkingDefault,
-                        budget_tokens: budgetTokensDefault
-                    };
-
-                    setModelParameters(newParameters);
-
-                    // Create the model object with all the data
-                    const modelWithPersona = {
-                        id: newModel.id,
-                        backend: newModel.backend,
-                        persona_name: persona,
-                        custom_prompt: customPrompt,
-                        extended_thinking: extendedThinkingDefault,
-                        budget_tokens: budgetTokensDefault,
-                        reasoning_effort: newParameters.reasoning_effort,
-                        temperature: newParameters.temperature
-                    };
-
-                    // Initialize new session with the custom prompt
-                    await initializeSession(false, modelWithPersona);
+                    // Only proceed if ModelContext is ready
+                    if (!isModelReady) {
+                        console.warn('LegacySessionContext: Cannot change model - ModelContext not ready');
+                        throw new Error('Model context not ready');
+                    }
+                    
+                    // Forward to ModelContext through our hook-based proxy
+                    await handleModelChange(values.modelName);
                     setSettingsVersion(v => v + 1);
-                    const updatedModelConfig = {
-                        modelName: values.modelName,
-                        modelParameters: newParameters
-                    };
-                    saveConfigToStorage(updatedModelConfig);
                     break;
                 }
                 case 'SETTINGS_UPDATE': {
@@ -473,8 +409,8 @@ export const LegacySessionProvider = ({ children }) => {
 
                     const updateData = {
                         ui_session_id: sessionId,
-                        model_name: modelName,
-                        backend: selectedModel?.backend,
+                        model_name: modelName, // Use from useModel hook
+                        backend: selectedModel?.backend, // Use from useModel hook
                         persona_name: updatedPersona,
                         custom_prompt: updatedPrompt
                     };
@@ -491,67 +427,15 @@ export const LegacySessionProvider = ({ children }) => {
                     break;
                 }
                 case 'PARAMETER_UPDATE': {
-                    if (debouncedUpdateRef.current) {
-                        clearTimeout(debouncedUpdateRef.current);
+                    // Only proceed if ModelContext is ready
+                    if (!isModelReady) {
+                        console.warn('LegacySessionContext: Cannot update parameters - ModelContext not ready');
+                        throw new Error('Model context not ready');
                     }
-                    debouncedUpdateRef.current = setTimeout(async () => {
-                        const updatedParameters = {...modelParameters};
-
-                        // ALWAYS include model_name and backend for all parameter updates
-                        // This is critical for complex parameters like extended_thinking
-                        const updateData = {
-                            ui_session_id: sessionId,
-                            model_name: modelName,
-                            backend: selectedModel?.backend
-                        };
-
-                        // non-reasoning model parameters
-                        if ('temperature' in values) {
-                            updatedParameters.temperature = values.temperature;
-                            updateData.temperature = values.temperature;
-                        }
-
-                        // openai reasoning model parameters
-                        if ('reasoning_effort' in values) {
-                            updatedParameters.reasoning_effort = values.reasoning_effort;
-                            updateData.reasoning_effort = values.reasoning_effort;
-                        }
-
-                        // claude reasoning model parameters
-                        if (selectedModel?.parameters?.extended_thinking) {
-                            const extendedThinking = 'extended_thinking' in values
-                                ? values.extended_thinking
-                                : updatedParameters.extended_thinking || false;
-
-                            updatedParameters.extended_thinking = extendedThinking;
-
-                            if ('budget_tokens' in values) {
-                                updatedParameters.budget_tokens = values.budget_tokens;
-                                updateData.budget_tokens = values.budget_tokens;
-                            } else if (extendedThinking) {
-                                // If UI shows extended thinking enabled but no budget specified,
-                                // use existing or default value
-                                const budgetTokens = updatedParameters.budget_tokens || 5000;
-                                updatedParameters.budget_tokens = budgetTokens;
-                                updateData.budget_tokens = budgetTokens;
-                            } else {
-                                // If UI shows extended thinking disabled,
-                                // ensure budget_tokens is 0
-                                updatedParameters.budget_tokens = 0;
-                                updateData.budget_tokens = 0;
-                            }
-                        }
-
-                        console.log('Parameter update data being sent:', updateData);
-                        setModelParameters(updatedParameters);
-                        await modelService.updateModelParameters(sessionId, updateData);
-                        
-                        setSettingsVersion(v => v + 1);
-                        const updatedParamConfig = {
-                            modelParameters: updatedParameters
-                        };
-                        saveConfigToStorage(updatedParamConfig);
-                    }, 300);
+                    
+                    // Forward to ModelContext through our hook-based proxy
+                    updateModelParameters(values);
+                    setSettingsVersion(v => v + 1);
                     break;
                 }
                 default:
@@ -566,16 +450,39 @@ export const LegacySessionProvider = ({ children }) => {
     // save config to storage
     const saveConfigToStorage = (updatedConfig = {}) => {
         const configToSave = {
-            modelName: updatedConfig.modelName || modelName,
+            modelName: updatedConfig.modelName || (isModelReady ? modelName : ''), // Use from useModel hook
             persona: updatedConfig.persona || persona,
             customPrompt: updatedConfig.customPrompt || customPrompt,
-            modelParameters: updatedConfig.modelParameters || modelParameters,
+            modelParameters: updatedConfig.modelParameters || (isModelReady ? modelParameters : {}), // Use from useModel hook
             lastUpdated: new Date().toISOString()
         };
 
         console.log('Saving configuration to localStorage:', configToSave);
         localStorage.setItem("agent_config", JSON.stringify(configToSave));
     };
+    
+    // Proxy model operations to ModelContext through useModel hook
+    const handleModelChange = useCallback((newModelName) => {
+        // Only attempt to change model if we're fully initialized
+        if (isModelReady) {
+            console.log(`LegacySessionContext: Changing model to ${newModelName}`);
+            return changeModel(newModelName);
+        } else {
+            console.warn(`LegacySessionContext: Cannot change model - ModelContext not ready`);
+            return Promise.reject(new Error('Model context not ready'));
+        }
+    }, [isModelReady, changeModel]);
+    
+    const handleModelParameterChange = useCallback((paramName, paramValue) => {
+        // Only attempt to update parameters if we're fully initialized
+        if (isModelReady) {
+            console.log(`LegacySessionContext: Updating parameter ${paramName} to ${paramValue}`);
+            return updateModelParameters({ [paramName]: paramValue });
+        } else {
+            console.warn(`LegacySessionContext: Cannot update parameters - ModelContext not ready`);
+            return Promise.reject(new Error('Model context not ready'));
+        }
+    }, [isModelReady, updateModelParameters]);
 
     // Handle equipping tools
     const handleEquipTools = async (tools) => {
@@ -619,6 +526,30 @@ export const LegacySessionProvider = ({ children }) => {
     useEffect(() => {
         fetchInitialData();
     }, []);
+    
+    // Sync initialization state with ModelContext readiness and session availability
+    useEffect(() => {
+        // When ModelContext becomes ready, set our own initialization flag
+        if (isModelReady) {
+            console.log('🔴 LegacySessionContext: ModelContext is now READY, marking as initialized');
+            setIsInitialized(true);
+        } else {
+            console.log('🔴 LegacySessionContext: ModelContext not ready yet, waiting for initialization');
+            
+            // FIX: When we have a session but ModelContext isn't ready, don't try to initialize again
+            // This was causing a circular loop where each context kept reinitializing the others
+        }
+    }, [isModelReady]);
+    
+    // Debug logging on mount and state changes
+    useEffect(() => {
+        console.log('🔴 LegacySessionContext STATE UPDATE:', {
+            hasSessionId: !!sessionId,
+            isSessionReady: isReady,
+            isModelReady,
+            ownIsInitialized: isInitialized
+        });
+    }, [sessionId, isReady, isModelReady, isInitialized]);
 
     useEffect(() => {
         if (sessionId && isReady) {
@@ -634,20 +565,24 @@ export const LegacySessionProvider = ({ children }) => {
                 isReady,
                 error,
                 
+                // Include model state from useModel hook with fallbacks
+                modelName: isModelReady ? modelName : (modelName || ''),
+                modelParameters: isModelReady ? modelParameters : {},
+                modelConfigs: modelConfigs.length > 0 ? modelConfigs : [],
+                selectedModel: isModelReady ? selectedModel : null,
+                
                 // Legacy state and methods
                 settingsVersion,
                 isOptionsOpen,
                 setIsOptionsOpen,
                 isStreaming,
                 isLoading,
-                isInitialized,
+                // For initialization status, use our own flag AND ModelContext's ready state
+                // This ensures components won't try to use model data until it's fully ready
+                isInitialized: isInitialized && (isModelReady || false),
                 persona,
                 temperature,
                 customPrompt,
-                modelConfigs,
-                modelName,
-                modelParameters,
-                selectedModel,
                 personas,
                 availableTools,
                 activeTools,
@@ -659,7 +594,11 @@ export const LegacySessionProvider = ({ children }) => {
                 handleProcessingStatus,
                 handleSessionsDeleted,
                 initializeSession,
-                setIsInitialized
+                setIsInitialized,
+                
+                // Add model-specific operations
+                changeModel: handleModelChange,
+                updateModelParameter: handleModelParameterChange
             }}
         >
             {children}

@@ -48,8 +48,8 @@ export {
   getModels,
   getModelDetails,
   getModelParameters,
-  setSessionModel,
-  updateModelParameters,
+  setModel,
+  updateParameters,
   getDefaultParameters,
 } from './model-api';
 
