@@ -36,6 +36,7 @@ const AppSidebar = ({ children, defaultOpen = true, collapsible = "icon" }) => {
     { path: '/rag', label: 'RAG', icon: <span className="mr-3 ml-2"><Icon icon="fa-thin fa-file-circle-plus" hoverIcon="fa-solid fa-file-circle-plus" size="lg" /></span> },
     { path: '/interactions', label: 'Event Logs', icon: <span className="mr-3 ml-2"><Icon icon="fa-thin fa-list-timeline" hoverIcon="fa-solid fa-list-timeline" size="lg" /></span> },
     { path: '/settings', label: 'Settings', icon:<span className="mr-3 ml-2"><Icon icon="fa-thin fa-gears" hoverIcon="fa-solid fa-list-gears" size="lg" /></span> },
+    { path: '/login', label: 'Login', icon:<span className="mr-3 ml-2"><Icon icon="fa-solid fa-user" hoverIcon="fa-solid fa-list-gears" size="lg" /></span> },
   ];
 
   // Check if a path is the current active route
