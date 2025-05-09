@@ -24,7 +24,9 @@ dependencies = [
     "weaviate-client==4.8.1", # Also used by agent_c-rag
     "python-multipart",
     "markitdown==0.0.2",
-    "aiofiles"
+    "aiofiles",
+    "redis>=5.0.0",
+    "fastapi-cache2[redis]>=0.2.2"
 ]
 
 requires-python = ">=3.12"

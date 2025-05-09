@@ -15,12 +15,16 @@ from .config import router as config_router
 from .sessions import router as sessions_router
 from .history import router as history_router
 from .debug import router as debug_router
+from .chat import router as chat_router
+from .users import router as users_router
 
 # Include all routers in the main v2 API router
 router.include_router(config_router)
 router.include_router(sessions_router)
 router.include_router(history_router)
 router.include_router(debug_router)
+router.include_router(chat_router)
+router.include_router(users_router)
 
 # Log the number of routes included for debugging
 logger = logging.getLogger(__name__)

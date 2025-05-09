@@ -47,6 +47,23 @@ def create_application(router: APIRouter, **kwargs) -> FastAPI:
     # Define a lifespan handler for startup and shutdown tasks.
     @asynccontextmanager
     async def lifespan(lifespan_app: FastAPI):
+        # Import Redis configuration at runtime to avoid circular imports
+        from agent_c_api.config.redis_config import RedisConfig
+        
+        # Start Redis if configured to manage lifecycle
+        if settings.MANAGE_REDIS_LIFECYCLE:
+            logger.info("Starting Redis server (managed by application)")
+            redis_started = await RedisConfig.start_redis_if_needed()
+            if not redis_started:
+                logger.error("Failed to start Redis server, application may not function correctly")
+                
+        # Check if Redis is available, regardless of whether we're managing it
+        redis_available = await RedisConfig.ping_redis()
+        if not redis_available:
+            logger.warning("Redis server is not available, some features may not work properly")
+        else:
+            logger.info("Successfully connected to Redis server")
+        
         # Shared AgentManager instance.
         lifespan_app.state.agent_manager = UItoAgentBridgeManager()
         
@@ -56,7 +73,10 @@ def create_application(router: APIRouter, **kwargs) -> FastAPI:
 
         yield
 
-        # Shutdown: Optionally, perform any cleanup tasks.
+        # Shutdown: Stop Redis if we started it
+        if settings.MANAGE_REDIS_LIFECYCLE:
+            logger.info("Stopping Redis server")
+            await RedisConfig.stop_redis_if_needed()
 
 
     # Set up comprehensive OpenAPI metadata from settings (or fallback defaults)
