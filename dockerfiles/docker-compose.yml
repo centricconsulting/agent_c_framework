@@ -1,6 +1,7 @@
 services:
   api:
     image: ghcr.io/centricconsulting/agent_c_api_dev:latest
+    platform: ${DOCKER_PLATFORM:-linux/amd64}  # Default to amd64 but allow override
     env_file:
       - ${AGENT_C_CONFIG_PATH}/agent_c.config
     ports:
@@ -26,6 +27,7 @@ services:
 
   frontend:
     image: ghcr.io/centricconsulting/agent_c_frontend_dev:latest
+    platform: ${DOCKER_PLATFORM:-linux/amd64}  # Default to amd64 but allow override
     restart: always
     ports:
       - "5173:5173"
