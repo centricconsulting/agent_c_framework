@@ -12,7 +12,7 @@ from . import random_number
 from . import xml_explorer  # XML Explorer toolset
 from . import css_explorer  # CSS Explorer toolset
 from . import mariadb  # MariaDB toolset
-
+from . import cmd_exec
 __all__ = [
     'workspace',
     'web', 
@@ -25,5 +25,6 @@ __all__ = [
     'random_number',
     'xml_explorer',
     'css_explorer',
-    'mariadb'
+    'mariadb',
+    'cmd_exec'
 ]

@@ -16,6 +16,9 @@ This directory contains documentation for the various tools available in the Age
 - [Memory](README_MEMORY.md): Store and retrieve persistent data across conversations
 - [Workspace](README_WORKSPACE.md): Read, write, and manipulate files in various storage locations
 
+### System Interaction
+- [Command Execution](README_COMMAND_EXEC.md): Execute shell commands with user approval
+
 ### Data Visualization and Presentation
 - [Mermaid Chart](README_MERMAID_CHART.md): Create and render diagrams using Mermaid.js syntax
 - [Markdown to HTML Report](README_MARKDOWN_TO_HTML_REPORT.md): Create interactive HTML viewers from markdown files
@@ -66,6 +69,7 @@ When using tools, be mindful of:
 - Data privacy: Only store necessary information in memory tools
 - API usage: Many tools consume API credits that may have associated costs
 - File system access: Workspace operations should be limited to appropriate directories
+- Command execution: Always review commands before approval
 
 ## Extending the Toolset
 
