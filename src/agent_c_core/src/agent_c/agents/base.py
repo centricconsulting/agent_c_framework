@@ -66,6 +66,7 @@ class BaseAgent:
         self.prompt_builder: Optional[PromptBuilder] = kwargs.get("prompt_builder", None)
         self.schemas: Union[None, List[Dict[str, Any]]] = None
         self.streaming_callback: Optional[Callable[[ChatEvent], Awaitable[None]]] = kwargs.get("streaming_callback", None)
+        self.redis_stream_id: Optional[str] = kwargs.get("redis_stream_id", None)
         self.mitigate_image_prompt_injection: bool = kwargs.get("mitigate_image_prompt_injection", False)
         self.can_use_tools: bool = False
         self.supports_multimodal: bool = False
@@ -194,9 +195,31 @@ class BaseAgent:
     async def _raise_event(self, event):
         """
         Raise a chat event to the event stream and log it if a logger is attached.
+        
+        If redis_stream_id is set, the event will be published to the Redis stream
+        instead of calling the streaming callback directly.
         """
-        # First, call the original streaming callback if it exists
-        if self.streaming_callback:
+        # First, handle Redis stream if configured
+        if hasattr(self, 'redis_stream_id') and self.redis_stream_id:
+            try:
+                # Import here to avoid circular dependency
+                from agent_c_api.core.util.redis_stream import RedisStreamManager
+                await RedisStreamManager.publish_event(self.redis_stream_id, event)
+            except ImportError:
+                # Redis stream module not available, fall back to callback
+                logging.warning("Redis stream module not available, falling back to direct callback")
+                if self.streaming_callback:
+                    await self.streaming_callback(event)
+            except Exception as e:
+                logging.exception(f"Redis stream publishing error: {e}")
+                # Fall back to callback if Redis fails
+                if self.streaming_callback:
+                    try:
+                        await self.streaming_callback(event)
+                    except Exception as callback_error:
+                        logging.exception(f"Streaming callback error after Redis failure: {callback_error}")
+        # Otherwise use the original streaming callback if it exists
+        elif self.streaming_callback:
             try:
                 await self.streaming_callback(event)
             except Exception as e:
@@ -206,7 +229,7 @@ class BaseAgent:
                 if hasattr(self, 'session_logger') and self.session_logger:
                     await self._log_internal_error("streaming_callback_error", str(e), event)
 
-        # Then, log the event if we have a logger
+        # Then, log the event if we have a logger (regardless of stream or callback)
         if hasattr(self, 'session_logger') and self.session_logger:
             try:
                 await self.session_logger.log_event(event)

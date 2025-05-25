@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     
     # Agent settings
     CALLBACK_TIMEOUT: float = 300.0  # Timeout in seconds for stream callbacks
+    
+    # Redis settings
+    REDIS_URL: str = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+    REDIS_STREAM_ENABLED: bool = os.environ.get("REDIS_STREAM_ENABLED", "False").lower() == "true"
 
     # Profile API App
     PROFILING_ENABLED: bool = False
