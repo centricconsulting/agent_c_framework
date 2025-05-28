@@ -12,9 +12,7 @@ load_dotenv(override=True)
 
 # Get configuration from environment variables
 CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
-# CLIENT_ID = os.getenv("AZURE_CLIENT_ID", "4f531e8c-e1f7-4a71-b6a5-6f91e1930d26")
 TENANT_ID = os.getenv("AZURE_TENANT_ID")
-# TENANT_ID = os.getenv("AZURE_TENANT_ID", "d6f8cc30-debb-41a6-9c78-0516c185fa0d")
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 OPENID_CONFIG_URL = f"{AUTHORITY}/v2.0/.well-known/openid-configuration"
 
