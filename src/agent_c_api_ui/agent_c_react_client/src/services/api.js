@@ -143,18 +143,27 @@ export function showErrorToast(error, fallbackMessage = 'An unexpected error occ
 /**
  * Create request options with proper headers and configuration
  * @param {object} options - Custom request options to merge with defaults
+ * @param {string} [token] - Authentication token (optional)
  * @returns {object} Combined request options
  */
-function createRequestOptions(options = {}) {
+function createRequestOptions(options = {}, token = null) {
   const { headers = {}, ...restOptions } = options;
+  
+  // Create base headers
+  const combinedHeaders = {
+    ...API_CONFIG.headers,
+    ...headers,
+  };
+  
+  // Add authorization header if token is provided
+  if (token) {
+    combinedHeaders['Authorization'] = `Bearer ${token}`;
+  }
   
   return {
     ...API_CONFIG,
     ...restOptions,
-    headers: {
-      ...API_CONFIG.headers,
-      ...headers,
-    },
+    headers: combinedHeaders,
     credentials: API_CONFIG.credentials,
   };
 }
@@ -163,10 +172,11 @@ function createRequestOptions(options = {}) {
  * Core API request method
  * @param {string} endpoint - API endpoint to call
  * @param {object} options - Request options
+ * @param {string} [token] - Authentication token (optional)
  * @returns {Promise<any>} Response data
  * @throws {Error} Enhanced error with context
  */
-export async function apiRequest(endpoint, options = {}) {
+export async function apiRequest(endpoint, options = {}, token = null) {
   // Make sure endpoint starts with a slash if it's not an absolute URL
   const normalizedEndpoint = endpoint.startsWith('/') || endpoint.startsWith('http') ? endpoint : `/${endpoint}`;
   
@@ -175,7 +185,7 @@ export async function apiRequest(endpoint, options = {}) {
     ? normalizedEndpoint 
     : `${API_CONFIG.baseUrl}${normalizedEndpoint}`;
   
-  const requestOptions = createRequestOptions(options);
+  const requestOptions = createRequestOptions(options, token);
   
   try {
     const response = await fetch(url, requestOptions);
@@ -213,9 +223,10 @@ export async function apiRequest(endpoint, options = {}) {
  * Shorthand for GET requests with pagination support
  * @param {string} endpoint - API endpoint
  * @param {object} options - Request options
+ * @param {string} [token] - Authentication token (optional)
  * @returns {Promise<any>} Response data
  */
-export function get(endpoint, options = {}) {
+export function get(endpoint, options = {}, token = null) {
   // Extract pagination parameters if present
   const { params, ...restOptions } = options;
   
@@ -240,7 +251,7 @@ export function get(endpoint, options = {}) {
   return apiRequest(endpoint, { 
     method: 'GET', 
     ...restOptions 
-  });
+  }, token);
 }
 
 /**
@@ -248,14 +259,15 @@ export function get(endpoint, options = {}) {
  * @param {string} endpoint - API endpoint
  * @param {any} data - Request body data
  * @param {object} options - Additional request options
+ * @param {string} [token] - Authentication token (optional)
  * @returns {Promise<any>} Response data
  */
-export function post(endpoint, data, options = {}) {
+export function post(endpoint, data, options = {}, token = null) {
   return apiRequest(endpoint, {
     method: 'POST',
     body: JSON.stringify(data),
     ...options,
-  });
+  }, token);
 }
 
 /**
@@ -263,14 +275,15 @@ export function post(endpoint, data, options = {}) {
  * @param {string} endpoint - API endpoint
  * @param {any} data - Request body data
  * @param {object} options - Additional request options
+ * @param {string} [token] - Authentication token (optional)
  * @returns {Promise<any>} Response data
  */
-export function put(endpoint, data, options = {}) {
+export function put(endpoint, data, options = {}, token = null) {
   return apiRequest(endpoint, {
     method: 'PUT',
     body: JSON.stringify(data),
     ...options,
-  });
+  }, token);
 }
 
 /**
@@ -278,27 +291,29 @@ export function put(endpoint, data, options = {}) {
  * @param {string} endpoint - API endpoint
  * @param {any} data - Request body data
  * @param {object} options - Additional request options
+ * @param {string} [token] - Authentication token (optional)
  * @returns {Promise<any>} Response data
  */
-export function patch(endpoint, data, options = {}) {
+export function patch(endpoint, data, options = {}, token = null) {
   return apiRequest(endpoint, {
     method: 'PATCH',
     body: JSON.stringify(data),
     ...options,
-  });
+  }, token);
 }
 
 /**
  * Shorthand for DELETE requests
  * @param {string} endpoint - API endpoint
  * @param {object} options - Request options
+ * @param {string} [token] - Authentication token (optional)
  * @returns {Promise<any>} Response data
  */
-export function del(endpoint, options = {}) {
+export function del(endpoint, options = {}, token = null) {
   return apiRequest(endpoint, {
     method: 'DELETE',
     ...options,
-  });
+  }, token);
 }
 
 /**
@@ -308,9 +323,10 @@ export function del(endpoint, options = {}) {
  * @param {string} fieldName - Form field name for the file
  * @param {object} additionalData - Additional form data to include
  * @param {object} options - Additional request options
+ * @param {string} [token] - Authentication token (optional)
  * @returns {Promise<any>} Response data
  */
-export function uploadFile(endpoint, file, fieldName = 'file', additionalData = {}, options = {}) {
+export function uploadFile(endpoint, file, fieldName = 'file', additionalData = {}, options = {}, token = null) {
   const formData = new FormData();
   formData.append(fieldName, file);
   
@@ -324,21 +340,22 @@ export function uploadFile(endpoint, file, fieldName = 'file', additionalData = 
     body: formData,
     headers: {}, // Let browser set content-type with boundary
     ...options,
-  });
+  }, token);
 }
 
 /**
  * Download a file from the API
  * @param {string} endpoint - API endpoint
  * @param {object} options - Request options
+ * @param {string} [token] - Authentication token (optional)
  * @returns {Promise<Blob>} File blob
  */
-export async function downloadFile(endpoint, options = {}) {
+export async function downloadFile(endpoint, options = {}, token = null) {
   const url = `${API_CONFIG.baseUrl}${endpoint}`;
   const requestOptions = createRequestOptions({
     method: 'GET',
     ...options,
-  });
+  }, token);
   
   try {
     const response = await fetch(url, requestOptions);

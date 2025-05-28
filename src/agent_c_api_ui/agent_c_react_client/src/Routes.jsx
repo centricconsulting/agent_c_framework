@@ -2,6 +2,8 @@
 import React, {Suspense, lazy} from 'react';
 import {Routes, Route} from 'react-router-dom';
 import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+import { protectedRoutes } from './config/authConfig';
 
 // Lazy load pages
 const HomePage = lazy(() => import('@/pages/HomePage'));
@@ -16,13 +18,36 @@ const AppRoutes = () => {
         <Layout>
             <Suspense fallback={<div>Loading...</div>}>
                 <Routes>
-                    <Route path="/home" element={<ChatPage/>}/>
-                    <Route path="/chat" element={<ChatPage/>}/>
+                    {/* Public routes */}
                     <Route path="/" element={<HomePage/>}/>
-                    <Route path="/settings" element={<SettingsPage/>}/>
-                    <Route path="/rag" element={<RagPage/>}/>
-                    <Route path="/interactions" element={<InteractionsPage/>}/>
-                    <Route path="/replay/:sessionId" element={<ReplayPage />} />
+                    <Route path="/home" element={<HomePage/>}/>
+                    
+                    {/* Protected routes */}
+                    <Route path="/chat" element={
+                        <ProtectedRoute>
+                            <ChatPage/>
+                        </ProtectedRoute>
+                    }/>
+                    <Route path="/settings" element={
+                        <ProtectedRoute>
+                            <SettingsPage/>
+                        </ProtectedRoute>
+                    }/>
+                    <Route path="/rag" element={
+                        <ProtectedRoute>
+                            <RagPage/>
+                        </ProtectedRoute>
+                    }/>
+                    <Route path="/interactions" element={
+                        <ProtectedRoute>
+                            <InteractionsPage/>
+                        </ProtectedRoute>
+                    }/>
+                    <Route path="/replay/:sessionId" element={
+                        <ProtectedRoute>
+                            <ReplayPage />
+                        </ProtectedRoute>
+                    }/>
                 </Routes>
             </Suspense>
         </Layout>

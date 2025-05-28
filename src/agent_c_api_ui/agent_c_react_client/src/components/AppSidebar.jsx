@@ -17,7 +17,8 @@ import {
 import { ThemeToggle } from './ui/theme-toggle';
 import { Separator } from './ui/separator';
 import { cn } from '../lib/utils';
-import {Icon} from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
+import { LoginButton, UserProfile } from "@/components/ui/login-button";
 
 /**
  * Main application sidebar using shadcn/ui Sidebar component
@@ -45,10 +46,14 @@ const AppSidebar = ({ children, defaultOpen = true, collapsible = "icon" }) => {
     <SidebarProvider defaultOpen={defaultOpen}>
       <div className="sidebar-layout">
         <Sidebar collapsible={collapsible}>
-          <SidebarHeader className="flex justify-start">
-            <div className="sidebar-logo flex ">
+          <SidebarHeader className="flex justify-between items-center">
+            <div className="sidebar-logo flex">
               <SidebarTrigger />
               <h2 className="text-lg font-semibold sidebar-title">Agent C</h2>
+            </div>
+            <div className="ml-auto mr-3">
+              <LoginButton size="sm" variant="ghost" />
+              <UserProfile size="sm" variant="ghost" />
             </div>
           </SidebarHeader>
           

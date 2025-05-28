@@ -12,6 +12,7 @@ import personaService from './persona-api';
 import chatService from './chat-api';
 import configService from './config-api';
 import historyService from './history-api';
+import authService from './auth-api';
 
 // Export individual services
 export const api = apiService;
@@ -22,6 +23,7 @@ export const persona = personaService;
 export const chat = chatService;
 export const config = configService;
 export const history = historyService;
+export const auth = authService;
 
 // Export individual functions from each service
 export {
@@ -30,6 +32,13 @@ export {
   showErrorToast,
   API_CONFIG,
 } from './api';
+
+// Authentication service functions
+export {
+  validateToken,
+  getUserInfo,
+  addAuthHeader,
+} from './auth-api';
 
 // Export all service methods from session-api
 export {
@@ -116,4 +125,5 @@ export default {
   chat: chatService,
   config: configService,
   history: historyService,
+  auth: authService,
 };

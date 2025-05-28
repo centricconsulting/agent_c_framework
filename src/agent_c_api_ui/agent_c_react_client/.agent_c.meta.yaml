@@ -1,0 +1,131 @@
+_plans:
+  sso_implementation:
+    created_at: '2025-05-28T16:51:11.390601'
+    description: Integrate Microsoft SSO authentication into the Agent C UI frontend
+      based on the existing backend authentication infrastructure.
+    id: d0a37b79-3309-481a-9a8c-b53708b0d1ec
+    lessons_learned: []
+    tasks:
+      54b638a1-0129-4502-8970-b63e4fd14e38:
+        child_tasks: []
+        completed: true
+        context: 'Update the API service to include authentication tokens in all requests
+          to protected endpoints. This involves:
+
+          - Adding token acquisition to API requests
+
+          - Handling token renewal
+
+          - Connecting to the existing auth-api.js service'
+        created_at: '2025-05-28T16:51:45.954780'
+        description: Ensure authentication tokens are properly passed to the API
+        id: 54b638a1-0129-4502-8970-b63e4fd14e38
+        parent_id: null
+        priority: medium
+        sequence: 5
+        title: Connect Frontend Auth with Backend
+        updated_at: '2025-05-28T16:56:45.847700'
+      720f51bf-e4d8-4d62-b234-9f99fd6b1935:
+        child_tasks: []
+        completed: true
+        context: Create a new AuthContext component to manage the MSAL instance, user
+          authentication state, and auth-related functions across the application.
+          This will wrap the entire application and provide authentication state and
+          functions to all components.
+        created_at: '2025-05-28T16:51:18.505339'
+        description: Create an AuthContext to manage authentication state across the
+          application
+        id: 720f51bf-e4d8-4d62-b234-9f99fd6b1935
+        parent_id: null
+        priority: high
+        sequence: 1
+        title: Set up Authentication Context
+        updated_at: '2025-05-28T16:56:14.247889'
+      a226504b-e5ee-43e6-b183-a412b76abe88:
+        child_tasks: []
+        completed: true
+        context: Update the existing ProtectedRoute component or create a new one
+          that checks authentication status and redirects to login if not authenticated.
+          Update Routes.jsx to use this guard for routes that should be protected.
+        created_at: '2025-05-28T16:51:38.857233'
+        description: Create or update ProtectedRoute component to secure authenticated
+          routes
+        id: a226504b-e5ee-43e6-b183-a412b76abe88
+        parent_id: null
+        priority: high
+        sequence: 4
+        title: Implement Protected Route Guard
+        updated_at: '2025-05-28T16:56:38.404133'
+      c1ca97c8-b1fa-4c56-aec7-dbc31e80c475:
+        child_tasks: []
+        completed: true
+        context: 'Create login button and user profile display components to be added
+          to the application layout. This will include:
+
+          - Login button component for unauthenticated users
+
+          - User profile display with logout option for authenticated users
+
+          - Styling consistent with the existing UI'
+        created_at: '2025-05-28T16:51:32.288605'
+        description: Develop UI components for authentication interaction
+        id: c1ca97c8-b1fa-4c56-aec7-dbc31e80c475
+        parent_id: null
+        priority: medium
+        sequence: 3
+        title: Create Login/Logout UI Components
+        updated_at: '2025-05-28T16:56:30.454782'
+      d4bc3951-f848-4644-8655-4cb2b15644ef:
+        child_tasks: []
+        completed: true
+        context: Install MSAL and create configuration to match the existing backend
+          auth settings. Use the SSO workspace implementation as a reference. This
+          involves copying the MSAL configuration and adapting it to work with the
+          Agent C application structure.
+        created_at: '2025-05-28T16:51:25.809550'
+        description: Add Microsoft Authentication Library (MSAL) and configure it
+          for the application
+        id: d4bc3951-f848-4644-8655-4cb2b15644ef
+        parent_id: null
+        priority: high
+        sequence: 2
+        title: Integrate MSAL Library
+        updated_at: '2025-05-28T16:56:22.197474'
+      e07e1b14-5aeb-4dbc-bc14-e611a4777f49:
+        child_tasks: []
+        completed: false
+        context: 'Test the complete SSO implementation to ensure:
+
+          - Login flow works correctly
+
+          - Protected routes are properly guarded
+
+          - Token is being passed to the API
+
+          - Logout functionality works
+
+          - User information is displayed correctly'
+        created_at: '2025-05-28T16:51:59.545924'
+        description: Verify that all SSO components are working correctly
+        id: e07e1b14-5aeb-4dbc-bc14-e611a4777f49
+        parent_id: null
+        priority: medium
+        sequence: 7
+        title: Test SSO Integration
+        updated_at: '2025-05-28T16:51:59.545924'
+      e461d688-0ce8-49c0-8e71-2445f304f241:
+        child_tasks: []
+        completed: true
+        context: Update the application entry points to include the AuthProvider in
+          the component hierarchy. Ensure that the AuthProvider wraps all components
+          that need access to authentication state.
+        created_at: '2025-05-28T16:51:52.372654'
+        description: Integrate AuthProvider into App.jsx and main.jsx
+        id: e461d688-0ce8-49c0-8e71-2445f304f241
+        parent_id: null
+        priority: high
+        sequence: 6
+        title: Update Application Entry Points
+        updated_at: '2025-05-28T16:56:54.121398'
+    title: SSO Authentication Implementation
+    updated_at: '2025-05-28T16:56:54.121398'
