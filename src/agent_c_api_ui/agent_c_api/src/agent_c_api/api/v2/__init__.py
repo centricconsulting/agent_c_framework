@@ -18,6 +18,7 @@ from .debug import router as debug_router
 from .chat import router as chat_router
 from .users import router as users_router
 from .health import router as health_router
+from .auth import router as auth_router
 
 # Include all routers in the main v2 API router
 router.include_router(config_router)
@@ -27,6 +28,7 @@ router.include_router(debug_router)
 router.include_router(chat_router)
 router.include_router(users_router)
 router.include_router(health_router)
+router.include_router(auth_router)
 
 # Log the number of routes included for debugging
 logger = logging.getLogger(__name__)

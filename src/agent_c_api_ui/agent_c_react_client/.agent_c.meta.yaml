@@ -1,0 +1,108 @@
+_plans:
+  microsoft_sso_integration:
+    created_at: '2025-05-28T19:47:24.043777'
+    description: Implement Microsoft SSO authentication in the Agent C UI by integrating
+      code from the SSO workspace.
+    id: d7d88bee-9d1e-4d82-9d09-0e84dbc619c7
+    lessons_learned: []
+    tasks:
+      32e9b3f3-2438-4084-811e-ef3b4dba01ae:
+        child_tasks: []
+        completed: true
+        context: ''
+        created_at: '2025-05-28T19:49:31.301942'
+        description: Update App.jsx to include the AuthProvider
+        id: 32e9b3f3-2438-4084-811e-ef3b4dba01ae
+        parent_id: null
+        priority: high
+        sequence: 7
+        title: Update App.jsx
+        updated_at: '2025-05-28T19:58:05.971361'
+      3db84601-e11e-476c-b73c-fa597687394d:
+        child_tasks: []
+        completed: true
+        context: ''
+        created_at: '2025-05-28T19:48:29.877940'
+        description: Update the existing LoginPage component to use the new AuthContext
+        id: 3db84601-e11e-476c-b73c-fa597687394d
+        parent_id: null
+        priority: high
+        sequence: 4
+        title: Update LoginPage component
+        updated_at: '2025-05-28T19:57:28.727809'
+      522d34bf-a84c-4532-9c51-56dd19c7a365:
+        child_tasks: []
+        completed: true
+        context: ''
+        created_at: '2025-05-28T19:49:42.121146'
+        description: Test the Microsoft SSO integration to ensure it works correctly
+        id: 522d34bf-a84c-4532-9c51-56dd19c7a365
+        parent_id: null
+        priority: medium
+        sequence: 8
+        title: Test and verify integration
+        updated_at: '2025-05-28T19:58:30.349919'
+      571e2e79-41b7-495d-8ce9-df985c0c3a92:
+        child_tasks: []
+        completed: true
+        context: ''
+        created_at: '2025-05-28T19:48:53.241692'
+        description: Update Routes.jsx to use ProtectedRoute for secure routes
+        id: 571e2e79-41b7-495d-8ce9-df985c0c3a92
+        parent_id: null
+        priority: high
+        sequence: 6
+        title: Update Routes.jsx
+        updated_at: '2025-05-28T19:57:50.749625'
+      5ad427af-e208-43f3-8db6-6bd6820d8025:
+        child_tasks: []
+        completed: true
+        context: ''
+        created_at: '2025-05-28T19:48:13.784625'
+        description: Create the authentication configuration file for Microsoft SSO
+        id: 5ad427af-e208-43f3-8db6-6bd6820d8025
+        parent_id: null
+        priority: high
+        sequence: 3
+        title: Create authentication configuration
+        updated_at: '2025-05-28T19:57:16.846316'
+      6eb89f51-af50-4ff1-968d-06ad7b3ec5bb:
+        child_tasks: []
+        completed: true
+        context: ''
+        created_at: '2025-05-28T19:48:46.835814'
+        description: Create a ProtectedRoute component to secure routes that require
+          authentication
+        id: 6eb89f51-af50-4ff1-968d-06ad7b3ec5bb
+        parent_id: null
+        priority: high
+        sequence: 5
+        title: Create ProtectedRoute component
+        updated_at: '2025-05-28T19:57:41.887591'
+      e2914846-b8b5-421d-a14c-b6b7c38c9ebc:
+        child_tasks: []
+        completed: true
+        context: ''
+        created_at: '2025-05-28T19:47:45.079191'
+        description: Create a new AuthContext component for the Agent C UI that integrates
+          Microsoft authentication
+        id: e2914846-b8b5-421d-a14c-b6b7c38c9ebc
+        parent_id: null
+        priority: high
+        sequence: 1
+        title: Create AuthContext component
+        updated_at: '2025-05-28T19:56:33.588941'
+      e7dce360-5abc-4daa-9f7d-079b420df77e:
+        child_tasks: []
+        completed: true
+        context: ''
+        created_at: '2025-05-28T19:48:01.835555'
+        description: Install the required MSAL dependencies for Microsoft authentication
+        id: e7dce360-5abc-4daa-9f7d-079b420df77e
+        parent_id: null
+        priority: high
+        sequence: 2
+        title: Install required dependencies
+        updated_at: '2025-05-28T19:56:57.411480'
+    title: Microsoft SSO Integration for Agent C
+    updated_at: '2025-05-28T19:58:30.349919'

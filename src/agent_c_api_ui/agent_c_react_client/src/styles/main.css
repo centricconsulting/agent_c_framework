@@ -46,6 +46,7 @@
 @import './components/icon.css';
 @import './components/footer-logo.css';
 @import './components/clipboard-paste.css';
+@import './components/user-profile.css';
 
 /* We've removed the import of component-styles.css as it created duplicate imports */
 /* All component styles are now directly imported above */

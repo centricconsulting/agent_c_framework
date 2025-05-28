@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import footerLogo from '../assets/footer-logo.svg';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Settings, Database, PanelLeft, Menu, History } from 'lucide-react';
+import { Home, Settings, Database, PanelLeft, Menu, History, LogOut } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +18,9 @@ import { ThemeToggle } from './ui/theme-toggle';
 import { Separator } from './ui/separator';
 import { cn } from '../lib/utils';
 import {Icon} from "@/components/ui/icon";
+import { useAuth } from '../contexts/AuthContext';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Button } from './ui/button';
 
 /**
  * Main application sidebar using shadcn/ui Sidebar component
@@ -77,6 +80,7 @@ const AppSidebar = ({ children, defaultOpen = true, collapsible = "icon" }) => {
           <SidebarFooter>
             <Separator className="my-2" />
             <div className="flex flex-col items-center px-2 gap-3">
+              <UserProfileSection />
               <div className="theme-toggle-container">
                 <ThemeToggle/>
               </div>
@@ -112,6 +116,56 @@ const MobileFloatingToggle = () => {
     >
       <Menu size={18} />
     </button>
+  );
+};
+
+// User profile section with logout functionality
+const UserProfileSection = () => {
+  const { user, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!user) return null;
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  return (
+    <div className="w-full px-3 mb-2 user-profile-section">
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <button
+            className="user-profile-button"
+            title={`Signed in as ${user.name}`}
+          >
+            <span className="mr-3 ml-2">
+              <Icon icon="fa-thin fa-user" hoverIcon="fa-solid fa-user" size="lg" />
+            </span>
+            <span className="sidebar-menu-label user-profile-name">{user.name}</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="user-profile-popover p-0" align="start">
+          <div className="p-2">
+            <div className="user-profile-popover-header">Signed in as</div>
+            <div className="user-profile-popover-name">{user.name}</div>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              className="w-full" 
+              onClick={handleLogout}
+            >
+              <LogOut size={16} className="mr-2" />
+              Sign Out
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 };
 

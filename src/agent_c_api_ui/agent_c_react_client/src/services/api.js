@@ -143,18 +143,26 @@ export function showErrorToast(error, fallbackMessage = 'An unexpected error occ
 /**
  * Create request options with proper headers and configuration
  * @param {object} options - Custom request options to merge with defaults
+ * @param {string} [authToken] - Optional auth token to include
  * @returns {object} Combined request options
  */
-function createRequestOptions(options = {}) {
+function createRequestOptions(options = {}, authToken = null) {
   const { headers = {}, ...restOptions } = options;
+  
+  const allHeaders = {
+    ...API_CONFIG.headers,
+    ...headers,
+  };
+  
+  // Add Authorization header if token is provided
+  if (authToken) {
+    allHeaders['Authorization'] = `Bearer ${authToken}`;
+  }
   
   return {
     ...API_CONFIG,
     ...restOptions,
-    headers: {
-      ...API_CONFIG.headers,
-      ...headers,
-    },
+    headers: allHeaders,
     credentials: API_CONFIG.credentials,
   };
 }
@@ -163,10 +171,11 @@ function createRequestOptions(options = {}) {
  * Core API request method
  * @param {string} endpoint - API endpoint to call
  * @param {object} options - Request options
+ * @param {string} [authToken] - Optional auth token to include
  * @returns {Promise<any>} Response data
  * @throws {Error} Enhanced error with context
  */
-export async function apiRequest(endpoint, options = {}) {
+export async function apiRequest(endpoint, options = {}, authToken = null) {
   // Make sure endpoint starts with a slash if it's not an absolute URL
   const normalizedEndpoint = endpoint.startsWith('/') || endpoint.startsWith('http') ? endpoint : `/${endpoint}`;
   
@@ -175,7 +184,24 @@ export async function apiRequest(endpoint, options = {}) {
     ? normalizedEndpoint 
     : `${API_CONFIG.baseUrl}${normalizedEndpoint}`;
   
-  const requestOptions = createRequestOptions(options);
+  // Try to get auth token from AuthContext if not provided and we're in a browser
+  if (!authToken && typeof window !== 'undefined') {
+    try {
+      // Only attempt this if we have the auth module available
+      const auth = window._agentC?.auth;
+      if (auth && typeof auth.getToken === 'function') {
+        authToken = await auth.getToken();
+        // Don't warn if token is null - this is expected for unauthenticated states
+        if (!authToken) {
+          console.debug('No auth token available - user may not be authenticated');
+        }
+      }
+    } catch (error) {
+      console.warn('Error accessing auth token provider:', error);
+    }
+  }
+  
+  const requestOptions = createRequestOptions(options, authToken);
   
   try {
     const response = await fetch(url, requestOptions);

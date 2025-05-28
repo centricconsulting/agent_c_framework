@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from starlette.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
+from agent_c_api.core.auth import configure_auth
 
 
 from agent_c_api.config.env_config import settings
@@ -196,6 +197,9 @@ def create_application(router: APIRouter, **kwargs) -> FastAPI:
     )
 
     app.include_router(router)
+
+    # Configure authentication
+    configure_auth(app)
 
     # Log application creation details
     app_name = getattr(settings, 'APP_NAME', 'Agent C API')

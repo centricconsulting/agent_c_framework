@@ -1,0 +1,64 @@
+/* ===== COMPONENT: UserProfileSection ===== */
+/* Description: User profile section in sidebar with logout functionality */
+
+.user-profile-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.user-profile-button:hover {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.user-profile-name {
+  margin-left: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+/* Animation for the user profile section */
+.user-profile-section {
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out;
+}
+
+[data-state="collapsed"] .user-profile-section {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* User profile popover styling */
+.user-profile-popover {
+  width: 200px;
+  padding: 0.75rem;
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border-radius: 0.375rem;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.user-profile-popover-header {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.25rem;
+}
+
+.user-profile-popover-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
