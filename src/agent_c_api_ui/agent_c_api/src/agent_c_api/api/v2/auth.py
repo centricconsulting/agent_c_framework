@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from agent_c_api.core.auth import get_current_user
+from agent_c_api.core.auth import get_current_user, get_auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -28,3 +28,19 @@ async def validate_token(user: dict = Depends(get_current_user)):
     if the token is invalid or missing.
     """
     return {"valid": True}
+
+@router.get("/providers", summary="Get available authentication providers")
+async def get_providers():
+    """Get information about available authentication providers.
+    
+    This endpoint returns metadata about all enabled authentication providers,
+    which can be used by clients to configure their authentication UI.
+    """
+    auth_service = get_auth_service()
+    providers = auth_service.get_enabled_providers()
+    default_provider = auth_service.get_default_provider_name()
+    
+    return {
+        "providers": providers,
+        "default_provider": default_provider
+    }

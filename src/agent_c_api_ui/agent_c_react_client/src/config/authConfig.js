@@ -28,5 +28,18 @@ export const authConfig = {
   // Default redirect path after successful login if no specific destination
   defaultRedirectPath: '/chat',
   // Path to redirect to if not authenticated
-  loginPath: '/login'
+  loginPath: '/login',
+  // Token refresh configuration
+  tokenRefresh: {
+    // Refresh token when it has less than 5 minutes remaining (300 seconds)
+    refreshThreshold: 300,
+    // Minimum time between refresh attempts (in seconds)
+    minRefreshInterval: 30,
+    // Maximum retry attempts for failed refreshes
+    maxRetryAttempts: 3,
+    // Debug mode for extra logging (set to true to enable refresh logging)
+    debug: false,
+    // Whether to force logout when refresh attempts are exhausted
+    logoutOnRefreshExhaustion: true
+  }
 };

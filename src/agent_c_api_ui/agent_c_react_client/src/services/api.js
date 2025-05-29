@@ -6,6 +6,7 @@
  */
 
 import { toast } from "@/hooks/use-toast";
+import { refreshAuthToken } from "@/lib/auth-helper";
 
 // Default request timeout in milliseconds
 const DEFAULT_TIMEOUT = 30000;
@@ -168,14 +169,15 @@ function createRequestOptions(options = {}, authToken = null) {
 }
 
 /**
- * Core API request method
+ * Core API request method with token refresh capability
  * @param {string} endpoint - API endpoint to call
  * @param {object} options - Request options
  * @param {string} [authToken] - Optional auth token to include
+ * @param {boolean} [isRetry] - Internal flag to prevent infinite retry loops
  * @returns {Promise<any>} Response data
  * @throws {Error} Enhanced error with context
  */
-export async function apiRequest(endpoint, options = {}, authToken = null) {
+export async function apiRequest(endpoint, options = {}, authToken = null, isRetry = false) {
   // Make sure endpoint starts with a slash if it's not an absolute URL
   const normalizedEndpoint = endpoint.startsWith('/') || endpoint.startsWith('http') ? endpoint : `/${endpoint}`;
   
@@ -217,6 +219,27 @@ export async function apiRequest(endpoint, options = {}, authToken = null) {
           response, 
           `Request failed with status ${response.status}`
         );
+      }
+      
+      // Check for authentication errors and retry with fresh token if not already retrying
+      if ((response.status === 401 || response.status === 403) && !isRetry && authToken) {
+        console.info('Authentication error detected, attempting token refresh and retry');
+        
+        try {
+          // Force token refresh
+          const newToken = await refreshAuthToken();
+          
+          if (newToken) {
+            console.info('Token refreshed successfully, retrying request');
+            // Retry the request with the new token, but mark as retry to prevent loops
+            return await apiRequest(endpoint, options, newToken, true);
+          } else {
+            console.warn('Token refresh returned null, cannot retry request');
+          }
+        } catch (refreshError) {
+          console.error('Failed to refresh token for retry:', refreshError);
+          // Continue with original error if refresh fails
+        }
       }
       
       // Create detailed error with parsed error information

@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { PublicClientApplication } from '@azure/msal-browser';
 import { msalConfig, loginRequest, authConfig } from '../config/authConfig';
 import axios from 'axios';
-import { registerTokenProvider } from '../lib/auth-helper';
+import { registerTokenProvider, getTokenManager } from '../lib/auth-helper';
+import { TokenManager } from '../lib/token-manager';
 
 // Create context
 const AuthContext = createContext();
@@ -17,6 +18,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [tokenRefreshError, setTokenRefreshError] = useState(null);
+  const tokenRefreshCount = useRef(0);
 
   // Initialize MSAL on component mount
   useEffect(() => {
@@ -108,9 +111,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Get access token for API calls
-  const getAccessToken = async () => {
+  // Get access token for API calls with enhanced error handling and refresh strategy
+  const getAccessToken = async (options = {}) => {
     try {
+      // Track refresh attempts for debugging
+      if (options.forceRefresh) {
+        tokenRefreshCount.current++;
+      }
+      
       // Check if user is authenticated
       if (!user) {
         console.debug('Token requested while user is not authenticated');
@@ -126,38 +134,108 @@ export const AuthProvider = ({ children }) => {
       const silentRequest = {
         scopes: loginRequest.scopes,
         account: accounts[0],
-        forceRefresh: false
+        forceRefresh: options.forceRefresh === true
       };
       
-      const response = await msalInstance.acquireTokenSilent(silentRequest);
-      return response.accessToken;
-    } catch (err) {
-      // If silent token acquisition fails, try interactive method
-      if (err.name === 'InteractionRequiredAuthError') {
-        try {
-          const response = await msalInstance.acquireTokenPopup(loginRequest);
-          return response.accessToken;
-        } catch (interactiveErr) {
-          console.error('Interactive token acquisition failed:', interactiveErr);
-          // Return null instead of throwing
+      // Clear any previous refresh errors when starting a fresh attempt
+      if (options.forceRefresh) {
+        setTokenRefreshError(null);
+      }
+      
+      try {
+        const response = await msalInstance.acquireTokenSilent(silentRequest);
+        return response.accessToken;
+      } catch (silentErr) {
+        // If silent token acquisition fails, try interactive method
+        if (silentErr.name === 'InteractionRequiredAuthError') {
+          // Only use popup for user-initiated actions, not background refreshes
+          if (!options.background) {
+            try {
+              const response = await msalInstance.acquireTokenPopup(loginRequest);
+              return response.accessToken;
+            } catch (interactiveErr) {
+              console.error('Interactive token acquisition failed:', interactiveErr);
+              setTokenRefreshError(interactiveErr.message || 'Failed to refresh token interactively');
+              return null;
+            }
+          } else {
+            // Don't interrupt users with popups during background refresh
+            console.warn('Silent token refresh failed and interactive refresh skipped for background operation');
+            setTokenRefreshError('Background token refresh failed');
+            return null;
+          }
+        } else {
+          // Handle other errors
+          console.error('Token acquisition failed:', silentErr);
+          setTokenRefreshError(silentErr.message || 'Failed to refresh token');
           return null;
         }
-      } else {
-        console.error('Token acquisition failed:', err);
-        // Return null instead of throwing
-        return null;
       }
+    } catch (err) {
+      console.error('Unexpected error in getAccessToken:', err);
+      setTokenRefreshError(err.message || 'Unexpected authentication error');
+      return null;
     }
   };
   
+  // Force refresh the token
+  const forceRefreshToken = async () => {
+    return await getAccessToken({ forceRefresh: true });
+  };
+  
+  // Set up token refresh listeners
+  useEffect(() => {
+    const setupTokenManagerListeners = () => {
+      const tokenManager = getTokenManager();
+      if (!tokenManager) return;
+      
+      // Listen for token refresh events
+      tokenManager.on('refreshStarted', () => {
+        console.debug('Token refresh started');
+      });
+      
+      tokenManager.on('refreshed', (token) => {
+        console.debug('Token successfully refreshed');
+        setTokenRefreshError(null);
+      });
+      
+      tokenManager.on('refreshFailed', (error) => {
+        console.warn('Token refresh failed:', error);
+        setTokenRefreshError(error?.message || 'Failed to refresh token');
+      });
+      
+      tokenManager.on('refreshExhausted', (error) => {
+        console.error('Token refresh retry attempts exhausted:', error);
+        setTokenRefreshError('Authentication session may have expired. Please log in again.');
+        
+        // Optionally force logout after multiple failed refreshes
+        if (authConfig.tokenRefresh.logoutOnRefreshExhaustion) {
+          logout().catch(e => console.error('Logout after refresh exhaustion failed:', e));
+        }
+      });
+    };
+    
+    // Setup listeners after a short delay to ensure token manager is initialized
+    const timerId = setTimeout(setupTokenManagerListeners, 500);
+    
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [isAuthenticated]);
+  
   // Register the token provider for global access
   useEffect(() => {
-    // Register our getAccessToken method as the global token provider
-    registerTokenProvider(getAccessToken);
+    // Register our getAccessToken method as the global token provider with the token refresh configuration
+    registerTokenProvider(
+      // Wrapper function to support background refreshes
+      async () => getAccessToken({ background: true }),
+      // Token refresh configuration
+      authConfig.tokenRefresh
+    );
     
     return () => {
       // Reset to default (null provider) when component unmounts
-      registerTokenProvider(async () => null);
+      registerTokenProvider(null);
     };
   }, []);
   
@@ -168,10 +246,12 @@ export const AuthProvider = ({ children }) => {
     msalReady,
     loading,
     error,
+    tokenRefreshError,
     isAuthenticated,
     login,
     logout,
     getAccessToken,
+    forceRefreshToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
