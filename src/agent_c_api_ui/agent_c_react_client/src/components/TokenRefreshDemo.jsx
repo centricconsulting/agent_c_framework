@@ -85,7 +85,10 @@ export function TokenRefreshDemo() {
         }
       } else {
         // Re-enable by scheduling refresh
+        // Note: This may not work as auto-refresh has been temporarily disabled
+        // in token-manager.js until backend implementation is completed
         tokenManager.scheduleRefresh();
+        console.warn('Note: Auto-refresh is currently disabled in the token manager until backend implementation is completed');
       }
       setBackgroundRefreshEnabled(!backgroundRefreshEnabled);
     }

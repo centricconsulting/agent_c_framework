@@ -56,10 +56,12 @@ export class TokenManager extends EventEmitter {
    * Initialize the token manager
    */
   async initialize() {
-    this._debug('Initializing token manager');
+    this._debug('Initializing token manager - AUTO-REFRESH DISABLED');
     try {
       // Attempt to get an initial token
       await this.refreshToken();
+      // Note: Auto-refresh is disabled - see scheduleRefresh method
+      console.warn('Token auto-refresh is currently disabled until backend implementation is completed');
       return true;
     } catch (error) {
       this._debug('Failed to initialize token manager', error);
@@ -201,6 +203,7 @@ export class TokenManager extends EventEmitter {
   
   /**
    * Schedule the next token refresh based on expiration time
+   * TEMPORARILY DISABLED: Auto-refresh disabled until backend implementation is completed
    */
   scheduleRefresh() {
     if (this.refreshTimer) {
@@ -208,6 +211,10 @@ export class TokenManager extends EventEmitter {
       this.refreshTimer = null;
     }
     
+    // Auto-refresh functionality temporarily disabled
+    this._debug('Auto-refresh disabled until backend implementation is completed');
+    
+    /* DISABLED: Auto-refresh code
     if (!this.tokenExpiration) {
       // If we don't know expiration, refresh conservatively after minRefreshInterval
       this._debug('Token expiration unknown, scheduling conservative refresh');
@@ -231,6 +238,7 @@ export class TokenManager extends EventEmitter {
     this._debug(`Scheduling next refresh in ${refreshIn} seconds`);
     
     this.refreshTimer = setTimeout(this.refreshToken, refreshIn * 1000);
+    */
   }
   
   /**
