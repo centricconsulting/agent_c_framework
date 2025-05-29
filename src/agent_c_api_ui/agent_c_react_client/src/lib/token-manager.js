@@ -213,6 +213,7 @@ export class TokenManager extends EventEmitter {
     
     // Auto-refresh functionality temporarily disabled
     this._debug('Auto-refresh disabled until backend implementation is completed');
+
     
     /* DISABLED: Auto-refresh code
     if (!this.tokenExpiration) {
