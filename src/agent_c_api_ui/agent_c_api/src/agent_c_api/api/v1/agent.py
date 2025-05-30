@@ -80,7 +80,7 @@ async def update_agent_settings(
             # This is critical - reinitialize the internal agent when model parameters change
             # This will NOT change the underlying agents chat session, because that's done in init_session above and
             # passed in via reactjs_agent.stream_chat
-            await agent.initialize_agent_parameters()
+            await agent.initialize_agent()
 
         logger.info(f"Settings updated for session {update_params.ui_session_id}: {changes_made}")
         # logger.info(f"Skipped null values: {[k for k, v in updates.items() if v is None]}")
