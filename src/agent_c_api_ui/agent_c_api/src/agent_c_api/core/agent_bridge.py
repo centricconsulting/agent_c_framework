@@ -82,8 +82,8 @@ class AgentBridge:
             tool_cache_dir (str): Directory for tool cache
             file_handler (Optional[FileHandler]): Handler for file operations.
         """
-        # Agent events setup, must come first
-        self.__init_events()
+        # Agent events setup: must come first
+        self.__init_threading_events()
 
         # Debugging and Logging Setup
         logging_manager = LoggingManager(__name__)
@@ -92,7 +92,7 @@ class AgentBridge:
         # Set up streaming_callback with logging
         self.streaming_callback_with_logging = create_with_callback(
             log_base_dir=os.getenv('AGENT_LOG_DIR', './logs/sessions'),
-            callback=self.consolidated_streaming_callback,  # Forward to UI processing
+            callback=self.handle_session_event,  # Forward to UI processing
             include_system_prompt=True
         )
 
@@ -179,7 +179,7 @@ class AgentBridge:
         self.image_inputs: List[ImageInput] = []
         self.audio_inputs: List[AudioInput] = []
 
-    def __init_events(self):
+    def __init_threading_events(self):
         """
         Initialize threading events used for debugging and input/output management.
         """
@@ -381,7 +381,7 @@ class AgentBridge:
 
         return prompt_builder
 
-    async def initialize_agent_parameters(self):
+    async def initialize_agent(self) -> None:
         """
         Initialize the internal agent with prompt builders, tools, and configurations.
 
@@ -783,10 +783,10 @@ class AgentBridge:
         """
         await self.__init_session()
         await self.__init_tool_chest()
-        await self.initialize_agent_parameters()
+        await self.initialize_agent()
 
 
-    async def consolidated_streaming_callback(self, event: SessionEvent):
+    async def handle_session_event(self, event: SessionEvent):
         """
         Processes and routes various types of session events through appropriate handlers.
 
