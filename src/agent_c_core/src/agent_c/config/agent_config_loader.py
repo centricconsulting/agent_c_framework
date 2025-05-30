@@ -13,6 +13,7 @@ from agent_c.config.config_loader import ConfigLoader
 from agent_c.models.agent_config import (
     AgentConfigurationV1,
     AgentConfigurationV2,
+    AgentConfigurationV3,
     AgentConfiguration,  # Union type
     CurrentAgentConfiguration  # Latest version alias
 )
@@ -92,17 +93,22 @@ class AgentConfigLoader(ConfigLoader):
         # Transform agent_params to match completion parameter models
         self._transform_agent_params(data)
 
+        # Transform pruning configuration if present
+        self._transform_pruning_config(data)
+        
         # Load appropriate version based on version field
         version = data.get('version', 1)
-        if version > 2:
+        if version > 3:
             self.logger.warning(f"Unsupported agent configuration version {version} in {agent_config_path}.")
             return None
 
         try:
             if version == 1:
                 config = AgentConfigurationV1(**data)
-            else:
+            elif version == 2:
                 config = AgentConfigurationV2(**data)
+            else:
+                config = AgentConfigurationV3(**data)
         except Exception as e:
             self.logger.error(f"Failed to load agent configuration from {agent_config_path}: {e}", exc_info=True)
             return None
@@ -116,7 +122,7 @@ class AgentConfigLoader(ConfigLoader):
 
         # Log migration if it occurred
         final_version = self._get_version(config)
-        if original_version != final_version:
+        if original_version != final_version and config is not None:
             self._migration_log[config.name] = {
                 'original_version': original_version,
                 'final_version': final_version,
@@ -125,6 +131,26 @@ class AgentConfigLoader(ConfigLoader):
 
         self._agent_config_cache[config.name] = config
         return config
+    
+    def _transform_pruning_config(self, data: dict) -> None:
+        """Transform pruning configuration from YAML structure to model structure."""
+        if 'pruning' in data:
+            pruning_data = data.pop('pruning')
+            
+            # Extract enable_auto_pruning if present
+            if 'enable_auto_pruning' in pruning_data:
+                data['enable_auto_pruning'] = pruning_data.pop('enable_auto_pruning')
+            
+            # If there are remaining pruning settings, create pruner_config
+            if pruning_data:
+                try:
+                    # Import here to avoid circular imports
+                    from agent_c.util.pruning.config import PrunerConfig
+                    # Create PrunerConfig from remaining data
+                    data['pruner_config'] = PrunerConfig(**pruning_data)
+                except Exception as e:
+                    self.logger.warning(f"Invalid pruning configuration: {e}. Using defaults.")
+                    data['pruner_config'] = None
 
     def _transform_agent_params(self, data: dict) -> None:
         """Transform agent_params to match completion parameter model expectations."""
@@ -161,6 +187,8 @@ class AgentConfigLoader(ConfigLoader):
             return 1
         elif isinstance(config, AgentConfigurationV2):
             return 2
+        elif isinstance(config, AgentConfigurationV3):
+            return 3
         else:
             # Fallback for future versions
             return getattr(config, 'version', 1)
@@ -168,14 +196,14 @@ class AgentConfigLoader(ConfigLoader):
     def _migrate_config(self, config: AgentConfiguration, agent_name: str) -> AgentConfiguration:
         """Migrate configuration to target version or latest."""
         current_version = self._get_version(config)
-        target = self._target_version or 2  # Default to v2 as latest
+        target = self._target_version or 3  # Default to v3 as latest
 
         if current_version >= target:
             return config
 
         # Migrate v1 to v2
         if isinstance(config, AgentConfigurationV1) and target >= 2:
-            return AgentConfigurationV2(
+            config = AgentConfigurationV2(
                 version=2,
                 name=config.name,
                 model_id=config.model_id,
@@ -186,6 +214,24 @@ class AgentConfigLoader(ConfigLoader):
                 persona=config.persona,
                 uid=config.uid,
                 category=["outdated"],
+            )
+            
+        # Migrate v2 to v3
+        if isinstance(config, AgentConfigurationV2) and target >= 3:
+            config = AgentConfigurationV3(
+                version=3,
+                name=config.name,
+                model_id=config.model_id,
+                agent_description=config.agent_description,
+                tools=config.tools,
+                agent_params=config.agent_params,
+                prompt_metadata=config.prompt_metadata,
+                persona=config.persona,
+                uid=config.uid,
+                category=config.category,
+                # Pruning defaults - disabled by default for backward compatibility
+                enable_auto_pruning=False,
+                pruner_config=None
             )
 
         return config
@@ -268,6 +314,26 @@ class AgentConfigLoader(ConfigLoader):
             )
 
         return config
+    
+    def _transform_pruning_config(self, data: dict) -> None:
+        """Transform pruning configuration from YAML structure to model structure."""
+        if 'pruning' in data:
+            pruning_data = data.pop('pruning')
+            
+            # Extract enable_auto_pruning if present
+            if 'enable_auto_pruning' in pruning_data:
+                data['enable_auto_pruning'] = pruning_data.pop('enable_auto_pruning')
+            
+            # If there are remaining pruning settings, create pruner_config
+            if pruning_data:
+                try:
+                    # Import here to avoid circular imports
+                    from agent_c.util.pruning.config import PrunerConfig
+                    # Create PrunerConfig from remaining data
+                    data['pruner_config'] = PrunerConfig(**pruning_data)
+                except Exception as e:
+                    self.logger.warning(f"Invalid pruning configuration: {e}. Using defaults.")
+                    data['pruner_config'] = None
 
     def get_latest_version_configs(self) -> Dict[str, CurrentAgentConfiguration]:
         """Get all configurations as the latest version."""
