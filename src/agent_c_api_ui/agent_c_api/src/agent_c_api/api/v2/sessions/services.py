@@ -438,7 +438,7 @@ class SessionService:
         
         # Reinitialize the agent if needed
         if needs_agent_reinitialization:
-            await agent.initialize_agent_parameters()
+            await agent.initialize_agent()
             
             # Update Redis session with new values
             await self.session_repository.update_session(
