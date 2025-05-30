@@ -1,12 +1,16 @@
 import os
 import json
+import os
 import yaml
 import logging
 
 from logging import Logger
-from typing import Optional, Any, List
+from typing import Optional, Any, List, TYPE_CHECKING
 
 from zep_cloud import Message
+
+if TYPE_CHECKING:
+    from agent_c.util.pruning.chat_log_pruner import ChatLogPruner
 
 if os.environ.get("ZEP_CE_KEY"):
     os.environ["ZEP_API_KEY"] = os.environ.get("ZEP_CE_KEY")
@@ -40,6 +44,7 @@ class ZepCESessionManager(ChatSessionManager):
         self.user  = None
         self.is_new_session = True
         self.is_new_user = True
+        self._pruner: Optional["ChatLogPruner"] = None
         self._active_memory = None
 
     @property
@@ -264,6 +269,155 @@ class ZepCESessionManager(ChatSessionManager):
 
     def filtered_user_meta_string(self, prefix: str):
         return self.kvps_as_str(self.filtered_user_meta(prefix))
+    
+    def _get_memory_messages(self) -> List[MemoryMessage]:
+        """
+        Get messages from Zep active memory as MemoryMessage objects.
+        
+        Returns:
+            List of MemoryMessage objects
+        """
+        if self._active_memory is None:
+            return []
+            
+        messages = []
+        # Zep memory has a messages attribute with Message objects
+        if hasattr(self._active_memory, 'messages') and self._active_memory.messages:
+            for zep_msg in self._active_memory.messages:
+                try:
+                    # Convert Zep Message to MemoryMessage
+                    message = MemoryMessage(
+                        role=zep_msg.role,
+                        content=zep_msg.content,
+                        uuid=getattr(zep_msg, 'uuid', None),
+                        token_count=getattr(zep_msg, 'token_count', None),
+                        metadata=getattr(zep_msg, 'metadata', None)
+                    )
+                    messages.append(message)
+                except Exception as e:
+                    self.logger.warning(f"Failed to convert Zep message to MemoryMessage: {e}")
+                    continue
+                    
+        return messages
+    
+    async def _update_session_messages(self, pruned_messages: List[MemoryMessage]) -> None:
+        """
+        Update the Zep session with pruned messages.
+        
+        Args:
+            pruned_messages: List of messages after pruning
+        """
+        if self.session_id is None:
+            self.logger.warning("No session_id available for updating Zep messages")
+            return
+            
+        try:
+            # Convert MemoryMessage objects to Zep Message objects
+            zep_messages = []
+            for msg in pruned_messages:
+                zep_msg = Message(
+                    role=msg.role,
+                    content=msg.content,
+                    uuid=msg.uuid,
+                    role_type=msg.role,
+                    metadata=msg.metadata,
+                    token_count=msg.token_count
+                )
+                zep_messages.append(zep_msg)
+            
+            # Note: Zep doesn't have a direct "replace all messages" API
+            # This is a limitation - we'd need to delete and recreate the session
+            # For now, we'll update the local memory and log a warning
+            self.logger.warning(
+                f"Zep doesn't support direct message replacement. "
+                f"Pruning performed locally but not synced to Zep for session {self.session_id}"
+            )
+            
+            # Update local memory structure if it exists
+            if self._active_memory is not None:
+                # Update the local memory with pruned messages
+                if hasattr(self._active_memory, 'messages'):
+                    self._active_memory.messages = zep_messages
+                    
+                # Update token count if the memory object supports it
+                if hasattr(self._active_memory, 'token_count'):
+                    from agent_c.util.pruning.message_analyzer import calculate_total_tokens
+                    self._active_memory.token_count = calculate_total_tokens(pruned_messages)
+                    
+        except Exception as e:
+            self.logger.error(f"Error updating Zep session messages: {e}", exc_info=True)
+
+    def get_pruner(self) -> Optional["ChatLogPruner"]:
+        """
+        Get the chat log pruner instance for this session manager.
+        
+        Returns:
+            Optional[ChatLogPruner]: The pruner instance, or None if not configured
+        """
+        return self._pruner
+
+    def set_pruner(self, pruner: Optional["ChatLogPruner"]) -> None:
+        """
+        Set the chat log pruner instance for this session manager.
+        
+        Args:
+            pruner: The pruner instance to use, or None to disable pruning
+        """
+        self._pruner = pruner
+
+    def prune_session_if_needed(self, session_id: str, context_limit: int) -> bool:
+        """
+        Prune the session messages if needed based on token count and context limit.
+        
+        Args:
+            session_id (str): The ID of the session to potentially prune
+            context_limit (int): Maximum context window size for the model
+            
+        Returns:
+            bool: True if pruning was performed, False otherwise
+        """
+        if self._pruner is None:
+            return False
+            
+        try:
+            # Get current session messages
+            messages = self.get_session_messages()
+            if not messages:
+                return False
+                
+            # Check if pruning is needed
+            if not self._pruner.should_prune(messages, context_limit):
+                return False
+                
+            self.logger.info(f"Pruning session {session_id} - {len(messages)} messages, context limit: {context_limit}")
+            
+            # Perform pruning
+            result = self._pruner.prune_messages(messages, context_limit)
+            
+            if result.pruned_messages != messages:
+                # Update the session with pruned messages
+                self._update_session_messages(result.pruned_messages)
+                
+                self.logger.info(
+                    f"Pruning completed for session {session_id}: "
+                    f"{len(messages)} -> {len(result.pruned_messages)} messages, "
+                    f"{result.tokens_before} -> {result.tokens_after} tokens"
+                )
+                return True
+                
+        except Exception as e:
+            self.logger.error(f"Error during session pruning: {e}", exc_info=True)
+            
+        return False
+
+    def get_session_messages(self) -> List[MemoryMessage]:
+        """
+        Get the current session messages.
+        
+        Returns:
+            List[MemoryMessage]: Current session messages
+        """
+        return self._get_memory_messages()
 
 class ZepCloudSessionManager(ZepCESessionManager):
     pass

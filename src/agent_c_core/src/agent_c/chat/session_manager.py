@@ -1,9 +1,12 @@
 import json
 import logging
+from typing import Union, Optional, Dict, TYPE_CHECKING
 
 import yaml
-from typing import Union, Optional, Dict
 from agent_c.models.chat_history import ChatSession, MemoryMessage, ChatUser
+
+if TYPE_CHECKING:
+    from agent_c.util.pruning.chat_log_pruner import ChatLogPruner
 
 
 class ChatSessionManager:
@@ -248,3 +251,34 @@ class ChatSessionManager:
             str: YAML string representation of the filtered user meta.
         """
         return self.dict_to_yaml(self.filtered_user_meta(prefix))
+
+    def get_pruner(self) -> Optional["ChatLogPruner"]:
+        """
+        Get the chat log pruner instance for this session manager.
+        
+        Returns:
+            Optional[ChatLogPruner]: The pruner instance, or None if not configured
+        """
+        raise NotImplementedError("Subclasses must implement get_pruner")
+
+    def prune_session_if_needed(self, session_id: str, context_limit: int) -> bool:
+        """
+        Prune the session messages if needed based on token count and context limit.
+        
+        Args:
+            session_id (str): The ID of the session to potentially prune
+            context_limit (int): Maximum context window size for the model
+            
+        Returns:
+            bool: True if pruning was performed, False otherwise
+        """
+        raise NotImplementedError("Subclasses must implement prune_session_if_needed")
+
+    def get_session_messages(self) -> list[MemoryMessage]:
+        """
+        Get the current session messages.
+        
+        Returns:
+            List[MemoryMessage]: Current session messages
+        """
+        raise NotImplementedError("Subclasses must implement get_session_messages")
