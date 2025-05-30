@@ -200,7 +200,7 @@ class TestAgentService:
         assert mock_agent.persona_name == "researcher"
         
         # Verify initialize_agent_parameters was called
-        mock_agent.initialize_agent_parameters.assert_called_once()
+        mock_agent.initialize_agent.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_update_agent_config_no_changes(self, mock_agent_manager):
