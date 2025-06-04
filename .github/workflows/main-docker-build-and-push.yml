@@ -58,6 +58,7 @@ jobs:
           pip install src/ace_proto/ts_tool-0.1.0-py3-none-any.whl
           pip install -e src/agent_c_core
           pip install -e src/agent_c_tools
+          pip install -e src/agent_c_api_ui/agent_c_api
       
       - name: Run unit tests
         run: |
