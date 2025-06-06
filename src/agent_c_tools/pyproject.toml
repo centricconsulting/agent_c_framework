@@ -3,7 +3,7 @@ name = "agent_c-tools"
 version = "0.1.3"
 description = "Reference tools / tool interfaces for Agent C"
 dependencies = [
-    "agent_c-core>=0.1.3",
+    "agent_c-core>=0.1.3", # Includes pydantic as a dependency
     "pandas==2.2.3", # googletrends, dynamics (overlap agent_c_demo)
     "pyarrow==17.0.0", # googletrends (overlap agent_c_demo)
     "mermaid-py==0.6.0", # mermaid

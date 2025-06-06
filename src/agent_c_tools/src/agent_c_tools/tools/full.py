@@ -21,6 +21,7 @@ from .workspace_planning import WorkspacePlanningTools
 from .workspace_knowledge import WorkspaceKnowledgeTools
 from .workspace_sequential_thinking import WorkspaceSequentialThinkingTools
 from .browser_playwright import BrowserPlaywrightTools
+from .github import GithubTools
 
 __all__ = [
     # Workspace tools
@@ -63,5 +64,6 @@ __all__ = [
     'WorkspacePlanningTools',
     'WorkspaceKnowledgeTools',
     'WorkspaceSequentialThinkingTools',
-    'BrowserPlaywrightTools'
+    'BrowserPlaywrightTools',
+    'GithubTools'
 ]
