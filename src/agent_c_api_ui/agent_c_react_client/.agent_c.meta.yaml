@@ -1,0 +1,239 @@
+_plans:
+  api_migration_v2:
+    created_at: '2025-06-06T15:19:58.370075'
+    description: Comprehensive plan to migrate the UI's API service layer from v1
+      to v2, implementing the adapter pattern to ensure a smooth transition with minimal
+      disruption to existing components.
+    id: 434b7346-086f-4464-a149-7537da59d008
+    lessons_learned: []
+    tasks:
+      0cd1e49e-c526-4df5-9562-0a55c64ec103:
+        child_tasks: []
+        completed: false
+        context: "Phase 6 is the final cleanup phase, removing the adapter layer and\
+          \ any remaining v1 code:\n\n1. Remove Adapter Layer:\n   - Once all components\
+          \ use v2 services directly\n   - Remove adapter files and references\n \
+          \  - Update imports across the application\n\n2. Final Testing & Documentation:\n\
+          \   - Complete end-to-end testing\n   - Update all documentation\n   - Remove\
+          \ any leftover v1 code\n\n3. Performance Validation:\n   - Verify no performance\
+          \ regression\n   - Ensure all functionality is maintained\n   - Document\
+          \ any improvements\n\nThis phase will be executed after confirming that\
+          \ all components have been successfully migrated to v2 services.\n\nStatus:\
+          \ NOT STARTED"
+        created_at: '2025-06-06T15:20:54.353784'
+        description: Remove adapter layer and legacy v1 code once all components are
+          migrated.
+        id: 0cd1e49e-c526-4df5-9562-0a55c64ec103
+        parent_id: null
+        priority: low
+        sequence: 6
+        title: 'Phase 6: Cleanup'
+        updated_at: '2025-06-06T15:20:54.353784'
+      22adfb2d-1c85-4c51-8412-c8bb7b2d51dd:
+        child_tasks: []
+        completed: false
+        context: "Phase 4 involves creating an adapter layer to maintain backward\
+          \ compatibility with components that still expect v1 API formats:\n\n1.\
+          \ Design Adapter Pattern:\n   - Create a consistent pattern for adapting\
+          \ v2 responses to v1 format\n   - Ensure proper error handling and edge\
+          \ cases\n\n2. Implement V1 Adapters:\n   - Create `v1-api-adapters.js` with\
+          \ adapter functions\n   - Implement adapters for all v1 methods that need\
+          \ to be preserved\n   - Add thorough tests for adapter functions\n\n3. Replace\
+          \ V1 Implementations:\n   - Update original service files to use adapters\n\
+          \   - Maintain the same exports and signatures\n   - Ensure all components\
+          \ continue to work with adapted services\n\nRelevant files:\n- New: /src/services/v1-api-adapters.js\n\
+          - Update: /src/services/index.js (to include adapter exports)\n\nStatus:\
+          \ NOT STARTED"
+        created_at: '2025-06-06T15:20:37.130377'
+        description: Implement adapters for v1 API compatibility during the transition
+          period.
+        id: 22adfb2d-1c85-4c51-8412-c8bb7b2d51dd
+        parent_id: null
+        priority: medium
+        sequence: 4
+        title: 'Phase 4: Adapter Layer Implementation'
+        updated_at: '2025-06-06T15:20:37.130377'
+      5c3cf7df-7101-4e06-841f-85dd80b01ae4:
+        child_tasks: []
+        completed: false
+        context: "This task involves updating the Session API service to use v2 endpoints\
+          \ and parameter formats:\n\n1. Required Changes:\n   - Update all endpoint\
+          \ paths to use v2 format (`/api/v2/sessions/...`)\n   - Update parameter\
+          \ handling to match v2 API expectations\n   - Use the `extractResponseData`\
+          \ utility for consistent response handling\n   - Add new methods for agent\
+          \ configuration management\n   - Update tool management methods\n\n2. Key\
+          \ Methods to Update:\n   - `createSession` - Update parameters and response\
+          \ handling\n   - `getSession` - Update path and response handling\n   -\
+          \ `listSessions` - Add pagination support\n   - `updateSession` - Implement\
+          \ using PATCH method\n   - `deleteSession` - Update path\n   - Add `getAgentConfig`\
+          \ and `updateAgentConfig` methods\n   - Update `getSessionTools` and `updateSessionTools`\
+          \ methods\n\n3. Testing:\n   - Add comprehensive tests covering all methods\n\
+          \   - Test error handling and edge cases\n   - Verify compatibility with\
+          \ existing components\n\nFiles to modify:\n- src/services/session-api.js\n\
+          - Add tests in test/session-api.test.js\n\nStatus: NEXT UP"
+        created_at: '2025-06-06T15:21:05.830304'
+        description: Update session-api.js to use v2 session endpoints.
+        id: 5c3cf7df-7101-4e06-841f-85dd80b01ae4
+        parent_id: b841f4ab-ff67-4cdd-94d0-097c0db6de81
+        priority: high
+        sequence: 1
+        title: Update Session API Service
+        updated_at: '2025-06-06T15:21:05.830304'
+      7647b32d-cc47-454d-a868-39c6d6cd3e51:
+        child_tasks: []
+        completed: false
+        context: "This task involves updating the main services index.js file to export\
+          \ all updated v2 services:\n\n1. Required Changes:\n   - Export all new\
+          \ v2 services (config, history, debug)\n   - Export all updated services\
+          \ (session, chat)\n   - Ensure all required functions are exported individually\n\
+          \   - Maintain backward compatibility with existing imports\n\n2. Implementation\
+          \ Approach:\n   - Keep the same structure as the current index.js\n   -\
+          \ Add exports for new services and methods\n   - Verify that all required\
+          \ functions are available\n\n3. Testing:\n   - Verify that all services\
+          \ can be imported correctly\n   - Test both named and default imports\n\
+          \   - Ensure no regression in existing imports\n\nFiles to modify:\n- src/services/index.js\n\
+          \nStatus: NOT STARTED"
+        created_at: '2025-06-06T15:21:24.813914'
+        description: Update the main service index to export all updated services.
+        id: 7647b32d-cc47-454d-a868-39c6d6cd3e51
+        parent_id: b841f4ab-ff67-4cdd-94d0-097c0db6de81
+        priority: medium
+        sequence: 3
+        title: Update services/index.js
+        updated_at: '2025-06-06T15:21:24.813914'
+      7682cbd8-ead7-4854-abe7-9d107574b952:
+        child_tasks: []
+        completed: false
+        context: "Phase 2 involves creating new API service modules for the v2 API\
+          \ endpoints that didn't exist in v1:\n\n1. Config API Service:\n   - Create\
+          \ `config-api.js` for all configuration endpoints\n   - Implement methods\
+          \ like `getModels()`, `getPersonas()`, `getTools()`, `getSystemConfig()`\n\
+          \   - Add tests for Config API Service\n   - Update `index.js` to export\
+          \ the new service\n\n2. History API Service:\n   - Create `history-api.js`\
+          \ for history and replay endpoints\n   - Implement methods for listing,\
+          \ retrieving, and streaming events\n   - Implement replay control methods\n\
+          \   - Add tests for History API Service\n   - Update `index.js` to export\
+          \ the new service\n\n3. Debug API Service:\n   - Create `debug-api.js` for\
+          \ debugging endpoints\n   - Implement methods for session and agent debug\
+          \ info\n   - Add tests for Debug API Service\n   - Update `index.js` to\
+          \ export the new service\n\nStatus: COMPLETED (May 10, 2025)"
+        created_at: '2025-06-06T15:20:17.316679'
+        description: Implement new API services for Config, History, and Debug endpoints.
+        id: 7682cbd8-ead7-4854-abe7-9d107574b952
+        parent_id: null
+        priority: high
+        sequence: 2
+        title: 'Phase 2: New API Services'
+        updated_at: '2025-06-06T15:20:17.316679'
+      869edfa2-8373-4fa9-bd9f-3fc70811d596:
+        child_tasks: []
+        completed: false
+        context: "Phase 5 focuses on migrating components to use the v2 API services\
+          \ directly, eliminating the need for adapters:\n\n1. Component Dependency\
+          \ Mapping:\n   - Identify which components use which API services\n   -\
+          \ Prioritize components for migration\n   - Create a migration schedule\n\
+          \n2. Component Updates:\n   - Update components to import v2 services directly\n\
+          \   - Update component code to handle v2 response formats\n   - Test each\
+          \ component thoroughly after updates\n\n3. Documentation & Training:\n \
+          \  - Document v2 service usage patterns\n   - Create examples for common\
+          \ use cases\n   - Share knowledge with the team\n\nThis will be a gradual\
+          \ process over 3-4 weeks, with components being updated one by one to ensure\
+          \ stability.\n\nStatus: NOT STARTED"
+        created_at: '2025-06-06T15:20:46.029503'
+        description: Gradually update components to use v2 services directly.
+        id: 869edfa2-8373-4fa9-bd9f-3fc70811d596
+        parent_id: null
+        priority: medium
+        sequence: 5
+        title: 'Phase 5: Component Migration'
+        updated_at: '2025-06-06T15:20:46.029503'
+      b841f4ab-ff67-4cdd-94d0-097c0db6de81:
+        child_tasks:
+        - 5c3cf7df-7101-4e06-841f-85dd80b01ae4
+        - ec33aa0f-b85e-429e-8064-f12ac45fb138
+        - 7647b32d-cc47-454d-a868-39c6d6cd3e51
+        completed: false
+        context: "Phase 3 focuses on updating the existing API service modules to\
+          \ use v2 endpoints:\n\n1. Session API Service (Next Task):\n   - Update\
+          \ `session-api.js` for v2 session endpoints\n   - Update methods for session\
+          \ creation, verification, listing, and deletion\n   - Add agent configuration\
+          \ methods\n   - Update tool management methods\n   - Add tests for updated\
+          \ Session API Service\n\n2. Chat API Service:\n   - Update `chat-api.js`\
+          \ for v2 chat endpoints\n   - Update message sending and receiving methods\n\
+          \   - Update file management methods\n   - Add support for streaming with\
+          \ the new v2 format\n   - Add tests for updated Chat API Service\n\n3. Update\
+          \ index.js:\n   - Update the main service index to export all updated services\n\
+          \   - Ensure backward compatibility with existing imports\n\nStatus: IN\
+          \ PROGRESS (Current Phase)\nCurrent Task: Update Session API Service"
+        created_at: '2025-06-06T15:20:27.557019'
+        description: Update existing service modules (Session API, Chat API) to use
+          v2 endpoints.
+        id: b841f4ab-ff67-4cdd-94d0-097c0db6de81
+        parent_id: null
+        priority: high
+        sequence: 3
+        title: 'Phase 3: Update Existing Services'
+        updated_at: '2025-06-06T15:20:27.557019'
+      cd90cb7f-9d99-4899-8c1e-33f86ece937a:
+        child_tasks: []
+        completed: false
+        context: 'Phase 1 of the API migration focuses on updating the base API infrastructure
+          and utility functions to support the v2 API format. This includes:
+
+
+          - Updating API base URL to `/api/v2`
+
+          - Adding `extractResponseData` utility function for standardized response
+          handling
+
+          - Enhancing error handling for v2 API format
+
+          - Adding support for pagination in GET requests
+
+          - Adding PATCH method to support RESTful updates
+
+
+          Relevant files:
+
+          - src/services/api.js - Base API module that needs updating
+
+
+          Status: COMPLETED (May 10, 2025)'
+        created_at: '2025-06-06T15:20:06.898307'
+        description: Set up the base infrastructure and utility functions needed for
+          the v2 API service layer.
+        id: cd90cb7f-9d99-4899-8c1e-33f86ece937a
+        parent_id: null
+        priority: high
+        sequence: 1
+        title: 'Phase 1: Base Infrastructure and Utility Functions'
+        updated_at: '2025-06-06T15:20:06.898307'
+      ec33aa0f-b85e-429e-8064-f12ac45fb138:
+        child_tasks: []
+        completed: false
+        context: "This task involves updating the Chat API service to use v2 endpoints\
+          \ and message formats:\n\n1. Required Changes:\n   - Update all endpoint\
+          \ paths to use v2 format (`/api/v2/sessions/{id}/chat`)\n   - Update message\
+          \ format to use the v2 structure with content array\n   - Update streaming\
+          \ implementation to handle v2 streaming format\n   - Update file management\
+          \ methods to use v2 endpoints\n   - Use the `extractResponseData` utility\
+          \ for consistent response handling\n\n2. Key Methods to Update:\n   - `sendChatMessage`\
+          \ - Update to handle v2 message format and streaming\n   - `cancelChatGeneration`\
+          \ - Update path\n   - `uploadFile` - Update to use v2 file endpoints\n \
+          \  - `listFiles` - Update path and add pagination\n   - `getFileMetadata`,\
+          \ `downloadFile`, `deleteFile` - Update paths\n\n3. Testing:\n   - Add comprehensive\
+          \ tests covering all methods\n   - Test streaming functionality specifically\n\
+          \   - Test file upload and download\n   - Verify compatibility with existing\
+          \ components\n\nFiles to modify:\n- src/services/chat-api.js\n- Add tests\
+          \ in test/chat-api.test.js\n\nStatus: NOT STARTED"
+        created_at: '2025-06-06T15:21:14.754148'
+        description: Update chat-api.js to use v2 chat endpoints.
+        id: ec33aa0f-b85e-429e-8064-f12ac45fb138
+        parent_id: b841f4ab-ff67-4cdd-94d0-097c0db6de81
+        priority: high
+        sequence: 2
+        title: Update Chat API Service
+        updated_at: '2025-06-06T15:21:14.754148'
+    title: API Service Layer Migration to v2
+    updated_at: '2025-06-06T15:21:24.814495'
+current_plan: api_migration_v2

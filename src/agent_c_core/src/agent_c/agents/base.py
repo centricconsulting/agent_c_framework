@@ -160,15 +160,27 @@ class BaseAgent:
 
         return opts
 
-    async def _raise_event(self, event, streaming_callback: Optional[Callable[[ChatEvent], Awaitable[None]]] = None):
+    async def _raise_event(self, event, streaming_callback: Optional[Callable[[ChatEvent], Awaitable[None]]] = None, stream_id: Optional[str] = None):
         """
         Raise a chat event to the event stream.
 
         Events are sent to the streaming_callback if configured. For event logging,
         use EventSessionLogger as your streaming_callback.
+        
+        Args:
+            event: The event to raise
+            streaming_callback: Optional callback to handle the event
+            stream_id: Optional Redis stream ID for distributed event tracking
         """
         if streaming_callback is None:
             streaming_callback = self.streaming_callback
+
+        # Attach stream_id to event if provided
+        if stream_id is not None and hasattr(event, 'set_stream_id'):
+            try:
+                event.set_stream_id(stream_id)
+            except Exception as e:
+                self.logger.warning(f"Failed to set stream_id on event: {e}")
 
         if streaming_callback is not None:
             try:

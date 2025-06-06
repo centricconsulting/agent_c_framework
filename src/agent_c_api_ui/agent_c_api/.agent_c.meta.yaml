@@ -658,6 +658,880 @@ _plans:
         updated_at: '2025-05-24T12:46:16.804703'
     title: Redis Implementation Refactor
     updated_at: '2025-05-24T13:09:19.956001'
+  redis_session_manager:
+    created_at: '2025-06-06T13:49:29.610883'
+    description: Replace the current in-memory ChatSessionManager with a Redis-based
+      implementation to support multi-user environments. This will allow session data
+      to be shared across multiple instances of the application, providing better
+      scalability and reliability.
+    id: 2005409f-c874-4672-971c-56a332bd6ad7
+    lessons_learned: []
+    tasks:
+      16b5001d-f638-42ab-909f-41e843ae9e34:
+        child_tasks: []
+        completed: false
+        context: "Let's implement the specific code changes needed for Redis stream\
+          \ support in the redis_session_manager_updated.py file:\n\n```python\n#\
+          \ Add these imports\nimport time\nimport uuid\nfrom agent_c.models import\
+          \ ChatEvent\n\n# Add these constants after the class initialization\n  \
+          \  def __init__(\n        self,\n        redis_url: Optional[str] = None,\n\
+          \        prefix: str = \"agent_c:session:\",\n        use_local_cache: bool\
+          \ = True,\n    ) -> None:\n        # ... existing initialization code ...\n\
+          \        \n        # Stream-related attributes\n        self.stream_prefix\
+          \ = \"agent_c:stream:\"\n        self.stream_max_len = settings.STREAM_MAX_LENGTH\
+          \ if hasattr(settings, 'STREAM_MAX_LENGTH') else 10000\n        self.stream_trim_interval\
+          \ = settings.STREAM_TRIM_INTERVAL if hasattr(settings, 'STREAM_TRIM_INTERVAL')\
+          \ else 100\n        self.event_count = 0  # Counter for trimming streams\
+          \ periodically\n\n    def get_stream_key(self, session_id: str) -> str:\n\
+          \        \"\"\"\n        Generate a Redis key for a session's event stream.\n\
+          \        \n        Args:\n            session_id: The session ID\n     \
+          \       \n        Returns:\n            The full Redis key for the session's\
+          \ event stream\n        \"\"\"\n        return f\"{self.stream_prefix}{session_id}\"\
+          \n    \n    def generate_stream_id(self) -> str:\n        \"\"\"\n     \
+          \   Generate a unique, time-ordered stream ID for Redis streams.\n     \
+          \   \n        Returns:\n            A string in the format \"timestamp-uuid\"\
+          \ suitable for Redis streams\n        \"\"\"\n        timestamp = int(time.time()\
+          \ * 1000)  # Millisecond timestamp\n        unique_id = uuid.uuid4().hex[:8]\
+          \    # Short UUID\n        return f\"{timestamp}-{unique_id}\"\n    \n \
+          \   async def add_event_to_stream(self, session_id: str, event_data: Dict[str,\
+          \ Any]) -> str:\n        \"\"\"\n        Add an event to a session's Redis\
+          \ stream.\n        \n        Args:\n            session_id: The session\
+          \ ID\n            event_data: The event data to add to the stream\n    \
+          \        \n        Returns:\n            The ID of the added event in the\
+          \ stream\n            \n        Raises:\n            redis.RedisError: If\
+          \ there's an error communicating with Redis\n        \"\"\"\n        try:\n\
+          \            stream_key = self.get_stream_key(session_id)\n            stream_id\
+          \ = self.generate_stream_id()\n            \n            # Convert event\
+          \ data to Redis compatible format\n            # Redis streams require field-value\
+          \ pairs\n            fields = {}\n            for key, value in event_data.items():\n\
+          \                if isinstance(value, (dict, list, tuple)):\n          \
+          \          fields[key] = json.dumps(value)\n                elif not isinstance(value,\
+          \ (str, int, float, bool, type(None))):\n                    fields[key]\
+          \ = str(value)\n                else:\n                    fields[key] =\
+          \ value\n            \n            # Add event to stream\n            await\
+          \ self.redis_client.xadd(\n                stream_key,\n               \
+          \ fields,\n                id=stream_id,\n                maxlen=self.stream_max_len\n\
+          \            )\n            \n            # Increment event count and trim\
+          \ periodically\n            self.event_count += 1\n            if self.event_count\
+          \ >= self.stream_trim_interval:\n                self.event_count = 0\n\
+          \                await self.trim_stream(session_id)\n            \n    \
+          \        logger.debug(f\"Added event to stream {stream_key} with ID {stream_id}\"\
+          )\n            return stream_id\n        except redis.RedisError as e:\n\
+          \            logger.error(f\"Error adding event to stream for session {session_id}:\
+          \ {e}\")\n            raise\n    \n    async def get_events_from_stream(self,\
+          \ session_id: str, start: str = \"0\", end: str = \"+\", count: Optional[int]\
+          \ = None) -> List[Dict[str, Any]]:\n        \"\"\"\n        Get events from\
+          \ a session's Redis stream.\n        \n        Args:\n            session_id:\
+          \ The session ID\n            start: Start ID (inclusive)\n            end:\
+          \ End ID (inclusive)\n            count: Maximum number of events to return\n\
+          \            \n        Returns:\n            List of events with their IDs\
+          \ and data\n            \n        Raises:\n            redis.RedisError:\
+          \ If there's an error communicating with Redis\n        \"\"\"\n       \
+          \ try:\n            stream_key = self.get_stream_key(session_id)\n     \
+          \       \n            # Get events from stream\n            events_data\
+          \ = await self.redis_client.xrange(\n                stream_key,\n     \
+          \           min=start,\n                max=end,\n                count=count\n\
+          \            )\n            \n            # Process events\n           \
+          \ events = []\n            for event_id, event_fields in events_data:\n\
+          \                # Convert Redis response to Python dict\n             \
+          \   event_id = event_id.decode('utf-8') if isinstance(event_id, bytes) else\
+          \ event_id\n                \n                event_data = {}\n        \
+          \        for field, value in event_fields.items():\n                   \
+          \ field = field.decode('utf-8') if isinstance(field, bytes) else field\n\
+          \                    value = value.decode('utf-8') if isinstance(value,\
+          \ bytes) else value\n                    \n                    # Try to\
+          \ parse JSON for complex fields\n                    try:\n            \
+          \            if isinstance(value, str) and (value.startswith('{') or value.startswith('[')):\n\
+          \                            value = json.loads(value)\n               \
+          \     except json.JSONDecodeError:\n                        pass\n     \
+          \               \n                    event_data[field] = value\n      \
+          \          \n                events.append({\n                    'id':\
+          \ event_id,\n                    'data': event_data\n                })\n\
+          \            \n            logger.debug(f\"Retrieved {len(events)} events\
+          \ from stream {stream_key}\")\n            return events\n        except\
+          \ redis.RedisError as e:\n            logger.error(f\"Error retrieving events\
+          \ from stream for session {session_id}: {e}\")\n            raise\n    \n\
+          \    async def trim_stream(self, session_id: str, max_len: Optional[int]\
+          \ = None) -> None:\n        \"\"\"\n        Trim a session's Redis stream\
+          \ to a maximum length.\n        \n        Args:\n            session_id:\
+          \ The session ID\n            max_len: Maximum length to trim to (defaults\
+          \ to self.stream_max_len)\n            \n        Raises:\n            redis.RedisError:\
+          \ If there's an error communicating with Redis\n        \"\"\"\n       \
+          \ try:\n            if max_len is None:\n                max_len = self.stream_max_len\n\
+          \                \n            stream_key = self.get_stream_key(session_id)\n\
+          \            await self.redis_client.xtrim(stream_key, maxlen=max_len)\n\
+          \            logger.debug(f\"Trimmed stream {stream_key} to max length {max_len}\"\
+          )\n        except redis.RedisError as e:\n            logger.error(f\"Error\
+          \ trimming stream for session {session_id}: {e}\")\n            # Don't\
+          \ raise, just log - trimming is not critical\n```\n\nAlso, update the cleanup_expired_sessions\
+          \ method to include stream cleanup:\n\n```python\nasync def cleanup_expired_sessions(self)\
+          \ -> int:\n    # ... existing code ...\n    \n    # Additional code to clean\
+          \ up streams for expired sessions\n    try:\n        for session_id in expired_sessions:\n\
+          \            stream_key = self.get_stream_key(session_id)\n            await\
+          \ self.redis_client.delete(stream_key)\n            logger.debug(f\"Deleted\
+          \ stream {stream_key} for expired session\")\n    except redis.RedisError\
+          \ as e:\n        logger.error(f\"Error cleaning up streams for expired sessions:\
+          \ {e}\")\n        # Continue with cleanup, don't raise\n        \n    #\
+          \ ... rest of existing code ...\n```\n\nThese changes add comprehensive\
+          \ Redis stream support to the session manager, allowing it to generate stream\
+          \ IDs, store events in streams, retrieve events, and properly manage stream\
+          \ lifecycle."
+        created_at: '2025-06-06T15:37:53.054498'
+        description: Develop the specific code implementation for Redis stream support
+          in the redis_session_manager_updated.py file.
+        id: 16b5001d-f638-42ab-909f-41e843ae9e34
+        parent_id: null
+        priority: high
+        sequence: null
+        title: Create Implementation for Redis Stream Support in redis_session_manager_updated.py
+        updated_at: '2025-06-06T15:37:53.054498'
+      1c881c71-7989-47b3-8653-4cbe83fecfa3:
+        child_tasks: []
+        completed: false
+        context: 'The BaseAgent._raise_event method is the central method that dispatches
+          events to the streaming callback. We need to modify it to support Redis
+          stream IDs that will be used in callback methods to track events in a distributed
+          environment.
+
+
+          The current implementation doesn''t have any knowledge of Redis streams,
+          so we need to extend it to:
+
+
+          1. Generate or accept a Redis stream ID for each event
+
+          2. Attach the stream ID to the event before passing it to the callback
+
+          3. Ensure this is done in a way that''s compatible with non-Redis deployments
+
+
+          Changes needed:
+
+
+          1. Update the method signature to accept an optional stream_id parameter
+
+          2. Modify the event object to include the stream_id if provided
+
+          3. Ensure error handling covers stream ID related issues
+
+
+          The modified method should maintain backward compatibility for deployments
+          not using Redis.'
+        created_at: '2025-06-06T15:36:21.936400'
+        description: Modify the BaseAgent._raise_event method in core/src/agent_c/agents/base.py
+          to include Redis stream ID tracking for events sent to callbacks.
+        id: 1c881c71-7989-47b3-8653-4cbe83fecfa3
+        parent_id: null
+        priority: high
+        sequence: null
+        title: Implement Redis Stream ID Tracking in BaseAgent._raise_event
+        updated_at: '2025-06-06T15:36:21.936400'
+      2c4da88d-2cfe-40dc-96fb-65809a19fd5a:
+        child_tasks: []
+        completed: false
+        context: "Let's implement the specific code changes needed for the BaseAgent._raise_event\
+          \ method in base.py to support Redis stream IDs:\n\n```python\nasync def\
+          \ _raise_event(self, event, streaming_callback: Optional[Callable[[ChatEvent],\
+          \ Awaitable[None]]] = None, stream_id: Optional[str] = None):\n    \"\"\"\
+          \n    Raise a chat event to the event stream.\n\n    Events are sent to\
+          \ the streaming_callback if configured. For event logging,\n    use EventSessionLogger\
+          \ as your streaming_callback.\n    \n    Args:\n        event: The event\
+          \ to raise\n        streaming_callback: Optional callback to handle the\
+          \ event\n        stream_id: Optional Redis stream ID for distributed event\
+          \ tracking\n    \"\"\"\n    if streaming_callback is None:\n        streaming_callback\
+          \ = self.streaming_callback\n\n    # Attach stream_id to event if provided\n\
+          \    if stream_id is not None and hasattr(event, 'set_stream_id'):\n   \
+          \     try:\n            event.set_stream_id(stream_id)\n        except Exception\
+          \ as e:\n            self.logger.warning(f\"Failed to set stream_id on event:\
+          \ {e}\")\n\n    if streaming_callback is not None:\n        try:\n     \
+          \       await streaming_callback(event)\n        except Exception as e:\n\
+          \            self.logger.exception(\n                f\"Streaming callback\
+          \ error for event: {e}. Event Type: {getattr(event, 'type', 'unknown')}\"\
+          \n            )\n            # Log internal error as system event\n    \
+          \        await self._raise_system_event(\n                f\"Streaming callback\
+          \ error: {str(e)}\",\n                severity=\"error\",\n            \
+          \    error_type=\"streaming_callback_error\",\n                original_event_type=getattr(event,\
+          \ 'type', 'unknown')\n            )\n```\n\nThis implementation:\n1. Adds\
+          \ a new `stream_id` parameter to the method signature\n2. Attempts to set\
+          \ the stream_id on the event object if provided\n3. Maintains backward compatibility\
+          \ by making the parameter optional\n4. Adds error handling for stream_id-related\
+          \ operations\n\nWe also need to update the ChatEvent base class to support\
+          \ stream_ids, which would be in another file."
+        created_at: '2025-06-06T15:37:15.982451'
+        description: Develop the specific code implementation for BaseAgent._raise_event
+          method to support Redis stream IDs.
+        id: 2c4da88d-2cfe-40dc-96fb-65809a19fd5a
+        parent_id: null
+        priority: high
+        sequence: null
+        title: Create Specific Implementation for BaseAgent._raise_event with Redis
+          Stream Support
+        updated_at: '2025-06-06T15:37:15.982451'
+      38e95c18-f2c3-4236-a4f7-07d201f2a11a:
+        child_tasks: []
+        completed: false
+        context: 'The Redis Session Manager needs to be enhanced to support stream
+          operations for event tracking. We need to add functionality to:
+
+
+          1. Generate unique, ordered stream IDs for events
+
+          2. Store events in Redis streams
+
+          3. Add methods to retrieve events from streams
+
+          4. Implement stream management (trimming, cleanup)
+
+
+          Specific changes needed:
+
+
+          1. Add Redis stream constants and configuration
+
+          2. Implement generate_stream_id method
+
+          3. Add add_event_to_stream method
+
+          4. Implement get_events_from_stream method
+
+          5. Add stream cleanup functionality
+
+
+          These changes will enable proper event tracking in a distributed environment
+          where multiple instances may be processing events for the same session.'
+        created_at: '2025-06-06T15:36:32.397479'
+        description: Enhance the RedisSessionManager class to generate and track Redis
+          stream IDs for events.
+        id: 38e95c18-f2c3-4236-a4f7-07d201f2a11a
+        parent_id: null
+        priority: high
+        sequence: null
+        title: Enhance Redis Session Manager with Stream Support
+        updated_at: '2025-06-06T15:36:32.397479'
+      420f153b-ba46-4025-b2f5-81ae9f63f80d:
+        child_tasks: []
+        completed: false
+        context: 'Add the necessary Redis client libraries to the project dependencies.
+
+
+          Specific tasks:
+
+          - Add redis-py-cluster or aioredis to requirements.txt or setup.py
+
+          - Document version requirements
+
+          - Update dependency documentation
+
+
+          Considerations:
+
+          - For asyncio support, prefer aioredis
+
+          - Ensure compatibility with existing Python version requirements
+
+          - Consider adding hiredis for performance improvements'
+        created_at: '2025-06-06T13:50:41.466210'
+        description: Update project dependencies to include Redis client libraries.
+        id: 420f153b-ba46-4025-b2f5-81ae9f63f80d
+        parent_id: null
+        priority: medium
+        sequence: 4
+        title: Update Dependencies
+        updated_at: '2025-06-06T13:50:41.466210'
+      44d63db1-4f55-4be6-8b93-04d155a70cd2:
+        child_tasks: []
+        completed: false
+        context: "Let's implement the specific code changes needed for the agent_bridge_redis_integration_updated.py\
+          \ file to support Redis stream integration with the callback system:\n\n\
+          ```python\n# Add these additional imports\nfrom typing import Dict, Any,\
+          \ Optional, Union, List\nfrom agent_c.models import ChatEvent, SessionEvent\n\
+          \n# Update the __init__ method in UItoAgentBridgeManager\ndef __init__(self):\n\
+          \    logging_manager = LoggingManager(__name__)\n    self.logger = logging_manager.get_logger()\n\
+          \    \n    self.ui_sessions: Dict[str, Dict[str, Any]] = {}\n    self._locks:\
+          \ Dict[str, asyncio.Lock] = {}\n    self._cancel_events: Dict[str, threading.Event]\
+          \ = {}\n    self.agent_config_loader: AgentConfigLoader = AgentConfigLoader()\n\
+          \    \n    # Choose session manager based on configuration\n    if settings.USE_REDIS_SESSIONS:\n\
+          \        self.logger.info(\"Initializing Redis session manager\")\n    \
+          \    self.chat_session_manager = RedisSessionManager(\n            # Redis\
+          \ URL will be constructed from settings automatically\n            prefix=\"\
+          agent_c:session:\",\n            use_local_cache=True\n        )\n    else:\n\
+          \        self.logger.info(\"Initializing in-memory session manager\")\n\
+          \        self.chat_session_manager = ChatSessionManager()\n\n# Add a new\
+          \ method for consolidated streaming callback that handles Redis streams\n\
+          async def consolidated_streaming_callback(self, event: ChatEvent) -> None:\n\
+          \    \"\"\"\n    Consolidated streaming callback that handles Redis stream\
+          \ integration.\n    \n    This callback:\n    1. Adds the event to the Redis\
+          \ stream (if using Redis)\n    2. Attaches the stream ID to the event\n\
+          \    3. Forwards the event to the appropriate handler\n    \n    Args:\n\
+          \        event: The event to process\n    \"\"\"\n    session_id = getattr(event,\
+          \ 'session_id', None)\n    \n    if not session_id or session_id not in\
+          \ self.ui_sessions:\n        self.logger.warning(f\"Event for unknown session:\
+          \ {session_id}\")\n        return\n        \n    # Generate or retrieve\
+          \ stream ID for the event\n    stream_id = None\n    if settings.USE_REDIS_SESSIONS\
+          \ and isinstance(self.chat_session_manager, RedisSessionManager):\n    \
+          \    try:\n            # Convert event to dictionary for stream storage\n\
+          \            event_dict = {}\n            for key, value in event.__dict__.items():\n\
+          \                if key.startswith('_'):\n                    continue \
+          \ # Skip private attributes\n                event_dict[key] = value\n \
+          \               \n            # Add event to Redis stream\n            stream_id\
+          \ = await self.chat_session_manager.add_event_to_stream(\n             \
+          \   session_id, event_dict\n            )\n            \n            # Set\
+          \ stream_id on the event object if it supports it\n            if hasattr(event,\
+          \ 'set_stream_id'):\n                event.set_stream_id(stream_id)\n  \
+          \              \n        except Exception as e:\n            self.logger.error(f\"\
+          Error adding event to Redis stream: {e}\")\n            # Continue processing\
+          \ even if Redis operation failed\n    \n    # Forward to appropriate handler\
+          \ based on event type\n    event_type = getattr(event, 'type', None)\n \
+          \   handler_method = f\"_handle_{event_type}_event\"\n    \n    if hasattr(self,\
+          \ handler_method):\n        try:\n            handler = getattr(self, handler_method)\n\
+          \            await handler(event, stream_id=stream_id)\n        except Exception\
+          \ as e:\n            self.logger.error(f\"Error handling event {event_type}:\
+          \ {e}\")\n    else:\n        self.logger.warning(f\"No handler for event\
+          \ type: {event_type}\")\n```\n\nThen, update the example event handler method\
+          \ to show how to include stream_id in the response:\n\n```python\nasync\
+          \ def _handle_text_delta_event(self, event, stream_id=None):\n    \"\"\"\
+          \n    Handle text delta events with Redis stream ID support.\n    \"\"\"\
+          \n    try:\n        ui_session_id = event.session_id\n        if ui_session_id\
+          \ not in self.ui_sessions:\n            return\n            \n        #\
+          \ Prepare payload with stream_id if available\n        payload = {\n   \
+          \         \"type\": \"text_delta\",\n            \"content\": event.content,\n\
+          \            \"role\": event.role,\n        }\n        \n        if stream_id:\n\
+          \            payload[\"stream_id\"] = stream_id\n            \n        #\
+          \ Send to client\n        await self._send_to_client(ui_session_id, payload)\n\
+          \    except Exception as e:\n        self.logger.error(f\"Error handling\
+          \ text delta event: {e}\")\n```\n\nThese changes integrate Redis stream\
+          \ support with the agent bridge callback system, allowing events to be tracked\
+          \ with stream IDs in a distributed environment."
+        created_at: '2025-06-06T15:38:21.922284'
+        description: Develop the specific code implementation to update agent_bridge_redis_integration_updated.py
+          for Redis stream integration.
+        id: 44d63db1-4f55-4be6-8b93-04d155a70cd2
+        parent_id: null
+        priority: high
+        sequence: null
+        title: Implement Specific Changes to agent_bridge_redis_integration_updated.py
+        updated_at: '2025-06-06T15:38:21.922284'
+      460536ce-a216-42e5-8b18-d93cddccdd30:
+        child_tasks: []
+        completed: true
+        context: 'We need to understand exactly how the current ChatSessionManager
+          works, including all methods, properties, and data structures it uses. This
+          will ensure our Redis implementation is compatible with the existing code.
+
+
+          Key aspects to analyze:
+
+          - Interface (methods and properties)
+
+          - Data structures used for session storage
+
+          - Serialization/deserialization mechanisms
+
+          - Error handling
+
+          - Performance characteristics
+
+
+          The analysis should result in a clear specification of what needs to be
+          implemented in the Redis version.'
+        created_at: '2025-06-06T13:49:47.247392'
+        description: Analyze the current ChatSessionManager implementation to understand
+          its interface, functionality, and requirements.
+        id: 460536ce-a216-42e5-8b18-d93cddccdd30
+        parent_id: null
+        priority: high
+        sequence: 1
+        title: Analysis of Current Session Manager
+        updated_at: '2025-06-06T15:59:01.610869'
+      4996e19f-adfd-440d-aefb-9fe73854c9c4:
+        child_tasks: []
+        completed: false
+        context: "We need to update the redis_session_manager_updated.py file in the\
+          \ .scratch directory to include Redis stream functionality. The current\
+          \ implementation focuses on session storage but lacks event streaming support.\n\
+          \nSpecific changes needed:\n\n1. Add constants for stream-related settings\
+          \ (stream prefix, max length, etc.)\n2. Add stream-related methods:\n  \
+          \ - get_stream_key(session_id) - Generate Redis key for a session's event\
+          \ stream\n   - generate_stream_id() - Generate a unique, ordered stream\
+          \ ID\n   - add_event_to_stream(session_id, event_data) - Add event to a\
+          \ session's stream\n   - get_events_from_stream(session_id, start=\"0\"\
+          , end=\"+\", count=None) - Get events from a stream\n   - trim_stream(session_id,\
+          \ max_len=None) - Trim a stream to max length\n\n3. Add stream cleanup to\
+          \ the cleanup_expired_sessions method\n\nThese changes will allow the Redis\
+          \ session manager to handle event streams in addition to session storage."
+        created_at: '2025-06-06T15:36:45.417835'
+        description: Modify the redis_session_manager_updated.py file to include Redis
+          stream functionality for event tracking.
+        id: 4996e19f-adfd-440d-aefb-9fe73854c9c4
+        parent_id: null
+        priority: high
+        sequence: null
+        title: Update redis_session_manager_updated.py with Stream Support
+        updated_at: '2025-06-06T15:36:45.417835'
+      504eb8ce-f0bf-439c-9ef4-cc3595dd6e94:
+        child_tasks: []
+        completed: false
+        context: 'Modify the AgentBridge class to use the new RedisSessionManager
+          instead of the current ChatSessionManager.
+
+
+          Specific changes:
+
+          - Update imports to use the new RedisSessionManager
+
+          - Update initialization code to create a RedisSessionManager instance
+
+          - Handle any interface differences between the two implementations
+
+          - Add any necessary configuration to support Redis settings
+
+
+          Considerations:
+
+          - Maintain backward compatibility if possible
+
+          - Update error handling to account for Redis-specific errors
+
+          - Consider adding a fallback mechanism to the in-memory implementation in
+          case of Redis failure'
+        created_at: '2025-06-06T13:51:31.057531'
+        description: Update the AgentBridge class to use the new RedisSessionManager.
+        id: 504eb8ce-f0bf-439c-9ef4-cc3595dd6e94
+        parent_id: null
+        priority: high
+        sequence: 8
+        title: Integrate with Agent Bridge
+        updated_at: '2025-06-06T15:11:06.161110'
+      63214f51-768a-4710-b989-2dbc19281a26:
+        child_tasks: []
+        completed: false
+        context: 'To ensure our Redis stream integration works correctly, we should
+          create an end-to-end test that verifies:
+
+
+          1. Events are properly added to Redis streams
+
+          2. Stream IDs are correctly generated and attached to events
+
+          3. Callbacks correctly include stream IDs in responses
+
+          4. Stream data can be retrieved and processed
+
+
+          This test will help verify that all components work together correctly in
+          a real-world scenario.
+
+
+          The test should:
+
+
+          1. Initialize the Redis session manager
+
+          2. Create a session
+
+          3. Generate test events with the BaseAgent._raise_event method
+
+          4. Verify events are added to the Redis stream
+
+          5. Retrieve events from the stream and verify they match what was sent
+
+          6. Test the cleanup functionality
+
+
+          This will provide confidence that our Redis stream integration works as
+          expected end-to-end.'
+        created_at: '2025-06-06T15:38:46.445946'
+        description: Create an end-to-end test to verify the Redis stream integration
+          works correctly.
+        id: 63214f51-768a-4710-b989-2dbc19281a26
+        parent_id: null
+        priority: medium
+        sequence: null
+        title: Create End-to-End Test for Redis Stream Integration
+        updated_at: '2025-06-06T15:38:46.445946'
+      73140636-07a2-4484-adc6-16a668e79a4e:
+        child_tasks: []
+        completed: false
+        context: 'The application already has an env_config.py file with Redis configuration
+          settings including:
+
+
+          - REDIS_HOST
+
+          - REDIS_PORT
+
+          - REDIS_DB
+
+          - REDIS_USERNAME
+
+          - REDIS_PASSWORD
+
+          - REDIS_CONNECTION_TIMEOUT
+
+          - REDIS_SOCKET_TIMEOUT
+
+          - REDIS_MAX_CONNECTIONS
+
+          - USE_REDIS_SESSIONS (feature flag, already set to True)
+
+          - SESSION_TTL (24 hours by default)
+
+          - SESSION_CLEANUP_INTERVAL
+
+          - SESSION_CLEANUP_BATCH_SIZE
+
+
+          We should modify our RedisSessionManager implementation to use these existing
+          settings rather than creating a new configuration module. This will ensure
+          consistency and avoid duplication.
+
+
+          Specific changes needed:
+
+          1. Import settings from agent_c_api.config.env_config
+
+          2. Use settings.REDIS_HOST, settings.REDIS_PORT, etc. for Redis connection
+
+          3. Use settings.SESSION_TTL for session expiration
+
+          4. Use settings.USE_REDIS_SESSIONS for feature flag
+
+          5. Add any missing Redis-specific settings to env_config.py if needed
+
+
+          The implementation should be compatible with the existing configuration
+          pattern while providing the necessary functionality for Redis session management.'
+        created_at: '2025-06-06T13:51:11.780656'
+        description: Update the Redis Session Manager implementation to use the existing
+          env_config.py file instead of creating a new configuration module.
+        id: 73140636-07a2-4484-adc6-16a668e79a4e
+        parent_id: null
+        priority: medium
+        sequence: 5
+        title: Update Redis Session Manager to use existing env_config.py
+        updated_at: '2025-06-06T14:13:11.791421'
+      75112001-f0d4-4392-9da9-ce02d4c0ba3b:
+        child_tasks: []
+        completed: false
+        context: 'Create a comprehensive deployment guide for using the Redis session
+          manager in production environments:
+
+
+          - Redis setup recommendations (standalone, sentinel, cluster)
+
+          - Security considerations (authentication, TLS, network isolation)
+
+          - High availability configuration
+
+          - Monitoring and alerting recommendations
+
+          - Backup and recovery procedures
+
+          - Scaling guidelines
+
+          - Resource requirements estimation
+
+
+          The guide should provide clear instructions for DevOps teams to set up and
+          maintain the Redis infrastructure needed for the session manager.'
+        created_at: '2025-06-06T13:52:00.248356'
+        description: Create a deployment guide for using the Redis session manager
+          in production.
+        id: 75112001-f0d4-4392-9da9-ce02d4c0ba3b
+        parent_id: null
+        priority: medium
+        sequence: 10
+        title: Deployment Guide
+        updated_at: '2025-06-06T13:52:00.248356'
+      82d426fd-1c32-4080-8f13-f6edf2f02469:
+        child_tasks: []
+        completed: true
+        context: 'Implement the RedisSessionManager class with all required methods
+          and properties to match the ChatSessionManager interface. This implementation
+          should use Redis for persistent storage of session data.
+
+
+          Implementation details:
+
+          - Use aioredis or redis-py for Redis communication
+
+          - Implement proper serialization/deserialization of session data
+
+          - Handle connection issues gracefully
+
+          - Implement appropriate logging
+
+          - Include comprehensive docstrings
+
+          - Add type hints
+
+
+          The implementation should handle:
+
+          - Creating new sessions
+
+          - Retrieving existing sessions
+
+          - Updating session data
+
+          - Flushing changes to Redis
+
+          - Session expiration
+
+          - Error handling for Redis connectivity issues'
+        created_at: '2025-06-06T13:50:26.951338'
+        description: Implement the RedisSessionManager class based on the design specifications.
+        id: 82d426fd-1c32-4080-8f13-f6edf2f02469
+        parent_id: null
+        priority: high
+        sequence: 3
+        title: Implement Redis Session Manager
+        updated_at: '2025-06-06T15:59:21.711829'
+      8f4980bf-a815-491c-b9fb-df65e75db5b2:
+        child_tasks: []
+        completed: true
+        context: "Based on the analysis of the current ChatSessionManager, design\
+          \ a Redis-based implementation that provides the same functionality but\
+          \ stores session data in Redis. \n\nDesign considerations:\n- Redis data\
+          \ structures to use (likely hash sets for session data)\n- Key naming conventions\n\
+          - TTL (Time-To-Live) settings for sessions\n- Serialization format (JSON\
+          \ or alternative)\n- Connection pooling and handling\n- Error handling and\
+          \ fallback mechanisms\n- Performance optimization strategies\n\nThe design\
+          \ should specify:\n- Class structure and method signatures\n- Redis commands\
+          \ to be used for each operation\n- Data serialization/deserialization approach\n\
+          - Configuration options (Redis connection settings, prefixes, TTL, etc.)"
+        created_at: '2025-06-06T13:50:11.443982'
+        description: Design the Redis-based session manager implementation that follows
+          the same interface as the current ChatSessionManager.
+        id: 8f4980bf-a815-491c-b9fb-df65e75db5b2
+        parent_id: null
+        priority: high
+        sequence: 2
+        title: Design Redis Session Manager
+        updated_at: '2025-06-06T15:59:11.475483'
+      a87a69d7-e138-4bcd-835e-8adbe561289e:
+        child_tasks: []
+        completed: false
+        context: 'The callback methods in AgentBridge need to be updated to handle
+          Redis stream IDs. This will allow events to be properly tracked, acknowledged,
+          and possibly resumed in a multi-user environment. The main callback method
+          `consolidated_streaming_callback` and its event handlers need modifications
+          to include stream ID information in the JSON payloads sent to clients.
+
+
+          This task involves:
+
+          1. Extending SessionEvent to include stream_id field
+
+          2. Updating all event handler methods to include stream_id in payloads
+
+          3. Modifying the consolidated_streaming_callback to work with Redis streams
+
+          4. Ensuring proper integration between the callback system and Redis stream
+          manager'
+        created_at: '2025-06-06T15:10:52.737353'
+        description: Modify the callback methods in the AgentBridge class to handle
+          Redis stream IDs for event tracking and message continuity.
+        id: a87a69d7-e138-4bcd-835e-8adbe561289e
+        parent_id: null
+        priority: high
+        sequence: 7
+        title: Update Callback Methods to Support Redis Stream IDs
+        updated_at: '2025-06-06T15:10:52.737353'
+      aaef1b7e-4bb5-4c26-83c6-f993e1a66ea2:
+        child_tasks: []
+        completed: false
+        context: 'Create detailed documentation for the Redis session manager implementation,
+          including:
+
+
+          - Overview of the Redis session manager architecture
+
+          - Configuration options and environment variables
+
+          - Redis schema design (key patterns, data structures)
+
+          - Performance characteristics and recommendations
+
+          - Deployment considerations
+
+          - Troubleshooting guide
+
+          - Migration guide from in-memory to Redis-based sessions
+
+
+          The documentation should be added to the project''s documentation system
+          and include code examples where appropriate.'
+        created_at: '2025-06-06T13:51:39.966219'
+        description: Create comprehensive documentation for the Redis session manager
+          implementation.
+        id: aaef1b7e-4bb5-4c26-83c6-f993e1a66ea2
+        parent_id: null
+        priority: medium
+        sequence: 8
+        title: Documentation
+        updated_at: '2025-06-06T13:51:39.966219'
+      acd4f920-cafa-4877-95ef-102422f7fca9:
+        child_tasks: []
+        completed: false
+        context: 'For our Redis stream integration to work properly, we need to update
+          the ChatEvent base class to support Redis stream IDs. We should check this
+          class and add the necessary support.
+
+
+          We need to:
+
+
+          1. Find the ChatEvent class definition
+
+          2. Add a stream_id attribute
+
+          3. Add methods to get and set the stream ID
+
+          4. Ensure proper serialization of the stream ID when events are converted
+          to JSON
+
+
+          This task involves updating the core event model to support the Redis stream
+          integration without breaking existing functionality.'
+        created_at: '2025-06-06T15:38:33.967508'
+        description: Enhance the ChatEvent base class to support Redis stream IDs.
+        id: acd4f920-cafa-4877-95ef-102422f7fca9
+        parent_id: null
+        priority: medium
+        sequence: null
+        title: Update ChatEvent Base Class for Stream ID Support
+        updated_at: '2025-06-06T15:38:33.967508'
+      b88a71b8-e6e0-4ebe-aeb2-7843e3c50ae8:
+        child_tasks: []
+        completed: false
+        context: 'We need to update the environment configuration to include settings
+          specific to Redis streams. This involves adding new settings to the env_config.py
+          file and ensuring they have sensible defaults.
+
+
+          Specific changes needed:
+
+
+          1. Add STREAM_MAX_LENGTH setting to control the maximum number of events
+          in a stream
+
+          2. Add STREAM_TRIM_INTERVAL setting to control how often streams are trimmed
+
+          3. Add STREAM_RETENTION_PERIOD setting to control how long events are retained
+
+          4. Add STREAM_PREFIX setting to customize the Redis key prefix for streams
+
+
+          These settings should have appropriate default values and be properly documented.
+          The configuration should maintain backward compatibility with existing deployments.'
+        created_at: '2025-06-06T15:38:58.322270'
+        description: Update the environment configuration to include settings for
+          Redis streams.
+        id: b88a71b8-e6e0-4ebe-aeb2-7843e3c50ae8
+        parent_id: null
+        priority: medium
+        sequence: null
+        title: Update Environment Configuration for Redis Streams
+        updated_at: '2025-06-06T15:38:58.322270'
+      c2ac2f61-3499-4ba0-ad3d-900a609ac106:
+        child_tasks: []
+        completed: false
+        context: 'Perform comprehensive performance testing to ensure the Redis-based
+          implementation meets performance requirements:
+
+
+          - Benchmark session creation speed
+
+          - Benchmark session retrieval speed
+
+          - Measure memory usage
+
+          - Test under high concurrency
+
+          - Test with large session data
+
+          - Identify bottlenecks and optimization opportunities
+
+
+          Compare results with the current in-memory implementation to ensure we''re
+          not introducing significant performance degradation. Document findings and
+          recommendations for production deployment.'
+        created_at: '2025-06-06T13:51:51.830926'
+        description: Conduct performance testing to compare the Redis-based implementation
+          with the current in-memory implementation.
+        id: c2ac2f61-3499-4ba0-ad3d-900a609ac106
+        parent_id: null
+        priority: medium
+        sequence: 9
+        title: Performance Testing
+        updated_at: '2025-06-06T13:51:51.830926'
+      c75cf416-5a8f-485f-91ed-f1d8d97b9082:
+        child_tasks: []
+        completed: false
+        context: "The agent_bridge_redis_integration_updated.py file needs to be updated\
+          \ to integrate Redis stream IDs with the callback system. Currently, it\
+          \ provides basic Redis session management integration but doesn't handle\
+          \ event streaming.\n\nSpecific changes needed:\n\n1. Update the UItoAgentBridgeManager.__init__\
+          \ method to initialize stream-related components\n\n2. Modify/create the\
+          \ consolidated_streaming_callback method to:\n   - Generate or retrieve\
+          \ a Redis stream ID for each event\n   - Add the event to the Redis stream\n\
+          \   - Include the stream ID in the event payload sent to clients\n\n3. Add\
+          \ a method to retrieve events from the stream for replay or analysis\n\n\
+          4. Update the cleanup_session method to handle stream cleanup\n\nThe implementation\
+          \ should ensure proper handling of stream IDs in both Redis and non-Redis\
+          \ deployments, maintaining backward compatibility."
+        created_at: '2025-06-06T15:36:58.523382'
+        description: Update the agent_bridge_redis_integration_updated.py file to
+          integrate Redis stream IDs with the callback system.
+        id: c75cf416-5a8f-485f-91ed-f1d8d97b9082
+        parent_id: null
+        priority: high
+        sequence: null
+        title: Implement Redis Stream Integration in agent_bridge_redis_integration_updated.py
+        updated_at: '2025-06-06T15:36:58.523382'
+      f8e48374-0eee-4deb-bf35-b0eb637e5604:
+        child_tasks: []
+        completed: false
+        context: 'Develop a comprehensive test suite for the RedisSessionManager that
+          verifies:
+
+
+          - Proper session creation and retrieval
+
+          - Session data persistence
+
+          - Session updates and flush operations
+
+          - Error handling for Redis connection issues
+
+          - Session expiration behavior
+
+          - Serialization/deserialization edge cases
+
+          - Performance under various loads
+
+
+          Considerations:
+
+          - Use pytest for test framework
+
+          - Use fakeredis or a mock Redis server for testing without actual Redis
+          dependency
+
+          - Include integration tests with a real Redis instance for CI/CD pipeline
+
+          - Test concurrency behavior with multiple clients accessing the same session'
+        created_at: '2025-06-06T13:51:21.225661'
+        description: Write comprehensive unit tests for the RedisSessionManager implementation.
+        id: f8e48374-0eee-4deb-bf35-b0eb637e5604
+        parent_id: null
+        priority: high
+        sequence: 6
+        title: Write Unit Tests
+        updated_at: '2025-06-06T13:51:21.225661'
+    title: Implement Redis Session Manager
+    updated_at: '2025-06-06T15:59:21.711829'
   session_repository_remediation:
     created_at: '2025-05-24T19:59:38.354388'
     description: Comprehensive plan to fix critical issues in the session repository
@@ -3333,4 +4207,4 @@ _plans:
         updated_at: '2025-05-25T16:24:27.926886'
     title: Structured Logging Infrastructure Design & Implementation
     updated_at: '2025-05-25T18:23:08.419468'
-current_plan: structured_logging_api_integration
+current_plan: redis_session_manager

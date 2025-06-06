@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Union, Optional, AsyncGenerator
 from datetime import datetime, timezone
 
 from agent_c.chat import ChatSessionManager
+from agent_c_api.core.redis_session_manager import RedisSessionManager
 from agent_c.models.input import AudioInput
 from agent_c.agents.gpt import GPTChatAgent
 from agent_c.models.events import SessionEvent
@@ -59,7 +60,7 @@ class AgentBridge:
     def __init__(
         self,
         chat_session: ChatSession,
-        session_manager: ChatSessionManager,
+        session_manager: Union[ChatSessionManager, RedisSessionManager],
         backend: str = DEFAULT_BACKEND,
         model_name: str = DEFAULT_MODEL_NAME,
         file_handler: Optional[FileHandler] = None,
