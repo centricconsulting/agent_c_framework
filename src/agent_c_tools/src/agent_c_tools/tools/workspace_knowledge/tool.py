@@ -2,6 +2,8 @@ from typing import Any, Dict, List, Optional, Union, cast
 from datetime import datetime
 import json
 
+import yaml
+
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.toolsets.json_schema import json_schema
 from agent_c_tools.tools.workspace_knowledge.prompt import WorkspaceKnowledgeSection
@@ -107,21 +109,22 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def create_knowledge_graph(self, kg_path: str, title: str, description: str = "") -> Dict[str, Any]:
+    async def create_knowledge_graph(self, **kwargs) -> str:
         """Create a new knowledge graph in the specified workspace."""
+        kg_path = kwargs.get("kg_path")
+        title = kwargs.get("title")
+        description = kwargs.get("description", "")
+        
         workspace_name, kg_id = self._parse_kg_path(kg_path)
         kg_meta = await self._get_kg_meta(workspace_name)
         
         if kg_id in kg_meta:
-            return {"success": False, "error": f"Knowledge graph with ID '{kg_id}' already exists"}
+            return  f"Knowledge graph with ID '{kg_id}' already exists"
         
         new_kg = KnowledgeGraph(title=title, description=description)
         await self._save_kg(kg_path, new_kg)
         
-        return {
-            "success": True,
-            "knowledge_graph": new_kg.model_dump()
-        }
+        return yaml.dump(new_kg.model_dump(), allow_unicode=True, sort_keys=False)
     
     @json_schema(
         description="List all knowledge graphs in a workspace",
@@ -133,8 +136,10 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def list_knowledge_graphs(self, workspace: str) -> Dict[str, Any]:
+    async def list_knowledge_graphs(self, **kwargs) -> str:
         """List all knowledge graphs in the specified workspace."""
+        workspace = kwargs.get("workspace")
+        
         kg_meta = await self._get_kg_meta(workspace)
         
         kg_list = []
@@ -147,10 +152,7 @@ class WorkspaceKnowledgeTools(Toolset):
                 "updated_at": kg_data.get("updated_at", "")
             })
         
-        return {
-            "success": True,
-            "knowledge_graphs": kg_list
-        }
+        return yaml.dump({"knowledge_graphs": kg_list}, allow_unicode=True, sort_keys=False)
     
     @json_schema(
         description="Get details of a knowledge graph",
@@ -162,17 +164,17 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def get_knowledge_graph(self, kg_path: str) -> Dict[str, Any]:
+    async def get_knowledge_graph(self, **kwargs) -> str:
         """Get details of a knowledge graph."""
+        kg_path = kwargs.get("kg_path")
+        
         kg = await self._get_kg(kg_path)
         
         if not kg:
-            return {"success": False, "error": f"Knowledge graph not found at path: {kg_path}"}
+            return f"Knowledge graph not found at path: {kg_path}"
         
-        return {
-            "success": True,
-            "knowledge_graph": kg.model_dump()
-        }
+        return yaml.dump(kg.model_dump(), allow_unicode=True, sort_keys=False)
+
     
     @json_schema(
         description="Create new entities in the knowledge graph",
@@ -210,12 +212,15 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def create_entities(self, kg_path: str, entities: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def create_entities(self, **kwargs) -> str:
         """Create new entities in the knowledge graph."""
+        kg_path = kwargs.get("kg_path")
+        entities = kwargs.get("entities")
+        
         kg = await self._get_kg(kg_path)
         
         if not kg:
-            return {"success": False, "error": f"Knowledge graph not found at path: {kg_path}"}
+            return  f"Knowledge graph not found at path: {kg_path}"
         
         created_entities = []
         for entity_data in entities:
@@ -237,10 +242,7 @@ class WorkspaceKnowledgeTools(Toolset):
         
         await self._save_kg(kg_path, kg)
         
-        return {
-            "success": True,
-            "created_entities": created_entities
-        }
+        return yaml.dump({"created_entities": created_entities}, allow_unicode=True, sort_keys=False)
     
     @json_schema(
         description="Create new relations between entities in the knowledge graph",
@@ -275,12 +277,15 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def create_relations(self, kg_path: str, relations: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def create_relations(self, **kwargs) -> str:
         """Create new relations between entities in the knowledge graph."""
+        kg_path = kwargs.get("kg_path")
+        relations = kwargs.get("relations")
+        
         kg = await self._get_kg(kg_path)
         
         if not kg:
-            return {"success": False, "error": f"Knowledge graph not found at path: {kg_path}"}
+            return f"Knowledge graph not found at path: {kg_path}"
         
         created_relations = []
         for relation_data in relations:
@@ -290,10 +295,10 @@ class WorkspaceKnowledgeTools(Toolset):
             
             # Verify that both entities exist
             if from_entity not in kg.entities:
-                return {"success": False, "error": f"Source entity '{from_entity}' not found"}
+                return  f"Source entity '{from_entity}' not found"
             
             if to_entity not in kg.entities:
-                return {"success": False, "error": f"Target entity '{to_entity}' not found"}
+                return f"Target entity '{to_entity}' not found"
             
             # Check if the relation already exists
             if any(r.from_entity == from_entity and r.to_entity == to_entity and r.relation_type == relation_type 
@@ -311,10 +316,8 @@ class WorkspaceKnowledgeTools(Toolset):
         
         await self._save_kg(kg_path, kg)
         
-        return {
-            "success": True,
-            "created_relations": created_relations
-        }
+        return yaml.dump({"created_relations": created_relations}, allow_unicode=True, sort_keys=False)
+
     
     @json_schema(
         description="Add observations to existing entities",
@@ -348,12 +351,15 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def add_observations(self, kg_path: str, observations: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def add_observations(self, **kwargs) -> str:
         """Add observations to existing entities in the knowledge graph."""
+        kg_path = kwargs.get("kg_path")
+        observations = kwargs.get("observations")
+        
         kg = await self._get_kg(kg_path)
         
         if not kg:
-            return {"success": False, "error": f"Knowledge graph not found at path: {kg_path}"}
+            return f"Knowledge graph not found at path: {kg_path}"
         
         results = []
         for observation_data in observations:
@@ -361,7 +367,7 @@ class WorkspaceKnowledgeTools(Toolset):
             contents = observation_data.get("contents", [])
             
             if entity_name not in kg.entities:
-                return {"success": False, "error": f"Entity '{entity_name}' not found"}
+                return  f"Entity '{entity_name}' not found"
             
             entity = kg.entities[entity_name]
             added_observations = []
@@ -381,10 +387,7 @@ class WorkspaceKnowledgeTools(Toolset):
         
         await self._save_kg(kg_path, kg)
         
-        return {
-            "success": True,
-            "results": results
-        }
+        return yaml.dump({"results": results}, allow_unicode=True, sort_keys=False)
     
     @json_schema(
         description="Delete entities from the knowledge graph",
@@ -404,12 +407,15 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def delete_entities(self, kg_path: str, entity_names: List[str]) -> Dict[str, Any]:
+    async def delete_entities(self, **kwargs) -> str:
         """Delete entities and their associated relations from the knowledge graph."""
+        kg_path = kwargs.get("kg_path")
+        entity_names = kwargs.get("entity_names")
+        
         kg = await self._get_kg(kg_path)
         
         if not kg:
-            return {"success": False, "error": f"Knowledge graph not found at path: {kg_path}"}
+            return  f"Knowledge graph not found at path: {kg_path}"
         
         deleted_entities = []
         for entity_name in entity_names:
@@ -423,10 +429,7 @@ class WorkspaceKnowledgeTools(Toolset):
         
         await self._save_kg(kg_path, kg)
         
-        return {
-            "success": True,
-            "deleted_entities": deleted_entities
-        }
+        return yaml.dump( { "deleted_entities": deleted_entities }, allow_unicode=True,sort_keys=False)
     
     @json_schema(
         description="Delete observations from entities",
@@ -460,12 +463,15 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def delete_observations(self, kg_path: str, deletions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def delete_observations(self, **kwargs) -> str:
         """Delete specific observations from entities in the knowledge graph."""
+        kg_path = kwargs.get("kg_path")
+        deletions = kwargs.get("deletions")
+        
         kg = await self._get_kg(kg_path)
         
         if not kg:
-            return {"success": False, "error": f"Knowledge graph not found at path: {kg_path}"}
+            return f"Knowledge graph not found at path: {kg_path}"
         
         for deletion in deletions:
             entity_name = deletion.get("entity_name")
@@ -482,10 +488,8 @@ class WorkspaceKnowledgeTools(Toolset):
         
         await self._save_kg(kg_path, kg)
         
-        return {
-            "success": True,
-            "message": "Observations deleted successfully"
-        }
+        return "Observations deleted successfully"
+
     
     @json_schema(
         description="Delete relations from the knowledge graph",
@@ -520,12 +524,15 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def delete_relations(self, kg_path: str, relations: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def delete_relations(self, **kwargs) -> str:
         """Delete specific relations from the knowledge graph."""
+        kg_path = kwargs.get("kg_path")
+        relations = kwargs.get("relations")
+        
         kg = await self._get_kg(kg_path)
         
         if not kg:
-            return {"success": False, "error": f"Knowledge graph not found at path: {kg_path}"}
+            return f"Knowledge graph not found at path: {kg_path}"
         
         initial_count = len(kg.relations)
         for relation_data in relations:
@@ -541,10 +548,8 @@ class WorkspaceKnowledgeTools(Toolset):
         deleted_count = initial_count - len(kg.relations)
         await self._save_kg(kg_path, kg)
         
-        return {
-            "success": True,
-            "deleted_count": deleted_count
-        }
+        return f"deleted_count: {deleted_count}"
+
     
     @json_schema(
         description="Search for nodes in the knowledge graph",
@@ -561,12 +566,15 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def search_nodes(self, kg_path: str, query: str) -> Dict[str, Any]:
+    async def search_nodes(self, **kwargs) -> str:
         """Search for nodes in the knowledge graph based on a query."""
+        kg_path = kwargs.get("kg_path")
+        query = kwargs.get("query")
+        
         kg = await self._get_kg(kg_path)
         
         if not kg:
-            return {"success": False, "error": f"Knowledge graph not found at path: {kg_path}"}
+            return  f"Knowledge graph not found at path: {kg_path}"
         
         # Filter entities
         matching_entities = {}
@@ -582,11 +590,7 @@ class WorkspaceKnowledgeTools(Toolset):
             if relation.from_entity in matching_entities and relation.to_entity in matching_entities:
                 matching_relations.append(relation.model_dump())
         
-        return {
-            "success": True,
-            "entities": matching_entities,
-            "relations": matching_relations
-        }
+        return yaml.dump({"entities": matching_entities,"relations": matching_relations},  allow_unicode=True, sort_keys=False)
     
     @json_schema(
         description="Get specific nodes in the knowledge graph by their names",
@@ -606,12 +610,15 @@ class WorkspaceKnowledgeTools(Toolset):
             }
         }
     )
-    async def get_nodes(self, kg_path: str, names: List[str]) -> Dict[str, Any]:
+    async def get_nodes(self, **kwargs) -> str:
         """Get specific nodes in the knowledge graph by their names."""
+        kg_path = kwargs.get("kg_path")
+        names = kwargs.get("names")
+        
         kg = await self._get_kg(kg_path)
         
         if not kg:
-            return {"success": False, "error": f"Knowledge graph not found at path: {kg_path}"}
+            return f"Knowledge graph not found at path: {kg_path}"
         
         # Filter entities
         matching_entities = {}
@@ -625,11 +632,8 @@ class WorkspaceKnowledgeTools(Toolset):
             if relation.from_entity in matching_entities and relation.to_entity in matching_entities:
                 matching_relations.append(relation.model_dump())
         
-        return {
-            "success": True,
-            "entities": matching_entities,
-            "relations": matching_relations
-        }
+        return yaml.dump({"entities": matching_entities,"relations": matching_relations}, allow_unicode=True, sort_keys=False)
+
 
 
 Toolset.register(WorkspaceKnowledgeTools, required_tools=['WorkspaceTools'])

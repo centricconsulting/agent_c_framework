@@ -1,5 +1,5 @@
 from .util import Weather
-from agent_c import json_schema, Toolset
+from agent_c.toolsets import json_schema, Toolset
 import logging
 
 from ...helpers.validate_kwargs import validate_required_fields

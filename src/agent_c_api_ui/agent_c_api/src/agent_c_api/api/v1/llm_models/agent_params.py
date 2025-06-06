@@ -82,8 +82,7 @@ class AgentInitializationParams(AgentCommonParams):
           - 'persona_name': always included, defaulting to 'default' if not provided.
         """
         additional = {}
-        if self.custom_prompt is not None:
-            additional['custom_prompt'] = self.custom_prompt
         # Always include persona_name, defaulting to 'default'
         additional['persona_name'] = self.persona_name if self.persona_name else 'default'
+        additional['agent_key'] = self.persona_name if self.persona_name else 'default'
         return additional

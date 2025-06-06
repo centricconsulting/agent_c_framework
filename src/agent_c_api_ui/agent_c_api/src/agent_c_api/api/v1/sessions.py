@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 import logging
+from agent_c_api.core.agent_manager import UItoAgentBridgeManager
 from agent_c_api.api.dependencies import get_agent_manager
 from agent_c_api.api.v1.llm_models.agent_params import AgentInitializationParams
 
@@ -62,6 +63,28 @@ async def verify_session(ui_session_id: str, agent_manager=Depends(get_agent_man
     session_data = agent_manager.get_session_data(ui_session_id)
     return {"valid": session_data is not None}
 
+@router.get("/sessions")
+async def get_sessions(agent_manager=Depends(get_agent_manager)):
+    """
+    Retrieves all available sessions.
+
+    Returns:
+        dict: A dictionary containing session IDs and their details
+
+    Raises:
+        HTTPException: If there's an error retrieving sessions
+    """
+    try:
+        mgr: UItoAgentBridgeManager = agent_manager
+        sessions = mgr.chat_session_manager.session_id_list
+        return {"session_ids": sessions}
+
+    except Exception as e:
+        logger.error(f"Error retrieving sessions: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve sessions: {str(e)}"
+        )
 
 @router.delete("/sessions")
 async def delete_all_sessions(agent_manager=Depends(get_agent_manager)):

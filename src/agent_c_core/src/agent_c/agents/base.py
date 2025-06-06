@@ -1,16 +1,15 @@
 import os
 import copy
-import yaml
 import asyncio
 
 from asyncio import Semaphore
 
 from typing import Any, Dict, List, Union, Optional, Callable, Awaitable, Tuple
 
-
-from agent_c.chat import ChatSessionManager
+from agent_c.models.chat_history.chat_session import ChatSession
+from agent_c.chat.session_manager import ChatSessionManager
 from agent_c.models import ChatEvent, ImageInput
-from agent_c.models.events.chat import ThoughtDeltaEvent
+from agent_c.models.events.chat import ThoughtDeltaEvent, HistoryDeltaEvent, CompleteThoughtEvent, SystemPromptEvent, UserRequestEvent
 from agent_c.models.input import FileInput, AudioInput
 from agent_c.models.events import ToolCallEvent, InteractionEvent, TextDeltaEvent, HistoryEvent, CompletionEvent, ToolCallDeltaEvent, SystemMessageEvent
 from agent_c.prompting.prompt_builder import PromptBuilder
@@ -118,29 +117,13 @@ class BaseAgent:
         """For chat interactions"""
         raise NotImplementedError
 
-    @staticmethod
-    async def _save_message_to_session(mgr: ChatSessionManager, text: str, role: str):
-        if mgr is not None:
-            msg =  {'role':role, 'content': text}
-
-            await mgr.add_message(msg)
-
-        return {"role": role, "content": text}
-
-
-    async def _save_interaction_to_session(self, mgr: ChatSessionManager, output_text: str):
-        return await self._save_message_to_session(mgr, output_text, "assistant")
-
-
-    async def _save_user_message_to_session(self, mgr: ChatSessionManager, user_message: str):
-        return await self._save_message_to_session(mgr, user_message, "user")
-
     async def _render_contexts(self, **kwargs) -> Tuple[dict[str, Any], dict[str, Any]]:
-        tool_call_context = kwargs.get("tool_call_context", {})
+        tool_call_context = kwargs.get("tool_context", {})
         tool_call_context['streaming_callback'] = kwargs.get("streaming_callback", self.streaming_callback)
-        tool_call_context['colling_model_name'] = kwargs.get("model_name", self.model_name)
+        tool_call_context['calling_model_name'] = kwargs.get("model_name", self.model_name)
+        tool_call_context['client_wants_cancel'] = kwargs.get("client_wants_cancel")
         prompt_context = kwargs.get("prompt_metadata", {})
-        prompt_builder: Union[PromptBuilder, None] = kwargs.get("prompt_builder", self.prompt_builder)
+        prompt_builder: Optional[PromptBuilder] = kwargs.get("prompt_builder", self.prompt_builder)
 
         sys_prompt: str = "Warn the user there's no system prompt with each response."
         prompt_context["agent"] = self
@@ -157,29 +140,39 @@ class BaseAgent:
         return tool_call_context | prompt_context, prompt_context
 
     @staticmethod
-    def _callback_opts(**kwargs) -> Dict[str, str]:
+    def _callback_opts(**kwargs) -> Dict[str, Any]:
         """
         Returns a dictionary of options for the callback method to be used by default.
         """
         agent_role: str = kwargs.get("agent_role", 'assistant')
-        session_manager: Union[ChatSessionManager, None] = kwargs.get("session_manager", None)
-        if session_manager is not None:
-            session_id = session_manager.chat_session.session_id
+        chat_session: Optional[ChatSession] = kwargs.get("chat_session", None)
+
+        if chat_session is not None:
+            session_id = chat_session.session_id
         else:
             session_id = kwargs.get("session_id", "unknown")
 
-        return {'session_id': session_id, 'role': agent_role}
+        opts = {'session_id': session_id, 'role': agent_role}
 
-    async def _raise_event(self, event):
+        callback = kwargs.get("streaming_callback", None)
+        if callback is not None:
+            opts['streaming_callback'] = callback
+
+        return opts
+
+    async def _raise_event(self, event, streaming_callback: Optional[Callable[[ChatEvent], Awaitable[None]]] = None):
         """
         Raise a chat event to the event stream.
 
         Events are sent to the streaming_callback if configured. For event logging,
         use EventSessionLogger as your streaming_callback.
         """
-        if self.streaming_callback:
+        if streaming_callback is None:
+            streaming_callback = self.streaming_callback
+
+        if streaming_callback is not None:
             try:
-                await self.streaming_callback(event)
+                await streaming_callback(event)
             except Exception as e:
                 self.logger.exception(
                     f"Streaming callback error for event: {e}. Event Type: {getattr(event, 'type', 'unknown')}")
@@ -218,8 +211,19 @@ class BaseAgent:
         """
         Raise a system event to the event stream.
         """
+        streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(SystemMessageEvent(role="system", severity=severity, content=content,
-                                                   session_id=data.get("session_id", "none")))
+                                                   session_id=data.get("session_id", "none")),
+                                                   streaming_callback=streaming_callback)
+
+    async def _raise_history_delta(self, messages, **data):
+        """
+        Raise a system event to the event stream.
+        """
+        data['role'] = data.get('role', 'assistant')
+        data['session_id'] = data.get("session_id", "none")
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(HistoryDeltaEvent(messages=messages, **data), streaming_callback=streaming_callback)
 
     async def _raise_completion_start(self, comp_options, **data):
         """
@@ -227,8 +231,10 @@ class BaseAgent:
         """
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
+        streaming_callback = data.pop('streaming_callback', None)
 
-        await self._raise_event(CompletionEvent(running=True, completion_options=completion_options, **data))
+        await self._raise_event(CompletionEvent(running=True, completion_options=completion_options, **data),
+                                streaming_callback=streaming_callback)
 
     async def _raise_completion_end(self, comp_options, **data):
         """
@@ -237,41 +243,63 @@ class BaseAgent:
         # logging.debug(f"_raise_completion_end called with stop_reason={data.get('stop_reason', 'none')}")
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
-        
+        streaming_callback = data.pop('streaming_callback', None)
         # logging.debug(f"Creating CompletionEvent with running=False, data={data}")
         event = CompletionEvent(running=False, completion_options=completion_options, **data)
         # logging.debug(f"CompletionEvent created: type={event.type}, stop_reason={getattr(event, 'stop_reason', 'none')}")
-        
+
         # logging.debug(f"About to raise CompletionEvent through _raise_event")
-        await self._raise_event(event)
+        await self._raise_event(event, streaming_callback=streaming_callback)
         # logging.debug(f"Completed raising CompletionEvent")
 
     async def _raise_tool_call_start(self, tool_calls, **data):
-        await self._raise_event(ToolCallEvent(active=True, tool_calls=tool_calls, **data))
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(ToolCallEvent(active=True, tool_calls=tool_calls, **data), streaming_callback=streaming_callback )
+
+    async def _raise_system_prompt(self, prompt: str, **data):
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(SystemPromptEvent(content=prompt, **data), streaming_callback=streaming_callback )
+
+    async def _raise_user_request(self, request: str, **data):
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(UserRequestEvent(data={"message": request}, **data), streaming_callback=streaming_callback )
 
     async def _raise_tool_call_delta(self, tool_calls, **data):
-        await self._raise_event(ToolCallDeltaEvent(tool_calls=tool_calls, **data))
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(ToolCallDeltaEvent(tool_calls=tool_calls, **data), streaming_callback=streaming_callback)
 
     async def _raise_tool_call_end(self, tool_calls, tool_results, **data):
+        streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(ToolCallEvent(active=False, tool_calls=tool_calls,
-                                              tool_results=tool_results,  **data))
+                                              tool_results=tool_results,  **data),
+                                              streaming_callback=streaming_callback)
 
     async def _raise_interaction_start(self, **data):
-        iid = MnemonicSlugs.generate_slug(3)
-        await self._raise_event(InteractionEvent(started=True, id=iid, **data))
+        iid = data.get('interaction_id',MnemonicSlugs.generate_slug(3))
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(InteractionEvent(started=True, id=iid, **data), streaming_callback=streaming_callback)
         return iid
 
     async def _raise_interaction_end(self, **data):
-        await self._raise_event(InteractionEvent(started=False, **data))
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(InteractionEvent(started=False, **data), streaming_callback=streaming_callback)
 
     async def _raise_text_delta(self, content: str, **data):
-        await self._raise_event(TextDeltaEvent(content=content, **data))
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(TextDeltaEvent(content=content, **data), streaming_callback=streaming_callback)
 
     async def _raise_thought_delta(self, content: str, **data):
-        await self._raise_event(ThoughtDeltaEvent(content=content, **data))
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(ThoughtDeltaEvent(content=content, **data), streaming_callback=streaming_callback)
+
+    async def _raise_complete_thought(self, content: str, **data):
+        data['role'] = data.get('role', 'assistant')
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(CompleteThoughtEvent(content=content, **data), streaming_callback=streaming_callback)
 
     async def _raise_history_event(self, messages: List[dict[str, Any]], **data):
-        await self._raise_event(HistoryEvent(messages=messages, **data))
+        streaming_callback = data.pop('streaming_callback', None)
+        await self._raise_event(HistoryEvent(messages=messages, **data), streaming_callback=streaming_callback)
 
     async def _exponential_backoff(self, delay: int) -> None:
         """
@@ -303,31 +331,11 @@ class BaseAgent:
         Returns:
             List[dict[str, Any]]: Formatted message array for LLM API
         """
-        sess_mgr: Optional[ChatSessionManager] = kwargs.get("session_manager", None)
         messages: Optional[List[Dict[str, Any]]] = kwargs.get("messages", None)
-
-        if messages is None and sess_mgr is not None:
-           kwargs['messages'] = copy.deepcopy(sess_mgr.active_memory.messages)
-
-        user_message = kwargs.get("user_message")
-        audio_clips: List[AudioInput] = kwargs.get("audio") or []
-        images: List[ImageInput] = kwargs.get("images") or []
-        files: List[FileInput] = kwargs.get("files") or []
-
-        if sess_mgr is not None:
-            # TODO: Add the user message but we need to take into account multimodal messages
-            if user_message is None:
-                if len(audio_clips) > 0:
-                    user_message = audio_clips[0].transcript or "audio input"
-                    await self._save_user_message_to_session(sess_mgr, user_message)
-                # If no audio but we have files, record that files were submitted
-                elif images or files:
-                    user_message = "Files submitted"
-                    await self._save_user_message_to_session(sess_mgr, user_message)
-            elif user_message:
-                await self._save_user_message_to_session(sess_mgr, user_message)
-
-        # User request logging is now handled by EventSessionLogger via streaming_callback
+        if messages is None:
+            chat_session: Optional[ChatSession] = kwargs.get("chat_session", None)
+            messages = chat_session.messages if chat_session is not None else []
+            kwargs["messages"] = messages
 
         return await self.__construct_message_array(**kwargs)
 

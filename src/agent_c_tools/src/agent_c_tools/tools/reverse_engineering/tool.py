@@ -1,4 +1,5 @@
 import itertools
+import threading
 from typing import Any, Dict, Optional
 
 import yaml
@@ -61,17 +62,18 @@ class ReverseEngineeringTools(AgentAssistToolBase):
         }
     )
     async def analyze_source(self, **kwargs) -> str:
+        tool_context: Dict[str, Any] = kwargs['tool_context']
+        client_wants_cancel: threading.Event = tool_context["client_wants_cancel"]
         glob: str = kwargs.get('glob')
         batch_size: int = kwargs.get('batch_size', 2)
-        tool_context: Dict[str, Any] = kwargs.get('tool_context')
         error, workspace, relative_path = self.workspace_tool.validate_and_get_workspace_path(glob)
         if error is not None:
             return f"Error: {error}"
 
         files = await workspace.glob(relative_path, True)
 
-        await self._pass_one(workspace, files, batch_size, tool_context )
-        await self._pass_two(workspace, files, tool_context)
+        await self._pass_one(workspace, files, batch_size, tool_context, client_wants_cancel )
+        await self._pass_two(workspace, files, tool_context, client_wants_cancel)
 
         return f"Processed {len(files)} files. See //{workspace.name}/.scratch/analyze_source/ for results."
 
@@ -97,10 +99,11 @@ class ReverseEngineeringTools(AgentAssistToolBase):
         }
     )
     async def analyze_tree(self, **kwargs) -> str:
+        tool_context: Dict[str, Any] = kwargs['tool_context']
+        client_wants_cancel: threading.Event = tool_context["client_wants_cancel"]
         start_path: str = kwargs.get('start_path')
         batch_size: int = kwargs.get('batch_size', 2)
         extensions: list[str] = kwargs.get('extensions', self.default_extensions)
-        tool_context: Dict[str, Any] = kwargs.get('tool_context')
         error, workspace, relative_path = self.workspace_tool.validate_and_get_workspace_path(start_path)
         if error is not None:
             return f"Error: {error}"
@@ -109,8 +112,8 @@ class ReverseEngineeringTools(AgentAssistToolBase):
         if error is not None:
             return f"Error: {error}"
 
-        await self._pass_one(workspace, files, batch_size, tool_context)
-        await self._pass_two(workspace, files, tool_context)
+        await self._pass_one(workspace, files, batch_size, tool_context, client_wants_cancel)
+        await self._pass_two(workspace, files, tool_context, client_wants_cancel)
 
         return f"Processed {len(files)} files. See //{workspace.name}/.scratch/analyze_source/ for results."
 
@@ -130,21 +133,23 @@ class ReverseEngineeringTools(AgentAssistToolBase):
         }
     )
     async def query_analysis(self, **kwargs) -> str:
+        tool_context: Dict[str, Any] = kwargs['tool_context']
+        client_wants_cancel: threading.Event = tool_context["client_wants_cancel"]
         request: str = kwargs.get('request')
         workspace_name: str = kwargs.get('workspace')
-        tool_context: Dict[str, Any] = kwargs.get('tool_context')
+
         workspace = self.workspace_tool.find_workspace_by_name(workspace_name)
         agent_config = self.recon_answers_oneshot.model_dump()
         agent_config['persona'] = agent_config['persona'].replace('[workspace]', workspace_name).replace('[workspace_tree]', await workspace.tree('.scratch/analyze_source/enhanced', 10, 5))
         agent = AgentConfigurationV2(**agent_config)
 
-        messages = await self.agent_oneshot(request, agent, tool_context['session_id'], tool_context)
+        messages = await self.agent_oneshot(request, agent, tool_context['session_id'], tool_context, client_wants_cancel=client_wants_cancel)
         last_message = messages[-1] if messages else None
 
         return yaml.dump(last_message, allow_unicode=True) if last_message else "No response from agent."
 
 
-    async def _pass_one(self, workspace, files: list[str], batch_size: int = 2, tool_context: Optional[Dict[str, any]] = None) -> list[str]:
+    async def _pass_one(self, workspace, files: list[str], batch_size: int, tool_context: Dict[str, any], client_wants_cancel: threading.Event) -> list[str]:
         pass_one_results = []
         if batch_size > 1:
             parallel: bool = True
@@ -155,37 +160,53 @@ class ReverseEngineeringTools(AgentAssistToolBase):
         if parallel:
             iterator = iter(files)
             while batch := list(itertools.islice(iterator, batch_size)):
+                if client_wants_cancel.is_set():
+                    await self._render_media_markdown("**Processing cancelled by user.**",
+                                                      "analyze_source", tool_context=tool_context)
+                    return pass_one_results
+
                 paths = "\n- ".join([f"//{workspace.name}/{file}" for file in batch])
-                await self._raise_text_delta_event(content=f"\n**Processing files (pass 1)**: {paths}... ")
+                await self._render_media_markdown(f"\n**Processing files (pass 1)**: {paths}... ", "analyze_source", tool_context=tool_context)
                 true_batch = [await self.__try_explain_code(f"//{workspace.name}/{file}") for file in batch]
                 results = await self.parallel_agent_oneshots(true_batch,
                                                              persona=self.recon_oneshot,
                                                              user_session_id=tool_context['session_id'],
-                                                             tool_context=tool_context)
-                await self._raise_text_delta_event(content=f"\nfinished processing files (pass 1):\n- {paths}")
+                                                             tool_context=tool_context,
+                                                             client_wants_cancel=client_wants_cancel)
+                await self._render_media_markdown(f"\nfinished processing files (pass 1):\n- {paths}", "analyze_source", tool_context=tool_context)
                 pass_one_results.extend(results)
         else:
             for file in files:
-                await self._raise_text_delta_event(content=f"\n**Processing file (pass 1)**: {file}... ")
+                if client_wants_cancel.is_set():
+                    await self._render_media_markdown("**Processing cancelled by user.**", "analyze_source", tool_context=tool_context)
+                    return pass_one_results
+
+                await self._render_media_markdown(f"n**Processing file (pass 1)**: {file}... ", "analyze_source", tool_context=tool_context)
                 result = await self.agent_oneshot(user_message=await self.__try_explain_code(f"//{workspace.name}/{file}"),
                                                   persona=self.recon_oneshot,
                                                   user_session_id=tool_context['session_id'],
-                                                  tool_context=tool_context)
-                await self._raise_text_delta_event(content=f"\nDone processing file (pass 1): {file}")
+                                                  tool_context=tool_context,
+                                                  client_wants_cancel=client_wants_cancel)
+                await self._render_media_markdown(f"\nDone processing file (pass 1): {file}", "analyze_source", tool_context=tool_context)
                 pass_one_results.append(result)
 
         return pass_one_results
 
 
-    async def _pass_two(self, workspace, files: list[str], tool_context: Optional[Dict[str, any]] = None) -> list[str]:
+    async def _pass_two(self, workspace, files: list[str], tool_context: Dict[str, any], client_wants_cancel: threading.Event ) -> list[str]:
         pass_two_results = []
 
         for file in files:
-            await self._raise_text_delta_event(content=f"\n**Processing file (pass 1)**: {file}... ")
+            if client_wants_cancel.is_set():
+                await self._render_media_markdown("**Processing cancelled by user.**", "analyze_source", tool_context=tool_context)
+                return pass_two_results
+
+            await self._render_media_markdown(f"\n**Processing file (pass 2)**: {file}... ", "analyze_source", tool_context=tool_context)
             result = await self.agent_oneshot(user_message=f"//{workspace.name}/{file}",
                                               persona=self.recon_revise_oneshot,
                                               user_session_id=tool_context['session_id'],
-                                              tool_context=tool_context)
+                                              tool_context=tool_context,
+                                              client_wants_cancel=client_wants_cancel)
             pass_two_results.append(result)
 
         return pass_two_results

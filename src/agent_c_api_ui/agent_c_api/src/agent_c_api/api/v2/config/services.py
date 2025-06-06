@@ -3,7 +3,7 @@ import glob
 from typing import Optional
 from fastapi_cache.decorator import cache
 
-from agent_c import Toolset
+from agent_c.toolsets.tool_set import Toolset
 from agent_c_api.config.config_loader import MODELS_CONFIG
 from agent_c_api.config.env_config import settings
 from agent_c_api.core.agent_manager import UItoAgentBridgeManager

@@ -263,41 +263,10 @@
       "vendor": "claude",
       "models": [
         {
-          "id": "claude-3-5-sonnet-latest",
+          "id": "claude-sonnet-4-20250514",
           "model_type": "chat",
-          "ui_name": "Claude 3.5 Sonnet Latest",
-          "description": "Latest Claude 3.5 Sonnet model for chat interactions.",
-          "parameters": {
-            "temperature": {
-              "default": 0.5,
-              "min": 0,
-              "max": 1,
-              "required": true
-            },
-            "max_tokens": {
-              "min": 1000,
-              "max": 8192,
-              "default": 8192,
-              "required": true
-            }
-          },
-          "context_window": 200000,
-          "capabilities": {
-            "supports_tools": true,
-            "multi_modal": true
-          },
-          "allowed_inputs": {
-            "image": true,
-            "video": false,
-            "audio": false,
-            "file": false
-          }
-        },
-        {
-          "id": "claude-3-7-sonnet-latest",
-          "model_type": "chat",
-          "ui_name": "Claude 3.7 Sonnet Latest",
-          "description": "Latest Claude 3.7 Sonnet model for chat interactions.",
+          "ui_name": "Claude 4 Sonnet",
+          "description": "Smart, efficient model for everyday use",
           "parameters": {
             "extended_thinking": {
               "enabled": true,
@@ -372,10 +341,132 @@
           }
         },
         {
-          "id": "claude-sonnet-4-20250514",
+          "id": "claude-3-7-sonnet-latest",
+          "model_type": "chat",
+          "ui_name": "Claude 3.7 Sonnet Latest",
+          "description": "Latest Claude 3.7 Sonnet model for chat interactions.",
+          "parameters": {
+            "extended_thinking": {
+              "enabled": true,
+              "budget_tokens": {
+                "min": 0,
+                "max": 24000,
+                "default": 10000
+              },
+              "required": true
+            },
+            "max_tokens": {
+              "default": 8192,
+              "limits": {
+                "min": 1000,
+                "max": {
+                  "standard": 8192,
+                  "with_extended_thinking": 64000
+                }
+              },
+              "required": true
+            }
+          },
+          "context_window": 200000,
+          "capabilities": {
+            "supports_tools": true,
+            "multi_modal": true
+          },
+          "allowed_inputs": {
+            "image": true,
+            "video": false,
+            "audio": false,
+            "file": false
+          }
+        }
+      ]
+    },
+    {
+      "vendor": "bedrock",
+      "models": [
+        {
+          "id": "bedrock_claude-sonnet-4-20250514",
           "model_type": "chat",
           "ui_name": "Claude 4 Sonnet",
           "description": "Smart, efficient model for everyday use",
+          "parameters": {
+            "extended_thinking": {
+              "enabled": true,
+              "budget_tokens": {
+                "min": 0,
+                "max": 24000,
+                "default": 10000
+              },
+              "required": true
+            },
+            "max_tokens": {
+              "default": 8192,
+              "limits": {
+                "min": 1000,
+                "max": {
+                  "standard": 8192,
+                  "with_extended_thinking": 64000
+                }
+              },
+              "required": true
+            }
+          },
+          "context_window": 200000,
+          "capabilities": {
+            "supports_tools": true,
+            "multi_modal": true
+          },
+          "allowed_inputs": {
+            "image": true,
+            "video": false,
+            "audio": false,
+            "file": false
+          }
+        },
+        {
+          "id": "bedrock_claude-opus-4-20250514",
+          "model_type": "chat",
+          "ui_name": "Claude 4 Opus",
+          "description": "Powerful, large model for complex challenges",
+          "parameters": {
+            "extended_thinking": {
+              "enabled": true,
+              "budget_tokens": {
+                "min": 0,
+                "max": 24000,
+                "default": 10000
+              },
+              "required": true
+            },
+            "max_tokens": {
+              "default": 8192,
+              "limits": {
+                "min": 1000,
+                "max": {
+                  "standard": 8192,
+                  "with_extended_thinking": 64000
+                }
+              },
+              "required": true
+            }
+          },
+          "context_window": 200000,
+          "capabilities": {
+            "supports_tools": true,
+            "multi_modal": true
+          },
+          "allowed_inputs": {
+            "image": true,
+            "video": false,
+            "audio": false,
+            "file": false
+          }
+        },
+        {
+          "id": "bedrock_claude-3-7-sonnet-latest",
+          "model_type": "chat",
+          "ui_name": "Claude 3.7 Sonnet Latest",
+          "description": "Latest Claude 3.7 Sonnet model for chat interactions.",
           "parameters": {
             "extended_thinking": {
               "enabled": true,

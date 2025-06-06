@@ -41,7 +41,7 @@ export const SessionProvider = ({children}) => {
     // Data from backend
     const [personas, setPersonas] = useState([]);
     const [availableTools, setAvailableTools] = useState({
-        essential_tools: [],
+        essential_toolsets: [],
         groups: {},
         categories: []
     });

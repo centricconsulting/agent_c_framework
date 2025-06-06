@@ -5,7 +5,7 @@ import logging
 
 from newsapi.newsapi_client import NewsApiClient
 
-from agent_c import json_schema, Toolset
+from agent_c.toolsets import json_schema, Toolset
 
 class NewsApiTools(Toolset):
     def __init__(self, **kwargs):

@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_versioning import version
 
+from ....core.agent_bridge import AgentBridge
 from ....core.agent_manager import UItoAgentBridgeManager
 from typing import Any
 from ...dependencies import get_agent_manager
@@ -222,27 +223,27 @@ async def get_agent_debug_info(
         if not session_data:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
-        agent = session_data["agent"]
+        agent_bridge: AgentBridge = session_data["agent_bridge"]
 
         # Get ReactJSAgent parameters
         agent_bridge_params = {
-            "temperature": getattr(agent, "temperature", None),
-            "reasoning_effort": getattr(agent, "reasoning_effort", None),
-            "extended_thinking": getattr(agent, "extended_thinking", None),
-            "budget_tokens": getattr(agent, "budget_tokens", None),
-            "max_tokens": getattr(agent, "max_tokens", None),
+            "temperature": getattr(agent_bridge, "temperature", None),
+            "reasoning_effort": getattr(agent_bridge, "reasoning_effort", None),
+            "extended_thinking": getattr(agent_bridge, "extended_thinking", None),
+            "budget_tokens": getattr(agent_bridge, "budget_tokens", None),
+            "max_tokens": getattr(agent_bridge, "max_tokens", None),
         }
 
         # Get internal agent parameters
         internal_agent_params = {}
-        if hasattr(agent, "agent") and agent.agent:
-            internal_agent = agent.agent
+        if agent_bridge.agent_runtime:
+            internal_agent_runtime = agent_bridge.agent_runtime
             internal_agent_params = {
-                "type": type(internal_agent).__name__,
-                "temperature": getattr(internal_agent, "temperature", None),
-                "reasoning_effort": getattr(internal_agent, "reasoning_effort", None),
-                "budget_tokens": getattr(internal_agent, "budget_tokens", None),
-                "max_tokens": getattr(internal_agent, "max_tokens", None),
+                "type": type(internal_agent_runtime).__name__,
+                "temperature": getattr(internal_agent_runtime, "temperature", None),
+                "reasoning_effort": getattr(internal_agent_runtime, "reasoning_effort", None),
+                "budget_tokens": getattr(internal_agent_runtime, "budget_tokens", None),
+                "max_tokens": getattr(internal_agent_runtime, "max_tokens", None),
             }
 
         debug_info = {

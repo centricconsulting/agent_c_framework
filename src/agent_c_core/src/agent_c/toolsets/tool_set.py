@@ -6,6 +6,8 @@ import logging
 
 from typing import Union, List, Dict, Any, Optional
 
+import markdown
+
 from agent_c.chat.session_manager import ChatSessionManager
 from agent_c.models.events import RenderMediaEvent, MessageEvent, TextDeltaEvent
 from agent_c.prompting.prompt_section import PromptSection
@@ -185,6 +187,14 @@ class Toolset:
 
         return formatted
 
+    async def _render_media_markdown(self, markdown_text: str, sent_by: str, **kwargs: Any) -> None:
+        await self._raise_render_media(
+                sent_by_class=self.__class__.__name__,
+                sent_by_function=sent_by,
+                content_type="text/html",
+                content=markdown.markdown(markdown_text),
+                **kwargs)
+
     async def _raise_render_media(self, **kwargs: Any) -> None:
         """
         Raises a render media event.
@@ -193,21 +203,17 @@ class Toolset:
             kwargs: The arguments to be passed to the render media event.
         """
         kwargs['role'] = kwargs.get('role', self.tool_role)
-        kwargs['session_id'] = kwargs.get('session_id', self.session_manager.chat_session.session_id)
 
         # Format markdown content if content_type is text/markdown
         content_type = kwargs.get('content_type')
         if content_type == 'text/markdown' and 'content' in kwargs:
             kwargs['content'] = self._format_markdown(kwargs['content'])
 
+        tool_context = kwargs.pop('tool_context')
+        kwargs['session_id'] = kwargs.get('session_id', tool_context.get('user_session_id', tool_context['session_id']))
+
         # Create the event object
         render_media_event = RenderMediaEvent(**kwargs)
-
-        # Log the event if we have access to an agent with a session_logger
-        if hasattr(self.tool_chest, 'agent') and self.tool_chest.agent:
-            agent = self.tool_chest.agent
-            if hasattr(agent, 'session_logger') and agent.session_logger:
-                await agent.session_logger.log_render_media(render_media_event)
 
         # Send it to the streaming callback
         if self.streaming_callback:
@@ -222,7 +228,8 @@ class Toolset:
         """
         kwargs['role'] = kwargs.get('role', self.tool_role)
         kwargs['format'] = kwargs.get('format', self.output_format)
-        kwargs['session_id'] = kwargs.get('session_id', self.session_manager.chat_session.session_id)
+        tool_context = kwargs.pop('tool_context')
+        kwargs['session_id'] = kwargs.get('session_id', tool_context.get('user_session_id', tool_context['session_id']))
         await self.streaming_callback(MessageEvent(**kwargs))
 
     async def _raise_text_delta_event(self, **kwargs: Any) -> None:
@@ -234,8 +241,11 @@ class Toolset:
         """
         kwargs['role'] = kwargs.get('role', self.tool_role)
         kwargs['format'] = kwargs.get('format', self.output_format)
-        kwargs['session_id'] = kwargs.get('session_id', self.session_manager.chat_session.session_id)
+        tool_context = kwargs.pop('tool_context')
+        kwargs['session_id'] = kwargs.get('session_id', tool_context.get('user_session_id', tool_context['session_id']))
+
         await self.streaming_callback(TextDeltaEvent(**kwargs))
+
 
     async def post_init(self) -> None:
         """

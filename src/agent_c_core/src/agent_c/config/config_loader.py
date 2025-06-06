@@ -1,6 +1,8 @@
 import os
 from typing import Optional
 
+from agent_c.util.logging_utils import LoggingManager
+
 
 class ConfigLoader:
     def __init__(self, config_path: Optional[str] = None):
@@ -10,6 +12,7 @@ class ConfigLoader:
         Args:
             config_path: Optional default path to configuration file
         """
+        self.logger = LoggingManager(__name__).get_logger()
         self.config_path = os.environ.get("AGENT_C_CONFIG_PATH", None) if config_path is None else config_path
         if config_path is None:
             self.config_path = self._locate_config_path()

@@ -254,11 +254,11 @@ const ToolSelector = ({ availableTools, onEquipTools, activeTools = [], sessionI
                 </Button>
 
                 <Tabs 
-                    defaultValue={availableTools.categories.includes("core") ? "core" : (availableTools.essential_tools && availableTools.essential_tools.length > 0 ? "essential" : availableTools.categories[0] || "")} 
+                    defaultValue={availableTools.categories.includes("core") ? "core" : (availableTools.essential_toolsets && availableTools.essential_toolsets.length > 0 ? "essential" : availableTools.categories[0] || "")} 
                     className="tool-selector-tabs"
                 >
                     <TabsList className="tool-selector-tabs-list">
-                        {availableTools.essential_tools && availableTools.essential_tools.length > 0 && (
+                        {availableTools.essential_toolsets && availableTools.essential_toolsets.length > 0 && (
                             <TabsTrigger 
                                 value="essential" 
                                 className="tool-selector-tab-trigger"
@@ -278,9 +278,9 @@ const ToolSelector = ({ availableTools, onEquipTools, activeTools = [], sessionI
                     </TabsList>
 
                     <ScrollArea className="tool-selector-content">
-                        {availableTools.essential_tools && availableTools.essential_tools.length > 0 && (
+                        {availableTools.essential_toolsets && availableTools.essential_toolsets.length > 0 && (
                             <TabsContent value="essential" className="mt-0">
-                                <EssentialTools tools={availableTools.essential_tools}/>
+                                <EssentialTools tools={availableTools.essential_toolsets}/>
                             </TabsContent>
                         )}
                         

@@ -73,7 +73,13 @@ export async function setSessionModel(sessionId, modelId, parameters = {}) {
  */
 export async function updateModelParameters(sessionId, parameters) {
   try {
-    return await api.put(`/session/${sessionId}/parameters`, parameters);
+    // The backend expects the session ID to be part of the payload
+    const payload = {
+      ui_session_id: sessionId,
+      ...parameters
+    };
+    
+    return await api.post('/update_settings', payload);
   } catch (error) {
     throw api.processApiError(error, 'Failed to update model parameters');
   }

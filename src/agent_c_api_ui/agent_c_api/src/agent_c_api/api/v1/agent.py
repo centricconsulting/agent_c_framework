@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Form, Depends, Request
 from agent_c_api.api.dependencies import get_agent_manager
 from agent_c_api.api.v1.llm_models.agent_params import AgentUpdateParams
 from agent_c_api.api.v1.llm_models.tool_model import ToolUpdateRequest
+from agent_c_api.core.agent_bridge import AgentBridge
 from agent_c_api.core.util.logging_utils import LoggingManager
 
 logging_manager = LoggingManager(__name__)
@@ -24,12 +25,11 @@ async def update_agent_settings(
     if not session_data:
         return {"error": "Invalid session_id"}
 
-    # get agent object
-    agent = session_data["agent"]
+    agent_bridge: AgentBridge = session_data["agent_bridge"]
 
-    if not agent:
-        logger.warning(f"No agent found for session {update_params.ui_session_id}")
-        return {"error": "No agent found to update"}
+    if not agent_bridge:
+        logger.warning(f"No agent bridge found for session {update_params.ui_session_id}")
+        return {"error": "No agent bridge found to update"}
 
     logger.debug(f"Pydantic model received: {update_params}")
     logger.debug(f"Model dump: {update_params.model_dump(exclude_unset=False)}")
@@ -51,17 +51,24 @@ async def update_agent_settings(
         failed_updates = []
         needs_agent_reinitialization = False
 
+        if "persona_name" in updates:
+            agent_key = updates["persona_name"]
+
+            agent_config = agent_manager.agent_config_loader.duplicate(agent_key)
+            agent_bridge.chat_session.agent_config = agent_config
+            needs_agent_reinitialization = True
+
+
         for key, value in updates.items():
-            if key in ["temperature", "reasoning_effort", "extended_thinking", "budget_tokens", "custom_prompt",
-                       "persona_name"]:
+            if key in ["temperature", "reasoning_effort", "extended_thinking", "budget_tokens", "custom_prompt", "persona_name"]:
                 # Only update if value is not None
                 if value is not None:
                     # Record the change
-                    old_value = getattr(agent, key, None)
+                    old_value = getattr(agent_bridge, key, None)
 
                     # Update only attributes that changed
                     if old_value != value:
-                        setattr(agent, key, value)
+                        setattr(agent_bridge, key, value)
                         changes_made[key] = {
                             "from": safe_truncate(old_value),
                             "to": safe_truncate(value)
@@ -80,7 +87,7 @@ async def update_agent_settings(
             # This is critical - reinitialize the internal agent when model parameters change
             # This will NOT change the underlying agents chat session, because that's done in init_session above and
             # passed in via reactjs_agent.stream_chat
-            await agent.initialize_agent_parameters()
+            await agent_bridge.initialize_agent_parameters()
 
         logger.info(f"Settings updated for session {update_params.ui_session_id}: {changes_made}")
         # logger.info(f"Skipped null values: {[k for k, v in updates.items() if v is None]}")
@@ -94,7 +101,7 @@ async def update_agent_settings(
             "failed_updates": failed_updates
         }
     except Exception as e:
-        logger.error(f"Error updating settings for session {update_params.ui_session_id}: {str(e)}")
+        logger.exception(f"Error updating settings for session {update_params.ui_session_id}: {str(e)}", exc_info=True)
         return {"error": f"Failed to update settings: {str(e)}"}
 
 
@@ -106,16 +113,13 @@ async def get_agent_config(ui_session_id: str, agent_manager=Depends(get_agent_m
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found")
 
-        agent = session_data["agent"]
-        config = agent._get_agent_config()
+        agent_bridge = session_data["agent_bridge"]
+        config = agent_bridge.get_agent_runtime_config()
 
         # Add additional configuration info
         config.update({
-            "user_id": config["user_id"],
-            "custom_prompt": config["custom_prompt"],
             "ui_session_id": ui_session_id,
-            "agent_c_session_id": session_data.get("agent_c_session_id"),
-            "backend": config["backend"],
+            "agent_c_session_id": session_data["agent_c_session_id"],
             "model_info": {
                 "name": config["model_name"],
                 "temperature": config["agent_parameters"]["temperature"],
@@ -133,7 +137,7 @@ async def get_agent_config(ui_session_id: str, agent_manager=Depends(get_agent_m
             "status": "success"
         }
     except Exception as e:
-        logger.error(f"Session {ui_session_id} - Error getting agent config: {e}")
+        logger.exception(f"Session {ui_session_id} - Error getting agent config: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -153,8 +157,8 @@ async def update_agent_tools(
         if not isinstance(data.tools, list):
             raise HTTPException(status_code=400, detail="Tools must be an array")
 
-        agent = session_data["agent"]
-        await agent.update_tools(tool_list)
+        agent_bridge = session_data["agent_bridge"]
+        await agent_bridge.update_tools(tool_list)
         session_data["active_tools"] = tool_list
 
         return {
@@ -176,8 +180,8 @@ async def get_agent_tools(ui_session_id: str, agent_manager=Depends(get_agent_ma
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found")
 
-        agent = session_data["agent"]
-        config = agent._get_agent_config()
+        agent_bridge: AgentBridge = session_data["agent_bridge"]
+        config = agent_bridge.get_agent_runtime_config()
         logger.info(f"Session {ui_session_id} requested tools config: {config['initialized_tools']}")
 
         return {
@@ -200,21 +204,21 @@ async def debug_agent_state(ui_session_id: str, agent_manager=Depends(get_agent_
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found")
 
-        agent = session_data["agent"]
+        agent_bridge = session_data["agent_bridge"]
 
         # Get ReactJSAgent parameters
         agent_bridge_params = {
-            "temperature": getattr(agent, "temperature", None),
-            "reasoning_effort": getattr(agent, "reasoning_effort", None),
-            "extended_thinking": getattr(agent, "extended_thinking", None),
-            "budget_tokens": getattr(agent, "budget_tokens", None),
-            "max_tokens": getattr(agent, "max_tokens", None),
+            "temperature": getattr(agent_bridge, "temperature", None),
+            "reasoning_effort": getattr(agent_bridge, "reasoning_effort", None),
+            "extended_thinking": getattr(agent_bridge, "extended_thinking", None),
+            "budget_tokens": getattr(agent_bridge, "budget_tokens", None),
+            "max_tokens": getattr(agent_bridge, "max_tokens", None),
         }
 
         # Get internal agent parameters
         internal_agent_params = {}
-        if hasattr(agent, "agent") and agent.agent:
-            internal_agent = agent.agent
+        if agent_bridge.agent_runtime:
+            internal_agent = agent_bridge.agent_runtime
             internal_agent_params = {
                 "type": type(internal_agent).__name__,
                 "temperature": getattr(internal_agent, "temperature", None),

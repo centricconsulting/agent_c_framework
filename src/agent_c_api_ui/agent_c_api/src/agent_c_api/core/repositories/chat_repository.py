@@ -1,7 +1,9 @@
 from datetime import datetime
 import json
+import time
 from typing import Dict, List, Any, Optional, Union, Sequence, cast
 
+import structlog
 from agent_c.models.events.chat import MessageEvent, InteractionEvent
 from agent_c.models.events.tool_calls import ToolCallEvent
 from agent_c.models.common_chat.models import CommonChatMessage
@@ -22,6 +24,13 @@ class ChatRepository:
         """
         self.redis = redis_client
         self.session_id = session_id
+        self.logger = structlog.get_logger(__name__)
+        
+        self.logger.info(
+            "chat_repository_initialized",
+            session_id=session_id,
+            redis_client_type=type(redis_client).__name__
+        )
     
     async def add_message(self, message: Union[MessageEvent, CommonChatMessage, Dict[str, Any]]) -> None:
         """
@@ -30,60 +39,110 @@ class ChatRepository:
         Args:
             message (Union[MessageEvent, CommonChatMessage, Dict[str, Any]]): The message to add
         """
-        # Handle CommonChatMessage
-        if isinstance(message, CommonChatMessage):
-            # Store the CommonChatMessage as JSON
-            common_msg_json = message.model_dump_json()
-            msg_id = message.id
-            await self.redis.set(
-                f"session:{self.session_id}:common_msg:{msg_id}", 
-                common_msg_json
+        start_time = time.time()
+        
+        try:
+            # Extract message context for logging
+            message_type = type(message).__name__
+            message_id = getattr(message, 'id', None) if hasattr(message, 'id') else message.get('id', 'unknown') if isinstance(message, dict) else 'unknown'
+            
+            self.logger.info(
+                "chat_message_storing",
+                session_id=self.session_id,
+                message_id=message_id,
+                message_type=message_type
             )
             
-            # Convert to MessageEvent for backward compatibility
-            msg_event = CommonChatConverter.common_chat_to_message_event(message)
-            if msg_event:
-                # Continue with MessageEvent processing
-                msg_data = msg_event.model_dump()
+            # Handle CommonChatMessage
+            if isinstance(message, CommonChatMessage):
+                # Store the CommonChatMessage as JSON
+                common_msg_json = message.model_dump_json()
+                msg_id = message.id
+                await self.redis.set(
+                    f"session:{self.session_id}:common_msg:{msg_id}", 
+                    common_msg_json
+                )
+                
+                self.logger.debug(
+                    "common_chat_message_stored",
+                    session_id=self.session_id,
+                    message_id=msg_id,
+                    role=message.role.value if hasattr(message.role, 'value') else str(message.role)
+                )
+                
+                # Convert to MessageEvent for backward compatibility
+                msg_event = CommonChatConverter.common_chat_to_message_event(message)
+                if msg_event:
+                    # Continue with MessageEvent processing
+                    msg_data = msg_event.model_dump()
+                else:
+                    # This is a tool message, store minimal data
+                    msg_data = {
+                        "id": message.id,
+                        "role": message.role.value,
+                        "content": "[Tool Message]",  # Placeholder
+                        "timestamp": message.created_at.isoformat(),
+                        "is_common_chat": "true"
+                    }
+            # Handle MessageEvent
+            elif isinstance(message, MessageEvent):
+                msg_data = message.model_dump()
+                
+                # Also convert and store as CommonChatMessage for future use
+                common_msg = CommonChatConverter.message_event_to_common_chat(message)
+                common_msg_json = common_msg.model_dump_json()
+                msg_id = common_msg.id
+                await self.redis.set(
+                    f"session:{self.session_id}:common_msg:{msg_id}", 
+                    common_msg_json
+                )
+                
+                self.logger.debug(
+                    "message_event_converted_and_stored",
+                    session_id=self.session_id,
+                    message_id=msg_id,
+                    original_type="MessageEvent"
+                )
+            # Handle dict
             else:
-                # This is a tool message, store minimal data
-                msg_data = {
-                    "id": message.id,
-                    "role": message.role.value,
-                    "content": "[Tool Message]",  # Placeholder
-                    "timestamp": message.created_at.isoformat(),
-                    "is_common_chat": "true"
-                }
-        # Handle MessageEvent
-        elif isinstance(message, MessageEvent):
-            msg_data = message.model_dump()
+                msg_data = message
             
-            # Also convert and store as CommonChatMessage for future use
-            common_msg = CommonChatConverter.message_event_to_common_chat(message)
-            common_msg_json = common_msg.model_dump_json()
-            msg_id = common_msg.id
-            await self.redis.set(
-                f"session:{self.session_id}:common_msg:{msg_id}", 
-                common_msg_json
+            # Add timestamp if not present
+            if "timestamp" not in msg_data:
+                msg_data["timestamp"] = datetime.now().isoformat()
+            
+            # Convert any non-string values
+            msg_data = {k: json.dumps(v) if not isinstance(v, str) else v 
+                        for k, v in msg_data.items()}
+            
+            # Add to Redis stream
+            stream_result = await self.redis.xadd(f"session:{self.session_id}:messages", msg_data)
+            
+            # Update session updated_at time
+            await self.redis.hset(f"session:{self.session_id}:meta", "updated_at", 
+                                datetime.now().isoformat())
+            
+            duration = time.time() - start_time
+            self.logger.info(
+                "chat_message_stored",
+                session_id=self.session_id,
+                message_id=message_id,
+                message_type=message_type,
+                stream_id=stream_result.decode('utf-8') if isinstance(stream_result, bytes) else str(stream_result),
+                duration_ms=round(duration * 1000, 2)
             )
-        # Handle dict
-        else:
-            msg_data = message
-        
-        # Add timestamp if not present
-        if "timestamp" not in msg_data:
-            msg_data["timestamp"] = datetime.now().isoformat()
-        
-        # Convert any non-string values
-        msg_data = {k: json.dumps(v) if not isinstance(v, str) else v 
-                    for k, v in msg_data.items()}
-        
-        # Add to Redis stream
-        await self.redis.xadd(f"session:{self.session_id}:messages", msg_data)
-        
-        # Update session updated_at time
-        await self.redis.hset(f"session:{self.session_id}:meta", "updated_at", 
-                            datetime.now().isoformat())
+            
+        except Exception as e:
+            duration = time.time() - start_time
+            self.logger.error(
+                "chat_message_store_failed",
+                session_id=self.session_id,
+                message_id=message_id if 'message_id' in locals() else 'unknown',
+                message_type=message_type if 'message_type' in locals() else 'unknown',
+                error=str(e),
+                duration_ms=round(duration * 1000, 2)
+            )
+            raise
     
     async def get_messages(self, start: str = "-", end: str = "+", count: int = 100, 
                       format: str = "default") -> List[Union[Dict[str, Any], CommonChatMessage]]:
@@ -99,60 +158,98 @@ class ChatRepository:
         Returns:
             List[Union[Dict[str, Any], CommonChatMessage]]: List of messages
         """
-        # Get messages from Redis stream
-        messages = await self.redis.xrange(f"session:{self.session_id}:messages", start, end, count)
+        start_time = time.time()
         
-        # Process messages
-        result = []
-        for msg_id, msg_data in messages:
-            # Convert message ID to string
-            msg_id_str = msg_id.decode("utf-8") if isinstance(msg_id, bytes) else msg_id
+        try:
+            self.logger.info(
+                "chat_messages_retrieving",
+                session_id=self.session_id,
+                start=start,
+                end=end,
+                count=count,
+                format=format
+            )
             
-            # Process message data
-            processed_data = {}
-            for k, v in msg_data.items():
-                # Convert bytes to string
-                key = k.decode("utf-8") if isinstance(k, bytes) else k
-                value = v.decode("utf-8") if isinstance(v, bytes) else v
+            # Get messages from Redis stream
+            messages = await self.redis.xrange(f"session:{self.session_id}:messages", start, end, count)
+            
+            # Process messages
+            result = []
+            for msg_id, msg_data in messages:
+                # Convert message ID to string
+                msg_id_str = msg_id.decode("utf-8") if isinstance(msg_id, bytes) else msg_id
                 
-                # Try to parse JSON values
-                try:
-                    if key not in ["timestamp", "role", "content", "format"]:
-                        processed_value = json.loads(value)
-                    else:
-                        processed_value = value
-                except json.JSONDecodeError:
-                    processed_value = value
+                # Process message data
+                processed_data = {}
+                for k, v in msg_data.items():
+                    # Convert bytes to string
+                    key = k.decode("utf-8") if isinstance(k, bytes) else k
+                    value = v.decode("utf-8") if isinstance(v, bytes) else v
                     
-                processed_data[key] = processed_value
-            
-            # Add message ID
-            processed_data["id"] = msg_id_str
-            
-            # Check if we should return CommonChatMessage format
-            if format == "common":
-                # Check if this is a common chat message
-                is_common_chat = processed_data.get("is_common_chat") == "true"
+                    # Try to parse JSON values
+                    try:
+                        if key not in ["timestamp", "role", "content", "format"]:
+                            processed_value = json.loads(value)
+                        else:
+                            processed_value = value
+                    except json.JSONDecodeError:
+                        processed_value = value
+                        
+                    processed_data[key] = processed_value
                 
-                # Try to get the stored CommonChatMessage
-                common_msg_json = await self.redis.get(f"session:{self.session_id}:common_msg:{processed_data['id']}")
+                # Add message ID
+                processed_data["id"] = msg_id_str
                 
-                if common_msg_json:
-                    # Deserialize from JSON
-                    common_msg = CommonChatMessage.model_validate_json(
-                        common_msg_json.decode("utf-8") if isinstance(common_msg_json, bytes) else common_msg_json
-                    )
-                    result.append(common_msg)
+                # Check if we should return CommonChatMessage format
+                if format == "common":
+                    # Check if this is a common chat message
+                    is_common_chat = processed_data.get("is_common_chat") == "true"
+                    
+                    # Try to get the stored CommonChatMessage
+                    common_msg_json = await self.redis.get(f"session:{self.session_id}:common_msg:{processed_data['id']}")
+                    
+                    if common_msg_json:
+                        # Deserialize from JSON
+                        common_msg = CommonChatMessage.model_validate_json(
+                            common_msg_json.decode("utf-8") if isinstance(common_msg_json, bytes) else common_msg_json
+                        )
+                        result.append(common_msg)
+                    else:
+                        # Convert on the fly if not stored
+                        msg_event = MessageEvent(**processed_data)
+                        common_msg = CommonChatConverter.message_event_to_common_chat(msg_event)
+                        result.append(common_msg)
                 else:
-                    # Convert on the fly if not stored
-                    msg_event = MessageEvent(**processed_data)
-                    common_msg = CommonChatConverter.message_event_to_common_chat(msg_event)
-                    result.append(common_msg)
-            else:
-                # Return original format
-                result.append(processed_data)
-        
-        return result
+                    # Return original format
+                    result.append(processed_data)
+            
+            duration = time.time() - start_time
+            self.logger.info(
+                "chat_messages_retrieved",
+                session_id=self.session_id,
+                start=start,
+                end=end,
+                count=count,
+                format=format,
+                retrieved_count=len(result),
+                duration_ms=round(duration * 1000, 2)
+            )
+            
+            return result
+            
+        except Exception as e:
+            duration = time.time() - start_time
+            self.logger.error(
+                "chat_messages_retrieval_failed",
+                session_id=self.session_id,
+                start=start,
+                end=end,
+                count=count,
+                format=format,
+                error=str(e),
+                duration_ms=round(duration * 1000, 2)
+            )
+            raise
     
     async def get_meta(self) -> Dict[str, Any]:
         """
@@ -161,28 +258,54 @@ class ChatRepository:
         Returns:
             Dict[str, Any]: Session metadata
         """
-        # Get metadata from Redis hash
-        meta_data = await self.redis.hgetall(f"session:{self.session_id}:meta")
+        start_time = time.time()
         
-        # Process metadata
-        result = {}
-        for k, v in meta_data.items():
-            # Convert bytes to string
-            key = k.decode("utf-8") if isinstance(k, bytes) else k
-            value = v.decode("utf-8") if isinstance(v, bytes) else v
+        try:
+            self.logger.info(
+                "session_meta_retrieving",
+                session_id=self.session_id
+            )
             
-            # Try to parse JSON values
-            try:
-                if key not in ["created_at", "updated_at", "name", "description"]:
-                    processed_value = json.loads(value)
-                else:
-                    processed_value = value
-            except json.JSONDecodeError:
-                processed_value = value
+            # Get metadata from Redis hash
+            meta_data = await self.redis.hgetall(f"session:{self.session_id}:meta")
+            
+            # Process metadata
+            result = {}
+            for k, v in meta_data.items():
+                # Convert bytes to string
+                key = k.decode("utf-8") if isinstance(k, bytes) else k
+                value = v.decode("utf-8") if isinstance(v, bytes) else v
                 
-            result[key] = processed_value
-        
-        return result
+                # Try to parse JSON values
+                try:
+                    if key not in ["created_at", "updated_at", "name", "description"]:
+                        processed_value = json.loads(value)
+                    else:
+                        processed_value = value
+                except json.JSONDecodeError:
+                    processed_value = value
+                    
+                result[key] = processed_value
+            
+            duration = time.time() - start_time
+            self.logger.info(
+                "session_meta_retrieved",
+                session_id=self.session_id,
+                meta_keys_count=len(result),
+                duration_ms=round(duration * 1000, 2)
+            )
+            
+            return result
+            
+        except Exception as e:
+            duration = time.time() - start_time
+            self.logger.error(
+                "session_meta_retrieval_failed",
+                session_id=self.session_id,
+                error=str(e),
+                duration_ms=round(duration * 1000, 2)
+            )
+            raise
     
     async def set_meta(self, key: str, value: Any) -> None:
         """
@@ -192,12 +315,43 @@ class ChatRepository:
             key (str): Metadata key
             value (Any): Metadata value
         """
-        # Convert value to string if needed
-        if not isinstance(value, str):
-            value = json.dumps(value)
+        start_time = time.time()
+        
+        try:
+            self.logger.info(
+                "session_meta_setting",
+                session_id=self.session_id,
+                key=key,
+                value_type=type(value).__name__
+            )
             
-        # Set metadata in Redis hash
-        await self.redis.hset(f"session:{self.session_id}:meta", key, value)
+            # Convert value to string if needed
+            if not isinstance(value, str):
+                value = json.dumps(value)
+                
+            # Set metadata in Redis hash
+            await self.redis.hset(f"session:{self.session_id}:meta", key, value)
+            
+            duration = time.time() - start_time
+            self.logger.info(
+                "session_meta_set",
+                session_id=self.session_id,
+                key=key,
+                value_type=type(value).__name__,
+                duration_ms=round(duration * 1000, 2)
+            )
+            
+        except Exception as e:
+            duration = time.time() - start_time
+            self.logger.error(
+                "session_meta_set_failed",
+                session_id=self.session_id,
+                key=key,
+                value_type=type(value).__name__,
+                error=str(e),
+                duration_ms=round(duration * 1000, 2)
+            )
+            raise
     
     async def get_managed_meta(self) -> Dict[str, Any]:
         """

@@ -10,7 +10,7 @@ The tools here work and have proven to be stable over time.  Many of them are 'd
 
 ## Tools
 - [dall_e](src/agent_c_tools/tools/dall_e) - A tool for generating images from text using OpenAI's DALL-E model
-- [data_vis](src/agent_c_tools/tools/data_vis) - A tool for visualizing data using Seaborn and Plotly library.  Requires the [dataframe](src/agent_c_tools/tools/dataframe) tool to enabled.
+- [data_vis](src/agent_c_tools/tools/data_visualization) - A tool for visualizing data using Seaborn and Plotly library.  Requires the [dataframe](src/agent_c_tools/tools/dataframe) tool to enabled.
 - [dataframe](src/agent_c_tools/tools/dataframe) - A tool for creating and manipulating dataframes in Python. Allows for loading from excel, csv, tool_cache or from other tools.  Can perform grouping/aggregations on the dataframe
 - [mermaid](src/agent_c_tools/tools/mermaid_chart) - A tool for creating diagrams using the Mermaid library
 - [rss](src/agent_c_tools/tools/rss) - A tool for reading RSS feeds

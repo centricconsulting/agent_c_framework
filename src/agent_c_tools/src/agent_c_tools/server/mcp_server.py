@@ -13,13 +13,12 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union, AsyncIterator, get_type_hints
 
-from mcp.server.fastmcp import FastMCP, Context
+from mcp.server.fastmcp import FastMCP
 # MCP parameter handling is done through standard type annotations and dictionaries
 
-from agent_c import ToolChest, MCPToolChest, ToolCache, Toolset, ChatSessionManager
-from agent_c.toolsets.mcp_server import MCPServer as AgentCMCPServer
+from agent_c.toolsets import ToolChest, MCPToolChest, ToolCache
+from agent_c.chat.session_manager import  ChatSessionManager
 from agent_c_tools.tools.workspace.local_storage import LocalStorageWorkspace
-
 
 from agent_c_tools.server.config import ServerConfig, MCPServersConfig
 from agent_c_tools.server.discovery import discover_and_load_tools

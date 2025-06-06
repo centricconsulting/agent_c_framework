@@ -15,12 +15,13 @@ from .think import ThinkTools
 from .dynamics import DynamicsTools
 from .markdown_to_html_report import MarkdownToHtmlReportTools
 from .css_explorer import CssExplorerTools
-from .mariadb import MariaDBTools
+from .mariadb import MariadbTools
 from .math import MathTools
 from .workspace_planning import WorkspacePlanningTools
 from .workspace_knowledge import WorkspaceKnowledgeTools
 from .workspace_sequential_thinking import WorkspaceSequentialThinkingTools
 from .browser_playwright import BrowserPlaywrightTools
+from .data_visualization import DataVisualizationTools
 from .github import GithubTools
 
 __all__ = [
@@ -59,11 +60,12 @@ __all__ = [
     'ThinkTools',
     'MarkdownToHtmlReportTools',
     'CssExplorerTools',
-    'MariaDBTools',
+    'MariadbTools',
     'MathTools',
     'WorkspacePlanningTools',
     'WorkspaceKnowledgeTools',
     'WorkspaceSequentialThinkingTools',
     'BrowserPlaywrightTools',
+    'DataVisualizationTools',
     'GithubTools'
 ]

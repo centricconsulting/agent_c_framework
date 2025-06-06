@@ -5,7 +5,7 @@ description = "Reference tools / tool interfaces for Agent C"
 dependencies = [
     "agent_c-core>=0.1.3", # Includes pydantic as a dependency
     "pandas==2.2.3", # googletrends, dynamics (overlap agent_c_demo)
-    "pyarrow==17.0.0", # googletrends (overlap agent_c_demo)
+    "pyarrow==17.0.0", # googletrends, # data_vis/dataframe
     "mermaid-py==0.6.0", # mermaid
     "feedparser==6.0.11", # rss
     "readability-lxml==0.8.1", # web
@@ -43,6 +43,8 @@ dependencies = [
     "scipy",
     "matplotlib",
     "pdfplumber",
+    "matplotlib==3.9.2",    # data_vis
+    "seaborn==0.13.2",      # data_vis
 
 ]
 

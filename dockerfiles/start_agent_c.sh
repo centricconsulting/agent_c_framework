@@ -80,16 +80,14 @@ if [ ! -f "$AGENT_C_CONFIG_PATH/agent_c.config" ]; then
     read -p "Press Enter to continue..."
 fi
 
-# Set platform flag for ARM processors
-PLATFORM_FLAG=""
-export DOCKER_PLATFORM="linux/amd64"  # Default to amd64
+# Set platform for Docker based on architecture
+export DOCKER_DEFAULT_PLATFORM="linux/amd64"  # Default to amd64
 if [ "$(uname -m)" = "arm64" ]; then
-    PLATFORM_FLAG="--platform linux/arm64"
-    export DOCKER_PLATFORM="linux/arm64"
+    export DOCKER_DEFAULT_PLATFORM="linux/arm64"
 fi
 
 # Run in detached mode (background) with platform support:
-COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yml -p agent_c build $PLATFORM_FLAG
+COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yml -p agent_c build
 docker-compose -f docker-compose.yml -p agent_c up -d
 
 # Wait for the containers to be healthy

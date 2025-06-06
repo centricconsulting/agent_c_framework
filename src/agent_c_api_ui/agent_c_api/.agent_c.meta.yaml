@@ -1443,6 +1443,723 @@ _plans:
         updated_at: '2025-05-24T20:00:28.749889'
     title: Session Repository Remediation Plan
     updated_at: '2025-05-25T11:04:11.897999'
+  structured_logging_api_integration:
+    created_at: '2025-06-02T08:54:54.866902'
+    description: Integrate the completed core framework structured logging infrastructure
+      into the API project, replacing inconsistent logging patterns with unified structured
+      logging while maintaining backward compatibility and enhancing operational visibility.
+    id: cda778f7-2773-4f42-ae42-9631599b0a39
+    lessons_learned: []
+    tasks:
+      18896a64-67ea-4043-ad9d-42241050c3ba:
+        child_tasks: []
+        completed: false
+        context: "**SCOPE**: Conduct thorough performance analysis of the integrated\
+          \ structured logging infrastructure and optimize for production deployment\
+          \ with minimal overhead.\n\n**Performance Analysis Objectives**:\n1. **Baseline\
+          \ Measurement**: Establish before/after performance metrics\n2. **Overhead\
+          \ Analysis**: Quantify structured logging overhead across components\n3.\
+          \ **Bottleneck Identification**: Find and resolve performance bottlenecks\n\
+          4. **Production Optimization**: Optimize for production workloads\n5. **Monitoring\
+          \ Setup**: Establish ongoing performance monitoring\n\n**Performance Testing\
+          \ Strategy**:\n\n1. **Baseline Measurements**:\n   - API endpoint response\
+          \ times without structured logging\n   - Repository operation timing (Redis\
+          \ operations)\n   - Service layer processing time\n   - Memory usage patterns\n\
+          \   - CPU utilization during peak load\n\n2. **Structured Logging Overhead\
+          \ Analysis**:\n   - Per-request overhead from middleware\n   - Context propagation\
+          \ performance impact\n   - Processor chain execution time\n   - Formatter\
+          \ performance (console vs JSON)\n   - Log capture and serialization overhead\n\
+          \n3. **Component-Level Analysis**:\n```python\n# Performance testing framework\n\
+          from agent_c.util.structured_logging.testing import PerformanceTester\n\n\
+          async def test_repository_performance():\n    tester = PerformanceTester(max_overhead_percent=5.0)\n\
+          \    \n    # Baseline without logging\n    with tester.measure(\"baseline_operation\"\
+          ):\n        await repository.create_session(session_data)\n    \n    # With\
+          \ structured logging\n    with tester.measure(\"structured_logging_operation\"\
+          ):\n        logger.info(\"session_creation_started\")\n        await repository.create_session(session_data)\n\
+          \        logger.info(\"session_created\", session_id=session.id)\n    \n\
+          \    # Verify overhead is acceptable\n    assert tester.get_overhead_percent(\"\
+          structured_logging_operation\") < 5.0\n```\n\n**Performance Optimization\
+          \ Areas**:\n\n1. **Context Propagation Optimization**:\n   - Lazy evaluation\
+          \ of expensive context values\n   - Efficient contextvars usage\n   - Minimal\
+          \ context copying overhead\n   - Async boundary optimization\n\n2. **Processor\
+          \ Chain Optimization**:\n   - Conditional processor execution based on log\
+          \ level\n   - Efficient error enrichment (only for error logs)\n   - Optimized\
+          \ timing processor (minimal overhead)\n   - Sampling for high-frequency\
+          \ operations\n\n3. **Formatter Optimization**:\n   - Efficient JSON serialization\
+          \ for production\n   - Lazy string formatting\n   - Minimal memory allocation\n\
+          \   - Optimized console formatting for development\n\n4. **Async Performance**:\n\
+          \   - Non-blocking log operations\n   - Efficient async context propagation\n\
+          \   - Minimal impact on async operation performance\n   - Proper async logger\
+          \ configuration\n\n**Production Configuration Optimization**:\n\n1. **Environment-Specific\
+          \ Settings**:\n```python\n# Production configuration\nSTRUCTURED_LOGGING_CONFIG\
+          \ = {\n    \"level\": \"INFO\",  # Reduce debug overhead\n    \"formatter\"\
+          : \"json\",  # Efficient structured output\n    \"async_logging\": True,\
+          \  # Non-blocking operations\n    \"sampling_rate\": 0.1,  # Sample high-frequency\
+          \ operations\n    \"context_optimization\": True,  # Lazy context evaluation\n\
+          }\n\n# Development configuration  \nSTRUCTURED_LOGGING_CONFIG = {\n    \"\
+          level\": \"DEBUG\",  # Full visibility\n    \"formatter\": \"console\",\
+          \  # Human-readable output\n    \"async_logging\": False,  # Synchronous\
+          \ for debugging\n    \"sampling_rate\": 1.0,  # No sampling\n    \"context_optimization\"\
+          : False,  # Full context always\n}\n```\n\n2. **Memory Usage Optimization**:\n\
+          \   - Efficient log buffer management\n   - Context cleanup after request\
+          \ completion\n   - Minimal object allocation in hot paths\n   - Garbage\
+          \ collection optimization\n\n3. **I/O Optimization**:\n   - Batched log\
+          \ writing for high-throughput scenarios\n   - Efficient file rotation and\
+          \ cleanup\n   - Network logging optimization for remote aggregation\n  \
+          \ - Buffer management for async operations\n\n**Load Testing Scenarios**:\n\
+          \n1. **High-Throughput API Testing**:\n   - 1000+ requests/second with full\
+          \ structured logging\n   - Context propagation under load\n   - Memory usage\
+          \ during sustained load\n   - Error handling performance under stress\n\n\
+          2. **Repository Performance Testing**:\n   - Batch operations with comprehensive\
+          \ logging\n   - Redis operation timing with structured context\n   - Concurrent\
+          \ access patterns\n   - Memory usage for large datasets\n\n3. **Error Scenario\
+          \ Performance**:\n   - Exception handling with structured context\n   -\
+          \ Error enrichment processor performance\n   - Recovery hint generation\
+          \ overhead\n   - Stack trace capture and formatting\n\n**Monitoring and\
+          \ Alerting Setup**:\n\n1. **Performance Metrics**:\n   - Average logging\
+          \ overhead per request\n   - 95th percentile response time impact\n   -\
+          \ Memory usage trends\n   - CPU utilization changes\n\n2. **Alert Thresholds**:\n\
+          \   - Logging overhead > 5% of total request time\n   - Memory usage increase\
+          \ > 10% from baseline\n   - Error rate increase due to logging failures\n\
+          \   - Context propagation failures\n\n3. **Dashboard Creation**:\n   - Real-time\
+          \ performance impact visualization\n   - Logging overhead trends over time\n\
+          \   - Error rate correlation with logging changes\n   - Resource utilization\
+          \ monitoring\n\n**Optimization Implementation**:\n\n1. **Code-Level Optimizations**:\n\
+          ```python\n# Lazy context evaluation\ndef get_expensive_context():\n   \
+          \ if logger.isEnabledFor(logging.DEBUG):\n        return calculate_expensive_context()\n\
+          \    return None\n\n# Conditional logging\nif logger.isEnabledFor(logging.DEBUG):\n\
+          \    logger.debug(\"detailed_operation_info\", \n                expensive_context=get_expensive_context())\n\
+          \n# Sampling for high-frequency operations\nif should_sample_operation():\n\
+          \    logger.info(\"high_frequency_operation\", operation_id=op_id)\n```\n\
+          \n2. **Configuration Optimizations**:\n   - Production-optimized processor\
+          \ chains\n   - Efficient formatter selection\n   - Optimal buffer sizes\n\
+          \   - Appropriate log levels\n\n**Success Criteria**:\n- Structured logging\
+          \ overhead < 5% of total request time\n- Memory usage increase < 10% from\
+          \ baseline\n- No degradation in 95th percentile response times\n- Error\
+          \ rates remain stable or improve\n- Production deployment ready with monitoring\n\
+          \n**Deliverables**:\n- Comprehensive performance analysis report\n- Optimized\
+          \ production configuration\n- Performance monitoring dashboard\n- Load testing\
+          \ results and recommendations\n- Optimization guide for future enhancements\n\
+          - Production deployment checklist"
+        created_at: '2025-06-02T08:58:44.969098'
+        description: Conduct comprehensive performance analysis and optimize structured
+          logging for production deployment
+        id: 18896a64-67ea-4043-ad9d-42241050c3ba
+        parent_id: null
+        priority: medium
+        sequence: 9
+        title: 'Phase 9: Performance Analysis and Optimization'
+        updated_at: '2025-06-02T08:58:44.969098'
+      2c0364bb-5fae-4802-8a44-9d69891cf972:
+        child_tasks: []
+        completed: false
+        context: "**SCOPE**: Create comprehensive documentation, developer guidelines,\
+          \ and training materials to ensure consistent and effective use of structured\
+          \ logging across the API project.\n\n**Documentation Objectives**:\n1. **Developer\
+          \ Onboarding**: Quick start guide for new developers\n2. **Best Practices**:\
+          \ Established patterns and anti-patterns\n3. **Integration Guide**: How\
+          \ to use core framework features\n4. **Troubleshooting**: Common issues\
+          \ and debugging techniques\n5. **Operational Guide**: Log queries and monitoring\
+          \ patterns\n\n**Documentation Structure**:\n\n1. **Quick Start Guide** (`docs/structured_logging_quickstart.md`):\n\
+          ```markdown\n# Structured Logging Quick Start\n\n## Basic Usage\n```python\n\
+          from agent_c.util.structured_logging import get_logger, LoggingContext\n\
+          \nlogger = get_logger(__name__)\n\n# Simple structured logging\nlogger.info(\"\
+          operation_completed\", user_id=\"user-123\", duration_ms=150)\n\n# With\
+          \ context\nwith LoggingContext(correlation_id=\"req-456\", user_id=\"user-123\"\
+          ):\n    logger.info(\"processing_request\")  # Automatically includes context\n\
+          ```\n\n## Common Patterns\n- Event-based naming: \"user_created\", \"session_expired\"\
+          \n- Rich context: Include relevant IDs and metadata\n- Error handling: Use\
+          \ exc_info=True for exceptions\n```\n\n2. **Best Practices Guide** (`docs/structured_logging_best_practices.md`):\n\
+          ```markdown\n# Structured Logging Best Practices\n\n## Event Naming Conventions\n\
+          - Use snake_case: \"user_session_created\"\n- Be descriptive: \"payment_processing_failed\"\
+          \ not \"error\"\n- Include outcome: \"email_sent_successfully\", \"email_delivery_failed\"\
+          \n\n## Context Guidelines\n- Always include relevant IDs (user_id, session_id,\
+          \ correlation_id)\n- Add operation timing for performance-sensitive operations\n\
+          - Include business context (user_type, operation_type, etc.)\n\n## Performance\
+          \ Considerations\n- Use lazy evaluation for expensive context\n- Avoid logging\
+          \ in tight loops without sampling\n- Use appropriate log levels (DEBUG for\
+          \ detailed info, INFO for business events)\n```\n\n3. **API-Specific Patterns**\
+          \ (`docs/api_logging_patterns.md`):\n```markdown\n# API-Specific Logging\
+          \ Patterns\n\n## FastAPI Endpoint Pattern\n```python\nfrom agent_c.util.structured_logging\
+          \ import get_logger, LoggingContext\n\nclass UserEndpoint:\n    def __init__(self):\n\
+          \        self.logger = get_logger(__name__)\n    \n    async def create_user(self,\
+          \ user_data: UserCreate):\n        with LoggingContext(operation=\"create_user\"\
+          ):\n            self.logger.info(\"user_creation_started\", \n         \
+          \                  user_type=user_data.type)\n            # ... business\
+          \ logic ...\n            self.logger.info(\"user_created\", \n         \
+          \                  user_id=user.id, \n                           duration_ms=duration)\n\
+          ```\n\n## Repository Pattern\n```python\nclass UserRepository:\n    def\
+          \ __init__(self):\n        self.logger = get_logger(__name__)\n    \n  \
+          \  async def store_user(self, user: User):\n        self.logger.debug(\"\
+          user_storage_started\", user_id=user.id)\n        # ... Redis operations\
+          \ ...\n        self.logger.info(\"user_stored\", \n                    \
+          \    user_id=user.id, \n                        redis_operation_ms=duration)\n\
+          ```\n```\n\n4. **Error Handling Guide** (`docs/error_logging_patterns.md`):\n\
+          ```markdown\n# Error Handling and Logging Patterns\n\n## Exception Logging\n\
+          ```python\ntry:\n    result = await risky_operation()\nexcept ValidationError\
+          \ as e:\n    logger.error(\"validation_failed\",\n                validation_errors=e.errors(),\n\
+          \                operation=\"risky_operation\",\n                exc_info=True)\n\
+          \    raise HTTPException(status_code=400, detail=str(e))\nexcept Exception\
+          \ as e:\n    logger.error(\"operation_failed\",\n                error_type=type(e).__name__,\n\
+          \                operation=\"risky_operation\",\n                recovery_hint=\"\
+          Check service availability\",\n                exc_info=True)\n    raise\n\
+          ```\n\n## Error Recovery Context\n- Include specific error types for categorization\n\
+          - Add recovery hints for operational teams\n- Include correlation IDs for\
+          \ request tracing\n- Log both technical and business context\n```\n\n5.\
+          \ **Testing Guide** (`docs/testing_structured_logging.md`):\n```markdown\n\
+          # Testing Structured Logging\n\n## Basic Log Assertion\n```python\nfrom\
+          \ agent_c.util.structured_logging.testing import assert_logged\n\nasync\
+          \ def test_user_creation(log_capture):\n    user = await service.create_user(user_data)\n\
+          \    \n    assert_logged(log_capture, \"user_creation_started\")\n    assert_logged(log_capture,\
+          \ \"user_created\", user_id=user.id)\n```\n\n## Context Validation\n```python\n\
+          async def test_context_propagation(log_capture):\n    with LoggingContext(correlation_id=\"\
+          test-123\"):\n        await service.process_request()\n    \n    assert_context_propagated(log_capture,\
+          \ correlation_id=\"test-123\")\n```\n```\n\n6. **Operational Guide** (`docs/operational_logging_guide.md`):\n\
+          ```markdown\n# Operational Logging Guide\n\n## Common Log Queries\n\n###\
+          \ Find all requests for a user\n```\ncorrelation_id:\"req-*\" AND user_id:\"\
+          user-123\"\n```\n\n### Performance analysis\n```\nevent:\"*_completed\"\
+          \ AND duration_ms:>1000\n```\n\n### Error investigation\n```\nlevel:\"ERROR\"\
+          \ AND correlation_id:\"req-456\"\n```\n\n## Monitoring Patterns\n- Set up\
+          \ alerts on error rates by endpoint\n- Monitor performance trends using\
+          \ duration_ms\n- Track user activity patterns using correlation_id\n- Monitor\
+          \ Redis operation performance\n```\n\n7. **Migration Guide** (`docs/migration_to_structured_logging.md`):\n\
+          ```markdown\n# Migration to Structured Logging\n\n## LoggingManager Migration\n\
+          ```python\n# FROM:\nfrom agent_c_api.core.util.logging_utils import LoggingManager\n\
+          logger = LoggingManager(__name__).get_logger()\n\n# TO:\nfrom agent_c.util.structured_logging\
+          \ import get_logger\nlogger = get_logger(__name__)\n```\n\n## Adding Context\n\
+          ```python\n# FROM:\nlogger.info(f\"User {user_id} created session {session_id}\"\
+          )\n\n# TO:\nlogger.info(\"session_created\", user_id=user_id, session_id=session_id)\n\
+          ```\n```\n\n**Training Materials**:\n\n1. **Developer Onboarding Checklist**:\n\
+          \   - [ ] Read quick start guide\n   - [ ] Review best practices\n   - [\
+          \ ] Complete hands-on exercise\n   - [ ] Understand testing patterns\n \
+          \  - [ ] Know troubleshooting procedures\n\n2. **Hands-On Exercises**:\n\
+          \   - Create a simple endpoint with structured logging\n   - Add context\
+          \ propagation to existing code\n   - Write tests with log validation\n \
+          \  - Debug using structured log queries\n\n3. **Code Review Checklist**:\n\
+          \   - [ ] Event names follow naming conventions\n   - [ ] Appropriate context\
+          \ included\n   - [ ] Error handling includes structured context\n   - [\
+          \ ] Performance-sensitive operations include timing\n   - [ ] Tests validate\
+          \ logging behavior\n\n**Success Criteria**:\n- Comprehensive documentation\
+          \ covering all use cases\n- Clear migration paths for different scenarios\n\
+          - Practical examples for common patterns\n- Troubleshooting guide for common\
+          \ issues\n- Training materials for team onboarding\n- Code review standards\
+          \ for logging quality\n\n**Deliverables**:\n- Complete documentation suite\n\
+          - Developer training materials\n- Code review checklist\n- Operational runbook\n\
+          - Migration guides for different scenarios\n- Best practices reference guide"
+        created_at: '2025-06-02T08:58:10.310243'
+        description: Create comprehensive documentation and developer guidelines for
+          structured logging usage in the API project
+        id: 2c0364bb-5fae-4802-8a44-9d69891cf972
+        parent_id: null
+        priority: medium
+        sequence: 8
+        title: 'Phase 8: Documentation and Developer Guidelines'
+        updated_at: '2025-06-02T08:58:10.310243'
+      304873f4-2b7b-4488-9bd6-932e187665c8:
+        child_tasks: []
+        completed: false
+        context: "**SCOPE**: Migrate V1 API endpoints from LoggingManager to core\
+          \ framework structured logging while maintaining backward compatibility\
+          \ and API stability.\n\n**Current V1 State**:\n- Consistent use of LoggingManager\
+          \ across all V1 endpoints\n- Traditional string-based logging patterns\n\
+          - Limited structured context\n- Good error handling but minimal context\
+          \ enrichment\n\n**V1 Components to Migrate**:\n- `api/v1/agent.py` - Agent\
+          \ management endpoints\n- `api/v1/chat.py` - Chat functionality\n- `api/v1/files.py`\
+          \ - File handling endpoints\n- `api/v1/models.py` - Model management\n-\
+          \ `api/v1/personas.py` - Persona management\n- `api/v1/sessions.py` - Session\
+          \ management\n- `api/v1/tools.py` - Tool management\n\n**Migration Strategy**:\n\
+          \n1. **Compatibility Layer Approach**:\n   - Use `StructuredLoggingAdapter`\
+          \ for seamless migration\n   - Maintain existing LoggingManager interface\n\
+          \   - Gradual enhancement with structured context\n\n2. **Phased Migration**:\n\
+          \   - Phase 7.1: Enable structured logging via compatibility layer\n   -\
+          \ Phase 7.2: Add structured context to critical operations\n   - Phase 7.3:\
+          \ Enhance error handling with structured context\n   - Phase 7.4: Add performance\
+          \ timing and metrics\n\n**Implementation Plan**:\n\n1. **Compatibility Layer\
+          \ Integration**:\n```python\n# FROM:\nfrom agent_c_api.core.util.logging_utils\
+          \ import LoggingManager\nlogger = LoggingManager(__name__).get_logger()\n\
+          \n# TO (Phase 7.1):\nfrom agent_c.util.structured_logging import get_compatible_logger\n\
+          logger = get_compatible_logger(__name__)\n\n# OR use adapter:\nfrom agent_c.util.structured_logging\
+          \ import StructuredLoggingAdapter\nlogging_manager = StructuredLoggingAdapter(__name__)\n\
+          logger = logging_manager.get_logger()\n```\n\n2. **Gradual Context Enhancement**\
+          \ (Phase 7.2):\n```python\n# Add structured context while maintaining existing\
+          \ patterns\nasync def create_agent(agent_data: dict):\n    logger.info(\"\
+          Creating agent\", extra={\n        \"agent_type\": agent_data.get(\"type\"\
+          ),\n        \"user_id\": agent_data.get(\"user_id\"),\n        \"operation\"\
+          : \"create_agent\"\n    })\n    \n    try:\n        agent = await agent_service.create(agent_data)\n\
+          \        logger.info(\"Agent created successfully\", extra={\n         \
+          \   \"agent_id\": agent.id,\n            \"agent_type\": agent.type,\n \
+          \           \"operation\": \"create_agent\"\n        })\n        return\
+          \ agent\n    except Exception as e:\n        logger.error(\"Agent creation\
+          \ failed\", extra={\n            \"error_type\": type(e).__name__,\n   \
+          \         \"agent_type\": agent_data.get(\"type\"),\n            \"operation\"\
+          : \"create_agent\"\n        }, exc_info=True)\n        raise\n```\n\n3.\
+          \ **Error Handling Enhancement** (Phase 7.3):\n```python\n# Enhance existing\
+          \ error handling with structured context\ntry:\n    result = await process_request(data)\n\
+          except ValidationError as e:\n    logger.error(\"Request validation failed\"\
+          , extra={\n        \"validation_errors\": [str(err) for err in e.errors()],\n\
+          \        \"request_type\": type(data).__name__,\n        \"operation\":\
+          \ \"validate_request\"\n    })\n    raise HTTPException(status_code=400,\
+          \ detail=\"Validation failed\")\nexcept Exception as e:\n    logger.error(\"\
+          Unexpected error\", extra={\n        \"error_type\": type(e).__name__,\n\
+          \        \"operation\": \"process_request\",\n        \"recovery_hint\"\
+          : \"Check service availability and retry\"\n    }, exc_info=True)\n    raise\
+          \ HTTPException(status_code=500, detail=\"Internal server error\")\n```\n\
+          \n4. **Performance Timing Addition** (Phase 7.4):\n```python\nimport time\n\
+          \nasync def expensive_operation(data: dict):\n    start_time = time.time()\n\
+          \    \n    logger.info(\"Operation started\", extra={\n        \"operation\"\
+          : \"expensive_operation\",\n        \"data_size\": len(str(data))\n    })\n\
+          \    \n    try:\n        result = await perform_operation(data)\n      \
+          \  duration_ms = (time.time() - start_time) * 1000\n        \n        logger.info(\"\
+          Operation completed\", extra={\n            \"operation\": \"expensive_operation\"\
+          ,\n            \"duration_ms\": duration_ms,\n            \"result_size\"\
+          : len(str(result))\n        })\n        return result\n    except Exception\
+          \ as e:\n        duration_ms = (time.time() - start_time) * 1000\n     \
+          \   logger.error(\"Operation failed\", extra={\n            \"operation\"\
+          : \"expensive_operation\",\n            \"duration_ms\": duration_ms,\n\
+          \            \"error_type\": type(e).__name__\n        }, exc_info=True)\n\
+          \        raise\n```\n\n**Migration Priorities**:\n\n1. **High Priority**\
+          \ (Critical user-facing endpoints):\n   - `sessions.py` - Session management\
+          \ (high traffic)\n   - `chat.py` - Chat functionality (core feature)\n \
+          \  - `agent.py` - Agent management (critical operations)\n\n2. **Medium\
+          \ Priority** (Important but lower traffic):\n   - `files.py` - File handling\n\
+          \   - `models.py` - Model management\n   - `personas.py` - Persona management\n\
+          \n3. **Low Priority** (Administrative/utility):\n   - `tools.py` - Tool\
+          \ management\n\n**Backward Compatibility Considerations**:\n- Maintain existing\
+          \ API response formats\n- Preserve log message formats for existing monitoring\n\
+          - Ensure no breaking changes to client integrations\n- Gradual rollout with\
+          \ feature flags\n\n**Testing Strategy**:\n- Comprehensive regression testing\
+          \ for all V1 endpoints\n- Validate existing functionality unchanged\n- Test\
+          \ new structured logging context\n- Performance testing to ensure no degradation\n\
+          - Integration testing with existing V1 clients\n\n**Risk Mitigation**:\n\
+          - Feature flags for gradual rollout\n- Rollback procedures for each component\n\
+          - Monitoring for performance and error rate changes\n- Canary deployment\
+          \ for high-traffic endpoints\n\n**Success Criteria**:\n- All V1 endpoints\
+          \ use structured logging via compatibility layer\n- No breaking changes\
+          \ to existing API behavior\n- Enhanced operational visibility with structured\
+          \ context\n- Performance maintained or improved\n- Smooth migration path\
+          \ established for future V1 deprecation\n\n**Deliverables**:\n- Migrated\
+          \ V1 endpoints with structured logging\n- Comprehensive regression test\
+          \ validation\n- Performance analysis comparing before/after\n- Migration\
+          \ guide for similar legacy API migrations\n- Operational runbook updates\
+          \ for V1 endpoint monitoring"
+        created_at: '2025-06-02T08:57:35.183013'
+        description: Migrate V1 API endpoints from LoggingManager to core framework
+          structured logging
+        id: 304873f4-2b7b-4488-9bd6-932e187665c8
+        parent_id: null
+        priority: low
+        sequence: 7
+        title: 'Phase 7: V1 API Legacy Migration'
+        updated_at: '2025-06-02T08:57:35.183013'
+      40f71e37-5db0-4cd9-acec-cdc7d241fc2d:
+        child_tasks: []
+        completed: false
+        context: "**SCOPE**: Address the massive testing gap (1500+ lines of tests\
+          \ with zero logging validation) by integrating the core framework testing\
+          \ infrastructure and adding comprehensive logging validation.\n\n**Current\
+          \ Testing Gap**:\n- **1500+ lines** of test code with **zero logging verification**\n\
+          - No tests validate logging behavior, content, format, or context\n- No\
+          \ logging mock patterns or assertion helpers\n- No performance testing for\
+          \ logging overhead\n- Strong test infrastructure foundation but missing\
+          \ logging validation\n\n**Core Framework Testing Infrastructure Available**:\n\
+          - `StructuredLogCapture` - Log capture with filtering and assertions\n-\
+          \ `MockStructuredLogger` - Mock logger with call tracking\n- `PerformanceTester`\
+          \ - Performance measurement and validation\n- `LogEntry` - Pattern matching\
+          \ and context validation\n- Pytest fixtures: `log_capture`, `mock_logger`,\
+          \ `isolated_context`, `performance_tester`\n- Assertion helpers: `assert_logged()`,\
+          \ `assert_not_logged()`, `assert_context_propagated()`\n\n**Implementation\
+          \ Plan**:\n\n1. **Import Core Testing Infrastructure**:\n```python\n# In\
+          \ conftest.py or test files\nfrom agent_c.util.structured_logging.testing\
+          \ import (\n    StructuredLogCapture,\n    MockStructuredLogger,\n    assert_logged,\n\
+          \    assert_not_logged,\n    assert_context_propagated,\n    log_capture,\n\
+          \    isolated_context\n)\n```\n\n2. **Add Logging Validation to Existing\
+          \ Tests**:\n```python\n# Example: SessionRepository tests\nasync def test_create_session_success(log_capture):\n\
+          \    # Existing test logic\n    session = await repository.create_session(session_data)\n\
+          \    \n    # Add logging validation\n    assert_logged(log_capture, \"session_creation_started\"\
+          , \n                 session_type=session_data.type)\n    assert_logged(log_capture,\
+          \ \"session_created\", \n                 session_id=session.id)\n    assert_context_propagated(log_capture,\
+          \ correlation_id=\"test-123\")\n```\n\n3. **API Endpoint Testing with Context**:\n\
+          ```python\n# Example: V2 API endpoint tests\nasync def test_chat_endpoint_with_logging(client,\
+          \ log_capture):\n    with LoggingContext(correlation_id=\"test-req-123\"\
+          , user_id=\"test-user\"):\n        response = await client.post(\"/api/v2/chat/sessions\"\
+          , json=test_data)\n    \n    assert response.status_code == 201\n    assert_logged(log_capture,\
+          \ \"api_request_started\", \n                 method=\"POST\", path=\"/api/v2/chat/sessions\"\
+          )\n    assert_logged(log_capture, \"chat_session_created\", \n         \
+          \        session_id=response.json()[\"id\"])\n    assert_context_propagated(log_capture,\
+          \ correlation_id=\"test-req-123\")\n```\n\n4. **Error Scenario Testing**:\n\
+          ```python\nasync def test_session_creation_failure_logging(log_capture,\
+          \ mock_redis):\n    mock_redis.hset.side_effect = RedisError(\"Connection\
+          \ failed\")\n    \n    with pytest.raises(Exception):\n        await repository.create_session(session_data)\n\
+          \    \n    assert_logged(log_capture, \"session_creation_failed\", \n  \
+          \               error_type=\"RedisError\")\n    # Verify error enrichment\
+          \ from core framework\n    assert_logged(log_capture, level=\"ERROR\", \n\
+          \                 recovery_hint=\"Check Redis connection and retry\")\n\
+          ```\n\n5. **Performance Testing Integration**:\n```python\nasync def test_logging_performance_overhead(performance_tester):\n\
+          \    # Test that logging doesn't add significant overhead\n    with performance_tester.measure(\"\
+          session_creation_with_logging\"):\n        session = await repository.create_session(session_data)\n\
+          \    \n    # Verify logging overhead is < 5%\n    assert_log_performance(performance_tester,\
+          \ max_overhead_percent=5.0)\n```\n\n6. **Middleware Testing**:\n```python\n\
+          async def test_middleware_context_propagation(client, log_capture):\n  \
+          \  response = await client.get(\"/api/v2/sessions/test-session\")\n    \n\
+          \    # Verify middleware sets correlation ID\n    correlation_id = log_capture.get_entries()[0].context.get(\"\
+          correlation_id\")\n    assert correlation_id.startswith(\"req-\")\n    \n\
+          \    # Verify all subsequent logs have same correlation ID\n    assert_context_propagated(log_capture,\
+          \ correlation_id=correlation_id)\n```\n\n**Testing Patterns to Implement**:\n\
+          \n1. **Repository Layer Testing**:\n   - Validate all CRUD operations log\
+          \ appropriately\n   - Test error scenarios include proper context\n   -\
+          \ Verify performance timing is captured\n   - Test batch operations include\
+          \ metrics\n\n2. **Service Layer Testing**:\n   - Validate business logic\
+          \ events are logged\n   - Test cross-repository coordination logging\n \
+          \  - Verify error handling includes recovery context\n   - Test operation\
+          \ timing and performance metrics\n\n3. **API Endpoint Testing**:\n   - Validate\
+          \ request/response logging\n   - Test context propagation from middleware\n\
+          \   - Verify error responses include proper logging\n   - Test authentication\
+          \ context propagation\n\n4. **Integration Testing**:\n   - End-to-end context\
+          \ propagation validation\n   - Cross-component correlation ID consistency\n\
+          \   - Performance testing with full logging stack\n   - Error recovery scenario\
+          \ validation\n\n**Fixture Integration**:\n```python\n# Enhanced conftest.py\n\
+          @pytest.fixture\ndef structured_log_capture():\n    \"\"\"Provide structured\
+          \ log capture for test validation.\"\"\"\n    return StructuredLogCapture()\n\
+          \n@pytest.fixture\ndef api_client_with_logging(log_capture):\n    \"\"\"\
+          API client with logging validation enabled.\"\"\"\n    # Setup client with\
+          \ logging context\n    return enhanced_test_client\n\n@pytest.fixture\n\
+          def performance_logger():\n    \"\"\"Performance testing with logging overhead\
+          \ measurement.\"\"\"\n    return PerformanceTester(max_overhead_percent=5.0)\n\
+          ```\n\n**Success Criteria**:\n- All critical test scenarios include logging\
+          \ validation\n- Context propagation tested end-to-end\n- Error scenarios\
+          \ verify proper logging behavior\n- Performance overhead validated (< 5%)\n\
+          - Logging behavior becomes part of test coverage\n- Developer confidence\
+          \ in logging behavior\n\n**Deliverables**:\n- Enhanced test suite with comprehensive\
+          \ logging validation\n- Updated conftest.py with logging fixtures\n- Testing\
+          \ patterns guide for future development\n- Performance benchmarks with logging\
+          \ overhead analysis\n- Integration test coverage for logging behavior"
+        created_at: '2025-06-02T08:57:05.527512'
+        description: Integrate core framework testing infrastructure and add logging
+          validation to existing tests
+        id: 40f71e37-5db0-4cd9-acec-cdc7d241fc2d
+        parent_id: null
+        priority: medium
+        sequence: 6
+        title: 'Phase 6: Testing Infrastructure Integration'
+        updated_at: '2025-06-02T08:57:05.527512'
+      4314ba8c-95fa-438c-9d31-c6671b2fe34f:
+        child_tasks: []
+        completed: true
+        context: "**SCOPE**: Address the critical operational visibility gap by adding\
+          \ structured logging to business logic components that currently have zero\
+          \ logging.\n\n**Target Components** (Zero Logging - Critical Gap):\n- `core/services/chat_service.py`\
+          \ - 198 lines, zero logging\n- `core/services/session_service.py` - 203\
+          \ lines, zero logging  \n- `core/repositories/chat_repository.py` - 345\
+          \ lines, zero logging\n- `core/repositories/user_repository.py` - 342 lines,\
+          \ zero logging\n\n**Implementation Strategy**:\n1. **Use Core Framework**:\
+          \ Import `from agent_c.util.structured_logging import get_logger`\n2. **Follow\
+          \ SessionRepository Pattern**: Use existing excellent structured logging\
+          \ as template\n3. **Event-Based Naming**: Use descriptive event names like\
+          \ `\"chat_message_stored\"`, `\"user_created\"`\n4. **Rich Context**: Include\
+          \ relevant IDs (user_id, session_id, message_id) and operation metadata\n\
+          5. **Performance Timing**: Add timing for Redis operations and business\
+          \ logic\n\n**Service Layer Logging Patterns**:\n```python\nfrom agent_c.util.structured_logging\
+          \ import get_logger, LoggingContext\n\nclass ChatService:\n    def __init__(self):\n\
+          \        self.logger = get_logger(__name__)\n    \n    async def create_chat_session(self,\
+          \ user_id: str, session_data: dict):\n        with LoggingContext(user_id=user_id,\
+          \ operation=\"create_chat_session\"):\n            self.logger.info(\"chat_session_creation_started\"\
+          , \n                           session_type=session_data.get('type'))\n\
+          \            # ... business logic ...\n            self.logger.info(\"chat_session_created\"\
+          , \n                           session_id=session_id, \n               \
+          \            duration_ms=duration)\n```\n\n**Repository Layer Logging Patterns**:\n\
+          ```python\nclass ChatRepository:\n    def __init__(self):\n        self.logger\
+          \ = get_logger(__name__)\n    \n    async def store_message(self, session_id:\
+          \ str, message: dict):\n        self.logger.debug(\"chat_message_store_started\"\
+          , \n                         session_id=session_id, \n                 \
+          \        message_type=message.get('type'))\n        # ... Redis operations\
+          \ ...\n        self.logger.info(\"chat_message_stored\", \n            \
+          \            session_id=session_id, \n                        message_id=message_id,\n\
+          \                        redis_operation_ms=duration)\n```\n\n**Error Handling\
+          \ Enhancement**:\n- Add structured error context for all exception scenarios\n\
+          - Include recovery hints and operation context\n- Use error enrichment processor\
+          \ from core framework\n\n**Performance Considerations**:\n- Add timing for\
+          \ all Redis operations\n- Log batch operation metrics\n- Include performance\
+          \ context for debugging\n\n**Testing Strategy**:\n- Use core framework testing\
+          \ infrastructure\n- Add log assertion to existing tests\n- Validate context\
+          \ propagation\n- Performance overhead verification\n\n**Success Criteria**:\n\
+          - 100% business logic visibility (401 lines → fully instrumented)\n- All\
+          \ repositories instrumented (687 lines → comprehensive logging)\n- Consistent\
+          \ structured logging patterns across all services\n- < 5% performance overhead\n\
+          - Rich operational context for debugging\n\n**Deliverables**:\n- Enhanced\
+          \ service layer with comprehensive logging\n- Instrumented repositories\
+          \ with Redis operation visibility\n- Updated tests with logging validation\n\
+          - Performance impact analysis\n- Operational runbook updates"
+        created_at: '2025-06-02T08:55:31.052928'
+        description: Add structured logging to service layer and repositories with
+          zero current logging
+        id: 4314ba8c-95fa-438c-9d31-c6671b2fe34f
+        parent_id: null
+        priority: high
+        sequence: 2
+        title: 'Phase 2: Core Services Enhancement (Quick Wins)'
+        updated_at: '2025-06-02T09:32:36.445130'
+      58ffcd74-a192-4536-8ed3-8150d06b03a5:
+        child_tasks: []
+        completed: false
+        context: "**SCOPE**: Standardize the inconsistent logging patterns across\
+          \ V2 API endpoints to use the core framework structured logging consistently.\n\
+          \n**Current State Analysis**:\nBased on previous analysis, V2 endpoints\
+          \ have three different approaches:\n- **Structlog** (debug, sessions/chat,\
+          \ sessions/services) - Best practices, need standardization\n- **LoggingManager**\
+          \ (history endpoints) - Legacy but consistent, needs migration\n- **Direct\
+          \ Python logging** (sessions/files, __init__) - Anti-pattern, needs complete\
+          \ overhaul\n\n**Migration Strategy by Component**:\n\n1. **Easy Migration**\
+          \ (Already using structlog, standardization only):\n   - `api/v2/debug/`\
+          \ - Already excellent, minimal changes\n   - `api/v2/sessions/chat.py` -\
+          \ Template quality, enhance with core framework\n   - `api/v2/sessions/services.py`\
+          \ - Good patterns, standardize\n\n2. **Medium Migration** (LoggingManager\
+          \ to core framework):\n   - `api/v2/history/` - Convert LoggingManager to\
+          \ structured logging\n   - Maintain existing log events and structure\n\
+          \   - Add structured context and correlation IDs\n\n3. **Complete Overhaul**\
+          \ (Anti-patterns to structured logging):\n   - `api/v2/sessions/files.py`\
+          \ - Replace direct logging with structured\n   - Various `__init__.py` files\
+          \ - Add proper structured logging\n\n**Implementation Plan**:\n\n1. **Standardization\
+          \ Template** (Based on sessions/chat.py):\n```python\nfrom agent_c.util.structured_logging\
+          \ import get_logger, LoggingContext\n\nclass ChatEndpoint:\n    def __init__(self):\n\
+          \        self.logger = get_logger(__name__)\n    \n    async def create_chat_session(self,\
+          \ session_data: dict, user_id: str):\n        with LoggingContext(user_id=user_id,\
+          \ operation=\"create_chat_session\"):\n            self.logger.info(\"chat_session_creation_started\"\
+          ,\n                           session_type=session_data.get('type'))\n \
+          \           # ... endpoint logic ...\n            self.logger.info(\"chat_session_created\"\
+          ,\n                           session_id=session_id,\n                 \
+          \          duration_ms=duration)\n```\n\n2. **LoggingManager Migration**:\n\
+          ```python\n# FROM:\nfrom agent_c_api.core.util.logging_utils import LoggingManager\n\
+          logger = LoggingManager(__name__).get_logger()\n\n# TO:\nfrom agent_c.util.structured_logging\
+          \ import get_logger\nlogger = get_logger(__name__)\n```\n\n3. **Context\
+          \ Integration**:\n- Use middleware-provided correlation_id, user_id, session_id\n\
+          - Add endpoint-specific context (operation, resource_type)\n- Include request\
+          \ parameters and response metadata\n\n4. **Error Handling Standardization**:\n\
+          ```python\ntry:\n    result = await self.service.process_request(data)\n\
+          \    self.logger.info(\"request_processed_successfully\",\n            \
+          \        result_type=type(result).__name__)\n    return result\nexcept ValidationError\
+          \ as e:\n    self.logger.error(\"request_validation_failed\",\n        \
+          \             validation_errors=e.errors(),\n                     exc_info=True)\n\
+          \    raise HTTPException(status_code=400, detail=str(e))\nexcept Exception\
+          \ as e:\n    self.logger.error(\"request_processing_failed\",\n        \
+          \             error_type=type(e).__name__,\n                     exc_info=True)\n\
+          \    raise HTTPException(status_code=500, detail=\"Internal server error\"\
+          )\n```\n\n**Component-Specific Migration**:\n\n1. **Debug Endpoints**: Minimal\
+          \ changes, add core framework imports\n2. **Sessions Endpoints**: Standardize\
+          \ existing good patterns\n3. **History Endpoints**: Complete LoggingManager\
+          \ → structured migration\n4. **Config Endpoints**: Add structured logging\
+          \ where missing\n5. **Models Endpoints**: Enhance with structured patterns\n\
+          6. **Users Endpoints**: Add comprehensive structured logging\n\n**Performance\
+          \ Considerations**:\n- Leverage middleware context propagation\n- Avoid\
+          \ duplicate context setting\n- Use lazy evaluation for expensive operations\n\
+          - Maintain async performance characteristics\n\n**Testing Strategy**:\n\
+          - Update existing endpoint tests to validate logging\n- Add log assertion\
+          \ patterns for critical endpoints\n- Test context propagation from middleware\n\
+          - Validate error logging scenarios\n- Performance regression testing\n\n\
+          **Backward Compatibility**:\n- Maintain existing API response formats\n\
+          - Preserve log event names where possible\n- Ensure monitoring tools continue\
+          \ working\n- Gradual rollout with feature flags\n\n**Success Criteria**:\n\
+          - All V2 endpoints use consistent structured logging patterns\n- Context\
+          \ propagation works end-to-end from middleware\n- Error scenarios provide\
+          \ rich debugging context\n- Performance maintained or improved\n- Operational\
+          \ visibility significantly enhanced\n- Developer experience improved with\
+          \ consistent patterns\n\n**Deliverables**:\n- Standardized V2 endpoints\
+          \ with core framework structured logging\n- Updated tests with logging validation\n\
+          - Migration guide for remaining V1 endpoints\n- Performance analysis report\n\
+          - Operational runbook updates with new log queries"
+        created_at: '2025-06-02T08:56:34.426503'
+        description: Standardize V2 API endpoints to use consistent core framework
+          structured logging patterns
+        id: 58ffcd74-a192-4536-8ed3-8150d06b03a5
+        parent_id: null
+        priority: medium
+        sequence: 5
+        title: 'Phase 5: V2 API Endpoints Standardization'
+        updated_at: '2025-06-02T08:56:34.426503'
+      60c76a16-dea3-4016-b493-d65f1f241c36:
+        child_tasks: []
+        completed: true
+        context: "**SCOPE**: Prepare the API project for structured logging integration\
+          \ by understanding current patterns and ensuring core framework compatibility.\n\
+          \n**Key Activities**:\n1. **Dependency Verification**: Ensure API project\
+          \ has compatible agent_c-core version with structured logging\n2. **Current\
+          \ Pattern Analysis**: Document existing logging patterns across API components\n\
+          3. **Compatibility Assessment**: Identify potential conflicts and integration\
+          \ points\n4. **Environment Configuration**: Prepare environment variables\
+          \ and feature flags\n\n**COMPLETED WORK**:\n\n✅ **Dependency Analysis**:\
+          \ Verified pyproject.toml dependencies\n- `agent_c-core>=0.1.3` ✅ (includes\
+          \ structured logging infrastructure)\n- `structlog>=25.3.0` ✅ (already installed\
+          \ and in use)\n\n✅ **Pattern Analysis**: Comprehensive analysis of current\
+          \ logging approaches\n- **LoggingManager Pattern**: 15+ files (V1 API, core\
+          \ infrastructure) - consistent but needs migration\n- **Structlog Pattern**:\
+          \ 5 files including SessionRepository (gold standard) - excellent structured\
+          \ logging\n- **Mixed/Anti-patterns**: Various files with direct logging\
+          \ - need complete overhaul\n\n✅ **Critical Gap Identification**: \n- Service\
+          \ layer: 401 lines with zero logging (chat_service.py, session_service.py)\n\
+          - Repository layer: 687 lines with zero logging (chat_repository.py, user_repository.py)\n\
+          - Testing: 1,500+ lines with no logging validation\n\n✅ **Core Framework\
+          \ Integration Assessment**:\n- Import points verified: `agent_c.util.structured_logging.get_logger()`,\
+          \ `LoggingContext`, `StructuredLoggingAdapter`\n- Migration strategies developed\
+          \ for each pattern type\n- Compatibility layer strategy for LoggingManager\
+          \ → StructuredLoggingAdapter\n\n✅ **Environment Configuration Strategy**:\n\
+          - Feature flag approach for gradual rollout\n- Development vs production\
+          \ configuration\n- Performance monitoring and security considerations\n\n\
+          **DELIVERABLES CREATED**:\n1. **Component Analysis Report** (`//api/.scratch/phase_1_component_analysis.md`)\n\
+          \   - Complete pattern inventory and migration priority matrix\n   \n2.\
+          \ **Environment Configuration Guide** (`//api/.scratch/environment_configuration_guide.md`)\n\
+          \   - Comprehensive environment variable strategy and feature flags\n  \
+          \ \n3. **Testing Framework** (3 test files):\n   - `test_core_framework_import.py`\
+          \ - Basic import validation\n   - `compatibility_test.py` - Pattern compatibility\
+          \ testing\n   - `integration_validation_test.py` - Comprehensive 10-test\
+          \ validation suite\n   \n4. **Final Assessment Report** (`//api/.scratch/phase_1_assessment_report.md`)\n\
+          \   - Complete Phase 1 summary and Phase 2 recommendations\n\n**SUCCESS\
+          \ CRITERIA ACHIEVED**:\n- [x] Core framework structured logging accessible\
+          \ from API project\n- [x] Current logging patterns documented and categorized\n\
+          - [x] Migration strategies defined for each pattern type  \n- [x] Component\
+          \ priority matrix established\n- [x] Basic compatibility verified through\
+          \ testing framework\n- [x] Environment prepared for gradual rollout\n\n\
+          **PHASE 2 RECOMMENDATIONS**:\n**HIGH PRIORITY** - Address critical visibility\
+          \ gaps:\n1. Add structured logging to service layer (401 lines with zero\
+          \ logging)\n2. Add structured logging to repository layer (687 lines with\
+          \ zero logging)  \n3. Enhance SessionRepository with core framework features\
+          \ as migration template\n\n**NEXT STEPS**: Execute Phase 2 - Core Services\
+          \ Enhancement to address the critical operational visibility gap in business\
+          \ logic components."
+        created_at: '2025-06-02T08:55:11.655291'
+        description: Assess current API project logging patterns and prepare for core
+          framework integration
+        id: 60c76a16-dea3-4016-b493-d65f1f241c36
+        parent_id: null
+        priority: high
+        sequence: 1
+        title: 'Phase 1: Infrastructure Assessment and Preparation'
+        updated_at: '2025-06-02T09:19:58.025872'
+      b89434e9-98d3-412b-893d-0ef01de250d6:
+        child_tasks: []
+        completed: false
+        context: "**SCOPE**: Upgrade the FastAPI middleware to use core framework\
+          \ structured logging and implement automatic context propagation across\
+          \ all API requests.\n\n**Current State Analysis**:\n- `APILoggingMiddleware`\
+          \ generates correlation IDs but doesn't propagate them effectively\n- Uses\
+          \ traditional logging patterns instead of structured logging\n- Limited\
+          \ context binding and request/response visibility\n- No integration with\
+          \ framework-wide context management\n\n**Enhancement Objectives**:\n1. **Core\
+          \ Framework Integration**: Use core structured logging infrastructure\n\
+          2. **Automatic Context Propagation**: Set correlation_id, user_id, session_id\
+          \ for entire request lifecycle\n3. **Request/Response Logging**: Structured\
+          \ logging for all HTTP interactions\n4. **Performance Monitoring**: Request\
+          \ timing and performance metrics\n5. **Error Context**: Rich error context\
+          \ for failed requests\n\n**Implementation Plan**:\n\n1. **Middleware Upgrade**:\n\
+          ```python\nfrom agent_c.util.structured_logging import get_logger, LoggingContext\n\
+          from agent_c.util.structured_logging.context import set_correlation_id,\
+          \ ensure_correlation_id\n\nclass StructuredLoggingMiddleware:\n    def __init__(self):\n\
+          \        self.logger = get_logger(__name__)\n    \n    async def __call__(self,\
+          \ request: Request, call_next):\n        # Generate/extract correlation\
+          \ ID\n        correlation_id = ensure_correlation_id()\n        \n     \
+          \   # Extract user context from request\n        user_id = self._extract_user_id(request)\n\
+          \        session_id = self._extract_session_id(request)\n        \n    \
+          \    # Set framework context for entire request\n        with LoggingContext(\n\
+          \            correlation_id=correlation_id,\n            user_id=user_id,\n\
+          \            session_id=session_id,\n            operation=\"api_request\"\
+          \n        ):\n            return await self._process_request(request, call_next)\n\
+          ```\n\n2. **Request/Response Logging**:\n```python\nasync def _process_request(self,\
+          \ request: Request, call_next):\n    start_time = time.time()\n    \n  \
+          \  self.logger.info(\"api_request_started\",\n                    method=request.method,\n\
+          \                    path=request.url.path,\n                    query_params=dict(request.query_params))\n\
+          \    \n    try:\n        response = await call_next(request)\n        duration_ms\
+          \ = (time.time() - start_time) * 1000\n        \n        self.logger.info(\"\
+          api_request_completed\",\n                        status_code=response.status_code,\n\
+          \                        duration_ms=duration_ms)\n        return response\n\
+          \        \n    except Exception as e:\n        duration_ms = (time.time()\
+          \ - start_time) * 1000\n        self.logger.error(\"api_request_failed\"\
+          ,\n                         error_type=type(e).__name__,\n             \
+          \            error_message=str(e),\n                         duration_ms=duration_ms,\n\
+          \                         exc_info=True)\n        raise\n```\n\n3. **Context\
+          \ Extraction**:\n- Extract user_id from JWT tokens or session data\n- Extract\
+          \ session_id from headers or request parameters\n- Handle authentication\
+          \ context appropriately\n\n4. **Integration Points**:\n- Replace existing\
+          \ `APILoggingMiddleware` with structured version\n- Ensure compatibility\
+          \ with existing FastAPI setup\n- Integrate with authentication middleware\n\
+          - Coordinate with error handling middleware\n\n**Performance Considerations**:\n\
+          - Minimal overhead for context extraction\n- Efficient correlation ID generation\n\
+          - Lazy evaluation of expensive context operations\n- Async-safe context\
+          \ propagation\n\n**Error Handling Enhancement**:\n- Structured error logging\
+          \ with full context\n- Request replay information for debugging\n- Error\
+          \ categorization and recovery hints\n- Integration with core framework error\
+          \ enrichment\n\n**Testing Strategy**:\n- Test context propagation across\
+          \ request lifecycle\n- Validate correlation ID consistency\n- Performance\
+          \ overhead measurement\n- Error scenario validation\n- Integration testing\
+          \ with existing middleware\n\n**Success Criteria**:\n- All API requests\
+          \ have automatic context propagation\n- Correlation IDs work end-to-end\n\
+          - Request/response logging provides operational visibility\n- Performance\
+          \ overhead < 2% per request\n- Error scenarios include full context for\
+          \ debugging\n- Backward compatibility with existing logging consumers\n\n\
+          **Deliverables**:\n- Enhanced FastAPI middleware with structured logging\n\
+          - Automatic context propagation for all requests\n- Request/response visibility\
+          \ with performance metrics\n- Updated tests with middleware validation\n\
+          - Integration guide for other FastAPI applications"
+        created_at: '2025-06-02T08:56:09.078855'
+        description: Enhance FastAPI middleware to use core framework structured logging
+          with automatic context propagation
+        id: b89434e9-98d3-412b-893d-0ef01de250d6
+        parent_id: null
+        priority: high
+        sequence: 4
+        title: 'Phase 4: FastAPI Middleware Integration'
+        updated_at: '2025-06-02T08:56:09.078855'
+      f7b19bd4-4138-43b0-a27d-f72ee061d60c:
+        child_tasks: []
+        completed: false
+        context: "**SCOPE**: Enhance the SessionRepository, which already has excellent\
+          \ structured logging, to showcase the full capabilities of the core framework\
+          \ infrastructure.\n\n**Current State**: SessionRepository is the gold standard\n\
+          - Already using `structlog.get_logger(__name__)` properly\n- Event-based\
+          \ naming: `\"create_session_failed\"`, `\"cleanup_expired_sessions_completed\"\
+          `\n- Rich context binding with structured data\n- Performance metrics for\
+          \ batch operations\n- Comprehensive error handling with context\n\n**Enhancement\
+          \ Opportunities**:\n1. **Core Framework Migration**: Switch from direct\
+          \ structlog to core framework\n2. **Context Propagation**: Add automatic\
+          \ correlation_id, agent_id, user_id context\n3. **Enhanced Error Recovery**:\
+          \ Use core framework error enrichment processor\n4. **Performance Optimization**:\
+          \ Leverage core framework timing processors\n5. **Testing Enhancement**:\
+          \ Use core framework testing infrastructure\n\n**Implementation Plan**:\n\
+          \n1. **Import Migration**:\n```python\n# FROM:\nimport structlog\nlogger\
+          \ = structlog.get_logger(__name__)\n\n# TO:\nfrom agent_c.util.structured_logging\
+          \ import get_logger, LoggingContext\nlogger = get_logger(__name__)\n```\n\
+          \n2. **Context Enhancement**:\n```python\n# Add framework context to operations\n\
+          async def create_session(self, session_data: SessionCreate) -> SessionDetail:\n\
+          \    with LoggingContext(operation=\"create_session\", \n              \
+          \         user_id=session_data.user_id):\n        logger.info(\"session_creation_started\"\
+          , \n                   session_type=session_data.type)\n        # ... existing\
+          \ logic ...\n```\n\n3. **Error Enrichment**:\n- Leverage core framework\
+          \ error categorization\n- Add recovery hints for Redis connection issues\n\
+          - Include session lifecycle context in errors\n\n4. **Performance Enhancement**:\n\
+          - Use core framework timing processors\n- Add automatic operation timing\n\
+          - Enhanced batch operation metrics\n\n5. **Testing Upgrade**:\n- Migrate\
+          \ to core framework testing infrastructure\n- Add log capture and assertion\
+          \ patterns\n- Validate context propagation in tests\n\n**Backward Compatibility**:\n\
+          - Maintain all existing log events and structure\n- Preserve current performance\
+          \ characteristics\n- Ensure no breaking changes to log consumers\n\n**Success\
+          \ Criteria**:\n- Seamless migration with no functionality loss\n- Enhanced\
+          \ context propagation (correlation_id, agent_id, user_id)\n- Improved error\
+          \ recovery hints\n- Better performance visibility\n- Comprehensive test\
+          \ coverage with log validation\n- Serves as template for other repository\
+          \ migrations\n\n**Validation**:\n- All existing tests pass\n- New context\
+          \ appears in logs\n- Performance overhead < 1%\n- Error scenarios include\
+          \ recovery hints\n- Log format remains consumable by existing tools\n\n\
+          **Deliverables**:\n- Enhanced SessionRepository using core framework\n-\
+          \ Updated tests with log validation\n- Performance comparison report\n-\
+          \ Migration guide for other repositories\n- Best practices documentation"
+        created_at: '2025-06-02T08:55:48.770488'
+        description: Enhance the already excellent SessionRepository structured logging
+          with core framework features
+        id: f7b19bd4-4138-43b0-a27d-f72ee061d60c
+        parent_id: null
+        priority: high
+        sequence: 3
+        title: 'Phase 3: SessionRepository Enhancement (Pilot Excellence)'
+        updated_at: '2025-06-02T08:55:48.770488'
+    title: API Project Structured Logging Integration
+    updated_at: '2025-06-02T09:32:36.445130'
   structured_logging_infrastructure:
     created_at: '2025-05-25T11:02:18.779230'
     description: Comprehensive plan to analyze, design, and implement a robust structured
@@ -2616,4 +3333,4 @@ _plans:
         updated_at: '2025-05-25T16:24:27.926886'
     title: Structured Logging Infrastructure Design & Implementation
     updated_at: '2025-05-25T18:23:08.419468'
-current_plan: structured_logging_infrastructure
+current_plan: structured_logging_api_integration

@@ -10,6 +10,7 @@ import pandas as pd
 import decimal
 import asyncio
 import logging
+import yaml
 from typing import Dict, Any, List, Optional, Union
 
 import sqlparse
@@ -407,48 +408,48 @@ class MariadbTools(Toolset):
             }
         return self.connector
 
-    # @json_schema(
-    #     description="Initialize a connection to a MariaDB database.  Uses hardcoded defaults if not provided.",
-    #     params={
-    #         "host": {
-    #             "type": "string",
-    #             "description": "Database host address",
-    #             "required": False,
-    #             "default": "127.0.0.1"
-    #         },
-    #         "port": {
-    #             "type": "integer",
-    #             "description": "Database port number",
-    #             "required": False,
-    #             "default": 3306
-    #         },
-    #         "user": {
-    #             "type": "string",
-    #             "description": "Database username",
-    #             "required": False,
-    #             "default": "root"
-    #         },
-    #         "password": {
-    #             "type": "string",
-    #             "description": "Database password",
-    #             "required": False,
-    #             "default": ""
-    #         },
-    #         "database": {
-    #             "type": "string",
-    #             "description": "Database name",
-    #             "required": False,
-    #             "default": "auraroleplay"
-    #         },
-    #         "save_connection": {
-    #             "type": "boolean",
-    #             "description": "Whether to save connection parameters for future use",
-    #             "required": False,
-    #             "default": False
-    #         }
-    #     }
-    # )
-    async def connect_database(self, **kwargs)-> str:
+    @json_schema(
+        description="Initialize a connection to a MariaDB database.  Uses hardcoded defaults if not provided.",
+        params={
+            "host": {
+                "type": "string",
+                "description": "Database host address",
+                "required": False,
+                "default": "127.0.0.1"
+            },
+            "port": {
+                "type": "integer",
+                "description": "Database port number",
+                "required": False,
+                "default": 3306
+            },
+            "user": {
+                "type": "string",
+                "description": "Database username",
+                "required": False,
+                "default": "root"
+            },
+            "password": {
+                "type": "string",
+                "description": "Database password",
+                "required": False,
+                "default": ""
+            },
+            "database": {
+                "type": "string",
+                "description": "Database name",
+                "required": False,
+                "default": "auraroleplay"
+            },
+            "save_connection": {
+                "type": "boolean",
+                "description": "Whether to save connection parameters for future use",
+                "required": False,
+                "default": False
+            }
+        }
+    )
+    async def connect_database(self, **kwargs) -> str:
         """
         Initialize a connection to the MariaDB database.
         
@@ -462,49 +463,48 @@ class MariadbTools(Toolset):
                 save_connection: Whether to save connection parameters for future use
             
         Returns:
-            Dict with connection status and database info
+            String with connection status and database info
         """
-        # Update connection parameters with non-None values
-        params = {
-            'host': kwargs.get('host') or MariaDBConnector.DEFAULT_CONFIG['host'],
-            'port': kwargs.get('port') or MariaDBConnector.DEFAULT_CONFIG['port'],
-            'user': kwargs.get('user') or MariaDBConnector.DEFAULT_CONFIG['user'],
-            'password': kwargs.get('password') or MariaDBConnector.DEFAULT_CONFIG['password'],
-            'database': kwargs.get('database') or MariaDBConnector.DEFAULT_CONFIG['database']
-        }
-        
-        self.connection_params = params
-        
-        # Save connection params if requested
-        if kwargs.get('save_connection', False):
-            self.tool_cache.set("maria_connection_params", params)
-            
-        # Create a new connector with updated parameters
-        self.connector = MariaDBConnector(**params)
-        
         try:
+            # Update connection parameters with non-None values
+            params = {
+                'host': kwargs.get('host') or MariaDBConnector.DEFAULT_CONFIG['host'],
+                'port': kwargs.get('port') or MariaDBConnector.DEFAULT_CONFIG['port'],
+                'user': kwargs.get('user') or MariaDBConnector.DEFAULT_CONFIG['user'],
+                'password': kwargs.get('password') or MariaDBConnector.DEFAULT_CONFIG['password'],
+                'database': kwargs.get('database') or MariaDBConnector.DEFAULT_CONFIG['database']
+            }
+            
+            self.connection_params = params
+            
+            # Save connection params if requested
+            if kwargs.get('save_connection', False):
+                self.tool_cache.set("maria_connection_params", params)
+                
+            # Create a new connector with updated parameters
+            self.connector = MariaDBConnector(**params)
+            
             # Test the connection by getting database info
-            # await self._raise_text_delta_event(content="Connecting to database...")
-
             db_info = await self.connector.get_database_info()
             
             if "error" in db_info:
-                return json.dumps({"status": "error", "message": db_info["error"]})
+                return f"ERROR: {db_info['error']}"
                 
-            # await self._raise_text_delta_event(content="Connected successfully!")
-            return json.dumps({
+            result = {
                 "status": "success", 
                 "message": f"Successfully connected to {params['database']} database on {params['host']}",
-                "database_info": self.connector.to_json(db_info)
-            })
+                "database_info": db_info
+            }
+            
+            return yaml.dump(result, allow_unicode=True)
             
         except Exception as e:
             error_msg = f"Failed to connect to database: {str(e)}"
             self.logger.error(error_msg)
-            return json.dumps({"status": "error", "message": error_msg})
+            return f"ERROR: {error_msg}"
 
     @json_schema(
-        description="Execute a SQL query on the AuraDev database",
+        description="Execute a SQL query on the MariaDB database",
         params={
             "query": {
                 "type": "string",
@@ -532,116 +532,116 @@ class MariadbTools(Toolset):
     )
     async def execute_query(self, **kwargs) -> str:
         """
-        Execute a SQL query on the AuraDev database.
+        Execute a SQL query on the MariaDB database.
         
         Args:
             kwargs:
                 query: SQL query to execute (SELECT statements only)
-                load_to_dataframe: Whether to load results into a DataFrame for further processing
+                workspace_name: The name of the workspace to save records if desired
+                file_path: Relative path to save the file in the workspace
+                force_save: Flag force saving file
 
         Returns:
-            Dict with query results and status
+            String with query results and status
         """
-        query = kwargs.get("query")
-        workspace_name = kwargs.get("workspace_name", "project")
-        file_path = kwargs.get('file_path', f'salesforce_query_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
-        force_save = kwargs.get("save_file", False)
-
-        if not query:
-            return json.dumps({"status": "error", "message": "Query cannot be empty."})
-
-        if self.connector is None:
-            await self._get_connector()
-
         try:
-            # await self._raise_text_delta_event(content=f"Executing query: {query[:50]}...")
+            query = kwargs.get("query")
+            workspace_name = kwargs.get("workspace_name", "project")
+            file_path = kwargs.get('file_path', f'mariadb_query_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
+            force_save = kwargs.get("force_save", False)
+
+            if not query:
+                return "ERROR: Query cannot be empty."
+
+            if self.connector is None:
+                await self._get_connector()
             
             # Run the query in a thread pool to avoid blocking
             result = await self.connector.execute_query(query)
 
-            # self.logger.debug(f"About to raise media, streaming_callback exists: {self.streaming_callback is not None}")
+            # Check for errors in result
+            if isinstance(result, dict) and "error" in result:
+                return f"ERROR: {result['error']}"
+
             await self._raise_render_media(
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='execute_query',
                 content_type="text/html",
-                content="<b>done</b>"
+                content="<b>Query executed successfully</b>",
+                tool_context=kwargs.get('tool_context', {})
             )
-            # await self._raise_text_delta_event(content="Query executed successfully.")
 
             if force_save:
                 try:
                     df = pd.DataFrame(result)
-                except Exception as e:
-                    self.logger.debug(f"Error converting result to DataFrame: {e}")
-                    return f"Error converting result to DataFrame: {e}"
+                    response_size = self.tool_chest.agent.count_tokens(df.to_json())
+                    force_save = True if response_size > 25000 else force_save
 
-                response_size = self.tool_chest.agent.count_tokens(df.to_json())
+                    if force_save:
+                        file_path = ensure_file_extension(file_path, 'xlsx')
+                        unc_path = create_unc_path(workspace_name, file_path)
 
-                force_save = True if response_size > 25000 else force_save
+                        excel_buffer = create_excel_in_memory(df)
 
-                if force_save:
-                    file_path = ensure_file_extension(file_path, 'xlsx')
-                    unc_path = create_unc_path(workspace_name, file_path)
+                        save_result = await self.workspace_tool.internal_write_bytes(
+                            path=unc_path,
+                            mode='write',
+                            data=excel_buffer.getvalue()
+                        )
+                        os_path = os_file_system_path(self.workspace_tool, unc_path)
 
-                    excel_buffer = create_excel_in_memory(df)
-
-                    result = await self.workspace_tool.internal_write_bytes(
-                        path=unc_path,
-                        mode='write',
-                        data=excel_buffer.getvalue()
-                    )
-                    os_path = os_file_system_path(self.workspace_tool, unc_path)
-
-                    await self._raise_render_media(
-                        sent_by_class=self.__class__.__name__,
-                        sent_by_function='execute_query',
-                        content_type="text/html",
-                        content=get_file_html(os_path, unc_path)
-                    )
-                    self.logger.debug(result)
+                        await self._raise_render_media(
+                            sent_by_class=self.__class__.__name__,
+                            sent_by_function='execute_query',
+                            content_type="text/html",
+                            content=get_file_html(os_path, unc_path),
+                            tool_context=kwargs.get('tool_context', {}),
+                        )
+                        self.logger.debug(save_result)
+                except Exception as df_error:
+                    self.logger.debug(f"Error converting result to DataFrame: {df_error}")
+                    # Continue with normal result return even if save fails
             
-            return json.dumps(result)
+            return yaml.dump(result, allow_unicode=True)
             
         except Exception as e:
             error_msg = f"Error executing query: {str(e)}"
             self.logger.error(error_msg)
-            return json.dumps({"status": "error", "message": error_msg})
+            return f"ERROR: {error_msg}"
 
     @json_schema(
-        description="Get a list of all tables in the Maria database",
+        description="Get a list of all tables in the MariaDB database",
         params={}
     )
-    async def get_tables(self)->str:
+    async def get_tables(self, **kwargs) -> str:
         """
-        Get a list of all tables in the AuraDev database.
+        Get a list of all tables in the MariaDB database.
         
         Returns:
-            Dict with list of tables and status
+            String with list of tables and status
         """
-        if self.connector is None:
-            await self._get_connector()
-            
         try:
-            # await self._raise_text_delta_event(content="Fetching database tables...")
-            
+            if self.connector is None:
+                await self._get_connector()
+                
             # Run in thread pool to avoid blocking
             result = await self.connector.get_tables()
             
             if "error" in result:
-                return json.dumps({"status": "error", "message": result["error"]})
+                return f"ERROR: {result['error']}"
                 
-            # await self._raise_text_delta_event(content=f"Found {len(result['tables'])} tables.")
-            
-            return json.dumps({
+            response = {
                 "status": "success",
                 "message": result["message"],
                 "tables": result["tables"]
-            })
+            }
+            
+            return yaml.dump(response, allow_unicode=True)
             
         except Exception as e:
             error_msg = f"Error getting tables: {str(e)}"
             self.logger.error(error_msg)
-            return json.dumps({"status": "error", "message": error_msg})
+            return f"ERROR: {error_msg}"
 
     @json_schema(
         description="Get the schema for a specific table",
@@ -653,72 +653,75 @@ class MariadbTools(Toolset):
             }
         }
     )
-    async def get_table_schema(self, table_name)->str:
+    async def get_table_schema(self, **kwargs) -> str:
         """
         Get the schema for a specific table.
         
         Args:
-            table_name: Name of the table to get schema for
+            kwargs:
+                table_name: Name of the table to get schema for
             
         Returns:
-            Dict with table schema information
+            String with table schema information
         """
-        if self.connector is None:
-            await self._get_connector()
-            
         try:
-            # await self._raise_text_delta_event(content=f"Fetching schema for table '{table_name}'...")
-            
+            table_name = kwargs.get("table_name")
+            if not table_name:
+                return "ERROR: table_name parameter is required"
+                
+            if self.connector is None:
+                await self._get_connector()
+                
             # Run in thread pool to avoid blocking
             result = await self.connector.get_table_schema(table_name)
             
             if "error" in result:
-                return json.dumps({"status": "error", "message": result["error"]})
+                return f"ERROR: {result['error']}"
                 
-            # await self._raise_text_delta_event(content=f"Schema retrieved with {len(result['schema'])} columns.")
-            
             # Render schema as an HTML table for better readability
             schema_html = self._schema_to_html(result['schema'], table_name)
             await self._raise_render_media(
                 content_type="text/html",
                 content=schema_html,
-                name=f"{table_name}_schema.html"
+                name=f"{table_name}_schema.html",
+                tool_context=kwargs.get('tool_context', {})
             )
             
-            return json.dumps({
+            response = {
                 "status": "success",
                 "message": result["message"],
                 "schema": result["schema"]
-            })
+            }
+            
+            return yaml.dump(response, allow_unicode=True)
             
         except Exception as e:
             error_msg = f"Error getting table schema: {str(e)}"
             self.logger.error(error_msg)
-            return json.dumps({"status": "error", "message": error_msg})
+            return f"ERROR: {error_msg}"
 
     @json_schema(
         description="Get database server information",
         params={}
     )
-    async def get_database_info(self)->str:
+    async def get_database_info(self, **kwargs) -> str:
         """
         Get general information about the database server and connection.
         
         Returns:
-            Dict with database server information
+            String with database server information
         """
-        if self.connector is None:
-            await self._get_connector()
-            
         try:
-            # await self._raise_text_delta_event(content="Fetching database information...")
-            
+            if self.connector is None:
+                await self._get_connector()
+                
             # Run in thread pool to avoid blocking
             result = await self.connector.get_database_info()
-                
-            # await self._raise_text_delta_event(content="Database information retrieved.")
             
-            return json.dumps({
+            if "error" in result:
+                return f"ERROR: {result['error']}"
+                
+            response = {
                 "status": "success",
                 "message": result["message"],
                 "info": {
@@ -730,14 +733,16 @@ class MariadbTools(Toolset):
                     "host": result["host"],
                     "user": result["user"]
                 }
-            })
+            }
+            
+            return yaml.dump(response, allow_unicode=True)
             
         except Exception as e:
             error_msg = f"Error getting database info: {str(e)}"
             self.logger.error(error_msg)
-            return json.dumps({"status": "error", "message": error_msg})
+            return f"ERROR: {error_msg}"
 
-    def _schema_to_html(self, schema, table_name)->str:
+    def _schema_to_html(self, schema, table_name) -> str:
         """
         Convert schema information to HTML for display.
         

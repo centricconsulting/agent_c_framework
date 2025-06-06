@@ -2,7 +2,7 @@ import json
 
 import wikipedia
 
-from agent_c import Toolset, json_schema
+from agent_c.toolsets import Toolset, json_schema
 from agent_c.util import filter_dict_by_keys
 
 class WikipediaTools(Toolset):

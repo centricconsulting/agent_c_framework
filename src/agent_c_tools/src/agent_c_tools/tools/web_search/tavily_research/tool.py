@@ -3,7 +3,7 @@ import json
 
 from tavily import TavilyClient
 
-from agent_c import json_schema, Toolset
+from agent_c.toolsets import json_schema, Toolset
 from .prompt import TavilyResearchPrompt
 
 

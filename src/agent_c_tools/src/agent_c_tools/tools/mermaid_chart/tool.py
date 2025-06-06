@@ -28,7 +28,8 @@ class MermaidChartTools(Toolset):
         graph_definition = kwargs.get('graph_definition')
         graph_name = kwargs.get('graph_name', "graph")
 
-        await self._raise_text_delta_event(content=f"Rendering graph:\n{graph_definition}")
+        await self._render_media_markdown(f"Rendering graph:\n{graph_definition}",
+                                          "render_graph", **kwargs)
 
         graph: Graph = Graph(graph_name, graph_definition)
         rendered_graph: Mermaid = Mermaid(graph)
@@ -38,9 +39,11 @@ class MermaidChartTools(Toolset):
         cache_key = f"chart://{svg_name}"
         self.tool_cache.set(cache_key, rendered_graph.svg_response.text)
 
-        await self._raise_text_delta_event(content=f"\n\nRender complete, cached as: `{cache_key}`.")
+        await self._render_media_markdown(f"\n\nRender complete, cached as: `{cache_key}`.",
+                                          "render_graph", **kwargs)
         await self._raise_render_media(content_type="image/svg+xml", url=svg_link,
-                                       name=svg_name, content=rendered_graph.svg_response.text)
+                                       name=svg_name, content=rendered_graph.svg_response.text,
+                                       tool_context=kwargs.get('tool_context', {}))
         if rendered_graph.svg_graph.svg_response.text is None:
             self.logger.debug("`rendered_graph.svg_response.text` is None, therefore, graph won't display.")
         return f"Render complete, cached as: `{cache_key}`. IF your client supports SVG, it will have been displayed by now."

@@ -110,7 +110,7 @@ class EventSessionLogger:
     
     def _default_error_handler(self, error: Exception, context: str) -> None:
         """Default error handler - logs errors"""
-        self._logger.error(f"EventSessionLogger error in {context}: {error}", exc_info=True)
+        self.logger.error(f"EventSessionLogger error in {context}: {error}", exc_info=True)
     
     def _ensure_directory_exists(self, directory: Path) -> bool:
         """
@@ -295,13 +295,13 @@ class EventSessionLogger:
                     f.write(json.dumps(log_entry, default=str) + '\n')
                 
                 # Log successful recovery
-                self._logger.info(f"Successfully recovered from missing directory: {session_dir}")
+                self.logger.info(f"Successfully recovered from missing directory: {session_dir}")
                 return True
                 
             except Exception as recovery_error:
                 # Recovery failed - log but don't raise (let downstream continue)
                 error_msg = f"File write failed and recovery unsuccessful. Original error: {e}, Recovery error: {recovery_error}"
-                self._logger.error(error_msg)
+                self.logger.error(error_msg)
                 raise LocalLoggingError(error_msg)
     
     async def _retry_operation(self, operation: Callable, operation_name: str) -> bool:
@@ -326,7 +326,7 @@ class EventSessionLogger:
                 if attempt < self.max_retry_attempts - 1:
                     delay = self.retry_delay_seconds * (2 ** attempt)  # Exponential backoff
                     await asyncio.sleep(delay)
-                    self._logger.debug(f"Retrying {operation_name} (attempt {attempt + 2}/{self.max_retry_attempts})")
+                    self.logger.debug(f"Retrying {operation_name} (attempt {attempt + 2}/{self.max_retry_attempts})")
         
         # All retries failed
         self.error_handler(last_exception, f"retry_failed:{operation_name}")

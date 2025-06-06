@@ -22,9 +22,31 @@ class ModelConfigurationLoader(ConfigLoader):
     def __init__(self, config_path: Optional[str] = None):
         super().__init__(config_path)
 
-        self.config_file_path = Path(config_path).joinpath("model_configs.json")
+        self.config_file_path = Path(self.config_path).joinpath("model_configs.json")
         self._cached_config: Optional[ModelConfigurationFile] = None
         self.load_from_json()
+
+    def flattened_config(self) -> Dict[str, Any]:
+        """
+        Flatten the cached model configuration into a dictionary.
+
+        Returns:
+            Dictionary representation of the cached configuration
+        """
+        if self._cached_config is None:
+            self.load_from_json()
+
+        data = self._cached_config.model_dump(exclude_none=True)
+        result: Dict[str, Any] = {}
+        for vendor_info in data["vendors"]:
+            vendor_name = vendor_info["vendor"]
+            for model in vendor_info["models"]:
+                model_with_vendor = model.copy()
+                model_with_vendor["vendor"] = vendor_name
+                result[model["id"]] = model_with_vendor
+
+        return result
+
     
     def load_from_json(self, json_path: Optional[Union[str, Path]] = None) -> ModelConfigurationFile:
         """

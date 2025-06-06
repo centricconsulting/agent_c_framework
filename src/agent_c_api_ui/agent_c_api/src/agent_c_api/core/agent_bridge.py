@@ -1,39 +1,42 @@
-import asyncio
-import json
 import os
-
+import json
+import asyncio
 import threading
 import traceback
-from typing import Union, List, Dict, Any, AsyncGenerator, Optional
+from typing import Any, Dict, List, Union, Optional, AsyncGenerator
 from datetime import datetime, timezone
 
-from agent_c import BaseAgent
-from agent_c_api.config.env_config import settings, Settings
-
-from agent_c.models.input.image_input import ImageInput
-from agent_c.models.input.audio_input import AudioInput
-from agent_c.models.input.file_input import FileInput
-from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
-from agent_c.agents import GPTChatAgent
-from agent_c.agents.claude import ClaudeChatAgent
-from agent_c.models.events import SessionEvent
-from agent_c.models.input import AudioInput
-from agent_c_api.core.file_handler import FileHandler
-from agent_c_api.core.util.logging_utils import LoggingManager
-from agent_c_tools.tools.workspace import LocalStorageWorkspace
-from agent_c_tools.tools.random_number import RandomNumberTools
-from agent_c.toolsets import ToolChest, ToolCache, Toolset
-from agent_c.toolsets.mcp_tool_chest import MCPToolChest, MCPServer
-from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c.chat import ChatSessionManager
-
-from agent_c.util.event_session_logger_factory import create_with_callback
-
-#from agent_c_tools.tools.user_preferences import AssistantPersonalityPreference, AddressMeAsPreference, UserPreference
-from agent_c.prompting import PromptBuilder, CoreInstructionSection
-from agent_c_tools.tools.workspace.local_storage import LocalProjectWorkspace
-from agent_c_tools.tools import *
+from agent_c.models.input import AudioInput
+from agent_c.agents.gpt import GPTChatAgent
+from agent_c.models.events import SessionEvent
+from agent_c.toolsets import ToolChest, ToolCache
+from agent_c_api.config.env_config import settings
+from agent_c.models.input.file_input import FileInput
+from agent_c.agents.base import BaseAgent, ChatSession
+from agent_c_api.core.file_handler import FileHandler
+from agent_c.models.input.image_input import ImageInput
+from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c_api.config.config_loader import MODELS_CONFIG
+from agent_c_tools.tools.workspace import LocalStorageWorkspace
+from agent_c_api.core.util.logging_utils import LoggingManager
+from agent_c.prompting import PromptBuilder, CoreInstructionSection
+from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
+from agent_c.agents.claude import ClaudeChatAgent, ClaudeBedrockChatAgent
+from agent_c.util.event_session_logger_factory import create_with_callback
+from agent_c_tools.tools.workspace.local_storage import LocalProjectWorkspace
+
+# Constants
+DEFAULT_BACKEND = 'claude'
+DEFAULT_MODEL_NAME = 'claude-sonnet-4-20250514'
+DEFAULT_OUTPUT_FORMAT = 'raw'
+DEFAULT_TOOL_CACHE_DIR = '.tool_cache'
+DEFAULT_LOG_DIR = './logs/sessions'
+LOCAL_WORKSPACES_FILE = '.local_workspaces.json'
+DEFAULT_ENV_NAME = 'development'
+OPENAI_REASONING_MODELS = ['o1', 'o1-mini', 'o3', 'o3-mini']
+
+
 
 class AgentBridge:
     """
@@ -53,37 +56,47 @@ class AgentBridge:
         - File handling capabilities
     """
 
-    def __init__(self, user_id: str = 'default', session_manager: Union[ChatSessionManager, None] = None,
-                 backend: str = 'openai', model_name: str = 'gpt-4o', persona_name: str = 'default',
-                 custom_prompt: str = None,
-                 essential_tools: List[str] = None,
-                 additional_tools: List[str] = None,
-                 file_handler: Optional[FileHandler] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        chat_session: ChatSession,
+        session_manager: ChatSessionManager,
+        backend: str = DEFAULT_BACKEND,
+        model_name: str = DEFAULT_MODEL_NAME,
+        file_handler: Optional[FileHandler] = None,
+        **kwargs: Any
+    ) -> None:
         """
-        Initialize the SimplifiedAgent instance.
+        Initialize the AgentBridge instance.
+
+        This initializes a bridge interface between the agent_c library and ReactJS
+        applications for chat functionality, setting up all necessary components
+        including logging, tool management, and agent configuration.
 
         Args:
-            user_id (str): Identifier for the user. Defaults to 'default'.
-        session_manager (Union[ChatSessionManager, None]): Session manager for chat sessions. Defaults to None.
-        backend (str): Backend to use for the agent (e.g., 'openai', 'claude'). Defaults to 'openai'.
-        model_name (str): Name of the AI model to use. Defaults to 'gpt-4o'.
-        persona_name (str): Name of the persona to use. Defaults to 'default'.
-        custom_prompt (str): Custom text to use for the agent's persona. Defaults to None.
-        essential_toolsets (List[str]): List of essential tools the agent must have. Defaults to None.
-        additional_toolsets (List[str]): List of additional tools to add to the agent. Defaults to None.
-        **kwargs: Additional optional keyword arguments including:
-            temperature (float): Temperature parameter for non-reasoning models
-            reasoning_effort (float): Reasoning effort parameter for OpenAI models
-            extended_thinking (bool): Extended thinking parameter for Claude models
-            budget_tokens (int): Budget tokens parameter for Claude models
-            agent_name (str): Name for the agent (for debugging)
-            output_format (str): Output format for agent responses
-            tool_cache_dir (str): Directory for tool cache
-            file_handler (Optional[FileHandler]): Handler for file operations.
+            chat_session: The chat session to manage.
+            session_manager: Session manager for chat sessions.
+            backend: Backend to use for the agent ('openai', 'claude', 'bedrock').
+                Defaults to 'claude'.
+            model_name: Name of the AI model to use. Defaults to 'claude-sonnet-4-20250514'.
+            file_handler: Handler for file operations. Defaults to None.
+            **kwargs: Additional optional keyword arguments including:
+                - temperature (float): Temperature parameter for non-reasoning models
+                - reasoning_effort (float): Reasoning effort parameter for OpenAI models
+                - extended_thinking (bool): Extended thinking parameter for Claude models
+                - budget_tokens (int): Budget tokens parameter for Claude models
+                - agent_name (str): Name for the agent (for debugging)
+                - output_format (str): Output format for agent responses
+                - tool_cache_dir (str): Directory for tool cache
+                - max_tokens (int): Maximum tokens for model responses
+                - sections (List): Sections for the prompt builder
+        
+        Raises:
+            Exception: If there are errors during tool or agent initialization.
         """
         # Agent events setup, must come first
         self.__init_events()
+        self.chat_session = chat_session
+        self.sections = kwargs.get('sections', None)  # Sections for the prompt builder, if any
 
         # Debugging and Logging Setup
         logging_manager = LoggingManager(__name__)
@@ -91,14 +104,14 @@ class AgentBridge:
 
         # Set up streaming_callback with logging
         self.streaming_callback_with_logging = create_with_callback(
-            log_base_dir=os.getenv('AGENT_LOG_DIR', './logs/sessions'),
+            log_base_dir=os.getenv('AGENT_LOG_DIR', DEFAULT_LOG_DIR),
             callback=self.consolidated_streaming_callback,  # Forward to UI processing
             include_system_prompt=True
         )
 
         self.debug_event = None
 
-        self.agent_name = kwargs.get('agent_name', None)  # Debugging only
+        self.agent_name = kwargs.get('agent_name', self.chat_session.agent_config.name)  # Debugging only
 
         # Initialize Core Class, there's quite a bit here, so let's go through this.
         # Agent Characteristics
@@ -106,8 +119,8 @@ class AgentBridge:
         # - Model Name: The model name used for the agent, defaults to 'gpt-4o'
         self.backend = backend
         self.model_name = model_name
-        self.agent: Optional[BaseAgent] = None
-        self.agent_output_format = kwargs.get('output_format', 'raw')
+        self.agent_runtime: Optional[BaseAgent] = None
+        self.agent_output_format = kwargs.get('output_format', DEFAULT_OUTPUT_FORMAT)
 
         # Non-Reasoning Models Parameters
         self.temperature = kwargs.get('temperature')
@@ -122,50 +135,17 @@ class AgentBridge:
         self.extended_thinking = kwargs.get('extended_thinking')
         self.budget_tokens = kwargs.get('budget_tokens')
 
-        # Agent "User" Management - these are used to keep agents and sessions separate in zep cache
-        # - User ID: The user ID for the agent, this is used for user preference management, it is required.
-        # In the future, I'll probably change this to a UUID
-        # - User Preferences: A list of user preferences that the agent can use, this is a list of UserPreference objects.
-        self.user_id = user_id
         # self.user_prefs: List[UserPreference] = [AddressMeAsPreference(), AssistantPersonalityPreference()]
         self.session_manager = session_manager
-
-        # Agent persona management, pass in the persona name and we'll initialize the persona text now
-        # we will pass in custom text later
-        self.persona_name = persona_name
-        self.custom_prompt = custom_prompt
-
-        if self.persona_name is None or self.persona_name == '':
-            self.persona_name = 'default'
-
-        if self.custom_prompt is None:
-            try:
-                self.logger.info(f"Loading persona file for {self.persona_name} because custom_prompt is None")
-                self.custom_prompt = self.__load_persona(self.persona_name)
-            except Exception as e:
-                self.logger.error(f"Error loading persona {self.persona_name}: {e}")
-        else:
-            self.logger.info(f"Using provided custom_prompt: {self.custom_prompt[:10]}...")
-
-        # Chat Management, this is where the agent stores the chat history
-        self.current_chat_Log: Union[List[Dict], None] = None
+        self.logger.info(f"Using provided agent config : {self.chat_session.agent_config.key}...")
 
         # Tool Chest, Cache, and Setup
         # - Tool Chest: A collection of toolsets that the agent can use, Set to None initialization.
         # - Tool Cache: A cache for storing tool data, set to a default directory.
-        # - Additional Tools: A list of additional toolsets to add to the tool chest, this is where use passes in other toolsets
-        # - Selected Tools: A list of toolsets that the agent will use, this is a combination of essential toolsets and additional toolsets.
         # - Output Tool Arguments: A placeholder for tool argument output preference.
         self.tool_chest: Union[ToolChest, None] = None
-        self.tool_cache_dir = kwargs.get("tool_cache_dir", ".tool_cache")
+        self.tool_cache_dir = kwargs.get("tool_cache_dir", DEFAULT_TOOL_CACHE_DIR)
         self.tool_cache = ToolCache(cache_dir=self.tool_cache_dir)
-
-        if essential_tools is None:
-            self.essential_toolsets = ['WorkspaceTools', 'ThinkTools', 'WorkspacePlanningTools', 'MarkdownToHtmlReportTools']
-        else:
-            self.essential_toolsets = essential_tools
-        self.additional_toolsets = additional_tools or []
-        self.selected_tools = self.essential_toolsets + self.additional_toolsets
         self.output_tool_arguments = True  # Placeholder for tool argument output preference
 
         # Agent Workspace Setup
@@ -179,155 +159,116 @@ class AgentBridge:
         self.image_inputs: List[ImageInput] = []
         self.audio_inputs: List[AudioInput] = []
 
-    def __init_events(self):
+    def __init_events(self) -> None:
         """
         Initialize threading events used for debugging and input/output management.
+        
+        Sets up various threading events for coordinating agent operations,
+        including exit handling, input state management, and TTS cancellation.
         """
         self.exit_event = threading.Event()
         self.input_active_event = threading.Event()
         self.cancel_tts_event = threading.Event()
-        # going to get from shared logging manager
+        # Get debug event from shared logging manager
         self.debug_event = LoggingManager.get_debug_event()
 
 
-    def __load_persona(self, persona_name: str = None) -> str:
-        """
-        Load the persona prompt from a file based on the given persona name.
-
-        Returns:
-            str: Loaded persona prompt text.
-
-        Raises:
-            Exception: If the persona file cannot be loaded.
-        """
-        if persona_name is None or persona_name == '' or persona_name.lower() == 'custom':
-            return ''
-        try:
-            self.logger.info(f"Agent {self.agent_name} is loading persona: {self.persona_name}")
-            persona_path = os.path.join('personas', f"{self.persona_name}.md")
-
-            # If persona file exists, read it
-            if os.path.exists(persona_path):
-                with open(persona_path, 'r') as file:
-                    return file.read()
-
-            # If no persona file, return empty string
-            self.logger.warning(f"No persona file found for {self.persona_name}. ")
-            return ''
-
-        except Exception as e:
-            self.logger.error(f"Error loading persona {self.persona_name}: {e}")
-            return ''
-
-    def __init_workspaces(self):
+    def __init_workspaces(self) -> None:
         """
         Initialize the agent's workspaces by loading local workspace configurations.
+        
+        Sets up the default local project workspace and loads additional workspaces
+        from the local configuration file if it exists. This provides the agent
+        with access to file system locations for tool operations.
+        
+        Raises:
+            Exception: If there are errors loading workspace configurations
+                (FileNotFoundError is handled gracefully).
         """
         local_project = LocalProjectWorkspace()
         self.workspaces = [local_project]
-        self.logger.info(f"Agent {self.agent_name} initialized workspaces {local_project.workspace_root}")
-
+        self.logger.info(
+            f"Agent {self.chat_session.agent_config.key} initialized workspaces "
+            f"{local_project.workspace_root}"
+        )
+        # TODO: ALLOWED / DISALLOWED WORKSPACES from agent config
         try:
-            with open('.local_workspaces.json', 'r') as json_file:
+            with open(LOCAL_WORKSPACES_FILE, 'r', encoding='utf-8') as json_file:
                 local_workspaces = json.load(json_file)
 
             for ws in local_workspaces['local_workspaces']:
                 self.workspaces.append(LocalStorageWorkspace(**ws))
         except FileNotFoundError:
+            # Local workspaces file is optional
             pass
 
-    async def __init_session(self):
+    @property
+    def current_chat_log(self) -> List[Dict[str, Any]]:
         """
-        Initialize the chat session for the agent, including setting up the session manager.
-        """
-        if self.session_manager is None:
-            self.session_manager = ChatSessionManager() # This always gets a new session_manager object
-            await self.session_manager.init(self.user_id) # This initializes the new session_manager object
-        elif not hasattr(self.session_manager, 'chat_session') or self.session_manager.chat_session is None:
-            # Only initialize if chat_session doesn't already exist on an already existing session_manager object.  Defensive programming here.
-            # Because we're messing with how things are setup,
-            # We may have a session_manager that is uninitialzied getting passed in, in that case we do need to initialize it.
-            await self.session_manager.init(self.user_id)
+        Returns the current chat log for the agent.
 
-        self.session_id = self.session_manager.chat_session.session_id
-        self.logger.info(f"Agent {self.agent_name} completed session initialization: {self.session_id}")
-
-    async def update_tools(self, new_tools: List[str]):
+        Returns:
+            Union[List[Dict], None]: The current chat log or None if not set.
         """
-        Updates the agent's tools without reinitializing the entire agent.
+        return self.chat_session.messages
+
+    async def update_tools(self, new_tools: List[str]) -> None:
+        """
+        Update the agent's tools without reinitializing the entire agent.
 
         This method allows dynamic updating of the tool set while maintaining
         the current session and other configurations. It ensures essential
         tools are preserved while adding or removing additional tools.
 
         Args:
-            new_tools (List[str]): List of tool names to be added to the essential tools
+            new_tools: List of tool names to be added to the essential tools.
 
+        Raises:
+            Exception: If there are errors during tool activation.
+            
         Notes:
             - Essential tools are always preserved
             - Duplicate tools are automatically removed
             - Tool chest is reinitialized with the updated tool set
             - Agent is reinitialized with new tools while maintaining the session
         """
-        self.logger.info(f"Requesting new tool list for agent {self.agent_name} to: {new_tools}")
+        self.logger.info(
+            f"Requesting new tool list for agent {self.agent_name} to: {new_tools}"
+        )
+        self.chat_session.agent_config.tools = new_tools
+        await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
+        self.logger.info(
+            f"Tools updated successfully. Current Active tools: "
+            f"{list(self.tool_chest.active_tools.keys())}"
+        )
 
-        # Remove duplicates and ensure essential tools are included
-        all_tools = list(set(self.essential_toolsets + new_tools))
-
-        self.additional_toolsets = [t for t in new_tools if t not in self.essential_toolsets]
-        self.selected_tools = all_tools
-
-        # Ensure you grab all the necessary options for the tool chest
-        tool_opts = {
-            'tool_cache': self.tool_cache,
-            'session_manager': self.session_manager,
-            'workspaces': self.workspaces,
-            'streaming_callback': self.streaming_callback_with_logging,
-            'model_configs': MODELS_CONFIG
-        }
-        # Reinitialize just the tool chest
-        await self.tool_chest.set_active_toolsets(self.additional_toolsets, tool_opts=tool_opts)
-        self.agent.prompt_builder.tool_sections = self.tool_chest.active_tool_sections
-
-        self.logger.info(f"Tools updated successfully. Current Active tools: {list(self.tool_chest.active_tools.keys())}")
-
-    async def __init_tool_chest(self):
+    async def __init_tool_chest(self) -> None:
         """
         Initialize the agent's tool chest with selected tools and configurations.
 
-        This method sets up the `ToolChest` with tools from the global `Toolset` registry
-        based on the tools specified in `self.selected_tools`. It also configures additional
+        This method sets up the ToolChest with tools from the global Toolset registry
+        based on the tools specified in the agent configuration. It configures additional
         tool options, initializes the selected tools, and logs the result. The method handles
-        errors and logs any tools that failed to initialize, providing useful debugging information.
+        errors and logs any tools that failed to initialize.
 
-        Steps:
-        1. Filter tools from the `Toolset` registry to match those in `self.selected_tools`.
-        2. Initialize the `ToolChest` with the filtered tools.
-        3. Create and set up a `ToolCache` for caching tool-related data.
-        4. Pass the necessary configuration options to initialize the tools in the `ToolChest`.
-        5. Log the successfully initialized tools.
-        6. Debug and log any tools that were selected but failed to initialize.
+        Process:
+            1. Set up tool options including cache, session manager, and workspaces
+            2. Initialize the ToolChest with configuration options
+            3. Initialize and activate the specified toolset
+            4. Log successful initialization and any failures
 
         Raises:
-            Exception: Logs and prints an error message if the tool initialization fails.
+            Exception: If there are errors during tool initialization, logged with full traceback.
 
-        Attributes:
-            self.tool_chest (ToolChest): The tool chest instance containing the initialized tools.
-            self.tool_cache (ToolCache): Cache manager for tool-related data.
-            self.selected_tools (list): Names of tools selected for initialization.
-            self.logger (Logger): Logger instance for logging messages.
-            self.agent_name (str): The name of the agent using this tool chest.
-
-        Debugging:
+        Note:
             Logs warnings if selected tools do not get initialized, typically due to
-            misspelled tool class names in the `self.selected_tools` list.
-
-        Returns:
-            None
+            misspelled tool class names in the agent configuration.
         """
-        self.logger.info(f"Requesting initialization of these tools: {self.selected_tools}")
-
-        # self.tool_cache = ToolCache(cache_dir=".tool_cache") # self.tool_cache is already initialized in __init__
+        self.logger.info(
+            f"Requesting initialization of these tools: "
+            f"{self.chat_session.agent_config.tools} for agent "
+            f"{self.chat_session.agent_config.key}"
+        )
 
         try:
             tool_opts = {
@@ -339,78 +280,78 @@ class AgentBridge:
             }
 
             # Initialize the tool chest with essential tools first
-            self.tool_chest = ToolChest(essential_toolsets=self.essential_toolsets, **tool_opts)
+            self.tool_chest = ToolChest(**tool_opts)
 
             # Initialize the tool chest essential tools
             await self.tool_chest.init_tools(tool_opts)
+            await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
+            
             self.logger.info(
-                f"Agent {self.agent_name} successfully initialized essential tools: {list(self.tool_chest.active_tools.keys())}")
+                f"Agent {self.chat_session.agent_config.key} successfully initialized "
+                f"essential tools: {list(self.tool_chest.active_tools.keys())}"
+            )
 
-            if len(self.additional_toolsets):
-                await self.tool_chest.set_active_toolsets(self.additional_toolsets, tool_opts=tool_opts)
-                self.logger.info(
-                    f"Agent {self.agent_name} successfully initialized additional tools: {list(self.tool_chest.active_tools.keys())}")
-
-
-
-            # Usually it's a misspelling of the tool class name from the LLM
+            # Check for tools that were selected but not initialized
+            # Usually indicates misspelling of the tool class name
             initialized_tools = set(self.tool_chest.active_tools.keys())
-
-            # Find tools that were selected but not initialized
             uninitialized_tools = [
-                tool_name for tool_name in self.selected_tools
+                tool_name for tool_name in self.chat_session.agent_config.tools
                 if tool_name not in initialized_tools
             ]
+            
             if uninitialized_tools:
                 self.logger.warning(
-                    f"The following selected tools were not initialized: {uninitialized_tools} for Agent {self.agent_name}")
+                    f"The following selected tools were not initialized: "
+                    f"{uninitialized_tools} for Agent {self.chat_session.agent_config.name}"
+                )
+                
         except Exception as e:
             self.logger.exception("Error initializing tools: %s", e, exc_info=True)
-
-        return
+            raise
 
     async def _sys_prompt_builder(self) -> PromptBuilder:
+        """
+        Build the system prompt for the agent.
+        
+        Creates a PromptBuilder with the core operational sections and
+        active tool sections from the tool chest.
+        
+        Returns:
+            PromptBuilder: Configured prompt builder with all necessary sections.
+        """
         operating_sections = [
             CoreInstructionSection(),
             ThinkSection(),
             DynamicPersonaSection()
         ]
 
-        sections = operating_sections  # + info_sections
-        prompt_builder = PromptBuilder(sections=sections, tool_sections=self.tool_chest.active_tool_sections)
+        prompt_builder = PromptBuilder(
+            sections=operating_sections,
+            tool_sections=self.tool_chest.active_tool_sections
+        )
 
         return prompt_builder
 
-    async def initialize_agent_parameters(self):
+    async def initialize_agent_parameters(self) -> None:
         """
         Initialize the internal agent with prompt builders, tools, and configurations.
 
         This method creates and configures the conversational agent for the application.
-        It sets up the agent's operational and informational sections, constructs a prompt
-        builder with these sections, and initializes the agent based on the specified backend.
+        It sets up the agent's prompt builder and initializes the appropriate agent
+        class based on the specified backend (Claude, Bedrock, or OpenAI).
 
-        Steps:
-        1. Define the operational sections of the agent, including core instructions, dynamic
-           persona settings, and active tool-related sections from the `ToolChest`.
-        2. Define the informational sections, such as environmental context and user bio details.
-        3. Combine operational and informational sections into a `PromptBuilder` instance.
-        4. Initialize the agent using the `ClaudeChatAgent` or `GPTChatAgent` class,
-           depending on the specified backend (`self.backend`).
-
-        Attributes:
-            self (ChatAgent): The initialized conversational agent instance
-                (either `ClaudeChatAgent` or `GPTChatAgent`).
-            self.backend (str): The backend type, determining which agent class is used.
-            self.model_name (str): The name of the AI model used by the agent.
-            self.tool_chest (ToolChest): The initialized tool chest containing active tools.
-            self.__chat_callback (function): Callback function for handling streaming responses.
-            self.agent_output_format (str): Format for the agent's output.
+        Process:
+            1. Build the system prompt using configured sections
+            2. Prepare common agent parameters
+            3. Add backend-specific parameters (temperature, reasoning settings, etc.)
+            4. Initialize the appropriate agent class based on backend
 
         Raises:
-            Exception: If an error occurs during agent initialization, an exception may be raised.
-
-        Returns:
-            None
+            Exception: If an error occurs during agent initialization.
+            
+        Note:
+            Sets self.agent_runtime to the initialized agent instance, which will be
+            one of ClaudeChatAgent, ClaudeBedrockChatAgent, or GPTChatAgent.
         """
 
         prompt_builder = await self._sys_prompt_builder()
@@ -426,7 +367,6 @@ class AgentBridge:
 
         # Add temperature if it exists (applies to both Claude and GPT)
         if self.temperature is not None:
-            # self.logger.debug(f"Setting agent temperature to {self.temperature}")
             agent_params["temperature"] = self.temperature
 
         if self.max_tokens is not None:
@@ -441,46 +381,65 @@ class AgentBridge:
             agent_params["budget_tokens"] = budget_tokens
             self.logger.debug(f"Setting agent budget_tokens to {budget_tokens}")
 
-            self.agent = ClaudeChatAgent(**agent_params)
+            self.agent_runtime = ClaudeChatAgent(**agent_params)
+            
+        elif self.backend == 'bedrock':
+            # Add Claude Bedrock-specific parameters
+            budget_tokens = self.budget_tokens if self.budget_tokens is not None else 0
+            agent_params["budget_tokens"] = budget_tokens
+            self.logger.debug(f"Setting agent budget_tokens to {budget_tokens}")
+
+            self.agent_runtime = ClaudeBedrockChatAgent(**agent_params)
+            
         else:
             # Add OpenAI-specific parameters
             # Only pass reasoning_effort if it's set and we're using a reasoning model
-            if self.reasoning_effort is not None and any(
-                    reasoning_model in self.model_name
-                    for reasoning_model in ["o1", "o1-mini", "o3", "o3-mini"]):
-                        agent_params["reasoning_effort"] = self.reasoning_effort
+            if (self.reasoning_effort is not None and 
+                any(reasoning_model in self.model_name for reasoning_model in OPENAI_REASONING_MODELS)):
+                agent_params["reasoning_effort"] = self.reasoning_effort
 
-            self.agent = GPTChatAgent(**agent_params)
+            self.agent_runtime = GPTChatAgent(**agent_params)
 
         self.logger.info(f"Agent initialized using the following parameters: {agent_params}")
 
-    async def reset_streaming_state(self):
-        """Reset streaming state to ensure clean session"""
-        self.logger.info(f"Resetting streaming state for session {self.session_id}")
+    async def reset_streaming_state(self) -> None:
+        """
+        Reset streaming state to ensure clean session.
+        
+        Creates a new asyncio Queue for streaming responses, ensuring that
+        each chat interaction starts with a clean state.
+        """
+        self.logger.info(
+            f"Resetting streaming state for session {self.chat_session.session_id}"
+        )
         self._stream_queue = asyncio.Queue()
 
     async def __build_prompt_metadata(self) -> Dict[str, Any]:
         """
         Build metadata for prompts including user and session information.
 
+        Creates a comprehensive metadata dictionary that provides context
+        for prompt generation, including session details, user information,
+        and system configuration.
+
         Returns:
-            Dict[str, Any]: Metadata for prompts.
-            - session_id (str): Session ID for the chat session. Not the UI session ID!
-            - current_user_username (str): Username of the current user.
-            - current_user_name (str): Name of the current user.
-            - session_summary (str): Summary of the current chat session.
-            - persona_prompt (str): Prompt for the persona.
+            Dict[str, Any]: Metadata dictionary containing:
+                - session_id: Session ID for the chat session (not UI session ID)
+                - current_user_username: Username of the current user
+                - persona_prompt: Prompt for the persona
+                - agent_config: Complete agent configuration
+                - voice_tools: Voice tools configuration
+                - timestamp: Current timestamp in ISO format
+                - env_name: Environment name (development, production, etc.)
         """
         return {
-            "session_id": self.session_id,
-            "current_user_username": self.session_manager.user.user_id,
-            "current_user_name": self.session_manager.user.first_name,
-            "session_summary": self.session_manager.chat_session.active_memory.summary,
-            "persona_prompt": self.custom_prompt,
-            "voice_tools": self.voice_tools,  # Add voice tools to metadata
+            "session_id": self.chat_session.session_id,
+            "current_user_username": self.chat_session.user_id,
+            "persona_prompt": self.chat_session.agent_config.persona,
+            "agent_config": self.chat_session.agent_config,
+            "voice_tools": self.voice_tools,
             "timestamp": datetime.now().isoformat(),
-            "env_name": os.getenv('ENV_NAME', 'development'),
-            "session_info": self.session_manager.chat_session.session_id if self.session_manager else None
+            "env_name": os.getenv('ENV_NAME', DEFAULT_ENV_NAME)
         }
 
     @staticmethod
@@ -493,7 +452,7 @@ class AgentBridge:
         """
         return datetime.now(timezone.utc).isoformat()
 
-    def _get_agent_config(self) -> Dict[str, Any]:
+    def get_agent_runtime_config(self) -> Dict[str, Any]:
         """
         Get the current configuration of the agent.
 
@@ -501,14 +460,12 @@ class AgentBridge:
             Dict[str, Any]: Dictionary containing agent configuration details
         """
         config = {
-            'user_id': self.user_id,
             'backend': self.backend,
             'model_name': self.model_name,
-            'persona_name': self.persona_name,
             'initialized_tools': [],
             'agent_name': self.agent_name,
-            'agent_session_id': self.session_id,
-            'custom_prompt': self.custom_prompt,
+            'user_session_id': self.chat_session.session_id,
+            'agent_session_id': self.chat_session.session_id,
             'output_format': self.agent_output_format,
             'created_time': self._current_timestamp(),
             'temperature': self.temperature,
@@ -534,16 +491,29 @@ class AgentBridge:
         return config
 
     @staticmethod
-    def convert_to_string(data):
-        # Check if data is None
+    def convert_to_string(data: Any) -> str:
+        """
+        Convert input data to a string representation.
+        
+        Handles various data types by converting them to JSON strings when possible,
+        or returning the string directly if already a string.
+        
+        Args:
+            data: The data to convert to a string.
+            
+        Returns:
+            str: String representation of the input data.
+            
+        Raises:
+            ValueError: If data is None, empty, or cannot be converted to JSON.
+        """
         if data is None:
             raise ValueError("Input data is None")
 
-        # Check if it's already a string
         if isinstance(data, str):
             return data
 
-        # Check if the data is empty (this works for lists, dicts, etc.)
+        # Check if the data is empty (works for lists, dicts, etc.)
         if not data:
             raise ValueError("Input data is empty")
 
@@ -551,15 +521,21 @@ class AgentBridge:
         try:
             return json.dumps(data)
         except (TypeError, ValueError) as e:
-            raise ValueError("Error converting input to string: " + str(e))
-
-    async def _handle_message(self, event):
+            raise ValueError(f"Error converting input to string: {str(e)}") from e
+    @staticmethod
+    async def _handle_message(event: SessionEvent) -> str:
         """
-        Handle message events from the model
+        Handle message events from the model.
 
         This is particularly important for handling Anthropic API errors
+        and other critical messages that need immediate attention.
+        
+        Args:
+            event: Session event containing message information.
+            
+        Returns:
+            str: JSON-formatted message payload.
         """
-        # Check if this is an error message about prompt length
         payload = json.dumps({
             "type": "message",
             "data": event.content,
@@ -570,7 +546,16 @@ class AgentBridge:
         return payload
 
     @staticmethod
-    async def _handle_system_message(event):
+    async def _handle_system_message(event: SessionEvent) -> str:
+        """
+        Handle system message events.
+        
+        Args:
+            event: Session event containing system message information.
+            
+        Returns:
+            str: JSON-formatted system message payload.
+        """
         return json.dumps({
             "type": "message",
             "data": event.content,
@@ -579,37 +564,78 @@ class AgentBridge:
             "severity": event.severity
         }) + "\n"
 
-    async def _handle_tool_select_delta(self, event):
-        """Handle tool selection events from the agent"""
-        # self.logger.debug(f"tool SELECT delta event. {event.model_dump()}")
+    @staticmethod
+    async def _ignore_event(_: SessionEvent) -> None:
+        """
+        Ignore certain event types that don't require processing.
+        
+        Args:
+            _: Session event to ignore.
+            
+        Returns:
+            None: No payload is generated for ignored events.
+        """
+        return None
+
+    async def _handle_tool_select_delta(self, event: SessionEvent) -> str:
+        """
+        Handle tool selection events from the agent.
+        
+        Args:
+            event: Session event containing tool selection information.
+            
+        Returns:
+            str: JSON-formatted tool select delta payload.
+        """
+        data = (
+            self.convert_to_string(event.tool_calls) 
+            if hasattr(event, 'tool_calls') 
+            else 'No data'
+        )
         payload = json.dumps({
             "type": "tool_select_delta",
-            "data": self.convert_to_string(event.tool_calls) if hasattr(event, 'tool_calls') else 'No data',
+            "data": data,
             "format": "markdown"
         }) + "\n"
         return payload
 
-    async def _handle_tool_call_delta(self, event):
-        """Handle tool selection events from the agent"""
-        # self.logger.debug(f"tool CALL delta event. {event.model_dump()}")
+    async def _handle_tool_call_delta(self, event: SessionEvent) -> str:
+        """
+        Handle tool call delta events from the agent.
+        
+        Args:
+            event: Session event containing tool call delta information.
+            
+        Returns:
+            str: JSON-formatted tool call delta payload.
+        """
+        data = (
+            self.convert_to_string(event.content) 
+            if hasattr(event, 'content') 
+            else 'No data'
+        )
         payload = json.dumps({
             "type": "tool_call_delta",
-            "data": self.convert_to_string(event.content) if hasattr(event, 'content') else 'No data',
+            "data": data,
             "format": "markdown"
         }) + "\n"
         return payload
 
-    async def _handle_text_delta(self, event):
-        """Handle text delta events from the agent/tools"""
-        vendor = 'anthropic' if self.backend == 'claude' else 'openai'
-        if vendor is None:
-            model_name = self.model_name.lower()
-            if any(name in model_name for name in ['sonnet', 'haiku', 'opus', 'claude']):
-                vendor = 'anthropic'  # These are Anthropic models, vendor should be 'anthropic'
-            elif any(name in model_name for name in ['gpt', 'davinci', 'o1', 'o1-mini', 'o3', 'o3-mini']):
-                vendor = 'openai'  # These are OpenAI models, vendor should be 'openai'
-            else:
-                vendor = 'unknown'
+    async def _handle_text_delta(self, event: SessionEvent) -> str:
+        """
+        Handle text delta events from the agent/tools.
+        
+        Determines the appropriate vendor based on backend and model name,
+        then formats the text content for streaming to the client.
+        
+        Args:
+            event: Session event containing text delta information.
+            
+        Returns:
+            str: JSON-formatted content payload with vendor information.
+        """
+        vendor = self._determine_vendor()
+        
         payload = json.dumps({
             "type": "content",
             "data": event.content,
@@ -618,8 +644,23 @@ class AgentBridge:
         }) + "\n"
         return payload
 
+    def _determine_vendor(self) -> str:
+        """
+        Determine the vendor based on backend and model name.
+        
+        Returns:
+            str: Vendor name ('anthropic', 'openai', 'bedrock', 'azure').
+        """
+        if self.backend in  ['claude', 'bedrock']:
+            return 'claude'
+        elif self.backend in ['openai', 'azure']:
+            return 'openai'
+
+        return 'claude'  # Default to 'claude' if backend is not recognized
+
+
     @staticmethod
-    async def _handle_tool_call(event):
+    async def _handle_tool_call(event: SessionEvent) -> str:
         """
         Unified tool call handler that checks the vendor to determine how to send messages.
         The front end expects a schema: tool_calls has id, name, arguments.  tool_results has role, tool_call_id, name, and content.
@@ -695,16 +736,35 @@ class AgentBridge:
             raise ValueError(f"Unsupported vendor: {event.vendor}")
 
     @staticmethod
-    async def _handle_render_media(event):
-        """Handle media render events from tools"""
+    async def _handle_render_media(event: SessionEvent) -> str:
+        """
+        Handle media render events from tools.
+        
+        Processes media content from tools, generating appropriate HTML
+        for display in the client interface.
+        
+        Args:
+            event: Session event containing media render information.
+            
+        Returns:
+            str: JSON-formatted media render payload.
+        """
         media_content = ""
+        
         if event.content:
             media_content = event.content
         elif event.url:
             if "image" in event.content_type:
-                media_content = f"<br><img src='{event.url}' style='max-width: 60%; height: auto;'/>"
+                media_content = (
+                    f"<br><img src='{event.url}' "
+                    f"style='max-width: 60%; height: auto;'/>"
+                )
             else:
-                media_content = f"<br><object type='{event.content_type}' data='{event.url}'></object>"
+                media_content = (
+                    f"<br><object type='{event.content_type}' "
+                    f"data='{event.url}'></object>"
+                )
+                
         payload = json.dumps({
             "type": "render_media",
             "content": media_content,
@@ -719,9 +779,25 @@ class AgentBridge:
         }) + "\n"
         return payload
 
-    async def _handle_history(self, event):
-        """Handle history events which update the chat log"""
-        self.current_chat_Log = event.messages
+    async def _handle_history(self, event: SessionEvent) -> str:
+        """
+        Handle history events which update the chat log.
+        
+        Updates the chat session with new message history and flushes
+        the session to persistent storage.
+        
+        Args:
+            event: Session event containing message history.
+            
+        Returns:
+            str: JSON-formatted history payload.
+            
+        Raises:
+            Exception: If session flushing fails.
+        """
+        self.chat_session.messages = event.messages
+        await self.session_manager.flush(self.chat_session.session_id)
+        
         payload = json.dumps({
             "type": "history",
             "messages": event.messages,
@@ -731,14 +807,34 @@ class AgentBridge:
         return payload
 
     @staticmethod
-    async def _handle_audio_delta(event):
-        """Handle audio events if voice features are enabled"""
-        # For tools/agents these typically don't need special handling
+    async def _handle_audio_delta(_: SessionEvent) -> None:
+        """
+        Handle audio events if voice features are enabled.
+        
+        Currently, audio events don't require special handling for tools/agents.
+        
+        Args:
+            _: Session event containing audio delta information (ignored).
+            
+        Returns:
+            None: No payload is generated for audio deltas.
+        """
         return None
 
     @staticmethod
-    async def _handle_completion(event):
-        """Handle completion events from the agent"""
+    async def _handle_completion(event: SessionEvent) -> str:
+        """
+        Handle completion events from the agent.
+        
+        Processes completion status information including token usage
+        and stop reasons for the chat interaction.
+        
+        Args:
+            event: Session event containing completion information.
+            
+        Returns:
+            str: JSON-formatted completion status payload.
+        """
         payload = json.dumps({
             "type": "completion_status",
             "data": {
@@ -751,8 +847,19 @@ class AgentBridge:
         return payload
 
     @staticmethod
-    async def _handle_interaction(event):
-        """Handle interaction state events"""
+    async def _handle_interaction(event: SessionEvent) -> str:
+        """
+        Handle interaction state events.
+        
+        Processes interaction start and end events to track
+        the lifecycle of chat interactions.
+        
+        Args:
+            event: Session event containing interaction state information.
+            
+        Returns:
+            str: JSON-formatted interaction payload.
+        """
         if event.started:
             payload = json.dumps({
                 "type": "interaction_start",
@@ -767,17 +874,21 @@ class AgentBridge:
             }) + "\n"
         return payload
 
-    async def _handle_thought_delta(self, event):
-        """Handle thinking process events"""
-        vendor = 'anthropic' if self.backend == 'claude' else 'openai'
-        if vendor is None:
-            model_name = self.model_name.lower()
-            if any(name in model_name for name in ['sonnet', 'haiku', 'opus', 'claude']):
-                vendor = 'anthropic'  # These are Anthropic models, vendor should be 'anthropic'
-            elif any(name in model_name for name in ['gpt', 'davinci', 'o1', 'o1-mini', 'o3', 'o3-mini']):
-                vendor = 'openai'  # These are OpenAI models, vendor should be 'openai'
-            else:
-                vendor = 'unknown'
+    async def _handle_thought_delta(self, event: SessionEvent) -> str:
+        """
+        Handle thinking process events.
+        
+        Processes thought delta events from reasoning models, formatting
+        them with appropriate vendor and model information.
+        
+        Args:
+            event: Session event containing thought delta information.
+            
+        Returns:
+            str: JSON-formatted thought delta payload.
+        """
+        vendor = self._determine_vendor()
+        
         payload = json.dumps({
             "type": "thought_delta",
             "data": event.content,
@@ -787,39 +898,49 @@ class AgentBridge:
         }) + "\n"
         return payload
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """
         Asynchronously initialize the agent's session, tool chest, and internal agent configuration.
+        
+        This method performs the complete initialization sequence required
+        to prepare the agent for chat interactions.
+        
+        Raises:
+            Exception: If initialization of tools or agent parameters fails.
         """
-        await self.__init_session()
         await self.__init_tool_chest()
         await self.initialize_agent_parameters()
 
 
-    async def consolidated_streaming_callback(self, event: SessionEvent):
+    async def consolidated_streaming_callback(self, event: SessionEvent) -> None:
         """
-        Processes and routes various types of session events through appropriate handlers.
+        Process and route various types of session events through appropriate handlers.
 
         This method serves as the central event processing hub, handling various event
         types including text updates, tool calls, media rendering, and completion status.
         It formats the events into JSON payloads suitable for streaming to the client.
 
         Args:
-            event (SessionEvent): The event to process, containing type and payload information
+            event: The session event to process, containing type and payload information.
 
         Event Types Handled:
             - text_delta: Text content updates
-            - tool_call: Tool invocation events
+            - tool_call: Tool invocation events  
             - render_media: Media content rendering
             - history: Chat history updates
             - audio_delta: Audio content updates
             - completion: Task completion status
             - interaction: Interaction state changes
             - thought_delta: Thinking process updates
+            - tool_call_delta: Tool call streaming updates
+            - tool_select_delta: Tool selection streaming updates
+            - message: Important messages from the model
+            - system_message: System-level messages
+            - history_delta: History streaming updates (ignored)
+            - complete_thought: Complete thought events (ignored)
 
-        Notes:
-            Events are processed and formatted into JSON strings with appropriate
-            type markers and payloads for client-side handling.
+        Raises:
+            Exception: Logs errors if event handlers fail, but does not re-raise.
         """
         # try:
         #     self.logger.debug(
@@ -841,7 +962,10 @@ class AgentBridge:
             "tool_select_delta": self._handle_tool_select_delta,
             "message": self._handle_message,
             "system_message": self._handle_system_message,
-
+            "history_delta": self._ignore_event,
+            "complete_thought": self._ignore_event,
+            "system_prompt": self._ignore_event,
+            "user_reequest": self._ignore_event,
         }
 
         handler = handlers.get(event.type)
@@ -851,13 +975,10 @@ class AgentBridge:
                 if payload is not None and hasattr(self, "_stream_queue"):
                     await self._stream_queue.put(payload)
 
-                    # If this is the end-of-stream event, push finaly payload and then a termination marker.
+                    # If this is the end-of-stream event, push final payload and then a termination marker.
                     if event.type == "interaction" and not event.started:
                         await self._stream_queue.put(payload)
                         await self._stream_queue.put(None)
-
-                else:
-                    self.logger.debug(f"Payload is None: {payload is None}, hasattr(self, '_stream_queue'): {hasattr(self, "_stream_queue")}")
 
 
             except Exception as e:
@@ -865,7 +986,12 @@ class AgentBridge:
         else:
             self.logger.warning(f"Unhandled event type: {event.type}")
 
-    async def stream_chat(self, user_message: str, custom_prompt: str = None, file_ids: List[str] = None, client_wants_cancel: Optional[threading.Event] = None):
+    async def stream_chat(
+        self,
+        user_message: str,
+        client_wants_cancel: threading.Event,
+        file_ids: Optional[List[str]] = None,
+    ) -> AsyncGenerator[str, None]:
         """
         Streams chat responses for a given user message.
 
@@ -878,7 +1004,6 @@ class AgentBridge:
 
         Args:
             user_message (str): The message from the user to process
-            custom_prompt (str, optional): Custom prompt to override default persona. Defaults to None.
             file_ids (List[str], optional): IDs of files to include with the message
             client_wants_cancel (threading.Event, optional): Event to signal cancellation of the chat. Defaults to None.
 
@@ -902,12 +1027,9 @@ class AgentBridge:
         try:
             await self.session_manager.update()
 
-            if custom_prompt is not None:
-                self.custom_prompt = custom_prompt
-
             file_inputs = []
             if file_ids and self.file_handler:
-                file_inputs = await self.process_files_for_message(file_ids, self.user_id)
+                file_inputs = await self.process_files_for_message(file_ids, self.chat_session.user_id)
 
                 # Log information about processed files
                 if file_inputs:
@@ -916,20 +1038,32 @@ class AgentBridge:
                         input_types[type(input_obj).__name__] += 1
                     self.logger.info(f"Processing {len(file_inputs)} files: {input_types}")
 
-            # Set the agent’s streaming callback to our consolidated version.
-            original_callback = self.agent.streaming_callback
-            self.agent.streaming_callback = self.streaming_callback_with_logging
-
             prompt_metadata = await self.__build_prompt_metadata()
-
             # Prepare chat parameters
+            tool_params = {}
+            if len(self.chat_session.agent_config.tools):
+                await self.tool_chest.initialize_toolsets(self.chat_session.agent_config.tools)
+                tool_params = self.tool_chest.get_inference_data(self.chat_session.agent_config.tools, self.agent_runtime.tool_format)
+                tool_params["toolsets"] = self.chat_session.agent_config.tools
+
+            if self.sections is not None:
+                agent_sections = self.sections
+            elif "ThinkTools" in self.chat_session.agent_config.tools:
+                agent_sections = [ThinkSection(), DynamicPersonaSection()]
+            else:
+                agent_sections = [DynamicPersonaSection()]
+
             chat_params = {
                 "streaming_queue": queue,
-                "session_manager": self.session_manager,
+                "user_id": self.chat_session.user_id,
+                "chat_session": self.chat_session,
                 "user_message": user_message,
                 "prompt_metadata": prompt_metadata,
-                "output_format": 'raw',
+                "output_format": DEFAULT_OUTPUT_FORMAT,
                 "client_wants_cancel": client_wants_cancel,
+                "streaming_callback": self.streaming_callback_with_logging,
+                'tool_call_context': {'active_agent': self.chat_session.agent_config},
+                'prompt_builder': PromptBuilder(sections=agent_sections)
             }
 
             # Categorize file inputs by type to pass to appropriate parameters
@@ -950,9 +1084,11 @@ class AgentBridge:
             if document_inputs:
                 chat_params["files"] = document_inputs
 
+            full_params = chat_params | tool_params
+
             # Start the chat task
             chat_task = asyncio.create_task(
-                self.agent.chat(**chat_params)
+                self.agent_runtime.chat(**full_params)
             )
 
             while True:
@@ -995,9 +1131,7 @@ class AgentBridge:
                     break
 
             await chat_task
-            # Restore the original callback
-            self.agent.streaming_callback = original_callback
-            await self.session_manager.flush()
+            await self.session_manager.flush(self.chat_session.session_id)
 
         except Exception as e:
             self.logger.exception (f"Error in stream_chat: {e}", exc_info=True)
@@ -1017,8 +1151,11 @@ class AgentBridge:
                 except asyncio.QueueEmpty:
                     break
 
-    async def process_files_for_message(self, file_ids: List[str], session_id: str) -> List[
-        Union[FileInput, ImageInput, AudioInput]]:
+    async def process_files_for_message(
+        self, 
+        file_ids: List[str], 
+        session_id: str
+    ) -> List[Union[FileInput, ImageInput, AudioInput]]:
         """
         Process files and convert them to appropriate Input objects for the agent.
 
@@ -1027,11 +1164,14 @@ class AgentBridge:
         capabilities.
 
         Args:
-            file_ids: List of file IDs to process
-            session_id: Session ID
+            file_ids: List of file IDs to process.
+            session_id: Session ID for file processing context.
 
         Returns:
-            List[Union[FileInput, ImageInput, AudioInput]]: List of input objects for the agent
+            List of input objects for the agent, typed as FileInput, ImageInput, or AudioInput.
+            
+        Raises:
+            Exception: If file processing fails (logged but not re-raised).
         """
         if not self.file_handler or not file_ids:
             return []

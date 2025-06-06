@@ -346,13 +346,13 @@ class SessionService:
         if not session_data:
             return None
             
-        # Get the agent directly from session data
-        agent = session_data.get("agent")
-        if not agent:
+        # Get the agent bridge directly from session data
+        agent_bridge = session_data.get("agent_bridge")
+        if not agent_bridge:
             return None
             
         # Get agent configuration using the agent's method
-        agent_config = agent._get_agent_config()
+        agent_config = agent_bridge.get_agent_runtime_config()
         if not agent_config:
             return None
             
@@ -393,8 +393,8 @@ class SessionService:
             return None
             
         # Get the agent directly from session data
-        agent = session_data.get("agent")
-        if not agent:
+        agent_bridge = session_data.get("agent_bridge")
+        if not agent_bridge:
             return None
             
         # Create a dictionary with only the fields that were provided in the update_data
@@ -421,11 +421,11 @@ class SessionService:
                 # Only update if value is not None
                 if value is not None:
                     # Record the change
-                    old_value = getattr(agent, key, None)
+                    old_value = getattr(agent_bridge, key, None)
                     
                     # Update only attributes that changed
                     if old_value != value:
-                        setattr(agent, key, value)
+                        setattr(agent_bridge, key, value)
                         changes_applied[key] = {
                             "from": safe_truncate(old_value),
                             "to": safe_truncate(value)
@@ -438,7 +438,7 @@ class SessionService:
         
         # Reinitialize the agent if needed
         if needs_agent_reinitialization:
-            await agent.initialize_agent_parameters()
+            await agent_bridge.initialize_agent_parameters()
             
             # Update Redis session with new values
             await self.session_repository.update_session(

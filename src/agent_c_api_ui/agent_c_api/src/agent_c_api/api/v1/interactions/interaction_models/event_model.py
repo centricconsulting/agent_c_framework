@@ -14,10 +14,12 @@ class EventType(str, Enum):
     MESSAGE = "message"
     SYSTEM_MESSAGE = "system_message"
     HISTORY = "history"
+    HISTORY_DELTA = "history_delta"
     
     # Text streaming events
     TEXT_DELTA = "text_delta"
     THOUGHT_DELTA = "thought_delta"
+    COMPLETE_THOUGHT = "complete_thought"
     
     # Tool events
     TOOL_CALL = "tool_call"

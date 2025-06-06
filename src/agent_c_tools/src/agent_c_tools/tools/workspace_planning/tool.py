@@ -674,7 +674,8 @@ class WorkspacePlanningTools(Toolset):
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='export_plan_report',
                 content_type="text/html",
-                content=f"<p>Interactive HTML plan report created: <a href='file://{file_system_path}' target='_blank'>{output_path}</a></p>"
+                content=f"<p>Interactive HTML plan report created: <a href='file://{file_system_path}' target='_blank'>{output_path}</a></p>",
+                tool_context=kwargs.get('tool_context', {})
             )
 
             return f"Plan report exported successfully to: {output_path}"

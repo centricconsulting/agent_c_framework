@@ -9,6 +9,7 @@ from scipy import integrate, optimize, stats
 import matplotlib.pyplot as plt
 from base64 import b64encode
 from typing import List, Dict, Union, Optional, Any
+import yaml
 
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.toolsets.json_schema import json_schema
@@ -47,7 +48,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def evaluate_expression(self, expression: str) -> float:
+    async def evaluate_expression(self, **kwargs) -> str:
         """
         Safely evaluate mathematical expressions
         
@@ -57,7 +58,15 @@ class MathTools(Toolset):
         Returns:
             The calculated result of the expression
         """
-        return safe_eval(expression)
+        expression = kwargs.get("expression")
+        if not expression:
+            return "ERROR: expression parameter is required"
+        
+        try:
+            result = safe_eval(expression)
+            return str(result)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     @json_schema(
         description="Perform basic arithmetic operations",
@@ -80,7 +89,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def calculate(self, a: float, operation: str, b: float) -> float:
+    async def calculate(self, **kwargs) -> str:
         """
         Perform basic arithmetic operations
         
@@ -92,20 +101,32 @@ class MathTools(Toolset):
         Returns:
             Calculation result
         """
-        if operation == "add":
-            return a + b
-        elif operation == "subtract":
-            return a - b
-        elif operation == "multiply":
-            return a * b
-        elif operation == "divide":
-            if b == 0:
-                raise ValueError("Divisor cannot be zero")
-            return a / b
-        elif operation == "power":
-            return a ** b
-        else:
-            raise ValueError(f"Unsupported operation: {operation}")
+        a = kwargs.get("a")
+        operation = kwargs.get("operation")
+        b = kwargs.get("b")
+        
+        if a is None or operation is None or b is None:
+            return "ERROR: a, operation, and b parameters are required"
+        
+        try:
+            if operation == "add":
+                result = a + b
+            elif operation == "subtract":
+                result = a - b
+            elif operation == "multiply":
+                result = a * b
+            elif operation == "divide":
+                if b == 0:
+                    return "ERROR: Divisor cannot be zero"
+                result = a / b
+            elif operation == "power":
+                result = a ** b
+            else:
+                return f"ERROR: Unsupported operation: {operation}"
+            
+            return str(result)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     # ------ Symbolic Computation Tools ------
     
@@ -129,7 +150,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def differentiate(self, expression: str, variable: str, order: int = 1) -> str:
+    async def differentiate(self, **kwargs) -> str:
         """
         Calculate the derivative of a function
         
@@ -141,10 +162,20 @@ class MathTools(Toolset):
         Returns:
             Expression of the derivative
         """
-        x = sp.Symbol(variable)
-        expr = sp.sympify(expression)
-        result = sp.diff(expr, x, order)
-        return str(result)
+        expression = kwargs.get("expression")
+        variable = kwargs.get("variable")
+        order = kwargs.get("order", 1)
+        
+        if not expression or not variable:
+            return "ERROR: expression and variable parameters are required"
+        
+        try:
+            x = sp.Symbol(variable)
+            expr = sp.sympify(expression)
+            result = sp.diff(expr, x, order)
+            return str(result)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     @json_schema(
         description="Calculate the integral of a function",
@@ -171,7 +202,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def integrate_symbolic(self, expression: str, variable: str, lower_bound: str = None, upper_bound: str = None) -> str:
+    async def integrate_symbolic(self, **kwargs) -> str:
         """
         Calculate the integral of a function
         
@@ -184,19 +215,30 @@ class MathTools(Toolset):
         Returns:
             Expression of the integration result
         """
-        x = sp.Symbol(variable)
-        expr = sp.sympify(expression)
+        expression = kwargs.get("expression")
+        variable = kwargs.get("variable")
+        lower_bound = kwargs.get("lower_bound")
+        upper_bound = kwargs.get("upper_bound")
         
-        if lower_bound is not None and upper_bound is not None:
-            # Definite integral
-            lower = sp.sympify(lower_bound)
-            upper = sp.sympify(upper_bound)
-            result = sp.integrate(expr, (x, lower, upper))
-        else:
-            # Indefinite integral
-            result = sp.integrate(expr, x)
+        if not expression or not variable:
+            return "ERROR: expression and variable parameters are required"
         
-        return str(result)
+        try:
+            x = sp.Symbol(variable)
+            expr = sp.sympify(expression)
+            
+            if lower_bound is not None and upper_bound is not None:
+                # Definite integral
+                lower = sp.sympify(lower_bound)
+                upper = sp.sympify(upper_bound)
+                result = sp.integrate(expr, (x, lower, upper))
+            else:
+                # Indefinite integral
+                result = sp.integrate(expr, x)
+            
+            return str(result)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     @json_schema(
         description="Numerically calculate a definite integral",
@@ -218,7 +260,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def integrate_numeric(self, expression: str, lower_bound: float, upper_bound: float) -> float:
+    async def integrate_numeric(self, **kwargs) -> str:
         """
         Numerically calculate a definite integral
         
@@ -230,10 +272,20 @@ class MathTools(Toolset):
         Returns:
             Numerical result of the integral
         """
-        # Safely create function
-        f = create_safe_function(expression)
-        result, error = integrate.quad(f, lower_bound, upper_bound)
-        return result
+        expression = kwargs.get("expression")
+        lower_bound = kwargs.get("lower_bound")
+        upper_bound = kwargs.get("upper_bound")
+        
+        if not expression or lower_bound is None or upper_bound is None:
+            return "ERROR: expression, lower_bound, and upper_bound parameters are required"
+        
+        try:
+            # Safely create function
+            f = create_safe_function(expression)
+            result, error = integrate.quad(f, lower_bound, upper_bound)
+            return str(result)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     @json_schema(
         description="Solve an equation",
@@ -250,7 +302,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def solve_equation(self, equation: str, variable: str) -> str:
+    async def solve_equation(self, **kwargs) -> str:
         """
         Solve an equation
         
@@ -261,18 +313,27 @@ class MathTools(Toolset):
         Returns:
             Solution of the equation
         """
-        x = sp.Symbol(variable)
-        # Handle cases containing an equals sign
-        if "=" in equation:
-            left, right = equation.split("=", 1)
-            left = sp.sympify(left.strip())
-            right = sp.sympify(right.strip())
-            expr = left - right
-        else:
-            expr = sp.sympify(equation)
+        equation = kwargs.get("equation")
+        variable = kwargs.get("variable")
         
-        solutions = sp.solve(expr, x)
-        return str(solutions)
+        if not equation or not variable:
+            return "ERROR: equation and variable parameters are required"
+        
+        try:
+            x = sp.Symbol(variable)
+            # Handle cases containing an equals sign
+            if "=" in equation:
+                left, right = equation.split("=", 1)
+                left = sp.sympify(left.strip())
+                right = sp.sympify(right.strip())
+                expr = left - right
+            else:
+                expr = sp.sympify(equation)
+            
+            solutions = sp.solve(expr, x)
+            return str(solutions)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     @json_schema(
         description="Solve a system of equations",
@@ -291,7 +352,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def solve_system(self, equations: List[str], variables: List[str]) -> str:
+    async def solve_system(self, **kwargs) -> str:
         """
         Solve a system of equations
         
@@ -302,23 +363,32 @@ class MathTools(Toolset):
         Returns:
             Solution of the equation system
         """
-        # Create symbolic variables
-        syms = [sp.Symbol(v) for v in variables]
+        equations = kwargs.get("equations")
+        variables = kwargs.get("variables")
         
-        # Process equations
-        exprs = []
-        for eq in equations:
-            if "=" in eq:
-                left, right = eq.split("=", 1)
-                left = sp.sympify(left.strip())
-                right = sp.sympify(right.strip())
-                exprs.append(left - right)
-            else:
-                exprs.append(sp.sympify(eq))
+        if not equations or not variables:
+            return "ERROR: equations and variables parameters are required"
         
-        # Solve
-        solutions = sp.solve(exprs, syms)
-        return str(solutions)
+        try:
+            # Create symbolic variables
+            syms = [sp.Symbol(v) for v in variables]
+            
+            # Process equations
+            exprs = []
+            for eq in equations:
+                if "=" in eq:
+                    left, right = eq.split("=", 1)
+                    left = sp.sympify(left.strip())
+                    right = sp.sympify(right.strip())
+                    exprs.append(left - right)
+                else:
+                    exprs.append(sp.sympify(eq))
+            
+            # Solve
+            solutions = sp.solve(exprs, syms)
+            return str(solutions)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     @json_schema(
         description="Simplify algebraic expression",
@@ -330,7 +400,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def simplify_expression(self, expression: str) -> str:
+    async def simplify_expression(self, **kwargs) -> str:
         """
         Simplify algebraic expression
         
@@ -340,9 +410,17 @@ class MathTools(Toolset):
         Returns:
             Simplified expression
         """
-        expr = sp.sympify(expression)
-        result = sp.simplify(expr)
-        return str(result)
+        expression = kwargs.get("expression")
+        
+        if not expression:
+            return "ERROR: expression parameter is required"
+        
+        try:
+            expr = sp.sympify(expression)
+            result = sp.simplify(expr)
+            return str(result)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     @json_schema(
         description="Expand algebraic expression",
@@ -354,7 +432,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def expand_expression(self, expression: str) -> str:
+    async def expand_expression(self, **kwargs) -> str:
         """
         Expand algebraic expression
         
@@ -364,9 +442,17 @@ class MathTools(Toolset):
         Returns:
             Expanded expression
         """
-        expr = sp.sympify(expression)
-        result = sp.expand(expr)
-        return str(result)
+        expression = kwargs.get("expression")
+        
+        if not expression:
+            return "ERROR: expression parameter is required"
+        
+        try:
+            expr = sp.sympify(expression)
+            result = sp.expand(expr)
+            return str(result)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     @json_schema(
         description="Factor an expression",
@@ -378,7 +464,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def factor_expression(self, expression: str) -> str:
+    async def factor_expression(self, **kwargs) -> str:
         """
         Factor an expression
         
@@ -388,9 +474,17 @@ class MathTools(Toolset):
         Returns:
             Factored expression
         """
-        expr = sp.sympify(expression)
-        result = sp.factor(expr)
-        return str(result)
+        expression = kwargs.get("expression")
+        
+        if not expression:
+            return "ERROR: expression parameter is required"
+        
+        try:
+            expr = sp.sympify(expression)
+            result = sp.factor(expr)
+            return str(result)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     # ------ Numerical Optimization Tools ------
     
@@ -414,7 +508,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def find_minimum(self, expression: str, lower_bound: float, upper_bound: float) -> Dict[str, Any]:
+    async def find_minimum(self, **kwargs) -> str:
         """
         Find the local minimum value of a function
         
@@ -426,14 +520,26 @@ class MathTools(Toolset):
         Returns:
             Dictionary containing the minimum value and corresponding x value
         """
-        f = create_safe_function(expression)
-        result = optimize.minimize_scalar(f, bounds=(lower_bound, upper_bound), method='bounded')
+        expression = kwargs.get("expression")
+        lower_bound = kwargs.get("lower_bound")
+        upper_bound = kwargs.get("upper_bound")
         
-        return {
-            "x_value": float(result.x),
-            "min_value": float(result.fun),
-            "success": bool(result.success)
-        }
+        if not expression or lower_bound is None or upper_bound is None:
+            return "ERROR: expression, lower_bound, and upper_bound parameters are required"
+        
+        try:
+            f = create_safe_function(expression)
+            result = optimize.minimize_scalar(f, bounds=(lower_bound, upper_bound), method='bounded')
+            
+            result_dict = {
+                "x_value": float(result.x),
+                "min_value": float(result.fun),
+                "success": bool(result.success)
+            }
+            
+            return yaml.dump(result_dict, allow_unicode=True)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     @json_schema(
         description="Find the root (zero) of a function",
@@ -455,7 +561,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def find_root(self, expression: str, lower_bound: float, upper_bound: float) -> float:
+    async def find_root(self, **kwargs) -> str:
         """
         Find the root (zero) of a function
         
@@ -467,9 +573,19 @@ class MathTools(Toolset):
         Returns:
             Root of the function
         """
-        f = create_safe_function(expression)
-        result = optimize.brentq(f, lower_bound, upper_bound)
-        return float(result)
+        expression = kwargs.get("expression")
+        lower_bound = kwargs.get("lower_bound")
+        upper_bound = kwargs.get("upper_bound")
+        
+        if not expression or lower_bound is None or upper_bound is None:
+            return "ERROR: expression, lower_bound, and upper_bound parameters are required"
+        
+        try:
+            f = create_safe_function(expression)
+            result = optimize.brentq(f, lower_bound, upper_bound)
+            return str(float(result))
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     # ------ Matrix Calculation Tools ------
     
@@ -496,7 +612,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def matrix_operation(self, operation: str, matrix_a: List[List[float]], matrix_b: List[List[float]] = None) -> str:
+    async def matrix_operation(self, **kwargs) -> str:
         """
         Perform matrix operations
         
@@ -508,28 +624,45 @@ class MathTools(Toolset):
         Returns:
             Operation result
         """
-        # Convert to numpy arrays
-        mat_a = np.array(matrix_a)
+        operation = kwargs.get("operation")
+        matrix_a = kwargs.get("matrix_a")
+        matrix_b = kwargs.get("matrix_b")
         
-        if matrix_b is not None:
-            mat_b = np.array(matrix_b)
-    
-        if operation == "determinant":
-            return str(np.linalg.det(mat_a))
-        elif operation == "inverse":
-            return str(np.linalg.inv(mat_a))
-        elif operation == "eigenvalues":
-            return str(np.linalg.eigvals(mat_a))
-        elif operation == "transpose":
-            return str(np.transpose(mat_a))
-        elif operation == "multiply" and matrix_b is not None:
-            return str(np.matmul(mat_a, mat_b))
-        elif operation == "add" and matrix_b is not None:
-            return str(mat_a + mat_b)
-        elif operation == "subtract" and matrix_b is not None:
-            return str(mat_a - mat_b)
-        else:
-            raise ValueError("Unsupported operation or missing parameters")
+        if not operation or not matrix_a:
+            return "ERROR: operation and matrix_a parameters are required"
+        
+        try:
+            # Convert to numpy arrays
+            mat_a = np.array(matrix_a)
+            
+            if matrix_b is not None:
+                mat_b = np.array(matrix_b)
+        
+            if operation == "determinant":
+                result = np.linalg.det(mat_a)
+                return str(result)
+            elif operation == "inverse":
+                result = np.linalg.inv(mat_a)
+                return str(result.tolist())
+            elif operation == "eigenvalues":
+                result = np.linalg.eigvals(mat_a)
+                return str(result.tolist())
+            elif operation == "transpose":
+                result = np.transpose(mat_a)
+                return str(result.tolist())
+            elif operation == "multiply" and matrix_b is not None:
+                result = np.matmul(mat_a, mat_b)
+                return str(result.tolist())
+            elif operation == "add" and matrix_b is not None:
+                result = mat_a + mat_b
+                return str(result.tolist())
+            elif operation == "subtract" and matrix_b is not None:
+                result = mat_a - mat_b
+                return str(result.tolist())
+            else:
+                return "ERROR: Unsupported operation or missing parameters"
+        except Exception as e:
+            return f"ERROR: {str(e)}"
     
     # ------ Visualization Tools ------
     
@@ -558,7 +691,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def plot_function(self, expression: str, x_min: float = -10, x_max: float = 10, points: int = 1000):
+    async def plot_function(self, **kwargs) -> str:
         """
         Plot a function graph
         
@@ -571,6 +704,14 @@ class MathTools(Toolset):
         Returns:
             Function graph image
         """
+        expression = kwargs.get("expression")
+        x_min = kwargs.get("x_min", -10)
+        x_max = kwargs.get("x_max", 10)
+        points = kwargs.get("points", 1000)
+        
+        if not expression:
+            return "ERROR: expression parameter is required"
+        
         # Generate x values
         x_values = np.linspace(x_min, x_max, points)
         
@@ -609,14 +750,15 @@ class MathTools(Toolset):
                 content_type="image/png",
                 name=img_name,
                 content_bytes=img_bytes,
-                content=base64_img
+                content=base64_img,
+                tool_context=kwargs.get('tool_context')
             )
             
             return f"Plot created for y = {expression}"
         
         except Exception as e:
             plt.close()
-            raise ValueError(f"Error when plotting function: {str(e)}")
+            return f"ERROR: Error when plotting function: {str(e)}"
     
     @json_schema(
         description="Plot graphs of multiple functions",
@@ -650,8 +792,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def plot_multiple_functions(self, expressions: List[str], labels: List[str] = None, 
-                                     x_min: float = -10, x_max: float = 10, points: int = 500):
+    async def plot_multiple_functions(self, **kwargs) -> str:
         """
         Plot graphs of multiple functions
         
@@ -665,58 +806,73 @@ class MathTools(Toolset):
         Returns:
             Function graph image
         """
-        if labels is None:
-            labels = [f"f_{i+1}(x) = {expr}" for i, expr in enumerate(expressions)]
+        expressions = kwargs.get("expressions")
+        labels = kwargs.get("labels")
+        x_min = kwargs.get("x_min", -10)
+        x_max = kwargs.get("x_max", 10)
+        points = kwargs.get("points", 500)
         
-        if len(labels) != len(expressions):
-            labels = [f"f_{i+1}(x) = {expr}" for i, expr in enumerate(expressions)]
+        if not expressions:
+            return "ERROR: expressions parameter is required"
         
-        # Generate x values
-        x_values = np.linspace(x_min, x_max, points)
-        
-        plt.figure(figsize=(10, 6))
-        
-        # Plot each function
-        for i, expr in enumerate(expressions):
-            try:
-                f = create_safe_function(expr)
-                y_values = [f(x_val) for x_val in x_values]
-                plt.plot(x_values, y_values, label=labels[i])
-            except Exception as e:
-                await self._raise_message_event(f"Error when plotting function '{expr}': {str(e)}")
-        
-        plt.grid(True)
-        plt.title("Function Comparison")
-        plt.axhline(y=0, color='k', linestyle='-', alpha=0.3)
-        plt.axvline(x=0, color='k', linestyle='-', alpha=0.3)
-        plt.xlabel('x')
-        plt.ylabel('y')
-        plt.legend()
-        
-        # Convert image to binary data
-        buffer = io.BytesIO()
-        plt.savefig(buffer, format='png')
-        plt.close()
-        buffer.seek(0)
-        
-        # Get binary data and base64 encode it
-        img_bytes = buffer.getvalue()
-        base64_img = b64encode(img_bytes).decode('utf-8')
-        
-        # Create a name for the plot
-        img_name = f"multiplot_{len(expressions)}_functions.png"
-        
-        # Return the image by raising a render media event
-        await self._raise_render_media(
-            sent_by_class=self.__class__.__name__,
-            sent_by_function='plot_multiple_functions',
-            content_type="image/png",
-            name=img_name,
-            content_bytes=img_bytes,
-            content=base64_img
-        )
-        
-        return f"Plot created comparing {len(expressions)} functions"
+        try:
+            if labels is None:
+                labels = [f"f_{i+1}(x) = {expr}" for i, expr in enumerate(expressions)]
+            
+            if len(labels) != len(expressions):
+                labels = [f"f_{i+1}(x) = {expr}" for i, expr in enumerate(expressions)]
+            
+            # Generate x values
+            x_values = np.linspace(x_min, x_max, points)
+            
+            plt.figure(figsize=(10, 6))
+            
+            # Plot each function
+            for i, expr in enumerate(expressions):
+                try:
+                    f = create_safe_function(expr)
+                    y_values = [f(x_val) for x_val in x_values]
+                    plt.plot(x_values, y_values, label=labels[i])
+                except Exception as e:
+                    self.logger.error(f"Error plotting function '{expr}': {str(e)}")
+                    return f"Error when plotting function '{expr}': {str(e)}"
+            
+            plt.grid(True)
+            plt.title("Function Comparison")
+            plt.axhline(y=0, color='k', linestyle='-', alpha=0.3)
+            plt.axvline(x=0, color='k', linestyle='-', alpha=0.3)
+            plt.xlabel('x')
+            plt.ylabel('y')
+            plt.legend()
+            
+            # Convert image to binary data
+            buffer = io.BytesIO()
+            plt.savefig(buffer, format='png')
+            plt.close()
+            buffer.seek(0)
+            
+            # Get binary data and base64 encode it
+            img_bytes = buffer.getvalue()
+            base64_img = b64encode(img_bytes).decode('utf-8')
+            
+            # Create a name for the plot
+            img_name = f"multiplot_{len(expressions)}_functions.png"
+            
+            # Return the image by raising a render media event
+            await self._raise_render_media(
+                sent_by_class=self.__class__.__name__,
+                sent_by_function='plot_multiple_functions',
+                content_type="image/png",
+                name=img_name,
+                content_bytes=img_bytes,
+                content=base64_img,
+                tool_context=kwargs.get('tool_context')
+            )
+            
+            return f"Plot created comparing {len(expressions)} functions"
+        except Exception as e:
+            plt.close()
+            return f"ERROR: {str(e)}"
 
     # ------ Statistics Analysis Tools ------
 
@@ -737,7 +893,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def statistics(self, data: List[float], operation: str) -> float:
+    async def statistics(self, **kwargs) -> str:
         """
         Perform statistical analysis
         
@@ -748,26 +904,37 @@ class MathTools(Toolset):
         Returns:
             Statistical result
         """
-        values = np.array(data)
+        data = kwargs.get("data")
+        operation = kwargs.get("operation")
         
-        if operation == "mean":
-            return float(np.mean(values))
-        elif operation == "median":
-            return float(np.median(values))
-        elif operation == "std":
-            return float(np.std(values))
-        elif operation == "var":
-            return float(np.var(values))
-        elif operation == "min":
-            return float(np.min(values))
-        elif operation == "max":
-            return float(np.max(values))
-        elif operation == "sum":
-            return float(np.sum(values))
-        elif operation == "count":
-            return len(values)
-        else:
-            raise ValueError("Unsupported statistical operation")
+        if not data or not operation:
+            return "ERROR: data and operation parameters are required"
+        
+        try:
+            values = np.array(data)
+            
+            if operation == "mean":
+                result = float(np.mean(values))
+            elif operation == "median":
+                result = float(np.median(values))
+            elif operation == "std":
+                result = float(np.std(values))
+            elif operation == "var":
+                result = float(np.var(values))
+            elif operation == "min":
+                result = float(np.min(values))
+            elif operation == "max":
+                result = float(np.max(values))
+            elif operation == "sum":
+                result = float(np.sum(values))
+            elif operation == "count":
+                result = len(values)
+            else:
+                return "ERROR: Unsupported statistical operation"
+            
+            return str(result)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
 
     @json_schema(
         description="Generate statistical summary of data",
@@ -780,7 +947,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def summarize_data(self, data: List[float]) -> Dict[str, float]:
+    async def summarize_data(self, **kwargs) -> str:
         """
         Generate statistical summary of data
         
@@ -790,18 +957,28 @@ class MathTools(Toolset):
         Returns:
             Dictionary containing multiple statistical values
         """
-        values = np.array(data)
+        data = kwargs.get("data")
         
-        return {
-            "count": len(values),
-            "mean": float(np.mean(values)),
-            "median": float(np.median(values)),
-            "std": float(np.std(values)),
-            "min": float(np.min(values)),
-            "max": float(np.max(values)),
-            "q1": float(np.percentile(values, 25)),
-            "q3": float(np.percentile(values, 75)),
-        }
+        if not data:
+            return "ERROR: data parameter is required"
+        
+        try:
+            values = np.array(data)
+            
+            result_dict = {
+                "count": len(values),
+                "mean": float(np.mean(values)),
+                "median": float(np.median(values)),
+                "std": float(np.std(values)),
+                "min": float(np.min(values)),
+                "max": float(np.max(values)),
+                "q1": float(np.percentile(values, 25)),
+                "q3": float(np.percentile(values, 75)),
+            }
+            
+            return yaml.dump(result_dict, allow_unicode=True)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
 
     @json_schema(
         description="Calculate correlation between two sets of data",
@@ -820,7 +997,7 @@ class MathTools(Toolset):
             }
         }
     )
-    async def correlation(self, data_x: List[float], data_y: List[float]) -> Dict[str, float]:
+    async def correlation(self, **kwargs) -> str:
         """
         Calculate correlation between two sets of data
         
@@ -831,18 +1008,29 @@ class MathTools(Toolset):
         Returns:
             Dictionary containing correlation coefficient and p-value
         """
-        x = np.array(data_x)
-        y = np.array(data_y)
+        data_x = kwargs.get("data_x")
+        data_y = kwargs.get("data_y")
         
-        if len(x) != len(y):
-            raise ValueError("The two data sets must have the same length")
+        if not data_x or not data_y:
+            return "ERROR: data_x and data_y parameters are required"
         
-        r, p = stats.pearsonr(x, y)
-        
-        return {
-            "correlation": float(r),
-            "p_value": float(p)
-        }
+        try:
+            x = np.array(data_x)
+            y = np.array(data_y)
+            
+            if len(x) != len(y):
+                return "ERROR: The two data sets must have the same length"
+            
+            r, p = stats.pearsonr(x, y)
+            
+            result_dict = {
+                "correlation": float(r),
+                "p_value": float(p)
+            }
+            
+            return yaml.dump(result_dict, allow_unicode=True)
+        except Exception as e:
+            return f"ERROR: {str(e)}"
 
 
 # Register the toolset

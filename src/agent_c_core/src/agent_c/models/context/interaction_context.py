@@ -2,7 +2,7 @@ import threading
 from pydantic import Field
 from typing import List, AnyStr, Optional, Dict, Any, Callable, Awaitable
 
-from agent_c import ToolChest, PromptSection
+from agent_c.toolsets.tool_chest import ToolChest, PromptSection
 from agent_c.agents.base import BaseAgent
 from agent_c.models.context.base import BaseContext
 from agent_c.models.agent_config import AgentConfiguration

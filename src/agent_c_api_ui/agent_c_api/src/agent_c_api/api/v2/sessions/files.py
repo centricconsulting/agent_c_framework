@@ -132,11 +132,11 @@ async def upload_file(
         
         # Set the file handler on the agent if needed
         session_data = session_service.agent_manager.get_session_data(str(session_id))
-        agent = session_data.get("agent")
-        if agent and not hasattr(agent, "file_handler"):
-            agent.file_handler = file_handler
-        elif agent and agent.file_handler is None:
-            agent.file_handler = file_handler
+        agent_bridge = session_data.get("agent_bridge")
+        if agent_bridge and not hasattr(agent_bridge, "file_handler"):
+            agent_bridge.file_handler = file_handler
+        elif agent_bridge and agent_bridge.file_handler is None:
+            agent_bridge.file_handler = file_handler
         
         # Process the file in the background for text extraction
         background_tasks.add_task(file_handler.process_file, metadata.id, str(session_id))

@@ -1,13 +1,10 @@
-import copy
-import logging
 import os
 import glob
 import yaml
-import uuid
 from pathlib import Path
 from typing import Dict, Any, Optional, List, TypeVar
 
-from agent_c import ModelConfigurationFile
+from agent_c.models import ModelConfigurationFile
 from agent_c.config import ModelConfigurationLoader
 from agent_c.config.config_loader import ConfigLoader
 from agent_c.models.agent_config import (
@@ -16,6 +13,7 @@ from agent_c.models.agent_config import (
     AgentConfiguration,  # Union type
     CurrentAgentConfiguration  # Latest version alias
 )
+from agent_c.util import MnemonicSlugs
 from agent_c.util.logging_utils import LoggingManager
 
 # Type variable for configuration versions
@@ -90,19 +88,25 @@ class AgentConfigLoader(ConfigLoader):
         agent_config_path = os.path.join(self.agent_config_folder, f"{agent_config.key}.yaml")
 
         # Save YAML content
-        with open(agent_config_path, 'w') as file:
+        with open(agent_config_path, 'w', encoding='utf-8') as file:
             yaml_content = agent_config.to_yaml()
             file.write(yaml_content)
 
     def load_agent_config_file(self, agent_config_path) -> Optional[AgentConfiguration]:
         if os.path.exists(agent_config_path):
-            with open(agent_config_path, 'r') as file:
-                file_contents = file.read()
+            try:
+                with open(agent_config_path, 'r', encoding='utf-8') as file:
+                    file_contents = file.read()
+
+                data = yaml.safe_load(file_contents)
+            except Exception as e:
+                self.logger.exception(f"Failed to read agent configuration file {agent_config_path}: {e}", exc_info=True)
+                return None
         else:
             raise FileNotFoundError(f"Agent configuration file {agent_config_path} not found.")
 
-        # Load YAML data
-        data = yaml.safe_load(file_contents)
+
+
 
         # Handle missing version field (assume v1)
         if 'version' not in data:
@@ -110,7 +114,7 @@ class AgentConfigLoader(ConfigLoader):
 
         # Add uid if missing
         if 'uid' not in data:
-            data['uid'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, file_contents))
+            data['uid'] =  MnemonicSlugs.generate_id_slug(3, file_contents)
 
         # Transform agent_params to match completion parameter models
         self._transform_agent_params(data)
@@ -146,7 +150,7 @@ class AgentConfigLoader(ConfigLoader):
                 'file_path': agent_config_path
             }
 
-        self._agent_config_cache[config.name] = config
+        self._agent_config_cache[config.key] = config
         return config
 
     def _transform_agent_params(self, data: dict) -> None:
@@ -227,6 +231,22 @@ class AgentConfigLoader(ConfigLoader):
                 raise Exception(f"Agent {agent_name} not found.")
 
         return agent_config
+
+    def duplicate(self, agent_key: str) -> AgentConfiguration:
+        """
+        Duplicate an existing agent configuration.
+
+        Args:
+            agent_key: The key of the agent to duplicate.
+
+        Returns:
+            A new AgentConfiguration object with a unique key.
+        """
+        original_config = self._fetch_agent_config(agent_key)
+        if not original_config:
+            raise ValueError(f"Agent {agent_key} does not exist.")
+
+        return AgentConfigurationV2(**original_config.model_dump(exclude_none=True))
 
     @property
     def catalog(self) -> Dict[str, AgentConfiguration]:
@@ -339,27 +359,3 @@ def migrate_all_agents_in_place(config_path: str, backup_dir: str) -> Dict[str, 
     return loader.get_migration_report()
 
 
-# Example usage
-if __name__ == "__main__":
-    # Example 1: Load with auto-migration to latest
-    loader = AgentConfigLoader(
-        config_path="/path/to/config",
-        auto_migrate=True
-    )
-
-    # Get a specific agent (auto-migrated)
-    agent = loader._fetch_agent_config("my_agent")
-    print(f"Loaded agent: {agent.name} (version {loader._get_version(agent)})")
-
-    # Example 2: Load without migration
-    loader_no_migrate = AgentConfigLoader(
-        config_path="/path/to/config",
-        auto_migrate=False
-    )
-
-    # Example 3: Migrate all configs and save
-    report = migrate_all_agents_in_place(
-        config_path="/path/to/config",
-        backup_dir="/path/to/backups"
-    )
-    print(f"Migration report: {report}")

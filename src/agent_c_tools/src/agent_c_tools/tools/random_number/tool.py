@@ -70,7 +70,8 @@ class RandomNumberTools(Toolset):
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='generate_random_number',
                 content_type="text/html",
-                content=f"<div>Example Raise Media Event: Number is <b>{number}</b></div>"
+                content=f"<div>Example Raise Media Event: Number is <b>{number}</b></div>",
+                tool_context=kwargs.get('tool_context', {})
             )
             return json.dumps({
                 "number": number,

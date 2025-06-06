@@ -5,17 +5,16 @@ import logging
 import datetime
 
 from typing import List, Optional, Dict
-from urllib.parse import urlparse
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from agent_c import json_schema, Toolset
+from agent_c.toolsets import json_schema, Toolset
 from .formatters import *
 from .util.expires_header import expires_header_to_cache_seconds
 # Use local import to avoid circular dependencies
 from ..workspace import WorkspaceTools
-from ...helpers.path_helper import ensure_file_extension, create_unc_path, os_file_system_path
+from ...helpers.path_helper import ensure_file_extension, create_unc_path
 
 
 class WebTools(Toolset):

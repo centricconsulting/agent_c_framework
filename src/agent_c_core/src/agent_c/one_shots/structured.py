@@ -2,7 +2,7 @@ import logging
 from openai import AsyncOpenAI
 from typing import Callable, Optional, Tuple, Any, Dict
 
-from agent_c import ImageInput
+from agent_c.models import ImageInput
 
 
 class StructuredOneshot:

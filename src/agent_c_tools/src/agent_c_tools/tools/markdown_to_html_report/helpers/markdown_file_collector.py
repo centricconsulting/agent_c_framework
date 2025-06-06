@@ -129,10 +129,10 @@ class MarkdownFileCollector:
 
             try:
                 # Read the file content
-                file_content = await self.workspace_tool.read(path=normalized_unc_path)
-                if file_content.startswith('{"error":'):
-                    # Detect a read error
-                    raise ValueError(f"Error reading file: {file_content}")
+                error, workspace, relative_path = self.workspace_tool.validate_and_get_workspace_path(normalized_unc_path)
+                if error:
+                    raise ValueError(f"Error reading file: {error}")
+                file_content = await workspace.read_internal(relative_path)
 
                 # Process links in the content
                 processed_content = await self._process_markdown_links(file_content, rel_path, normalized_root_path,
@@ -389,7 +389,10 @@ class MarkdownFileCollector:
         """Validate that a file exists and is accessible."""
         try:
             # Try to read the file to verify it exists and is accessible
-            result = await self.workspace_tool.read(path=file_path)
+            error, workspace, relative_path = self.workspace_tool.validate_and_get_workspace_path(file_path)
+            if error:
+                raise ValueError(f"Error reading file: {error}")
+            result = await workspace.read_internal(relative_path)
             
             # Check for error response
             if result.startswith('{"error":'):
@@ -479,9 +482,11 @@ class MarkdownFileCollector:
                 
                 try:
                     # Read the file content
-                    file_content = await self.workspace_tool.read(path=resolved_path)
-                    if file_content.startswith('{"error":'):
-                        raise ValueError(f"Error reading file: {file_content}")
+                    error, workspace, relative_path = self.workspace_tool.validate_and_get_workspace_path(resolved_path)
+                    if error:
+                        raise ValueError(f"Error reading file: {error}")
+                    file_content = await workspace.read_internal(relative_path)
+
                     
                     # Process links in the content using custom path mappings
                     processed_content = await self._process_custom_markdown_links(file_content, custom_path, markdown_files)

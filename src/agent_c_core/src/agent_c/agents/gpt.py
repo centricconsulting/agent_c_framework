@@ -257,7 +257,7 @@ class GPTChatAgent(BaseAgent):
         session_manager = kwargs.get("session_manager", None)
         tool_chest = opts['tool_chest']
         callback_opts = opts['callback_opts']
-        client_wants_cancel: threading.Event = kwargs.get("client_wants_cancel", threading.Event())
+        client_wants_cancel: threading.Event = kwargs.get("client_wants_cancel")
         delay = 1  # Initial delay between retries
 
         async with self.semaphore:

@@ -273,7 +273,7 @@ Transform your tool class to focus only on interface concerns:
 ```python
 # Clean tool class template
 from .business_logic import business_function  # or existing class
-from agent_c import json_schema, Toolset
+from agent_c.toolsets import json_schema, Toolset
 import logging
 
 class YourTools(Toolset):

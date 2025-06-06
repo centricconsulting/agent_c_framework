@@ -1,13 +1,11 @@
-from typing import Any, Dict, List, Optional, Union, cast
-import asyncio
+from typing import Any, Dict,  Optional,  cast
 import base64
-import json
 import os
-import subprocess
 import tempfile
 import uuid
+import yaml
 from datetime import datetime
-from pathlib import Path
+
 
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.toolsets.json_schema import json_schema
@@ -42,10 +40,10 @@ class BrowserPlaywrightTools(Toolset):
         try:
             from playwright.async_api import async_playwright
             self.playwright_module = async_playwright
-            self._log.info("Playwright module loaded successfully")
+            self.logger.info("Playwright module loaded successfully")
             return True
         except ImportError:
-            self._log.error("Failed to import playwright module. Make sure it's installed.")
+            self.logger.error("Failed to import playwright module. Make sure it's installed.")
             return False
 
     @json_schema(
@@ -75,19 +73,24 @@ class BrowserPlaywrightTools(Toolset):
             }
         }
     )
-    async def initialize_browser(self, browser_type: str, headless: bool = False, user_agent: Optional[str] = None,
-                             viewport_width: int = 1280, viewport_height: int = 720) -> Dict[str, Any]:
+    async def initialize_browser(self, **kwargs) -> str:
         """
         Initialize a new browser session with the specified parameters.
         """
+        browser_type = kwargs.get("browser_type")
+        headless = kwargs.get("headless", False)
+        user_agent = kwargs.get("user_agent")
+        viewport_width = kwargs.get("viewport_width", 1280)
+        viewport_height = kwargs.get("viewport_height", 720)
+        
+        if not browser_type:
+            return "ERROR: browser_type parameter is required"
+        
         # Verify Playwright is available
         if not hasattr(self, 'playwright_module'):
             init_success = await self._initialize_playwright()
             if not init_success:
-                return {
-                    "success": False,
-                    "error": "Failed to initialize Playwright. Please ensure the playwright package is installed."
-                }
+                return "ERROR: Failed to initialize Playwright. Please ensure the playwright package is installed."
         
         try:
             # Start a new browser instance
@@ -131,17 +134,15 @@ class BrowserPlaywrightTools(Toolset):
             # Set this as the current session
             self.current_session_id = session_id
             
-            return {
+            result = {
                 "success": True,
                 "session": session_model.model_dump(),
                 "message": f"Browser session initialized with {browser_type}"
             }
+            return yaml.dump(result, allow_unicode=True)
         except Exception as e:
-            self._log.error(f"Failed to initialize browser: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Failed to initialize browser: {str(e)}"
-            }
+            self.logger.error(f"Failed to initialize browser: {str(e)}")
+            return f"ERROR: Failed to initialize browser: {str(e)}"
 
     @json_schema(
         description="Navigate to a URL in the current browser session",
@@ -162,17 +163,19 @@ class BrowserPlaywrightTools(Toolset):
             }
         }
     )
-    async def navigate(self, url: str, session_id: Optional[str] = None, wait_until: str = "load") -> Dict[str, Any]:
+    async def navigate(self, **kwargs) -> str:
         """
         Navigate to a URL in the current browser session.
         """
-        # Get the session ID to use
-        session_id = session_id or self.current_session_id
+        url = kwargs.get("url")
+        session_id = kwargs.get("session_id") or self.current_session_id
+        wait_until = kwargs.get("wait_until", "load")
+        
+        if not url:
+            return "ERROR: url parameter is required"
+        
         if not session_id or session_id not in self.sessions:
-            return {
-                "success": False,
-                "error": "No active browser session. Initialize a browser first."
-            }
+            return "ERROR: No active browser session. Initialize a browser first."
         
         try:
             # Get the current page
@@ -187,18 +190,16 @@ class BrowserPlaywrightTools(Toolset):
             current_url = page.url
             
             # Return success with the current page information
-            return {
+            result = {
                 "success": True,
                 "url": current_url,
                 "title": title,
                 "message": f"Navigated to {url}"
             }
+            return yaml.dump(result, allow_unicode=True)
         except Exception as e:
-            self._log.error(f"Failed to navigate to {url}: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Failed to navigate to {url}: {str(e)}"
-            }
+            self.logger.error(f"Failed to navigate to {url}: {str(e)}")
+            return f"ERROR: Failed to navigate to {url}: {str(e)}"
 
     @json_schema(
         description="Get a snapshot of the current page",
@@ -213,17 +214,15 @@ class BrowserPlaywrightTools(Toolset):
             }
         }
     )
-    async def get_snapshot(self, session_id: Optional[str] = None, include_hidden: bool = False) -> Dict[str, Any]:
+    async def get_snapshot(self, **kwargs) -> str:
         """
         Get a snapshot of the current page with accessibility information.
         """
-        # Get the session ID to use
-        session_id = session_id or self.current_session_id
+        session_id = kwargs.get("session_id") or self.current_session_id
+        include_hidden = kwargs.get("include_hidden", False)
+        
         if not session_id or session_id not in self.sessions:
-            return {
-                "success": False,
-                "error": "No active browser session. Initialize a browser first."
-            }
+            return "ERROR: No active browser session. Initialize a browser first."
         
         try:
             # Get the current page
@@ -302,16 +301,14 @@ class BrowserPlaywrightTools(Toolset):
                 elements=elements
             )
             
-            return {
+            result = {
                 "success": True,
                 "snapshot": snapshot_model.model_dump()
             }
+            return yaml.dump(result, allow_unicode=True)
         except Exception as e:
-            self._log.error(f"Failed to get page snapshot: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Failed to get page snapshot: {str(e)}"
-            }
+            self.logger.error(f"Failed to get page snapshot: {str(e)}")
+            return f"ERROR: Failed to get page snapshot: {str(e)}"
 
     @json_schema(
         description="Click on an element in the page",
@@ -339,18 +336,20 @@ class BrowserPlaywrightTools(Toolset):
             }
         }
     )
-    async def click(self, element_ref: str, session_id: Optional[str] = None, force: bool = False, 
-                 modifiers: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def click(self, **kwargs) -> str:
         """
         Click on an element in the page.
         """
-        # Get the session ID to use
-        session_id = session_id or self.current_session_id
+        element_ref = kwargs.get("element_ref")
+        session_id = kwargs.get("session_id") or self.current_session_id
+        force = kwargs.get("force", False)
+        modifiers = kwargs.get("modifiers")
+        
+        if not element_ref:
+            return "ERROR: element_ref parameter is required"
+        
         if not session_id or session_id not in self.sessions:
-            return {
-                "success": False,
-                "error": "No active browser session. Initialize a browser first."
-            }
+            return "ERROR: No active browser session. Initialize a browser first."
         
         try:
             # Get the current page
@@ -370,10 +369,7 @@ class BrowserPlaywrightTools(Toolset):
                 if element_index < len(elements):
                     element = elements[element_index]
                 else:
-                    return {
-                        "success": False,
-                        "error": f"Element with reference {element_ref} not found"
-                    }
+                    return f"ERROR: Element with reference {element_ref} not found"
             
             # Set up click options
             click_options = {"force": force}
@@ -386,16 +382,14 @@ class BrowserPlaywrightTools(Toolset):
             # Wait a moment for any page updates
             await page.wait_for_load_state("networkidle")
             
-            return {
+            result = {
                 "success": True,
                 "message": f"Clicked element with reference {element_ref}"
             }
+            return yaml.dump(result, allow_unicode=True)
         except Exception as e:
-            self._log.error(f"Failed to click element: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Failed to click element: {str(e)}"
-            }
+            self.logger.error(f"Failed to click element: {str(e)}")
+            return f"ERROR: Failed to click element: {str(e)}"
 
     @json_schema(
         description="Type text into an input element",
@@ -424,18 +418,23 @@ class BrowserPlaywrightTools(Toolset):
             }
         }
     )
-    async def type_text(self, element_ref: str, text: str, session_id: Optional[str] = None, 
-                      delay: int = 0, clear_first: bool = True) -> Dict[str, Any]:
+    async def type_text(self, **kwargs) -> str:
         """
         Type text into an input element.
         """
-        # Get the session ID to use
-        session_id = session_id or self.current_session_id
+        element_ref = kwargs.get("element_ref")
+        text = kwargs.get("text")
+        session_id = kwargs.get("session_id") or self.current_session_id
+        delay = kwargs.get("delay", 0)
+        clear_first = kwargs.get("clear_first", True)
+        
+        if not element_ref:
+            return "ERROR: element_ref parameter is required"
+        if not text:
+            return "ERROR: text parameter is required"
+        
         if not session_id or session_id not in self.sessions:
-            return {
-                "success": False,
-                "error": "No active browser session. Initialize a browser first."
-            }
+            return "ERROR: No active browser session. Initialize a browser first."
         
         try:
             # Get the current page
@@ -452,10 +451,7 @@ class BrowserPlaywrightTools(Toolset):
                 if element_index < len(elements):
                     element = elements[element_index]
                 else:
-                    return {
-                        "success": False,
-                        "error": f"Input element with reference {element_ref} not found"
-                    }
+                    return f"ERROR: Input element with reference {element_ref} not found"
             
             # Clear the input first if requested
             if clear_first:
@@ -464,16 +460,14 @@ class BrowserPlaywrightTools(Toolset):
             # Type the text
             await element.type(text, delay=delay)
             
-            return {
+            result = {
                 "success": True,
                 "message": f"Typed text into element with reference {element_ref}"
             }
+            return yaml.dump(result, allow_unicode=True)
         except Exception as e:
-            self._log.error(f"Failed to type text: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Failed to type text: {str(e)}"
-            }
+            self.logger.error(f"Failed to type text: {str(e)}")
+            return f"ERROR: Failed to type text: {str(e)}"
 
     @json_schema(
         description="Take a screenshot of the current page or a specific element",
@@ -501,19 +495,18 @@ class BrowserPlaywrightTools(Toolset):
             }
         }
     )
-    async def take_screenshot(self, session_id: Optional[str] = None, element_ref: Optional[str] = None,
-                          full_page: bool = False, quality: int = 80, 
-                          file_format: str = "png") -> Dict[str, Any]:
+    async def take_screenshot(self, **kwargs) -> str:
         """
         Take a screenshot of the current page or a specific element.
         """
-        # Get the session ID to use
-        session_id = session_id or self.current_session_id
+        session_id = kwargs.get("session_id") or self.current_session_id
+        element_ref = kwargs.get("element_ref")
+        full_page = kwargs.get("full_page", False)
+        quality = kwargs.get("quality", 80)
+        file_format = kwargs.get("file_format", "png")
+        
         if not session_id or session_id not in self.sessions:
-            return {
-                "success": False,
-                "error": "No active browser session. Initialize a browser first."
-            }
+            return "ERROR: No active browser session. Initialize a browser first."
         
         try:
             # Get the current page
@@ -540,10 +533,7 @@ class BrowserPlaywrightTools(Toolset):
                     if element_index < len(elements):
                         element = elements[element_index]
                     else:
-                        return {
-                            "success": False,
-                            "error": f"Element with reference {element_ref} not found"
-                        }
+                        return f"ERROR: Element with reference {element_ref} not found"
                 
                 # Take a screenshot of just this element
                 screenshot_bytes = await element.screenshot(**screenshot_options)
@@ -573,17 +563,15 @@ class BrowserPlaywrightTools(Toolset):
                 content=f"data:{media_type};base64,{base64_screenshot}"
             )
             
-            return {
+            result = {
                 "success": True,
                 "file_path": filepath,
                 "message": f"Screenshot saved to {filepath}"
             }
+            return yaml.dump(result, allow_unicode=True)
         except Exception as e:
-            self._log.error(f"Failed to take screenshot: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Failed to take screenshot: {str(e)}"
-            }
+            self.logger.error(f"Failed to take screenshot: {str(e)}")
+            return f"ERROR: Failed to take screenshot: {str(e)}"
 
     @json_schema(
         description="Close the browser session",
@@ -594,17 +582,14 @@ class BrowserPlaywrightTools(Toolset):
             }
         }
     )
-    async def close_browser(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+    async def close_browser(self, **kwargs) -> str:
         """
         Close the browser session and clean up resources.
         """
-        # Get the session ID to use
-        session_id = session_id or self.current_session_id
+        session_id = kwargs.get("session_id") or self.current_session_id
+        
         if not session_id or session_id not in self.sessions:
-            return {
-                "success": False,
-                "error": "No active browser session to close."
-            }
+            return "ERROR: No active browser session to close."
         
         try:
             # Get the session
@@ -623,16 +608,14 @@ class BrowserPlaywrightTools(Toolset):
             if session_id == self.current_session_id:
                 self.current_session_id = None if not self.sessions else next(iter(self.sessions))
             
-            return {
+            result = {
                 "success": True,
                 "message": f"Browser session {session_id} closed successfully"
             }
+            return yaml.dump(result, allow_unicode=True)
         except Exception as e:
-            self._log.error(f"Failed to close browser session: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Failed to close browser session: {str(e)}"
-            }
+            self.logger.error(f"Failed to close browser session: {str(e)}")
+            return f"ERROR: Failed to close browser session: {str(e)}"
 
     @json_schema(
         description="Manage browser tabs",
@@ -657,18 +640,20 @@ class BrowserPlaywrightTools(Toolset):
             }
         }
     )
-    async def manage_tabs(self, action: TabActionType, session_id: Optional[str] = None, 
-                        url: Optional[str] = None, tab_index: Optional[int] = None) -> Dict[str, Any]:
+    async def manage_tabs(self, **kwargs) -> str:
         """
         Manage browser tabs: create, close, select, or list tabs.
         """
-        # Get the session ID to use
-        session_id = session_id or self.current_session_id
+        action = kwargs.get("action")
+        session_id = kwargs.get("session_id") or self.current_session_id
+        url = kwargs.get("url")
+        tab_index = kwargs.get("tab_index")
+        
+        if not action:
+            return "ERROR: action parameter is required"
+        
         if not session_id or session_id not in self.sessions:
-            return {
-                "success": False,
-                "error": "No active browser session. Initialize a browser first."
-            }
+            return "ERROR: No active browser session. Initialize a browser first."
         
         try:
             # Get the session
@@ -712,29 +697,24 @@ class BrowserPlaywrightTools(Toolset):
                 # Update the tabs model
                 tabs, active_tab_index = await update_tabs_model()
                 
-                return {
+                result = {
                     "success": True,
                     "tabs": [tab.model_dump() for tab in tabs],
                     "active_tab_index": active_tab_index,
                     "message": "New tab created"
                 }
+                return yaml.dump(result, allow_unicode=True)
             
             elif action == "close":
                 # Close a tab
                 if tab_index is None:
-                    return {
-                        "success": False,
-                        "error": "Tab index must be provided for 'close' action"
-                    }
+                    return "ERROR: Tab index must be provided for 'close' action"
                 
                 # Get all pages
                 pages = context.pages
                 
                 if tab_index < 0 or tab_index >= len(pages):
-                    return {
-                        "success": False,
-                        "error": f"Invalid tab index: {tab_index}"
-                    }
+                    return f"ERROR: Invalid tab index: {tab_index}"
                 
                 # Close the page
                 page_to_close = pages[tab_index]
@@ -749,29 +729,24 @@ class BrowserPlaywrightTools(Toolset):
                 # Update the tabs model
                 tabs, active_tab_index = await update_tabs_model()
                 
-                return {
+                result = {
                     "success": True,
                     "tabs": [tab.model_dump() for tab in tabs],
                     "active_tab_index": active_tab_index,
                     "message": f"Tab {tab_index} closed"
                 }
+                return yaml.dump(result, allow_unicode=True)
             
             elif action == "select":
                 # Select a tab
                 if tab_index is None:
-                    return {
-                        "success": False,
-                        "error": "Tab index must be provided for 'select' action"
-                    }
+                    return "ERROR: Tab index must be provided for 'select' action"
                 
                 # Get all pages
                 pages = context.pages
                 
                 if tab_index < 0 or tab_index >= len(pages):
-                    return {
-                        "success": False,
-                        "error": f"Invalid tab index: {tab_index}"
-                    }
+                    return f"ERROR: Invalid tab index: {tab_index}"
                 
                 # Set the active page
                 session["page"] = pages[tab_index]
@@ -779,34 +754,30 @@ class BrowserPlaywrightTools(Toolset):
                 # Update the tabs model
                 tabs, active_tab_index = await update_tabs_model()
                 
-                return {
+                result = {
                     "success": True,
                     "tabs": [tab.model_dump() for tab in tabs],
                     "active_tab_index": active_tab_index,
                     "message": f"Tab {tab_index} selected"
                 }
+                return yaml.dump(result, allow_unicode=True)
             
             elif action == "list":
                 # List all tabs
                 tabs, active_tab_index = await update_tabs_model()
                 
-                return {
+                result = {
                     "success": True,
                     "tabs": [tab.model_dump() for tab in tabs],
                     "active_tab_index": active_tab_index
                 }
+                return yaml.dump(result, allow_unicode=True)
             
             else:
-                return {
-                    "success": False,
-                    "error": f"Invalid action: {action}"
-                }
+                return f"ERROR: Invalid action: {action}"
         except Exception as e:
-            self._log.error(f"Failed to manage tabs: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Failed to manage tabs: {str(e)}"
-            }
+            self.logger.error(f"Failed to manage tabs: {str(e)}")
+            return f"ERROR: Failed to manage tabs: {str(e)}"
 
 
 # Register the toolset with required dependencies

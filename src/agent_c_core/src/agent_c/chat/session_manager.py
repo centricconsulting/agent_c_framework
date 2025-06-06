@@ -1,10 +1,12 @@
 import json
 import yaml
 
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
-from agent_c.models.chat_history import ChatSession, MemoryMessage, ChatUser
+from agent_c.config.saved_chat import SavedChatLoader
+from agent_c.models.chat_history import ChatSession
 from agent_c.util.logging_utils import LoggingManager
+
 
 
 class ChatSessionManager:
@@ -21,72 +23,50 @@ class ChatSessionManager:
         """
         self.is_new_user: bool = True
         self.is_new_session: bool = True
-        self.user: Optional[ChatUser] = None
-        self.chat_session: Optional[ChatSession] = None
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
+        self._loader: SavedChatLoader = SavedChatLoader()
+        self.session_id_list: List[str] = self._loader.session_id_list
+        self._session_cache: Dict[str, ChatSession] = {}
+        self.logger = LoggingManager(__name__).get_logger()
 
-    @property
-    def active_memory(self):
-        return self.chat_session.active_memory
-
-    async def delete_session(self, session_id: str = None) -> None:
+    async def delete_session(self, session_id) -> None:
         """
-        Deletes a chat session.
+        Deletes a chat session by its ID.
 
         Args:
             session_id (str): The ID of the session to delete.
         """
-        if session_id is None:
-            session_id = self.chat_session.session_id
-        pass
+        if session_id in self._session_cache:
+            del self._session_cache[session_id]
+        if session_id in self.session_id_list:
+            self.session_id_list.remove(session_id)
 
-    async def new_session(self, session_id: Optional[str] = None) -> str:
+        self._loader.delete_session(session_id)
+
+    async def new_session(self, session: ChatSession):
+        self._session_cache[session.session_id] = session
+        self.session_id_list.append(session.session_id)
+        session.touch()
+
+
+    async def get_session(self, session_id: str) -> Optional[ChatSession]:
         """
-        Creates a new chat session, optionally with a given session_id.
+        Retrieves a chat session by its ID.
 
         Args:
-            session_id (Optional[str]): The session ID to initialize a session with.
-                                         If not provided, a new session ID will be generated.
+            session_id (str): The ID of the session to retrieve.
 
         Returns:
-            str: The session ID of the newly created session.
+            Optional[ChatSession]: The chat session if found, otherwise None.
         """
-        opts = {'user_id': self.user.user_id}
-        if session_id:
-            opts['session_id'] = session_id
+        if session_id in self._session_cache:
+            return self._session_cache[session_id]
 
-        self.chat_session = ChatSession(**opts)
-        return self.chat_session.session_id
+        if session_id in self.session_id_list:
+            session = self._loader.load_session_id(session_id)
+            self._session_cache[session_id] = session
+            return session
 
-    async def init(self, user_id: str, session_id: Optional[str] = None) -> str:
-        """
-        Initializes the chat session and user for a given user_id and optional session_id.
-
-        Args:
-            user_id (str): The ID of the user.
-            session_id (Optional[str]): The ID of the session. If not provided, a new session is created.
-
-        Returns:
-            str: The initialized session's ID.
-        """
-        self.user = ChatUser(user_id=user_id)
-        return await self.new_session(session_id)
-
-    async def add_message(self, msg: Dict[str, any]) -> None:
-        """
-        Adds a message to the current chat session.
-
-        Args:
-            msg (MemoryMessage): The message to be added to the chat session.
-
-        Raises:
-            ValueError: If a chat session is not initialized.
-        """
-        if self.chat_session is None:
-            raise ValueError("Session not initialized")
-
-        await self.chat_session.add_message(msg)
+        return None
 
     async def update(self) -> None:
         """
@@ -94,11 +74,12 @@ class ChatSessionManager:
         """
         pass
 
-    async def flush(self) -> None:
-        """
-        Asynchronously flushes the changes for both the session and user back to the datastore.
-        """
-        pass
+    async def flush(self, session_id: str) -> None:
+        session = self._session_cache.get(session_id)
+        if session is None or len(session.messages) == 0:
+            self.logger.warning(f"Session {session_id} is empty or not found, skipping flush.")
+            return
+        self._loader.save_session(self._session_cache[session_id])
 
     def filtered_session_meta(self, prefix: str) -> Dict:
         """
@@ -166,11 +147,12 @@ class ChatSessionManager:
         else:
             self.user.metadata['metameta'][prefix] = json_str
 
-    def get_session_meta_meta(self, prefix: str) -> Dict:
+    def get_session_meta_meta(self, session_id: str, prefix: str) -> Dict:
         """
         Retrieves 'metameta' session metadata associated with the given prefix.
 
         Args:
+            session_id (str): The ID of the session to retrieve metadata from.
             prefix (str): The desired metadata prefix.
 
         Returns:
@@ -179,18 +161,20 @@ class ChatSessionManager:
         Raises:
             Exception: If metadata cannot be decoded properly.
         """
-        json_str = self.chat_session.metadata.get('metameta', {}).get(prefix, '{}')
+        chat_session = self._session_cache.get(session_id)
+        json_str = chat_session.metadata.get('metameta', {}).get(prefix, '{}')
         try:
             return json.loads(json_str)
         except Exception:
             self.logger.exception(f"Failed to decode session metameta for {prefix}")
             return {}
 
-    def set_session_meta_meta(self, prefix: str, metameta: Dict) -> None:
+    def set_session_meta_meta(self, session_id: str, prefix: str, metameta: Dict) -> None:
         """
         Sets 'metameta' session metadata under the specified prefix.
 
         Args:
+            session_id (str): The ID of the session to set metadata for.
             prefix (str): The prefix under which the metadata should be stored.
             metameta (Dict): The metadata to store.
 
@@ -203,10 +187,11 @@ class ChatSessionManager:
             self.logger.exception(f"Failed to encode session metameta for {prefix}")
             raise
 
-        if not self.chat_session.metadata.get('metameta'):
-            self.chat_session.metadata['metameta'] = {prefix: json_str}
+        chat_session = self._session_cache.get(session_id)
+        if not chat_session.metadata.get('metameta'):
+            chat_session.metadata['metameta'] = {prefix: json_str}
         else:
-            self.chat_session.metadata['metameta'][prefix] = json_str
+            chat_session.metadata['metameta'][prefix] = json_str
 
 
     def dict_to_yaml(self, data_dict: Dict) -> str:

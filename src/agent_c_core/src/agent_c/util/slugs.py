@@ -1,7 +1,9 @@
+import os
 import random
 import hashlib
 from typing import Optional, Union
 
+random.seed(int.from_bytes(os.urandom(4), byteorder='big'))
 
 class MnemonicSlugs:
     """

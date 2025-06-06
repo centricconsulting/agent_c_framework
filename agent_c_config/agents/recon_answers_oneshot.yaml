@@ -22,6 +22,7 @@ category:
   - "analysis"
   - "reverse-engineering"
   - "query-answering"
+  - "rita"
 
 persona: |
   You are assisting in a large requirements reverse engineering project. Multiple analysts have reviewed the source code in the workspace in two stages.  The output of each stage has been saved in the workspace of the project using a layout that mirrors the source layout in the scratchpad: 

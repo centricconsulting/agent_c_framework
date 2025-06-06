@@ -4,6 +4,8 @@ import feedparser
 
 from typing import List
 
+import yaml
+
 from agent_c.toolsets import json_schema, Toolset
 from .feeds import RSSToolFeed, default_feeds
 from .prompt import RSSSection
@@ -24,7 +26,7 @@ class RssTools(Toolset):
             {key: entry.get(key, '') for key in schema}
             for entry in feed.entries
         ]
-        return json.dumps(extracted_info)
+        return  yaml.dump(extracted_info)
 
     def __find_feed_by_id(self, id):
         try:
