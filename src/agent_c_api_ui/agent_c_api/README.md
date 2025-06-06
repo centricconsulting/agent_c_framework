@@ -1,4 +1,9 @@
 # WARNING WIP
+
+## New Features
+
+### Redis Session Manager
+The application now supports Redis-based session management for multi-user environments. This allows session data to be shared across multiple instances of the application, providing better scalability and reliability. See [Redis Dependencies](docs/redis_dependencies.md) for more information.
 This is a ReactJS + FastAPI app that is a work in progress.  It is may not be ready for production use. It was developed by @justjoehere, who is not a developer.
 It was also partially assisted by ChatGPT 4o, o3-mini-high, and Claude.
 

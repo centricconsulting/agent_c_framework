@@ -61,18 +61,18 @@ class RedisSessionManager:
         self.cleanup_batch_size = settings.SESSION_CLEANUP_BATCH_SIZE
         
         # Stream-related attributes
-        self.stream_prefix = "agent_c:stream:"
-        self.stream_max_len = getattr(settings, 'STREAM_MAX_LENGTH', 10000)
-        self.stream_trim_interval = getattr(settings, 'STREAM_TRIM_INTERVAL', 100)
+        self.stream_prefix = settings.STREAM_PREFIX
+        self.stream_max_len = settings.STREAM_MAX_LENGTH
+        self.stream_trim_interval = settings.STREAM_TRIM_INTERVAL
+        self.stream_retention_period = settings.STREAM_RETENTION_PERIOD
         self.event_count = 0  # Counter for trimming streams periodically
         
         # Build Redis URL from settings if not provided
         if redis_url is None:
             auth = ""
-            if hasattr(settings, 'REDIS_USERNAME') and hasattr(settings, 'REDIS_PASSWORD') \
-                and settings.REDIS_USERNAME and settings.REDIS_PASSWORD:
+            if settings.REDIS_USERNAME and settings.REDIS_PASSWORD:
                 auth = f"{settings.REDIS_USERNAME}:{settings.REDIS_PASSWORD}@"
-            elif hasattr(settings, 'REDIS_PASSWORD') and settings.REDIS_PASSWORD:
+            elif settings.REDIS_PASSWORD:
                 auth = f":{settings.REDIS_PASSWORD}@"
             
             redis_url = f"redis://{auth}{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}"
@@ -396,10 +396,17 @@ class RedisSessionManager:
                     # Remove from index
                     await pipe.srem(index_key, *expired_sessions)
                     
-                    # Remove streams
+                    # For streams, we have two options based on retention policy:
+                    # 1. Delete immediately (when retention period is 0)
+                    # 2. Set expiration time (when retention period > 0)
                     for session_id in expired_sessions:
                         stream_key = self.get_stream_key(session_id)
-                        pipe.delete(stream_key)
+                        if self.stream_retention_period <= 0:
+                            # Option 1: Delete immediately
+                            pipe.delete(stream_key)
+                        else:
+                            # Option 2: Set expiration time
+                            pipe.expire(stream_key, self.stream_retention_period)
                     
                     await pipe.execute()
                 

@@ -75,6 +75,12 @@ class Settings(BaseSettings):
     # Feature Flags
     USE_REDIS_SESSIONS: bool = True
 
+    # Redis Stream Configuration
+    STREAM_PREFIX: str = "agent_c:stream:"
+    STREAM_MAX_LENGTH: int = 10000  # Maximum number of events in a stream
+    STREAM_TRIM_INTERVAL: int = 100  # How often to trim streams (event count)
+    STREAM_RETENTION_PERIOD: int = 7 * 24 * 60 * 60  # 7 days in seconds
+
     # Allows you to override settings via a .env file
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR.parent.parent.parent.parent / ".env"),  # Get the .env file from the root of the project
