@@ -1,0 +1,1 @@
+Scratch directory for planning and tracking work on the Agent C Core framework.
