@@ -1,152 +1,111 @@
-# API Service Layer Improvements - Phase 1, Step 1
+# Redis Streams Integration for Agent C Event System
 
-## Changes to `api.js`
+## Executive Summary
 
-### 1. Updated API Base URL
+We will replace the current async queue-based event handling system in Agent C with Redis Streams to enable distributed event processing, improving scalability and resilience. This migration will maintain backward compatibility while enabling more robust event handling across multiple processes or servers.
 
-- Changed the default base URL from `/api/v1` to `/api/v2` in `API_CONFIG`
-- This ensures all API requests will target the v2 endpoints by default
+## Current System
 
-```javascript
-export const API_CONFIG = {
-  baseUrl: import.meta.env.VITE_API_URL || '/api/v2',  // Updated from v1 to v2
-  timeout: DEFAULT_TIMEOUT,
-  credentials: 'include',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-};
+The current event system uses:
+1. `BaseAgent._raise_event` methods to create events
+2. `AgentBridge.consolidated_streaming_callback` to process events
+3. Async queues to transfer events between components
+4. `AgentBridge.stream_chat` to yield events to the client
+
+This approach works well for single-process deployments but has limitations for distributed systems.
+
+## Proposed Solution
+
+Integrate Redis Streams as follows:
+
+1. **Create RedisStreamManager**: A new class to handle all Redis Stream operations
+2. **Update BaseAgent**: Modify `_raise_event` to accept stream IDs and publish to Redis
+3. **Update AgentBridge**: Adapt `consolidated_streaming_callback` and `stream_chat` to work with Redis Streams
+4. **Add Feature Flag**: `USE_REDIS_STREAMS` to control which system is active
+
+## Implementation Plan
+
+### Phase 1: Analysis and Design
+- Analyze current event flow and identify needed changes
+- Design Redis Stream integration architecture
+- Define configuration requirements
+
+### Phase 2: Core Implementation
+- Create RedisStreamManager class
+- Update BaseAgent._raise_event method
+- Update all _raise_* methods in BaseAgent
+- Update AgentBridge.consolidated_streaming_callback
+- Update AgentBridge.stream_chat method
+
+### Phase 3: Testing and Validation
+- Create unit tests for RedisStreamManager
+- Create integration tests for event flow
+- Create performance tests
+
+### Phase 4: Documentation and Deployment
+- Update technical documentation
+- Create deployment guide
+- Create monitoring and maintenance plan
+
+## Key Technical Details
+
+### Stream Naming Convention
+```
+agent_c:stream:{session_id}:{interaction_id}
 ```
 
-### 2. Added `extractResponseData` Utility Function
-
-- Created a new utility function to handle the standardized v2 response format
-- Extracts `data`, `meta`, and `errors` fields from the response
-- Falls back to returning the entire response as data if it doesn't match the expected format
-
-```javascript
-export function extractResponseData(response) {
-  // Handle v2 API standard response format
-  if (response && typeof response === 'object') {
-    return {
-      data: response.data !== undefined ? response.data : response,
-      meta: response.meta || {},
-      errors: response.errors || []
-    };
-  }
-  
-  // Return the response itself for endpoints that don't follow the standard format
-  return { data: response, meta: {}, errors: [] };
+### Message Format
+```python
+{
+    'event_type': str,  # Type of event (text_delta, tool_call, etc.)
+    'event_data': str,  # JSON-serialized event data
+    'timestamp': str,   # ISO format timestamp
+    'session_id': str,  # Session identifier
+    'interaction_id': str,  # Interaction identifier
+    'sequence': int,    # Sequence number for ordering
 }
 ```
 
-### 3. Enhanced Error Handling
+### Configuration Parameters
+```python
+# Redis connection settings
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', None)
+REDIS_DB = int(os.getenv('REDIS_DB', 0))
+REDIS_SSL = os.getenv('REDIS_SSL', 'false').lower() == 'true'
 
-- Updated `processApiError` to handle the v2 API error format
-- Added support for extracting detailed error information from the v2 response structure
-- Preserved the error object's compatibility with existing code
+# Redis connection pool settings
+REDIS_MAX_CONNECTIONS = int(os.getenv('REDIS_MAX_CONNECTIONS', 10))
 
-```javascript
-// Extract v2 API specific error format
-if (responseData && responseData.detail) {
-  const detail = responseData.detail;
-  if (detail.message) {
-    errorMessage = detail.message;
-  }
-  errorDetails = {
-    error: detail.error,
-    error_code: detail.error_code,
-    params: detail.params
-  };
-}
+# Redis Streams specific settings
+REDIS_STREAM_MAX_LEN = int(os.getenv('REDIS_STREAM_MAX_LEN', 1000))
+REDIS_STREAM_TTL = int(os.getenv('REDIS_STREAM_TTL', 3600))
 ```
 
-### 4. Added Pagination Support for GET Requests
+## Benefits
 
-- Enhanced the `get` function to handle pagination parameters
-- Added support for query parameters via the `params` option
-- Properly formats and appends parameters to the request URL
+1. **Scalability**: Handle more concurrent sessions across multiple processes
+2. **Resilience**: Survive process restarts without losing in-flight events
+3. **Observability**: Better monitoring and debugging of event flow
+4. **Distribution**: Enable distributed event processing across servers
 
-```javascript
-export function get(endpoint, options = {}) {
-  // Extract pagination parameters if present
-  const { params, ...restOptions } = options;
-  
-  // If pagination parameters are provided, add them to the query string
-  if (params) {
-    const queryParams = new URLSearchParams();
-    
-    // Add pagination parameters
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        queryParams.append(key, value);
-      }
-    });
-    
-    // Append query string to endpoint if there are parameters
-    const queryString = queryParams.toString();
-    if (queryString) {
-      endpoint = `${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryString}`;
-    }
-  }
-  
-  return apiRequest(endpoint, { 
-    method: 'GET', 
-    ...restOptions 
-  });
-}
-```
+## Risks and Mitigations
 
-### 5. Added PATCH Method
+| Risk | Mitigation |
+|------|------------|
+| Redis availability issues | Fallback to async queues if Redis is unavailable |
+| Performance degradation | Comprehensive performance testing before deployment |
+| Data loss during transition | Dual-write approach during initial rollout |
+| Increased complexity | Thorough documentation and monitoring |
 
-- Added a dedicated `patch` function for PATCH requests
-- This supports the RESTful update operations used in the v2 API
+## Timeline
 
-```javascript
-export function patch(endpoint, data, options = {}) {
-  return apiRequest(endpoint, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-    ...options,
-  });
-}
-```
+- **Week 1**: Implementation and unit testing
+- **Week 2**: Integration testing and performance optimization
+- **Week 3**: Canary deployment and monitoring
+- **Week 4**: Full deployment and cleanup
 
-### 6. Updated Error Message Extraction
+## Conclusion
 
-- Enhanced error message extraction to look for v2 API's nested error format
-- Updated the error message extraction in apiRequest to handle both v1 and v2 formats
-
-```javascript
-const error = new Error(
-  errorData?.detail?.message || errorData?.message || `Request failed with status ${response.status}`
-);
-```
-
-### 7. Updated Exports
-
-- Added new functions to the default export object
-- Included the new `extractResponseData` function and `patch` method
-
-```javascript
-export default {
-  get,
-  post,
-  put,
-  patch,  // New method
-  delete: del,
-  uploadFile,
-  downloadFile,
-  apiRequest,
-  processApiError,
-  showErrorToast,
-  extractResponseData,  // New utility
-  API_CONFIG,
-};
-```
-
-## Additional Information
-
-These changes form the foundation for the v2 API integration. The updated `api.js` file is now equipped to handle the standardized v2 response format, improved error reporting, and pagination support that will be used throughout the rest of the API service layer implementation.
-
-Next steps will involve creating or updating specific service modules for different API resources.
+Migrating to Redis Streams will significantly improve the scalability and resilience of the Agent C event system while maintaining compatibility with existing code. The phased approach with feature flags ensures minimal disruption and easy rollback if issues arise.

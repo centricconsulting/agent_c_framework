@@ -236,4 +236,820 @@ _plans:
         updated_at: '2025-06-06T15:21:14.754148'
     title: API Service Layer Migration to v2
     updated_at: '2025-06-06T15:21:24.814495'
+  redis_streams_integration:
+    created_at: '2025-06-09T14:14:57.291431'
+    description: Implement Redis Streams to replace the current async queue-based
+      event handling system in Agent C. This will enable distributed event processing
+      and improve scalability for the Agent C React UI integration.
+    id: 5e6f77bf-41aa-4eb4-b43a-b3132001084e
+    lessons_learned:
+    - created_at: '2025-06-09T15:12:39.307423'
+      id: e8242b31-8e51-4431-b0d4-5bd0359443bc
+      learned_task_id: effa1a55-0723-430a-b16a-39c1940d9b18
+      lesson: 'Event Flow Analysis revealed well-structured architecture: The current
+        async queue-based event system has a clean separation of concerns that makes
+        Redis Streams integration feasible. BaseAgent already has partial stream_id
+        support, AgentBridge centralizes event handling through consolidated_streaming_callback,
+        and the JSON serialization is already in place. The key insight is that we
+        can maintain the same client interface while swapping the underlying transport
+        mechanism from async queues to Redis Streams. Critical success factors identified:
+        maintain event ordering, provide robust error handling with async queue fallback,
+        and ensure proper stream lifecycle management.'
+    - created_at: '2025-06-09T15:17:25.613708'
+      id: e696f6af-e28b-4a6f-b87f-9a38a286b722
+      learned_task_id: 87a39d61-0f43-43b9-917f-40777ab3f366
+      lesson: '**Comprehensive Architecture Design Approach**: Creating a detailed
+        architecture design document before implementation proves invaluable for complex
+        integrations like Redis Streams. The document serves multiple purposes:
+
+
+        1. **Cross-team Alignment**: Provides a single source of truth for all implementation
+        teams
+
+        2. **Risk Identification**: Detailed design reveals potential issues early
+        (connection failures, stream cleanup, performance bottlenecks)
+
+        3. **Implementation Roadmap**: Clear phase-based approach with specific deliverables
+        reduces implementation risk
+
+        4. **Operational Readiness**: Including monitoring, error handling, and cleanup
+        strategies from the design phase ensures production readiness
+
+
+        **Key Architecture Insights**:
+
+        - **Hierarchical Stream Naming**: Using `agent_c:stream:{session_id}:{interaction_id}`
+        provides the right balance of isolation and management
+
+        - **Multi-level Error Handling**: Different error types (connection, stream
+        ops, application) require different handling strategies
+
+        - **Fallback Mechanisms**: Always design fallback to simpler approaches (async
+        queue) for Redis outages
+
+        - **Stream Lifecycle Management**: Automated cleanup is essential to prevent
+        Redis memory issues in production
+
+
+        **Technical Design Decisions**:
+
+        - Separate connection pools for publishers/consumers optimize for different
+        usage patterns
+
+        - Batching strategies can significantly improve throughput for high-volume
+        scenarios
+
+        - Event serialization format must balance completeness with performance
+
+        - Circuit breaker patterns prevent cascade failures during Redis outages
+
+
+        This comprehensive design approach should be used as a template for future
+        complex integration projects.'
+    - created_at: '2025-06-09T15:21:12.888715'
+      id: 885615ea-7788-47e9-b85b-8d5987954298
+      learned_task_id: c43825f3-e0a3-43bf-b921-8a6676b7db35
+      lesson: '**Comprehensive Configuration Design Strategy**: Building configuration
+        requirements for complex integrations like Redis Streams requires a systematic
+        approach that addresses multiple dimensions:
+
+
+        **1. Multi-Environment Support**: Configuration must support development,
+        staging, and production environments with appropriate defaults and override
+        mechanisms. Each environment has different performance, security, and reliability
+        requirements.
+
+
+        **2. Performance Optimization**: Configuration should include tuning parameters
+        for different deployment scenarios (high-throughput vs low-latency), connection
+        pool optimization for different workloads (publisher vs consumer), and batching
+        strategies.
+
+
+        **3. Error Handling Strategy**: Configuration must support multi-level error
+        handling including connection errors, stream operation errors, and application-level
+        errors, with appropriate fallback mechanisms and circuit breaker patterns.
+
+
+        **4. Integration with Existing Systems**: New configuration systems should
+        follow existing patterns and conventions while extending capabilities. For
+        Agent C, this meant following VITE_ environment variable conventions and integrating
+        with existing config.js patterns.
+
+
+        **5. Security Considerations**: Configuration must include comprehensive security
+        settings including SSL/TLS, authentication (Redis ACL), authorization, and
+        data encryption options.
+
+
+        **6. Operational Excellence**: Include monitoring, logging, metrics collection,
+        and maintenance configuration from the beginning rather than as an afterthought.
+
+
+        **7. Validation and Type Safety**: Implement robust configuration validation
+        with clear error messages, type checking, and sensible defaults to prevent
+        configuration-related failures.
+
+
+        **Key Technical Insights**:
+
+        - Separate connection pools for publishers and consumers optimize for different
+        I/O patterns
+
+        - Environment-specific configuration profiles reduce deployment complexity
+
+        - Configuration validation at startup prevents runtime failures
+
+        - Comprehensive fallback configuration ensures system resilience
+
+        - Integration testing of configuration systems is critical for reliability
+
+
+        This approach ensures configuration systems are production-ready, maintainable,
+        and support the full lifecycle of complex distributed systems.'
+    - created_at: '2025-06-09T15:22:45.150797'
+      id: 25cf46a1-45bb-4fc3-868f-e8cb543ac890
+      learned_task_id: a240b764-a734-43cb-aba1-fc6f5989e6cd
+      lesson: 'Phase 1 of the Redis Streams Integration plan (Analysis and Design)
+        was completed successfully. The three key deliverables were: 1) A comprehensive
+        analysis of the current event flow that identified all components requiring
+        modification, 2) A detailed architecture design document covering stream naming
+        conventions, message format, error handling, connection management, performance
+        considerations, and cleanup strategies, and 3) A thorough configuration requirements
+        document with all necessary environment variables, default values, and configuration
+        profiles. This solid foundation of analysis and design will make the implementation
+        phase much more straightforward, with clear guidance on how to build each
+        component of the Redis Streams integration.'
+    - created_at: '2025-06-09T16:28:51.036112'
+      id: 9735565b-e2aa-4c02-bb25-8819d16f39bf
+      learned_task_id: 427bba40-76cd-443f-a1fe-c649434fc1a4
+      lesson: '**Core Implementation Lesson**: Implementing the Redis Streams integration
+        required a careful dual-publishing/dual-consumption strategy to ensure system
+        reliability. Rather than replacing the existing async queue mechanism entirely,
+        we implemented a hybrid approach where events are published to both Redis
+        Streams and the async queue, with the system preferring Redis Streams but
+        falling back to the async queue when Redis is unavailable. This architecture
+        provides several key benefits:
+
+
+        1. **Graceful Degradation**: The system continues to function during Redis
+        outages or connection issues
+
+        2. **Zero Downtime Deployment**: The system can be deployed without interrupting
+        existing users
+
+        3. **Progressive Adoption**: The Redis Streams feature can be enabled/disabled
+        via configuration
+
+        4. **Simplified Testing**: Components can be tested in isolation without Redis
+        dependencies
+
+
+        This dual-mechanism approach is a pattern that should be considered for other
+        critical system integrations where reliability and backward compatibility
+        are essential. The pattern allows for progressive enhancement of the system
+        while maintaining operational stability.'
+    tasks:
+      1376469b-eb84-471a-8978-d45d832f5201:
+        child_tasks: []
+        completed: true
+        context: "Changes needed:\n\n1. Update method signature to accept stream_id\
+          \ parameter\n\n2. Add logic to attach stream_id to events\n\n3. Modify the\
+          \ event raising logic to publish to Redis Stream\n\n4. Ensure backward compatibility\
+          \ for non-Redis use cases\n\n5. Update error handling\n\n\nThe modified\
+          \ method should:\n\n- Accept an optional stream_id parameter\n\n- If stream_id\
+          \ is provided, publish to Redis Stream\n\n- Continue to support the existing\
+          \ callback mechanism for compatibility\n\n## Implementation Details\n\n\
+          Successfully updated the BaseAgent._raise_event method with the following\
+          \ enhancements:\n\n1. Updated method signature to accept the stream_id parameter:\n\
+          \   ```python\n   async def _raise_event(self, event, streaming_callback=None,\
+          \ stream_id=None):\n   ```\n\n2. Added logic to attach stream_id to events\
+          \ when the event supports it:\n   ```python\n   if hasattr(event, 'set_stream_id')\
+          \ and stream_id:\n       event.set_stream_id(stream_id)\n   ```\n\n3. Modified\
+          \ the event raising logic to publish to Redis Stream when configured:\n\
+          \   ```python\n   if self.redis_stream_manager and stream_id:\n       try:\n\
+          \           await self.redis_stream_manager.publish_event(\n           \
+          \    event_type=event.type,\n               event_data=event.to_dict(),\n\
+          \               stream_id=stream_id,\n               source=\"BaseAgent\"\
+          \n           )\n       except Exception as e:\n           self.logger.error(f\"\
+          Failed to publish event to Redis Stream: {e}\")\n   ```\n\n4. Maintained\
+          \ backward compatibility by continuing to support the existing callback\
+          \ mechanism:\n   ```python\n   if callback:\n       try:\n           await\
+          \ callback.callback(event)\n       except Exception as e:\n           self.logger.error(f\"\
+          Streaming callback error: {e}\")\n   ```\n\n5. Enhanced error handling to\
+          \ log Redis Stream errors and continue execution:\n   ```python\n   except\
+          \ Exception as e:\n       self.logger.error(f\"Failed to publish event to\
+          \ Redis Stream: {e}\")\n       await self._raise_system_event(\n       \
+          \    content=f\"Redis Stream publish error: {str(e)}\",\n           level=\"\
+          error\",\n           component=\"streaming\"\n       )\n   ```\n\nThe implementation\
+          \ ensures that the method supports both Redis Streams and the existing callback\
+          \ mechanism, providing dual publishing capability while maintaining backward\
+          \ compatibility."
+        created_at: '2025-06-09T14:16:23.401687'
+        description: Modify the _raise_event method in BaseAgent to support Redis
+          Stream IDs and publish to Redis Streams.
+        id: 1376469b-eb84-471a-8978-d45d832f5201
+        parent_id: 427bba40-76cd-443f-a1fe-c649434fc1a4
+        priority: high
+        sequence: null
+        title: Update BaseAgent._raise_event method
+        updated_at: '2025-06-09T16:27:18.967749'
+      23e0ad7e-b6c2-48c8-9e71-ddeacb39e295:
+        child_tasks: []
+        completed: false
+        context: 'The deployment guide should cover:
+
+          - Redis server requirements
+
+          - Configuration changes needed
+
+          - Migration steps from async queue to Redis Streams
+
+          - Monitoring recommendations
+
+          - Backup and recovery procedures
+
+          - Scaling considerations
+
+
+          Ensure the guide includes both development and production environments.'
+        created_at: '2025-06-09T14:18:00.371259'
+        description: Create a deployment guide for the Redis Streams integration.
+        id: 23e0ad7e-b6c2-48c8-9e71-ddeacb39e295
+        parent_id: 5ef5fb93-dff3-4999-85cc-47cf5ede739e
+        priority: medium
+        sequence: null
+        title: Create deployment guide
+        updated_at: '2025-06-09T14:18:00.371259'
+      329cca21-e53f-495e-9d87-66662122e31b:
+        child_tasks: []
+        completed: true
+        context: 'Create a new class that will handle:
+
+
+          - Redis connection management
+
+          - Stream creation and management
+
+          - Publishing events to streams
+
+          - Consuming events from streams
+
+          - Error handling and reconnection logic
+
+          - Stream cleanup
+
+
+
+          This class should provide a clean API that can be used by both the BaseAgent
+          and AgentBridge classes.
+
+
+          ## Implementation Details
+
+
+          Implemented a comprehensive RedisStreamManager class with the following
+          features:
+
+
+          - Stream Key Management with hierarchical naming convention (`agent_c:stream:{session_id}:{interaction_id}`)
+
+          - Connection Management with separate pools for publishers and consumers
+
+          - Event Serialization with standardized message format and metadata
+
+          - Multi-level Error Handling with circuit breaker pattern and fallback mechanisms
+
+          - Stream Lifecycle Management with automated creation, TTL management, and
+          cleanup
+
+          - Performance Optimization with connection pooling and batching support
+
+
+          The class provides a complete API for Redis Streams operations, including:
+
+          - publish_event() - For publishing events to Redis Streams
+
+          - consume_events() - For consuming events from Redis Streams
+
+          - create_stream() - For stream creation and initialization
+
+          - close_stream() - For proper stream finalization
+
+
+          The implementation follows the architectural design and provides robust
+          error handling and fallback mechanisms.'
+        created_at: '2025-06-09T14:16:13.768707'
+        description: Implement a RedisStreamManager class to handle Redis Stream operations.
+        id: 329cca21-e53f-495e-9d87-66662122e31b
+        parent_id: 427bba40-76cd-443f-a1fe-c649434fc1a4
+        priority: high
+        sequence: null
+        title: Create RedisStreamManager class
+        updated_at: '2025-06-09T16:27:00.258017'
+      427bba40-76cd-443f-a1fe-c649434fc1a4:
+        child_tasks:
+        - 329cca21-e53f-495e-9d87-66662122e31b
+        - 1376469b-eb84-471a-8978-d45d832f5201
+        - cb29130e-9511-4e80-bf44-a034fdc5fbf2
+        - f93ee5a0-6d52-42ec-bdbb-ec8a2913fb33
+        - e238d3a0-6f08-46f6-af5a-d95ecbf2b9d1
+        completed: true
+        context: '## Implementation Status
+
+
+          Phase 2 (Core Implementation) has been successfully completed! All five
+          tasks have been implemented according to the architectural design from Phase
+          1:
+
+
+          1. ✅ Create RedisStreamManager class - Comprehensive implementation with
+          connection management, event publishing/consuming, error handling, and stream
+          lifecycle management
+
+
+          2. ✅ Update BaseAgent._raise_event method - Enhanced to support Redis Streams
+          while maintaining backward compatibility
+
+
+          3. ✅ Update all _raise_* methods in BaseAgent - All 15 methods updated to
+          accept and pass the stream_id parameter
+
+
+          4. ✅ Update AgentBridge.consolidated_streaming_callback - Modified to work
+          with Redis Streams while maintaining the async queue as fallback
+
+
+          5. ✅ Update AgentBridge.stream_chat method - Updated to consume events from
+          Redis Streams with proper error handling and fallback
+
+
+          The implementation provides a robust, scalable solution for distributed
+          event processing while maintaining full backward compatibility with existing
+          components. A detailed implementation status report has been created at
+          //ui/.scratch/redis_streams_phase2_implementation_status.md.
+
+
+          The system is now ready for Phase 3 (Testing and Validation) to ensure the
+          implementation meets all requirements and performs as expected.'
+        created_at: '2025-06-09T14:16:05.232564'
+        description: Implement the core Redis Streams functionality and integration
+          with Agent C
+        id: 427bba40-76cd-443f-a1fe-c649434fc1a4
+        parent_id: null
+        priority: high
+        sequence: 2
+        title: 'Phase 2: Core Implementation'
+        updated_at: '2025-06-09T16:28:37.547999'
+      596d6f19-5574-4161-9999-227e5f9540a0:
+        child_tasks: []
+        completed: false
+        context: 'Performance tests should measure:
+
+          - Latency compared to async queue implementation
+
+          - Throughput under various loads
+
+          - Resource usage (memory, CPU)
+
+          - Connection pooling effectiveness
+
+          - Scaling with multiple concurrent sessions
+
+
+          Tests should provide metrics that can be used to tune the implementation.'
+        created_at: '2025-06-09T14:17:38.839195'
+        description: Develop performance tests to measure the impact of Redis Streams
+          integration.
+        id: 596d6f19-5574-4161-9999-227e5f9540a0
+        parent_id: e2a02075-0e60-463b-bbc6-022795b2c687
+        priority: medium
+        sequence: null
+        title: Create performance tests
+        updated_at: '2025-06-09T14:17:38.839195'
+      5ef5fb93-dff3-4999-85cc-47cf5ede739e:
+        child_tasks:
+        - a880c2cb-0127-4368-8840-b7c7a8b2b16d
+        - 23e0ad7e-b6c2-48c8-9e71-ddeacb39e295
+        - cafb6b8c-ab2d-47aa-ad05-13de342864fe
+        completed: false
+        context: ''
+        created_at: '2025-06-09T14:17:45.254333'
+        description: Document the Redis Streams integration and prepare for deployment
+        id: 5ef5fb93-dff3-4999-85cc-47cf5ede739e
+        parent_id: null
+        priority: medium
+        sequence: 4
+        title: 'Phase 4: Documentation and Deployment'
+        updated_at: '2025-06-09T14:17:45.254333'
+      87a39d61-0f43-43b9-917f-40777ab3f366:
+        child_tasks: []
+        completed: true
+        context: "Key design considerations:\n- Stream naming convention (per session,\
+          \ per interaction?)\n- Message format for serialization/deserialization\n\
+          - Error handling and recovery\n- Connection management\n- Performance considerations\n\
+          - Cleanup strategy for old streams\n\nThe design should include sequence\
+          \ diagrams showing the flow of events through the system.\n\n## COMPLETED\
+          \ DELIVERABLES:\n\nCreated comprehensive Redis Stream integration architecture\
+          \ design document (`//ui/.scratch/redis_streams_integration_architecture.md`)\
+          \ that addresses all key requirements:\n\n### ✅ Stream Naming Conventions\n\
+          - Hierarchical naming: `agent_c:stream:{session_id}:{interaction_id}`\n\
+          - StreamKeyManager class for centralized key management\n- Validation and\
+          \ sanitization for Redis key safety\n\n### ✅ Message Format & Serialization\
+          \ \n- Standardized message format with event metadata\n- EventSerializer\
+          \ class for consistent serialization/deserialization\n- Versioning support\
+          \ for future compatibility\n- JSON-based payload with structured context\n\
+          \n### ✅ Error Handling & Recovery\n- Multi-level error handling (connection,\
+          \ stream operations, application-level)\n- Circuit breaker pattern for Redis\
+          \ failures\n- Exponential backoff retry strategies\n- Fallback to in-memory\
+          \ queue when Redis unavailable\n- Dead letter queue for unprocessable messages\n\
+          \n### ✅ Connection Management\n- Separate connection pools for publishers\
+          \ and consumers\n- Health monitoring with automatic recovery\n- Connection\
+          \ pool optimization for different use cases\n- Performance tuning configurations\n\
+          \n### ✅ Performance Considerations\n- Batching strategies for high throughput\n\
+          - Connection pool tuning for different scenarios\n- Stream length management\
+          \ to prevent memory issues\n- Performance optimization configurations\n\n\
+          ### ✅ Cleanup Strategy\n- StreamLifecycleManager for complete stream lifecycle\n\
+          - Automated cleanup of old and abandoned streams\n- TTL-based expiration\
+          \ with different retention policies\n- Periodic monitoring and maintenance\n\
+          \n### ✅ Sequence Diagrams\n- Event publishing flow diagram\n- Error recovery\
+          \ flow diagram  \n- Stream lifecycle flow diagram\n- Complete visual representation\
+          \ of system interactions\n\n### ✅ Implementation Strategy\n- 4-phase implementation\
+          \ plan (8 weeks total)\n- Detailed task breakdown with deliverables\n- Risk\
+          \ mitigation strategies\n- Success criteria and performance requirements\n\
+          \nThe architecture document serves as the definitive reference for implementation\
+          \ teams and includes comprehensive code examples, configuration options,\
+          \ and operational procedures."
+        created_at: '2025-06-09T14:15:43.420550'
+        description: Create a detailed design for the Redis Stream integration, including
+          stream naming conventions, message format, and error handling strategy.
+        id: 87a39d61-0f43-43b9-917f-40777ab3f366
+        parent_id: a240b764-a734-43cb-aba1-fc6f5989e6cd
+        priority: high
+        sequence: null
+        title: Design Redis Stream integration architecture
+        updated_at: '2025-06-09T15:22:04.545313'
+      a240b764-a734-43cb-aba1-fc6f5989e6cd:
+        child_tasks:
+        - effa1a55-0723-430a-b16a-39c1940d9b18
+        - 87a39d61-0f43-43b9-917f-40777ab3f366
+        - c43825f3-e0a3-43bf-b921-8a6676b7db35
+        completed: true
+        context: ''
+        created_at: '2025-06-09T14:15:12.974943'
+        description: Analyze the current event system and design the Redis Streams
+          integration
+        id: a240b764-a734-43cb-aba1-fc6f5989e6cd
+        parent_id: null
+        priority: high
+        sequence: 1
+        title: 'Phase 1: Analysis and Design'
+        updated_at: '2025-06-09T15:22:34.427298'
+      a880c2cb-0127-4368-8840-b7c7a8b2b16d:
+        child_tasks: []
+        completed: false
+        context: 'Documentation updates should include:
+
+          - Architecture overview with Redis Streams
+
+          - Configuration options and environment variables
+
+          - Stream naming conventions and lifecycle
+
+          - Error handling and troubleshooting
+
+          - Performance considerations
+
+          - Diagrams showing the updated event flow
+
+
+          Ensure the documentation is clear for both developers and operators.'
+        created_at: '2025-06-09T14:17:52.549913'
+        description: Update the technical documentation to reflect the Redis Streams
+          integration.
+        id: a880c2cb-0127-4368-8840-b7c7a8b2b16d
+        parent_id: 5ef5fb93-dff3-4999-85cc-47cf5ede739e
+        priority: medium
+        sequence: null
+        title: Update technical documentation
+        updated_at: '2025-06-09T14:17:52.549913'
+      b3a557f5-c141-49b9-9f95-c3e540c93dc2:
+        child_tasks: []
+        completed: false
+        context: 'Integration tests should cover:
+
+          - End-to-end flow from BaseAgent to client
+
+          - Different event types and their handling
+
+          - Concurrent sessions and interactions
+
+          - Error handling and recovery
+
+          - Performance under load
+
+
+          Tests should use a real Redis instance (possibly via Docker) to ensure proper
+          behavior.'
+        created_at: '2025-06-09T14:17:28.378495'
+        description: Develop integration tests to validate the complete event flow
+          through the system.
+        id: b3a557f5-c141-49b9-9f95-c3e540c93dc2
+        parent_id: e2a02075-0e60-463b-bbc6-022795b2c687
+        priority: high
+        sequence: null
+        title: Create integration tests for event flow
+        updated_at: '2025-06-09T14:17:28.378495'
+      c43825f3-e0a3-43bf-b921-8a6676b7db35:
+        child_tasks: []
+        completed: true
+        context: "We need to define:\n- Redis connection parameters (host, port, password)\n\
+          - Connection pool settings\n- Timeout configurations\n- Environment variable\
+          \ names\n- Default values\n- Error handling for connection issues\n\nThis\
+          \ should be integrated with the existing configuration system.\n\n## COMPLETED\
+          \ DELIVERABLES:\n\n✅ **Comprehensive Redis Configuration Requirements Document**\n\
+          Created `//ui/.scratch/redis_streams_comprehensive_config_requirements.md`\
+          \ that provides complete configuration specifications for Redis Streams\
+          \ integration.\n\n### ✅ Core Redis Connection Configuration\n- Primary connection\
+          \ parameters (host, port, password, SSL, etc.)\n- Detailed environment variable\
+          \ specifications with types and defaults\n- Security configuration including\
+          \ SSL/TLS and Redis ACL support\n- Alternative Redis URL configuration format\n\
+          \n### ✅ Connection Pool Configuration  \n- Separate publisher and consumer\
+          \ pool settings optimized for different workloads\n- Comprehensive timeout\
+          \ and retry configurations\n- Performance tuning parameters for different\
+          \ deployment scenarios\n- Health check and keepalive settings\n\n### ✅ Redis\
+          \ Streams Specific Configuration\n- Stream management settings (max length,\
+          \ TTL, naming conventions)\n- Performance optimization (batching, memory\
+          \ management)\n- Stream lifecycle and cleanup configuration\n- Read/write\
+          \ operation tuning\n\n### ✅ Error Handling and Fallback Configuration\n\
+          - Multi-level error handling strategy configuration\n- Circuit breaker and\
+          \ retry configurations\n- Fallback queue and dead letter queue settings\n\
+          - Connection error recovery mechanisms\n\n### ✅ Environment-Specific Profiles\n\
+          - Development, staging, and production configuration profiles\n- Environment\
+          \ variable precedence and override mechanisms\n- Container and Kubernetes\
+          \ deployment configurations\n- Security and credential management approaches\n\
+          \n### ✅ Monitoring and Observability\n- Comprehensive metrics collection\
+          \ configuration\n- Logging configuration with different levels and formats\n\
+          - Performance tracking and alert threshold settings\n- Operational monitoring\
+          \ requirements\n\n### ✅ Integration with Existing Systems\n- Integration\
+          \ with current UI configuration patterns (following VITE_ conventions)\n\
+          - Configuration validation and type safety implementation\n- Backend API\
+          \ configuration integration points\n- Deployment-specific configuration\
+          \ management\n\n### ✅ Implementation Support\n- Configuration manager class\
+          \ implementation\n- Validation and error handling code examples\n- Testing\
+          \ strategy for configuration validation\n- Documentation templates (.env.example,\
+          \ deployment guides)\n\nThe document provides all necessary configuration\
+          \ requirements to support the Redis Streams integration architecture while\
+          \ maintaining compatibility with existing Agent C systems."
+        created_at: '2025-06-09T14:15:57.842009'
+        description: Define the Redis connection configuration needed for the implementation,
+          including environment variables and default settings.
+        id: c43825f3-e0a3-43bf-b921-8a6676b7db35
+        parent_id: a240b764-a734-43cb-aba1-fc6f5989e6cd
+        priority: medium
+        sequence: null
+        title: Define Redis configuration requirements
+        updated_at: '2025-06-09T15:22:13.945915'
+      c65298a9-6a8c-4cde-8456-5e7aa4062ff2:
+        child_tasks: []
+        completed: false
+        context: 'Unit tests should cover:
+
+          - Stream creation and deletion
+
+          - Publishing events to streams
+
+          - Consuming events from streams
+
+          - Error handling and recovery
+
+          - Connection management
+
+          - Edge cases and failure scenarios
+
+
+          Tests should use a mock Redis implementation to avoid external dependencies.'
+        created_at: '2025-06-09T14:17:18.292733'
+        description: Develop comprehensive unit tests for the RedisStreamManager class.
+        id: c65298a9-6a8c-4cde-8456-5e7aa4062ff2
+        parent_id: e2a02075-0e60-463b-bbc6-022795b2c687
+        priority: high
+        sequence: null
+        title: Create unit tests for RedisStreamManager
+        updated_at: '2025-06-09T14:17:18.292733'
+      cafb6b8c-ab2d-47aa-ad05-13de342864fe:
+        child_tasks: []
+        completed: false
+        context: 'The monitoring plan should include:
+
+          - Key metrics to monitor
+
+          - Alert thresholds and response procedures
+
+          - Stream cleanup policies
+
+          - Backup and recovery procedures
+
+          - Troubleshooting guides for common issues
+
+          - Maintenance tasks and schedules
+
+
+          Ensure the plan is comprehensive for production operations.'
+        created_at: '2025-06-09T14:18:08.278878'
+        description: Develop a monitoring and maintenance plan for the Redis Streams
+          implementation.
+        id: cafb6b8c-ab2d-47aa-ad05-13de342864fe
+        parent_id: 5ef5fb93-dff3-4999-85cc-47cf5ede739e
+        priority: medium
+        sequence: null
+        title: Create monitoring and maintenance plan
+        updated_at: '2025-06-09T14:18:08.278878'
+      cb29130e-9511-4e80-bf44-a034fdc5fbf2:
+        child_tasks: []
+        completed: true
+        context: "Methods to update include:\n\n- _raise_system_event\n\n- _raise_history_delta\n\
+          \n- _raise_completion_start\n\n- _raise_completion_end\n\n- _raise_tool_call_start\n\
+          \n- _raise_system_prompt\n\n- _raise_user_request\n\n- _raise_tool_call_delta\n\
+          \n- _raise_tool_call_end\n\n- _raise_interaction_start\n\n- _raise_interaction_end\n\
+          \n- _raise_text_delta\n\n- _raise_thought_delta\n\n- _raise_complete_thought\n\
+          \n- _raise_history_event\n\n\nEach method needs to be updated to accept\
+          \ and pass through the stream_id parameter.\n\n## Implementation Details\n\
+          \nSuccessfully updated all 15 _raise_* methods in BaseAgent to support the\
+          \ stream_id parameter. Each method now:\n\n1. Accepts an optional stream_id\
+          \ parameter with a default value of None:\n   ```python\n   async def _raise_text_delta(self,\
+          \ content: str, stream_id: Optional[str] = None, **data):\n   ```\n\n2.\
+          \ Properly passes the stream_id to _raise_event:\n   ```python\n   await\
+          \ self._raise_event(event, streaming_callback=streaming_callback, stream_id=stream_id)\n\
+          \   ```\n\n3. Implements fallback to self._current_stream_id when no explicit\
+          \ stream_id is provided:\n   ```python\n   effective_stream_id = stream_id\
+          \ or self._current_stream_id\n   ```\n\n4. Maintains backward compatibility\
+          \ by making the stream_id parameter optional\n\nAll methods follow a consistent\
+          \ implementation pattern, ensuring that events can be properly routed to\
+          \ Redis Streams when a stream_id is provided, while maintaining compatibility\
+          \ with existing code that doesn't use the stream_id parameter."
+        created_at: '2025-06-09T14:16:34.331119'
+        description: Update all event raising methods in BaseAgent to pass stream_id
+          to _raise_event.
+        id: cb29130e-9511-4e80-bf44-a034fdc5fbf2
+        parent_id: 427bba40-76cd-443f-a1fe-c649434fc1a4
+        priority: high
+        sequence: null
+        title: Update all _raise_* methods in BaseAgent
+        updated_at: '2025-06-09T16:27:34.915101'
+      e238d3a0-6f08-46f6-af5a-d95ecbf2b9d1:
+        child_tasks: []
+        completed: true
+        context: "Changes needed:\n\n1. Replace async queue with Redis Stream consumer\n\
+          \n2. Ensure proper ordering of events\n\n3. Handle Redis connection issues\
+          \ gracefully\n\n4. Maintain the same yield format for compatibility with\
+          \ API\n\n\nThe modified method should:\n\n- Create a Redis Stream consumer\n\
+          \n- Consume events from the stream\n\n- Format and yield events to the client\n\
+          \n- Handle connection issues and reconnection\n\n- Clean up streams appropriately\
+          \ when done\n\n## Implementation Details\n\nSuccessfully updated the AgentBridge.stream_chat\
+          \ method to consume events from Redis Streams with the following enhancements:\n\
+          \n1. Added Redis Stream consumption logic:\n   ```python\n   # Generate\
+          \ unique interaction ID and create Redis Stream if enabled\n   self._current_interaction_id\
+          \ = str(uuid.uuid4())\n   session_id = self.chat_session.session_id\n  \
+          \ stream_id = f\"{session_id}:{self._current_interaction_id}\"\n   \n  \
+          \ # Configure agent for Redis Streams if available\n   if self.redis_stream_manager:\n\
+          \       try:\n           await self.redis_stream_manager.create_stream(stream_id)\n\
+          \           # Use Redis Stream consumer to yield events\n           async\
+          \ for event_json in self._consume_redis_stream_events(stream_id, client_wants_cancel):\n\
+          \               yield event_json\n       except Exception as e:\n      \
+          \     self.logger.error(f\"Redis Stream consumption error: {e}\")\n    \
+          \       # Fallback to async queue\n           async for event_json in self._consume_async_queue_events(client_wants_cancel):\n\
+          \               yield event_json\n   else:\n       # Use original async\
+          \ queue consumption\n       async for event_json in self._consume_async_queue_events(client_wants_cancel):\n\
+          \           yield event_json\n   ```\n\n2. Added helper method to consume\
+          \ events from Redis Streams:\n   ```python\n   async def _consume_redis_stream_events(self,\
+          \ stream_id, cancel_event):\n       try:\n           async for event_data\
+          \ in self.redis_stream_manager.consume_events(stream_id, block=1000):\n\
+          \               # Check for cancellation\n               if cancel_event.is_set():\n\
+          \                   break\n                   \n               # Process\
+          \ and yield event\n               processed_event = await self._process_redis_stream_event(event_data)\n\
+          \               if processed_event:\n                   yield processed_event\n\
+          \       except Exception as e:\n           self.logger.error(f\"Stream consumption\
+          \ error: {e}\")\n           raise\n   ```\n\n3. Added helper method to process\
+          \ Redis Stream events:\n   ```python\n   async def _process_redis_stream_event(self,\
+          \ event_data):\n       try:\n           # Skip metadata events\n       \
+          \    if event_data.get('event_type') in ['stream_created', 'stream_closed']:\n\
+          \               return None\n               \n           # Use existing\
+          \ handler methods for consistent formatting\n           event_type = event_data['event_type']\n\
+          \           handler = getattr(self, f\"_handle_{event_type}\", None)\n \
+          \          if handler:\n               return await handler(event_data['event_data'])\n\
+          \           else:\n               # Generic handler for unknown types\n\
+          \               return json.dumps({\n                   'type': event_type,\n\
+          \                   'data': event_data['event_data']\n               })\
+          \ + '\\n'\n       except Exception as e:\n           self.logger.error(f\"\
+          Error processing stream event: {e}\")\n           return None\n   ```\n\n\
+          4. Added proper stream cleanup in the finally block:\n   ```python\n   finally:\n\
+          \       # Clean up Redis Stream if used\n       if self.redis_stream_manager\
+          \ and self._current_interaction_id:\n           try:\n               stream_id\
+          \ = f\"{self.chat_session.session_id}:{self._current_interaction_id}\"\n\
+          \               await self.redis_stream_manager.close_stream(stream_id)\n\
+          \           except Exception as e:\n               self.logger.error(f\"\
+          Failed to close stream: {e}\")\n       \n       # Clean up async queue (original\
+          \ behavior)\n       if self._stream_queue:\n           while not self._stream_queue.empty():\n\
+          \               try:\n                   self._stream_queue.get_nowait()\n\
+          \               except:\n                   pass\n   ```\n\nThe implementation\
+          \ ensures seamless event consumption from Redis Streams while maintaining\
+          \ the same yield format for API compatibility and providing fallback to\
+          \ the async queue when Redis is unavailable."
+        created_at: '2025-06-09T14:16:58.083087'
+        description: Modify the stream_chat method to consume events from Redis Streams
+          instead of async queue.
+        id: e238d3a0-6f08-46f6-af5a-d95ecbf2b9d1
+        parent_id: 427bba40-76cd-443f-a1fe-c649434fc1a4
+        priority: high
+        sequence: null
+        title: Update AgentBridge.stream_chat method
+        updated_at: '2025-06-09T16:28:21.145691'
+      e2a02075-0e60-463b-bbc6-022795b2c687:
+        child_tasks:
+        - c65298a9-6a8c-4cde-8456-5e7aa4062ff2
+        - b3a557f5-c141-49b9-9f95-c3e540c93dc2
+        - 596d6f19-5574-4161-9999-227e5f9540a0
+        completed: false
+        context: ''
+        created_at: '2025-06-09T14:17:08.505750'
+        description: Create comprehensive tests and validate the Redis Streams integration
+        id: e2a02075-0e60-463b-bbc6-022795b2c687
+        parent_id: null
+        priority: high
+        sequence: 3
+        title: 'Phase 3: Testing and Validation'
+        updated_at: '2025-06-09T14:17:08.505750'
+      effa1a55-0723-430a-b16a-39c1940d9b18:
+        child_tasks: []
+        completed: true
+        context: "Analysis completed and documented in //ui/.scratch/redis_streams_current_event_flow_analysis.md\n\
+          \nThe analysis identified:\n- 6 main components requiring modification\n\
+          - 15 BaseAgent._raise_* methods needing updates  \n- 1 new RedisStreamManager\
+          \ class needed\n- Clear event flow sequence from BaseAgent through AgentBridge\
+          \ to client\n- Specific implementation requirements and risk assessment\n\
+          - Detailed success criteria and implementation strategy\n\nKey findings:\n\
+          1. Current async queue mechanism is well-structured for Redis Streams migration\n\
+          2. BaseAgent already has partial stream_id support that needs completion\n\
+          3. AgentBridge event handling is centralized and manageable for Redis integration\n\
+          4. Need to maintain backward compatibility with async queue as fallback\n\
+          5. Stream cleanup and connection error handling are critical considerations\n\
+          \nThe document provides complete technical specification for the implementation\
+          \ team."
+        created_at: '2025-06-09T14:15:28.130878'
+        description: Document the current event flow from BaseAgent to AgentBridge
+          and identify all components that need to be modified for Redis Streams integration.
+        id: effa1a55-0723-430a-b16a-39c1940d9b18
+        parent_id: a240b764-a734-43cb-aba1-fc6f5989e6cd
+        priority: high
+        sequence: null
+        title: Analyze current event flow and identify changes needed
+        updated_at: '2025-06-09T15:21:54.390607'
+      f93ee5a0-6d52-42ec-bdbb-ec8a2913fb33:
+        child_tasks: []
+        completed: true
+        context: "Changes needed:\n\n1. Update method signature to accept Redis Stream\
+          \ ID\n\n2. Add logic to handle events from Redis Streams\n\n3. Ensure proper\
+          \ ordering of events\n\n4. Update error handling for Redis-specific issues\n\
+          \n\nThe method should:\n\n- Continue to process events as before\n\n- Use\
+          \ Redis Streams for communication instead of async queue\n\n- Maintain the\
+          \ same JSON payload format for compatibility with frontend\n\n## Implementation\
+          \ Details\n\nSuccessfully updated the AgentBridge.consolidated_streaming_callback\
+          \ method to support Redis Streams with the following enhancements:\n\n1.\
+          \ Updated method signature to accept Redis Stream ID:\n   ```python\n  \
+          \ async def consolidated_streaming_callback(self, event, redis_stream_id=None):\n\
+          \   ```\n\n2. Added logic to publish events to Redis Streams when configured:\n\
+          \   ```python\n   if self.redis_stream_manager and redis_stream_id:\n  \
+          \     await self._publish_to_redis_stream(event, redis_stream_id)\n   ```\n\
+          \n3. Implemented dual publishing to both Redis Streams and the async queue\
+          \ for reliability:\n   ```python\n   # Process and publish to Redis Stream\
+          \ if configured\n   if self.redis_stream_manager and redis_stream_id:\n\
+          \       await self._publish_to_redis_stream(event, redis_stream_id)\n  \
+          \     \n   # Always use async queue as well (for backward compatibility\
+          \ and fallback)\n   if hasattr(self, '_stream_queue') and self._stream_queue:\n\
+          \       await self._stream_queue.put(payload)\n   ```\n\n4. Added helper\
+          \ method for Redis Stream publishing with error handling:\n   ```python\n\
+          \   async def _publish_to_redis_stream(self, event, stream_id):\n      \
+          \ try:\n           event_type = event.type\n           handler = self._event_handlers.get(event_type)\n\
+          \           if handler:\n               payload = await handler(event)\n\
+          \               if payload:\n                   await self.redis_stream_manager.publish_event(\n\
+          \                       event_type=event_type,\n                       event_data=payload,\n\
+          \                       stream_id=stream_id,\n                       source=\"\
+          AgentBridge\"\n                   )\n       except Exception as e:\n   \
+          \        self.logger.error(f\"Failed to publish event to Redis Stream: {e}\"\
+          )\n   ```\n\n5. Maintained the same JSON payload format for compatibility\
+          \ with the frontend\n\nThe implementation ensures proper event handling\
+          \ and ordering while adding Redis Streams support, maintaining backward\
+          \ compatibility with the existing async queue mechanism."
+        created_at: '2025-06-09T14:16:44.854350'
+        description: Modify the consolidated_streaming_callback method to work with
+          Redis Streams.
+        id: f93ee5a0-6d52-42ec-bdbb-ec8a2913fb33
+        parent_id: 427bba40-76cd-443f-a1fe-c649434fc1a4
+        priority: high
+        sequence: null
+        title: Update AgentBridge.consolidated_streaming_callback
+        updated_at: '2025-06-09T16:27:54.584073'
+    title: Redis Streams Integration for Agent C Event System
+    updated_at: '2025-06-09T16:28:51.036112'
 current_plan: api_migration_v2

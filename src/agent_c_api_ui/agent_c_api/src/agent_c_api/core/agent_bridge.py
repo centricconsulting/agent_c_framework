@@ -3,6 +3,7 @@ import json
 import asyncio
 import threading
 import traceback
+import uuid
 from typing import Any, Dict, List, Union, Optional, AsyncGenerator
 from datetime import datetime, timezone
 
@@ -21,6 +22,7 @@ from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c_api.config.config_loader import MODELS_CONFIG
 from agent_c_tools.tools.workspace import LocalStorageWorkspace
 from agent_c_api.core.util.logging_utils import LoggingManager
+from agent_c_api.core.util.redis_stream import RedisStreamManager
 from agent_c.prompting import PromptBuilder, CoreInstructionSection
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 from agent_c.agents.claude import ClaudeChatAgent, ClaudeBedrockChatAgent
@@ -160,6 +162,11 @@ class AgentBridge:
         self.image_inputs: List[ImageInput] = []
         self.audio_inputs: List[AudioInput] = []
 
+        # Redis Streams integration
+        self.redis_stream_manager = None
+        self._current_redis_stream_id = None
+        self._redis_streams_enabled = False
+
     def __init_events(self) -> None:
         """
         Initialize threading events used for debugging and input/output management.
@@ -286,7 +293,7 @@ class AgentBridge:
             # Initialize the tool chest essential tools
             await self.tool_chest.init_tools(tool_opts)
             await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
-            
+
             self.logger.info(
                 f"Agent {self.chat_session.agent_config.key} successfully initialized "
                 f"essential tools: {list(self.tool_chest.active_tools.keys())}"
@@ -299,13 +306,13 @@ class AgentBridge:
                 tool_name for tool_name in self.chat_session.agent_config.tools
                 if tool_name not in initialized_tools
             ]
-            
+
             if uninitialized_tools:
                 self.logger.warning(
                     f"The following selected tools were not initialized: "
                     f"{uninitialized_tools} for Agent {self.chat_session.agent_config.name}"
                 )
-                
+
         except Exception as e:
             self.logger.exception("Error initializing tools: %s", e, exc_info=True)
             raise
@@ -383,7 +390,7 @@ class AgentBridge:
             self.logger.debug(f"Setting agent budget_tokens to {budget_tokens}")
 
             self.agent_runtime = ClaudeChatAgent(**agent_params)
-            
+
         elif self.backend == 'bedrock':
             # Add Claude Bedrock-specific parameters
             budget_tokens = self.budget_tokens if self.budget_tokens is not None else 0
@@ -391,11 +398,11 @@ class AgentBridge:
             self.logger.debug(f"Setting agent budget_tokens to {budget_tokens}")
 
             self.agent_runtime = ClaudeBedrockChatAgent(**agent_params)
-            
+
         else:
             # Add OpenAI-specific parameters
             # Only pass reasoning_effort if it's set and we're using a reasoning model
-            if (self.reasoning_effort is not None and 
+            if (self.reasoning_effort is not None and
                 any(reasoning_model in self.model_name for reasoning_model in OPENAI_REASONING_MODELS)):
                 agent_params["reasoning_effort"] = self.reasoning_effort
 
@@ -523,6 +530,7 @@ class AgentBridge:
             return json.dumps(data)
         except (TypeError, ValueError) as e:
             raise ValueError(f"Error converting input to string: {str(e)}") from e
+
     @staticmethod
     async def _handle_message(event: SessionEvent) -> str:
         """
@@ -589,8 +597,8 @@ class AgentBridge:
             str: JSON-formatted tool select delta payload.
         """
         data = (
-            self.convert_to_string(event.tool_calls) 
-            if hasattr(event, 'tool_calls') 
+            self.convert_to_string(event.tool_calls)
+            if hasattr(event, 'tool_calls')
             else 'No data'
         )
         payload = json.dumps({
@@ -611,8 +619,8 @@ class AgentBridge:
             str: JSON-formatted tool call delta payload.
         """
         data = (
-            self.convert_to_string(event.content) 
-            if hasattr(event, 'content') 
+            self.convert_to_string(event.content)
+            if hasattr(event, 'content')
             else 'No data'
         )
         payload = json.dumps({
@@ -636,7 +644,7 @@ class AgentBridge:
             str: JSON-formatted content payload with vendor information.
         """
         vendor = self._determine_vendor()
-        
+
         payload = json.dumps({
             "type": "content",
             "data": event.content,
@@ -751,7 +759,7 @@ class AgentBridge:
             str: JSON-formatted media render payload.
         """
         media_content = ""
-        
+
         if event.content:
             media_content = event.content
         elif event.url:
@@ -765,7 +773,7 @@ class AgentBridge:
                     f"<br><object type='{event.content_type}' "
                     f"data='{event.url}'></object>"
                 )
-                
+
         payload = json.dumps({
             "type": "render_media",
             "content": media_content,
@@ -798,7 +806,7 @@ class AgentBridge:
         """
         self.chat_session.messages = event.messages
         await self.session_manager.flush(self.chat_session.session_id)
-        
+
         payload = json.dumps({
             "type": "history",
             "messages": event.messages,
@@ -889,7 +897,7 @@ class AgentBridge:
             str: JSON-formatted thought delta payload.
         """
         vendor = self._determine_vendor()
-        
+
         payload = json.dumps({
             "type": "thought_delta",
             "data": event.content,
@@ -911,18 +919,24 @@ class AgentBridge:
         """
         await self.__init_tool_chest()
         await self.initialize_agent_parameters()
+        await self.initialize_redis_streams()
 
 
-    async def consolidated_streaming_callback(self, event: SessionEvent) -> None:
+    async def consolidated_streaming_callback(self, event: SessionEvent, redis_stream_id: Optional[str] = None) -> None:
         """
         Process and route various types of session events through appropriate handlers.
-
+        
         This method serves as the central event processing hub, handling various event
         types including text updates, tool calls, media rendering, and completion status.
         It formats the events into JSON payloads suitable for streaming to the client.
+        
+        Enhanced with Redis Streams support for distributed event processing while
+        maintaining backward compatibility with async queue fallback.
 
         Args:
             event: The session event to process, containing type and payload information.
+            redis_stream_id: Optional Redis Stream ID for distributed event publishing.
+                           Format: "{session_id}:{interaction_id}"
 
         Event Types Handled:
             - text_delta: Text content updates
@@ -943,11 +957,15 @@ class AgentBridge:
         Raises:
             Exception: Logs errors if event handlers fail, but does not re-raise.
         """
+        # Debug logging (commented out for performance)
         # try:
         #     self.logger.debug(
         #         f"Consolidated callback received event: {event.model_dump_json(exclude={'content_bytes'})}")
         # except Exception as e:
         #     self.logger.debug(f"Error serializing event {event.type}: {e}")
+
+        # Publish raw event to Redis Stream first (before processing)
+        await self._publish_to_redis_stream(event, redis_stream_id)
 
         # A simple dispatch dictionary that maps event types to handler methods.
         handlers = {
@@ -971,6 +989,8 @@ class AgentBridge:
         if handler:
             try:
                 payload = await handler(event)
+
+                # Always publish to async queue for backward compatibility and fallback
                 if payload is not None and hasattr(self, "_stream_queue"):
                     await self._stream_queue.put(payload)
 
@@ -979,11 +999,165 @@ class AgentBridge:
                         await self._stream_queue.put(payload)
                         await self._stream_queue.put(None)
 
-
             except Exception as e:
                 self.logger.error(f"Error in event handler {handler.__name__} for {event.type}: {str(e)}")
         else:
             self.logger.warning(f"Unhandled event type: {event.type}")
+
+    async def _publish_to_redis_stream(self, event: SessionEvent, redis_stream_id: Optional[str] = None) -> None:
+        """
+        Publish an event to Redis Stream if enabled and configured.
+        
+        This method handles the Redis Stream publishing with proper error handling
+        and fallback behavior. It will not raise exceptions to ensure the async
+        queue fallback mechanism continues to work.
+        
+        Args:
+            event: The SessionEvent to publish
+            redis_stream_id: Optional Redis Stream ID in format "{session_id}:{interaction_id}"
+        """
+        # Check if Redis Streams should be used
+        if not self._should_use_redis_streams(redis_stream_id):
+            return
+
+        try:
+            # Use the provided stream ID or fall back to current stream ID
+            stream_id = redis_stream_id or self._current_redis_stream_id
+
+            if stream_id and self.redis_stream_manager:
+                # Build the Redis Stream key using the configured prefix
+                redis_stream_key = f"{settings.STREAM_PREFIX}{stream_id}"
+
+                # Publish the raw event to Redis Stream
+                message_id = await self.redis_stream_manager.publish_event(redis_stream_key, event)
+
+                # Log success (debug level to avoid spam)
+                self.logger.debug(f"Published event {event.type} to Redis Stream {redis_stream_key}: {message_id}")
+
+        except Exception as e:
+            # Log error but don't re-raise to ensure async queue fallback works
+            self.logger.error(f"Failed to publish event {event.type} to Redis Stream: {e}")
+            # Could increment a metric here for monitoring
+
+    def _should_use_redis_streams(self, redis_stream_id: Optional[str] = None) -> bool:
+        """
+        Determine if Redis Streams should be used for event publishing.
+        
+        Args:
+            redis_stream_id: Optional Redis Stream ID to check
+            
+        Returns:
+            bool: True if Redis Streams should be used, False otherwise
+        """
+        return (
+            self._redis_streams_enabled and
+            self.redis_stream_manager is not None and
+            (redis_stream_id is not None or self._current_redis_stream_id is not None)
+        )
+
+    async def initialize_redis_streams(self) -> None:
+        """
+        Initialize Redis Streams functionality if enabled in configuration.
+        
+        This method should be called during the bridge initialization process.
+        It will attempt to set up the Redis Stream manager and enable Redis
+        Streams functionality if the configuration allows it.
+        """
+        # Check if Redis Streams are enabled via configuration
+        use_redis_streams = getattr(settings, 'USE_REDIS_STREAMS', False)
+
+        if not use_redis_streams:
+            self.logger.info("Redis Streams disabled via configuration")
+            return
+
+        try:
+            # Build Redis URL from settings
+            redis_url = self._build_redis_url()
+
+            # Initialize the Redis Stream manager (class-level)
+            await RedisStreamManager.initialize(redis_url)
+
+            # Set instance variables
+            self.redis_stream_manager = RedisStreamManager
+            self._redis_streams_enabled = True
+
+            self.logger.info(f"Redis Streams initialized successfully: {redis_url}")
+
+        except Exception as e:
+            self.logger.error(f"Failed to initialize Redis Streams: {e}")
+            self.logger.info("Continuing with async queue fallback only")
+            self._redis_streams_enabled = False
+
+    def _build_redis_url(self) -> str:
+        """
+        Build Redis URL from environment settings.
+        
+        Returns:
+            str: Complete Redis URL for connection
+        """
+        # Build basic URL
+        redis_url = f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}"
+
+        # Add authentication if configured
+        if settings.REDIS_PASSWORD:
+            if settings.REDIS_USERNAME:
+                redis_url = f"redis://{settings.REDIS_USERNAME}:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}"
+            else:
+                redis_url = f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}"
+
+        return redis_url
+
+    def set_redis_stream_id(self, session_id: str, interaction_id: str) -> None:
+        """
+        Set the current Redis Stream ID for event publishing.
+        
+        Args:
+            session_id: Session identifier
+            interaction_id: Interaction identifier
+        """
+        self._current_redis_stream_id = f"{session_id}:{interaction_id}"
+        self.logger.debug(f"Set Redis Stream ID: {self._current_redis_stream_id}")
+
+    def clear_redis_stream_id(self) -> None:
+        """
+        Clear the current Redis Stream ID.
+        """
+        self._current_redis_stream_id = None
+        self.logger.debug("Cleared Redis Stream ID")
+
+    def _create_redis_aware_callback(self, redis_stream_id: Optional[str]):
+        """
+        Create a callback wrapper that includes Redis Stream ID.
+        
+        This method creates a callback function that preserves the existing
+        logging and event handling while adding Redis Stream support.
+        
+        Args:
+            redis_stream_id: The Redis Stream ID to use for publishing
+            
+        Returns:
+            Callback function compatible with agent_c streaming interface
+        """
+        # Create the callback wrapper that includes Redis Stream ID
+        async def redis_aware_callback(event: SessionEvent):
+            """
+            Callback wrapper that adds Redis Stream support to consolidated_streaming_callback.
+            """
+            try:
+                # Call the existing consolidated callback with Redis Stream ID
+                await self.consolidated_streaming_callback(event, redis_stream_id)
+            except Exception as e:
+                self.logger.error(f"Error in Redis-aware callback: {e}")
+                # Don't re-raise to avoid breaking the chat flow
+
+        # Use the existing logging wrapper but with our Redis-aware callback
+        from agent_c.util.event_session_logger_factory import create_with_callback
+
+        return create_with_callback(
+            log_base_dir=os.getenv('AGENT_LOG_DIR', DEFAULT_LOG_DIR),
+            callback=redis_aware_callback,  # Our Redis-aware callback
+            include_system_prompt=True
+        )
 
     async def stream_chat(
         self,
@@ -998,8 +1172,11 @@ class AgentBridge:
         - Session updates
         - Custom prompt integration
         - Message processing
-        - Response streaming
+        - Response streaming via Redis Streams or async queue fallback
         - Event handling
+
+        Enhanced with Redis Streams support for distributed event processing while
+        maintaining backward compatibility with async queue fallback.
 
         Args:
             user_message (str): The message from the user to process
@@ -1022,6 +1199,14 @@ class AgentBridge:
 
         queue = asyncio.Queue()
         self._stream_queue = queue  # Make the queue available to the callback
+
+        # Generate unique interaction ID for this chat session
+        interaction_id = str(uuid.uuid4())
+        session_id = self.chat_session.session_id
+        redis_stream_id = f"{session_id}:{interaction_id}"
+
+        # Set up Redis Stream ID for this interaction
+        self.set_redis_stream_id(session_id, interaction_id)
 
         try:
             await self.session_manager.update()
@@ -1060,7 +1245,7 @@ class AgentBridge:
                 "prompt_metadata": prompt_metadata,
                 "output_format": DEFAULT_OUTPUT_FORMAT,
                 "client_wants_cancel": client_wants_cancel,
-                "streaming_callback": self.streaming_callback_with_logging,
+                "streaming_callback": self._create_redis_aware_callback(self._current_redis_stream_id),
                 'tool_call_context': {'active_agent': self.chat_session.agent_config},
                 'prompt_builder': PromptBuilder(sections=agent_sections)
             }
@@ -1090,50 +1275,39 @@ class AgentBridge:
                 self.agent_runtime.chat(**full_params)
             )
 
-            while True:
+            # Determine which consumption method to use
+            use_redis_streams = self._should_use_redis_streams(redis_stream_id)
+
+            if use_redis_streams:
+                self.logger.debug(f"Using Redis Streams for consumption: {redis_stream_id}")
                 try:
-                    try:
-                        timeout = getattr(settings, "CALLBACK_TIMEOUT")  # Get timeout from settings with fallback
-                        #content = await asyncio.wait_for(queue.get(), timeout=timeout)
-                        content = await queue.get()
-                        if content is None:
-                            self.logger.info("Received stream termination signal")
+                    # Consume from Redis Streams
+                    async for content in self._consume_redis_stream_events(redis_stream_id, client_wants_cancel):
+                        if content is not None:
+                            yield content
+                        else:
+                            self.logger.info("Received Redis Stream termination signal")
                             break
-                        # self.logger.info(f"Yielding chunk: {content.replace("\n","")}")
-                        yield content
-                        queue.task_done()
-                    except asyncio.TimeoutError:
-                        timeout_msg =f"Timeout waiting for stream content to occur in agent_bridge.py:stream_chat. Waiting for stream surpassed {timeout} seconds, terminating stream."
-                        self.logger.warning(timeout_msg)
-                        yield json.dumps({
-                            "type": "error",
-                            "data": timeout_msg
-                        }) + "\n"
-                        break
-                    except asyncio.CancelledError as e:
-                        error_type = type(e).__name__
-                        error_traceback = traceback.format_exc()
-                        cancelled_msg = f"Asyncio Cancelled error in agent_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}"
-                        self.logger.error(cancelled_msg)
-                        yield json.dumps({
-                            "type": "error",
-                            "data": cancelled_msg
-                        }) + "\n"
-                        break
                 except Exception as e:
-                    error_type = type(e).__name__
-                    error_traceback = traceback.format_exc()
-                    unexpected_msg = f"Unexpected error in stream processing: {error_type}: {str(e)}\n{error_traceback}"
-                    self.logger.error(unexpected_msg)
-                    # Yield error message and break
-                    yield json.dumps({"type": "error", "data": unexpected_msg}) + "\n"
-                    break
+                    self.logger.error(f"Redis Stream consumption failed, falling back to async queue: {e}")
+                    # Fall back to async queue consumption
+                    use_redis_streams = False
+
+            if not use_redis_streams:
+                self.logger.debug("Using async queue for consumption (fallback or disabled)")
+                # Consume from async queue (original implementation)
+                async for content in self._consume_async_queue_events(queue, client_wants_cancel):
+                    if content is not None:
+                        yield content
+                    else:
+                        self.logger.info("Received async queue termination signal")
+                        break
 
             await chat_task
             await self.session_manager.flush(self.chat_session.session_id)
 
         except Exception as e:
-            self.logger.exception (f"Error in stream_chat: {e}", exc_info=True)
+            self.logger.exception(f"Error in stream_chat: {e}", exc_info=True)
             error_type = type(e).__name__
             error_traceback = traceback.format_exc()
             self.logger.error(f"Error in event_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}")
@@ -1142,6 +1316,9 @@ class AgentBridge:
                 "data": f"Error in event_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}"
             }) + "\n"
         finally:
+            # Clear Redis Stream ID for this interaction
+            self.clear_redis_stream_id()
+
             # Drain any remaining items in the queue.
             while not queue.empty():
                 try:
@@ -1150,9 +1327,163 @@ class AgentBridge:
                 except asyncio.QueueEmpty:
                     break
 
+    async def _consume_redis_stream_events(self, redis_stream_id: str, client_wants_cancel: threading.Event) -> AsyncGenerator[Optional[str], None]:
+        """
+        Consume events from Redis Stream.
+
+        Args:
+            redis_stream_id: Redis Stream ID in format "{session_id}:{interaction_id}"
+            client_wants_cancel: Event to signal cancellation
+
+        Yields:
+            Optional[str]: JSON-formatted event payloads or None for termination
+        """
+        if not self.redis_stream_manager:
+            self.logger.error("Redis Stream manager not available for consumption")
+            return
+
+        # Parse session and interaction IDs from redis_stream_id
+        try:
+            session_id, interaction_id = redis_stream_id.split(':', 1)
+        except ValueError:
+            self.logger.error(f"Invalid Redis Stream ID format: {redis_stream_id}")
+            return
+
+        # Build the Redis Stream key using the configured prefix
+        redis_stream_key = f"{settings.STREAM_PREFIX}{redis_stream_id}"
+
+        self.logger.debug(f"Starting Redis Stream consumption: {redis_stream_key}")
+
+        try:
+            # Consume events from Redis Stream
+            consumer_name = f"bridge_{session_id}_{interaction_id}"
+
+            async for event in self.redis_stream_manager.consume_events(
+                stream_id=redis_stream_key,
+                consumer_group="agent_bridge",
+                consumer_name=consumer_name,
+                batch_size=10,
+                poll_interval=0.1
+            ):
+                # Check for cancellation
+                if client_wants_cancel.is_set():
+                    self.logger.debug("Client requested cancellation during Redis Stream consumption")
+                    break
+
+                # Process the event and convert to client format
+                try:
+                    processed_payload = await self._process_redis_stream_event(event)
+                    if processed_payload:
+                        yield processed_payload
+
+                    # Check for interaction end
+                    if event.type == "interaction" and not getattr(event, 'started', True):
+                        self.logger.debug("Received interaction end event from Redis Stream")
+                        yield None  # Signal termination
+                        break
+
+                except Exception as e:
+                    self.logger.error(f"Error processing Redis Stream event: {e}")
+                    continue
+
+        except Exception as e:
+            self.logger.error(f"Redis Stream consumption error: {e}")
+            raise
+
+    async def _process_redis_stream_event(self, event) -> Optional[str]:
+        """
+        Process a Redis Stream event and convert to client format.
+
+        Args:
+            event: SessionEvent from Redis Stream
+
+        Returns:
+            Optional[str]: JSON-formatted payload or None if event should be skipped
+        """
+        try:
+            # Use the existing event handlers to process the event
+            # This ensures consistent formatting between Redis and queue consumption
+            handlers = {
+                "text_delta": self._handle_text_delta,
+                "tool_call": self._handle_tool_call,
+                "render_media": self._handle_render_media,
+                "history": self._handle_history,
+                "audio_delta": self._handle_audio_delta,
+                "completion": self._handle_completion,
+                "interaction": self._handle_interaction,
+                "thought_delta": self._handle_thought_delta,
+                "tool_call_delta": self._handle_tool_call_delta,
+                "tool_select_delta": self._handle_tool_select_delta,
+                "message": self._handle_message,
+                "system_message": self._handle_system_message,
+            }
+
+            handler = handlers.get(event.type)
+            if handler:
+                return await handler(event)
+            elif event.type in ["history_delta", "complete_thought"]:
+                # These events are ignored in the original implementation
+                return None
+            else:
+                self.logger.warning(f"Unhandled Redis Stream event type: {event.type}")
+                return None
+
+        except Exception as e:
+            self.logger.error(f"Error processing Redis Stream event {event.type}: {e}")
+            return None
+
+    async def _consume_async_queue_events(self, queue: asyncio.Queue, client_wants_cancel: threading.Event) -> AsyncGenerator[Optional[str], None]:
+        """
+        Consume events from async queue (fallback method).
+
+        Args:
+            queue: The asyncio Queue to consume from
+            client_wants_cancel: Event to signal cancellation
+
+        Yields:
+            Optional[str]: JSON-formatted event payloads or None for termination
+        """
+        while True:
+            try:
+                timeout = getattr(settings, "CALLBACK_TIMEOUT", 30)  # Get timeout from settings with fallback
+                # For now, don't use timeout as it causes issues
+                content = await queue.get()
+                if content is None:
+                    self.logger.info("Received async queue termination signal")
+                    yield None
+                    break
+                yield content
+                queue.task_done()
+            except asyncio.TimeoutError:
+                timeout_msg = f"Timeout waiting for stream content to occur in agent_bridge.py:stream_chat. Waiting for stream surpassed {timeout} seconds, terminating stream."
+                self.logger.warning(timeout_msg)
+                yield json.dumps({
+                    "type": "error",
+                    "data": timeout_msg
+                }) + "\n"
+                break
+            except asyncio.CancelledError as e:
+                error_type = type(e).__name__
+                error_traceback = traceback.format_exc()
+                cancelled_msg = f"Asyncio Cancelled error in agent_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}"
+                self.logger.error(cancelled_msg)
+                yield json.dumps({
+                    "type": "error",
+                    "data": cancelled_msg
+                }) + "\n"
+                break
+            except Exception as e:
+                error_type = type(e).__name__
+                error_traceback = traceback.format_exc()
+                unexpected_msg = f"Unexpected error in async queue processing: {error_type}: {str(e)}\n{error_traceback}"
+                self.logger.error(unexpected_msg)
+                # Yield error message and break
+                yield json.dumps({"type": "error", "data": unexpected_msg}) + "\n"
+                break
+
     async def process_files_for_message(
-        self, 
-        file_ids: List[str], 
+        self,
+        file_ids: List[str],
         session_id: str
     ) -> List[Union[FileInput, ImageInput, AudioInput]]:
         """
@@ -1168,7 +1499,7 @@ class AgentBridge:
 
         Returns:
             List of input objects for the agent, typed as FileInput, ImageInput, or AudioInput.
-            
+
         Raises:
             Exception: If file processing fails (logged but not re-raised).
         """

@@ -17,6 +17,7 @@ from agent_c.toolsets.tool_chest import ToolChest
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.util.logging_utils import LoggingManager
 from agent_c.util.token_counter import TokenCounter
+from agent_c.streaming.redis_stream_manager import RedisStreamManager
 
 
 class BaseAgent:
@@ -83,6 +84,10 @@ class BaseAgent:
 
         if TokenCounter.counter() is None:
             TokenCounter.set_counter(self.token_counter)
+
+        # Redis Streams integration
+        self.redis_stream_manager: Optional[RedisStreamManager] = None
+        self._current_stream_id: Optional[str] = None
 
     @classmethod
     def client(cls, **opts):
@@ -164,37 +169,119 @@ class BaseAgent:
         """
         Raise a chat event to the event stream.
 
-        Events are sent to the streaming_callback if configured. For event logging,
-        use EventSessionLogger as your streaming_callback.
+        Events are sent to the streaming_callback if configured and published to 
+        Redis Streams if available. Supports backward compatibility and graceful
+        fallback when Redis is unavailable.
         
         Args:
             event: The event to raise
             streaming_callback: Optional callback to handle the event
             stream_id: Optional Redis stream ID for distributed event tracking
         """
-        if streaming_callback is None:
-            streaming_callback = self.streaming_callback
+        # Use provided streaming callback or default
+        callback = streaming_callback or self.streaming_callback
+        
+        # Use provided stream_id or current stream_id
+        effective_stream_id = stream_id or self._current_stream_id
 
-        # Attach stream_id to event if provided
-        if stream_id is not None and hasattr(event, 'set_stream_id'):
+        # Attach stream_id to event if provided and event supports it
+        if effective_stream_id is not None and hasattr(event, 'set_stream_id'):
             try:
-                event.set_stream_id(stream_id)
+                event.set_stream_id(effective_stream_id)
             except Exception as e:
                 self.logger.warning(f"Failed to set stream_id on event: {e}")
 
-        if streaming_callback is not None:
+        # Publish to Redis Streams if configured and available
+        if self.redis_stream_manager and effective_stream_id:
             try:
-                await streaming_callback(event)
+                session_id, interaction_id = self._parse_stream_id(effective_stream_id)
+                await self.redis_stream_manager.publish_event(
+                    event_type=getattr(event, 'type', 'unknown'),
+                    event_data=event,
+                    session_id=session_id,
+                    interaction_id=interaction_id,
+                    source="BaseAgent"
+                )
+            except Exception as e:
+                # Log error but don't fail the event - Redis failures shouldn't break the agent
+                self.logger.error(f"Failed to publish event to Redis Stream: {e}")
+                # Could optionally raise a system event about the Redis failure
+                # but we'll keep it simple for now
+
+        # Always call the streaming callback for backward compatibility
+        if callback is not None:
+            try:
+                await callback(event)
             except Exception as e:
                 self.logger.exception(
                     f"Streaming callback error for event: {e}. Event Type: {getattr(event, 'type', 'unknown')}")
                 # Log internal error as system event
-                await self._raise_system_event(
-                    f"Streaming callback error: {str(e)}",
-                    severity="error",
-                    error_type="streaming_callback_error",
-                    original_event_type=getattr(event, 'type', 'unknown')
-                )
+                # Note: We need to be careful about recursion here since this method
+                # might be called during error handling
+                try:
+                    await self._raise_system_event(
+                        f"Streaming callback error: {str(e)}",
+                        severity="error",
+                        error_type="streaming_callback_error",
+                        original_event_type=getattr(event, 'type', 'unknown')
+                    )
+                except Exception as inner_e:
+                    # Last resort - just log to prevent infinite recursion
+                    self.logger.error(f"Failed to raise system event for callback error: {inner_e}")
+
+    def set_redis_stream_manager(self, redis_manager: RedisStreamManager):
+        """
+        Set Redis Stream manager for event publishing.
+        
+        Args:
+            redis_manager: RedisStreamManager instance
+        """
+        self.redis_stream_manager = redis_manager
+    
+    def set_current_stream_id(self, session_id: str, interaction_id: str):
+        """
+        Set current stream ID for event publishing.
+        
+        Args:
+            session_id: Session identifier
+            interaction_id: Interaction identifier
+        """
+        self._current_stream_id = f"{session_id}:{interaction_id}"
+    
+    def _parse_stream_id(self, stream_id: str) -> Tuple[str, str]:
+        """
+        Parse session_id and interaction_id from stream_id.
+        
+        Args:
+            stream_id: Stream ID in format "session_id:interaction_id"
+            
+        Returns:
+            Tuple of (session_id, interaction_id)
+        """
+        if ':' in stream_id:
+            parts = stream_id.split(':', 1)
+            return parts[0], parts[1]
+        return stream_id, "default"
+    
+    def _get_current_stream_id(self) -> Optional[str]:
+        """
+        Get the current stream ID.
+        
+        Returns:
+            Current stream ID or None
+        """
+        return self._current_stream_id
+    
+    def _should_use_redis_streams(self) -> bool:
+        """
+        Check if Redis Streams should be used for event publishing.
+        
+        Returns:
+            True if Redis Streams are configured and available
+        """
+        return (self.redis_stream_manager is not None and 
+                self._current_stream_id is not None and
+                self.redis_stream_manager.is_healthy)
 
     async def _log_internal_error(self, error_type, error_message, related_event=None):
         """
@@ -219,99 +306,139 @@ class BaseAgent:
             self.logger.exception(f"Failed to log internal error as event: {e}")
             self.logger.error(f"Original error - {error_type}: {error_message}")
 
-    async def _raise_system_event(self, content: str, severity: str = "error", **data):
+    async def _raise_system_event(self, content: str, severity: str = "error", stream_id: Optional[str] = None, **data):
         """
         Raise a system event to the event stream.
         """
         streaming_callback = data.pop('streaming_callback', None)
+        effective_stream_id = stream_id or self._current_stream_id
         await self._raise_event(SystemMessageEvent(role="system", severity=severity, content=content,
                                                    session_id=data.get("session_id", "none")),
-                                                   streaming_callback=streaming_callback)
+                                                   streaming_callback=streaming_callback,
+                                                   stream_id=effective_stream_id)
 
-    async def _raise_history_delta(self, messages, **data):
+    async def _raise_history_delta(self, messages, stream_id: Optional[str] = None, **data):
         """
-        Raise a system event to the event stream.
+        Raise a history delta event to the event stream.
         """
         data['role'] = data.get('role', 'assistant')
         data['session_id'] = data.get("session_id", "none")
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(HistoryDeltaEvent(messages=messages, **data), streaming_callback=streaming_callback)
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(HistoryDeltaEvent(messages=messages, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
 
-    async def _raise_completion_start(self, comp_options, **data):
+    async def _raise_completion_start(self, comp_options, stream_id: Optional[str] = None, **data):
         """
         Raise a completion start event to the event stream.
         """
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
         streaming_callback = data.pop('streaming_callback', None)
+        effective_stream_id = stream_id or self._current_stream_id
 
         await self._raise_event(CompletionEvent(running=True, completion_options=completion_options, **data),
-                                streaming_callback=streaming_callback)
+                                streaming_callback=streaming_callback,
+                                stream_id=effective_stream_id)
 
-    async def _raise_completion_end(self, comp_options, **data):
+    async def _raise_completion_end(self, comp_options, stream_id: Optional[str] = None, **data):
         """
-        Raise a completion start event to the event stream.
+        Raise a completion end event to the event stream.
         """
         # logging.debug(f"_raise_completion_end called with stop_reason={data.get('stop_reason', 'none')}")
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
         streaming_callback = data.pop('streaming_callback', None)
+        effective_stream_id = stream_id or self._current_stream_id
         # logging.debug(f"Creating CompletionEvent with running=False, data={data}")
         event = CompletionEvent(running=False, completion_options=completion_options, **data)
         # logging.debug(f"CompletionEvent created: type={event.type}, stop_reason={getattr(event, 'stop_reason', 'none')}")
 
         # logging.debug(f"About to raise CompletionEvent through _raise_event")
-        await self._raise_event(event, streaming_callback=streaming_callback)
+        await self._raise_event(event, streaming_callback=streaming_callback, stream_id=effective_stream_id)
         # logging.debug(f"Completed raising CompletionEvent")
 
-    async def _raise_tool_call_start(self, tool_calls, **data):
+    async def _raise_tool_call_start(self, tool_calls, stream_id: Optional[str] = None, **data):
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(ToolCallEvent(active=True, tool_calls=tool_calls, **data), streaming_callback=streaming_callback )
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(ToolCallEvent(active=True, tool_calls=tool_calls, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
 
-    async def _raise_system_prompt(self, prompt: str, **data):
+    async def _raise_system_prompt(self, prompt: str, stream_id: Optional[str] = None, **data):
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(SystemPromptEvent(content=prompt, **data), streaming_callback=streaming_callback )
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(SystemPromptEvent(content=prompt, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
 
-    async def _raise_user_request(self, request: str, **data):
+    async def _raise_user_request(self, request: str, stream_id: Optional[str] = None, **data):
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(UserRequestEvent(data={"message": request}, **data), streaming_callback=streaming_callback )
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(UserRequestEvent(data={"message": request}, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
 
-    async def _raise_tool_call_delta(self, tool_calls, **data):
+    async def _raise_tool_call_delta(self, tool_calls, stream_id: Optional[str] = None, **data):
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(ToolCallDeltaEvent(tool_calls=tool_calls, **data), streaming_callback=streaming_callback)
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(ToolCallDeltaEvent(tool_calls=tool_calls, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
 
-    async def _raise_tool_call_end(self, tool_calls, tool_results, **data):
+    async def _raise_tool_call_end(self, tool_calls, tool_results, stream_id: Optional[str] = None, **data):
         streaming_callback = data.pop('streaming_callback', None)
+        effective_stream_id = stream_id or self._current_stream_id
         await self._raise_event(ToolCallEvent(active=False, tool_calls=tool_calls,
                                               tool_results=tool_results,  **data),
-                                              streaming_callback=streaming_callback)
+                                              streaming_callback=streaming_callback,
+                                              stream_id=effective_stream_id)
 
-    async def _raise_interaction_start(self, **data):
+    async def _raise_interaction_start(self, stream_id: Optional[str] = None, **data):
         iid = data.get('interaction_id',MnemonicSlugs.generate_slug(3))
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(InteractionEvent(started=True, id=iid, **data), streaming_callback=streaming_callback)
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(InteractionEvent(started=True, id=iid, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
         return iid
 
-    async def _raise_interaction_end(self, **data):
+    async def _raise_interaction_end(self, stream_id: Optional[str] = None, **data):
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(InteractionEvent(started=False, **data), streaming_callback=streaming_callback)
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(InteractionEvent(started=False, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
 
-    async def _raise_text_delta(self, content: str, **data):
+    async def _raise_text_delta(self, content: str, stream_id: Optional[str] = None, **data):
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(TextDeltaEvent(content=content, **data), streaming_callback=streaming_callback)
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(TextDeltaEvent(content=content, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
 
-    async def _raise_thought_delta(self, content: str, **data):
+    async def _raise_thought_delta(self, content: str, stream_id: Optional[str] = None, **data):
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(ThoughtDeltaEvent(content=content, **data), streaming_callback=streaming_callback)
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(ThoughtDeltaEvent(content=content, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
 
-    async def _raise_complete_thought(self, content: str, **data):
+    async def _raise_complete_thought(self, content: str, stream_id: Optional[str] = None, **data):
         data['role'] = data.get('role', 'assistant')
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(CompleteThoughtEvent(content=content, **data), streaming_callback=streaming_callback)
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(CompleteThoughtEvent(content=content, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
 
-    async def _raise_history_event(self, messages: List[dict[str, Any]], **data):
+    async def _raise_history_event(self, messages: List[dict[str, Any]], stream_id: Optional[str] = None, **data):
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(HistoryEvent(messages=messages, **data), streaming_callback=streaming_callback)
+        effective_stream_id = stream_id or self._current_stream_id
+        await self._raise_event(HistoryEvent(messages=messages, **data), 
+                               streaming_callback=streaming_callback,
+                               stream_id=effective_stream_id)
 
     async def _exponential_backoff(self, delay: int) -> None:
         """

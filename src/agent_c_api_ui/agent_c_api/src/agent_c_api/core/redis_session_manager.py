@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Any, Set, Union
 from datetime import datetime, timedelta
 
 import redis.asyncio as redis
-from agent_c.chat import ChatSession
+from agent_c.chat import ChatSessionManager
 from agent_c.models.agent_config import AgentConfiguration
 from agent_c.models import ChatEvent
 from agent_c_api.config.env_config import settings
@@ -88,7 +88,7 @@ class RedisSessionManager:
         )
         
         # Local cache for performance (optional)
-        self._local_cache: Dict[str, ChatSession] = {}
+        self._local_cache: Dict[str, ChatSessionManager] = {}
         self._session_keys: Set[str] = set()  # Track active session IDs
         
         logger.info(f"RedisSessionManager initialized with prefix: {prefix}")
@@ -137,7 +137,7 @@ class RedisSessionManager:
         unique_id = uuid.uuid4().hex[:8]    # Short UUID
         return f"{timestamp}-{unique_id}"
     
-    async def new_session(self, session: ChatSession) -> None:
+    async def new_session(self, session: ChatSessionManager) -> None:
         """
         Create a new chat session and store it in Redis.
         
@@ -169,7 +169,7 @@ class RedisSessionManager:
             logger.error(f"Error creating session in Redis: {e}")
             raise
     
-    async def get_session(self, session_id: str) -> ChatSession:
+    async def get_session(self, session_id: str) -> ChatSessionManager:
         """
         Retrieve a session from Redis by ID.
         
