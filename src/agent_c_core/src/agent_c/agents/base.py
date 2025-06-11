@@ -17,7 +17,9 @@ from agent_c.toolsets.tool_chest import ToolChest
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.util.logging_utils import LoggingManager
 from agent_c.util.token_counter import TokenCounter
-from agent_c.streaming.redis_stream_manager import RedisStreamManager
+from agent_c.streaming.redis_stream_manager import RedisStreamManager, RedisConfig
+from agent_c.streaming.redis_health_monitor import RedisHealthMonitor
+from agent_c.streaming.event_handler_mode_manager import EventHandlerModeManager, EventContext, HandlerMode
 
 
 class BaseAgent:
@@ -45,10 +47,8 @@ class BaseAgent:
             A PromptBuilder to create system prompts for the agent
         streaming_callback: Optional[Callable[..., None]], default is None
             A callback to be called for chat events
-        concurrency_limit: int, default is 3
-            A semaphore to limit the number of concurrent operations.
-        max_delay: int, default is 10
-            Maximum delay for exponential backoff.
+        redis_config: Optional[RedisConfig], default is None
+            Redis configuration for resilient event streaming.
         """
         self.model_name: str = kwargs.get("model_name")
         self.temperature: float = kwargs.get("temperature", 0.5)
@@ -85,9 +85,21 @@ class BaseAgent:
         if TokenCounter.counter() is None:
             TokenCounter.set_counter(self.token_counter)
 
-        # Redis Streams integration
+        # Redis Streams resilient integration
+        self.redis_config: Optional[RedisConfig] = kwargs.get("redis_config", None)
         self.redis_stream_manager: Optional[RedisStreamManager] = None
+        self.redis_health_monitor: Optional[RedisHealthMonitor] = None
+        self.event_handler_mode_manager: Optional[EventHandlerModeManager] = None
         self._current_stream_id: Optional[str] = None
+        
+        # Initialize resilient Redis components if configuration provided
+        if self.redis_config or kwargs.get("enable_redis_streams", False):
+            try:
+                self._initialize_resilient_redis()
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize resilient Redis components: {e}")
+                # Graceful fallback - continue without Redis
+                self.redis_config = None
 
     @classmethod
     def client(cls, **opts):
@@ -167,76 +179,210 @@ class BaseAgent:
 
     async def _raise_event(self, event, streaming_callback: Optional[Callable[[ChatEvent], Awaitable[None]]] = None, stream_id: Optional[str] = None):
         """
-        Raise a chat event to the event stream.
+        Raise a chat event to the event stream using resilient Redis implementation.
 
-        Events are sent to the streaming_callback if configured and published to 
-        Redis Streams if available. Supports backward compatibility and graceful
-        fallback when Redis is unavailable.
+        Events are routed through the EventHandlerModeManager which handles:
+        - Dynamic switching between Redis and async queue modes
+        - Automatic failover when Redis is unavailable
+        - Event buffering during mode transitions
+        - Performance optimizations and error recovery
         
         Args:
             event: The event to raise
             streaming_callback: Optional callback to handle the event
             stream_id: Optional Redis stream ID for distributed event tracking
         """
-        # Use provided streaming callback or default
-        callback = streaming_callback or self.streaming_callback
+        start_time = asyncio.get_event_loop().time()
         
-        # Use provided stream_id or current stream_id
-        effective_stream_id = stream_id or self._current_stream_id
+        try:
+            # Use provided streaming callback or default
+            callback = streaming_callback or self.streaming_callback
+            
+            # Use provided stream_id or current stream_id
+            effective_stream_id = stream_id or self._current_stream_id
 
-        # Attach stream_id to event if provided and event supports it
-        if effective_stream_id is not None and hasattr(event, 'set_stream_id'):
-            try:
-                event.set_stream_id(effective_stream_id)
-            except Exception as e:
-                self.logger.warning(f"Failed to set stream_id on event: {e}")
+            # Attach stream_id to event if provided and event supports it
+            if effective_stream_id is not None and hasattr(event, 'set_stream_id'):
+                try:
+                    event.set_stream_id(effective_stream_id)
+                except Exception as e:
+                    self.logger.warning(f"Failed to set stream_id on event: {e}")
 
-        # Publish to Redis Streams if configured and available
-        if self.redis_stream_manager and effective_stream_id:
-            try:
+            # Prepare event context for resilient event handling
+            event_context = None
+            if effective_stream_id:
                 session_id, interaction_id = self._parse_stream_id(effective_stream_id)
-                await self.redis_stream_manager.publish_event(
-                    event_type=getattr(event, 'type', 'unknown'),
-                    event_data=event,
+                event_context = EventContext(
                     session_id=session_id,
                     interaction_id=interaction_id,
-                    source="BaseAgent"
+                    stream_key=f"agent_events:{session_id}:{interaction_id}"
                 )
-            except Exception as e:
-                # Log error but don't fail the event - Redis failures shouldn't break the agent
-                self.logger.error(f"Failed to publish event to Redis Stream: {e}")
-                # Could optionally raise a system event about the Redis failure
-                # but we'll keep it simple for now
 
-        # Always call the streaming callback for backward compatibility
-        if callback is not None:
-            try:
-                await callback(event)
-            except Exception as e:
-                self.logger.exception(
-                    f"Streaming callback error for event: {e}. Event Type: {getattr(event, 'type', 'unknown')}")
-                # Log internal error as system event
-                # Note: We need to be careful about recursion here since this method
-                # might be called during error handling
+            # Publish through resilient event handler if available
+            if self.event_handler_mode_manager and event_context:
                 try:
-                    await self._raise_system_event(
-                        f"Streaming callback error: {str(e)}",
-                        severity="error",
-                        error_type="streaming_callback_error",
-                        original_event_type=getattr(event, 'type', 'unknown')
+                    event_id = await self.event_handler_mode_manager.publish_event(
+                        event_type=getattr(event, 'type', 'unknown'),
+                        event_data=self._serialize_event_for_redis(event),
+                        context=event_context
                     )
-                except Exception as inner_e:
-                    # Last resort - just log to prevent infinite recursion
-                    self.logger.error(f"Failed to raise system event for callback error: {inner_e}")
+                    
+                    # Log successful publication for debugging
+                    if event_id:
+                        self.logger.debug(f"Event published successfully with ID: {event_id}")
+                        
+                except Exception as e:
+                    # The mode manager handles fallback internally, but log the error
+                    self.logger.error(f"Event handler mode manager failed: {e}")
+                    # Continue to callback - don't fail the entire event
+
+            # Call the streaming callback only if we're not using Redis Streams or exclusive mode isn't enabled
+            # When in REDIS mode with exclusive_callback_via_redis=True, events should ONLY go through Redis, not the callback
+            redis_exclusive_mode = (self.redis_config and getattr(self.redis_config, 'exclusive_callback_via_redis', False))
+            if callback is not None and (
+                not self.event_handler_mode_manager or 
+                self.event_handler_mode_manager.get_current_mode() != HandlerMode.REDIS or
+                not redis_exclusive_mode
+            ):
+                try:
+                    await callback(event)
+                except Exception as e:
+                    self.logger.exception(
+                        f"Streaming callback error for event: {e}. Event Type: {getattr(event, 'type', 'unknown')}")
+                    # Log internal error as system event (prevent recursion)
+                    try:
+                        if not getattr(event, 'type', '') == 'system_message':
+                            await self._raise_system_event(
+                                f"Streaming callback error: {str(e)}",
+                                severity="error",
+                                error_type="streaming_callback_error",
+                                original_event_type=getattr(event, 'type', 'unknown')
+                            )
+                    except Exception as inner_e:
+                        # Last resort - just log to prevent infinite recursion
+                        self.logger.error(f"Failed to raise system event for callback error: {inner_e}")
+            
+            # Performance monitoring
+            end_time = asyncio.get_event_loop().time()
+            duration_ms = (end_time - start_time) * 1000
+            if duration_ms > 100:  # Log slow events
+                self.logger.warning(f"Slow event processing: {duration_ms:.2f}ms for {getattr(event, 'type', 'unknown')}")
+                
+        except Exception as e:
+            # Catch-all error handling to prevent agent failure
+            self.logger.error(f"Critical error in _raise_event: {e}")
+            # Try to log as system event if possible
+            try:
+                await self._log_internal_error("raise_event_critical", str(e), event)
+            except:
+                # Last resort logging
+                self.logger.error(f"Failed to log critical _raise_event error: {e}") 
+    
+    def _serialize_event_for_redis(self, event) -> dict:
+        """
+        Serialize event for Redis storage.
+        
+        Args:
+            event: The event to serialize
+            
+        Returns:
+            Dict representation of the event
+        """
+        try:
+            # Try to use event's to_dict method if available
+            if hasattr(event, 'to_dict') and callable(getattr(event, 'to_dict')):
+                return event.to_dict()
+            
+            # Try to use event's dict representation
+            if hasattr(event, '__dict__'):
+                event_dict = event.__dict__.copy()
+                # Remove non-serializable items
+                return {k: v for k, v in event_dict.items() if isinstance(v, (str, int, float, bool, list, dict, type(None)))}
+            
+            # Fallback: basic event representation
+            return {
+                'type': getattr(event, 'type', 'unknown'),
+                'timestamp': getattr(event, 'timestamp', asyncio.get_event_loop().time()),
+                'content': str(event) if hasattr(event, '__str__') else 'unknown'
+            }
+            
+        except Exception as e:
+            self.logger.warning(f"Failed to serialize event for Redis: {e}")
+            # Return minimal representation
+            return {
+                'type': getattr(event, 'type', 'unknown'),
+                'timestamp': asyncio.get_event_loop().time(),
+                'serialization_error': str(e)
+            }
 
     def set_redis_stream_manager(self, redis_manager: RedisStreamManager):
         """
         Set Redis Stream manager for event publishing.
         
+        This method provides backward compatibility while integrating with
+        the resilient Redis components.
+        
         Args:
             redis_manager: RedisStreamManager instance
         """
         self.redis_stream_manager = redis_manager
+        
+        # If resilient components are not initialized, try to integrate the provided manager
+        if not self.event_handler_mode_manager and redis_manager:
+            try:
+                # Extract or create Redis config from the manager
+                redis_config = getattr(redis_manager, 'redis_config', None)
+                if not redis_config:
+                    redis_config = RedisConfig()  # Use default config
+                
+                # Initialize resilient components with the provided manager
+                self.redis_config = redis_config
+                self._initialize_resilient_redis_with_manager(redis_manager)
+                
+            except Exception as e:
+                self.logger.warning(f"Failed to integrate provided Redis manager with resilient components: {e}")
+                # Continue with basic integration
+    
+    def _initialize_resilient_redis_with_manager(self, redis_manager: RedisStreamManager):
+        """
+        Initialize resilient Redis components using an existing RedisStreamManager.
+        
+        Args:
+            redis_manager: Existing RedisStreamManager to integrate
+        """
+        try:
+            # Use the provided manager
+            self.redis_stream_manager = redis_manager
+            
+            # Initialize health monitor
+            self.redis_health_monitor = RedisHealthMonitor(
+                redis_config=self.redis_config,
+                health_check_interval=30.0,
+                unhealthy_threshold=0.6,
+                degraded_threshold=0.3,
+                latency_threshold_ms=1000.0
+            )
+            
+            # Initialize mode manager
+            self.event_handler_mode_manager = EventHandlerModeManager(
+                redis_config=self.redis_config,
+                health_monitor=self.redis_health_monitor,
+                transition_timeout=30.0,
+                buffer_max_size=1000,
+                enable_metrics=True
+            )
+            
+            # Initialize components
+            if self.event_handler_mode_manager.initialize():
+                self.redis_health_monitor.start_monitoring()
+                self.logger.info("Resilient Redis components integrated successfully with existing manager")
+            else:
+                raise RuntimeError("Failed to initialize mode manager with existing Redis manager")
+                
+        except Exception as e:
+            self.logger.error(f"Failed to initialize resilient components with existing manager: {e}")
+            # Clean up on failure
+            self._cleanup_redis_components()
     
     def set_current_stream_id(self, session_id: str, interaction_id: str):
         """
@@ -279,9 +425,259 @@ class BaseAgent:
         Returns:
             True if Redis Streams are configured and available
         """
+        # Use the mode manager to determine if Redis should be used
+        if self.event_handler_mode_manager:
+            mode = self.event_handler_mode_manager.get_current_mode()
+            return mode.value == "REDIS"
+        
+        # Fallback to legacy check
         return (self.redis_stream_manager is not None and 
                 self._current_stream_id is not None and
-                self.redis_stream_manager.is_healthy)
+                self.redis_stream_manager.is_healthy())
+    
+    def _initialize_resilient_redis(self):
+        """
+        Initialize resilient Redis components.
+        
+        Sets up RedisConfig, RedisHealthMonitor, RedisStreamManager, and EventHandlerModeManager
+        with proper error handling and fallback mechanisms.
+        """
+        try:
+            # Use provided config or create default
+            if not self.redis_config:
+                self.redis_config = RedisConfig()
+            
+            # Validate configuration
+            self.redis_config.validate()
+            
+            # Initialize Redis Stream Manager with resilient config
+            self.redis_stream_manager = RedisStreamManager(redis_config=self.redis_config)
+            
+            # Initialize Redis Health Monitor
+            self.redis_health_monitor = RedisHealthMonitor(
+                redis_config=self.redis_config,
+                health_check_interval=self.redis_config.health_check_interval,
+                unhealthy_threshold=0.6,
+                degraded_threshold=0.3,
+                latency_threshold_ms=4000.0
+            )
+            
+            # Initialize Event Handler Mode Manager
+            self.event_handler_mode_manager = EventHandlerModeManager(
+                redis_config=self.redis_config,
+                health_monitor=self.redis_health_monitor,
+                transition_timeout=30.0,
+                buffer_max_size=1000,
+                enable_metrics=True
+            )
+            
+            # Initialize all components
+            if not self.event_handler_mode_manager.initialize():
+                raise RuntimeError("Failed to initialize EventHandlerModeManager")
+            
+            # Start health monitoring
+            self.redis_health_monitor.start_monitoring()
+            
+            self.logger.info(f"Resilient Redis components initialized successfully. "
+                           f"Mode: {self.event_handler_mode_manager.get_current_mode()}")
+                           
+        except Exception as e:
+            self.logger.error(f"Failed to initialize resilient Redis components: {e}")
+            # Clean up partial initialization
+            self._cleanup_redis_components()
+            raise
+    
+    def _cleanup_redis_components(self):
+        """
+        Clean up Redis components during initialization failure or shutdown.
+        """
+        try:
+            if self.redis_health_monitor:
+                self.redis_health_monitor.stop_monitoring()
+            if self.event_handler_mode_manager:
+                self.event_handler_mode_manager.shutdown()
+        except Exception as e:
+            self.logger.warning(f"Error during Redis component cleanup: {e}")
+        finally:
+            self.redis_health_monitor = None
+            self.event_handler_mode_manager = None
+            self.redis_stream_manager = None
+    
+    def update_redis_config(self, new_config: RedisConfig):
+        """
+        Update Redis configuration at runtime.
+        
+        Args:
+            new_config: New Redis configuration to apply
+        """
+        try:
+            # Validate new configuration
+            new_config.validate()
+            
+            # Store old config for rollback if needed
+            old_config = self.redis_config
+            
+            # Apply new configuration
+            self.redis_config = new_config
+            
+            # If resilient components are initialized, update them
+            if self.event_handler_mode_manager:
+                # Shutdown existing components
+                self._cleanup_redis_components()
+                
+                # Reinitialize with new config
+                self._initialize_resilient_redis()
+                
+                self.logger.info(f"Redis configuration updated successfully. "
+                               f"New mode: {self.event_handler_mode_manager.get_current_mode()}")
+            else:
+                self.logger.info("Redis configuration updated. Components will use new config on next initialization.")
+                
+        except Exception as e:
+            # Rollback on failure
+            if 'old_config' in locals():
+                self.redis_config = old_config
+            self.logger.error(f"Failed to update Redis configuration: {e}")
+            raise
+    
+    def get_redis_config(self) -> Optional[RedisConfig]:
+        """
+        Get current Redis configuration.
+        
+        Returns:
+            Current Redis configuration or None if not configured
+        """
+        return self.redis_config
+    
+    def get_redis_status(self) -> dict:
+        """
+        Get comprehensive Redis status information.
+        
+        Returns:
+            Dict containing Redis health, mode, and performance information
+        """
+        status = {
+            'configured': self.redis_config is not None,
+            'initialized': self.event_handler_mode_manager is not None,
+            'current_stream_id': self._current_stream_id
+        }
+        
+        if self.event_handler_mode_manager:
+            status.update({
+                'current_mode': self.event_handler_mode_manager.get_current_mode().value,
+                'is_transitioning': self.event_handler_mode_manager.is_transitioning(),
+                'transition_phase': self.event_handler_mode_manager.get_transition_phase().value,
+                'status_details': self.event_handler_mode_manager.get_status(),
+                'metrics': self.event_handler_mode_manager.get_metrics()
+            })
+        
+        if self.redis_health_monitor:
+            status.update({
+                'health_status': self.redis_health_monitor.status().value,
+                'is_healthy': self.redis_health_monitor.is_healthy(),
+                'circuit_breaker_open': self.redis_health_monitor.is_circuit_open(),
+                'health_summary': self.redis_health_monitor.get_health_summary()
+            })
+        
+        return status
+    
+    def set_redis_operation_mode(self, mode: str, reason: str = "Manual override") -> bool:
+        """
+        Manually set Redis operation mode.
+        
+        Args:
+            mode: Target mode ('REDIS', 'ASYNC', 'HYBRID')
+            reason: Reason for the mode change
+            
+        Returns:
+            True if mode change was successful
+        """
+        if not self.event_handler_mode_manager:
+            self.logger.warning("Cannot set operation mode: EventHandlerModeManager not initialized")
+            return False
+        
+        try:
+            target_mode = HandlerMode(mode.upper())
+            
+            success = self.event_handler_mode_manager.set_manual_override(target_mode, reason)
+            
+            if success:
+                self.logger.info(f"Redis operation mode set to {mode} manually. Reason: {reason}")
+            else:
+                self.logger.warning(f"Failed to set Redis operation mode to {mode}")
+                
+            return success
+            
+        except ValueError as e:
+            self.logger.error(f"Invalid operation mode '{mode}': {e}")
+            return False
+        except Exception as e:
+            self.logger.error(f"Error setting Redis operation mode: {e}")
+            return False
+    
+    def clear_redis_mode_override(self) -> None:
+        """
+        Clear manual Redis mode override and return to automatic mode management.
+        """
+        if self.event_handler_mode_manager:
+            self.event_handler_mode_manager.clear_manual_override()
+            self.logger.info("Redis mode override cleared. Returning to automatic mode management.")
+        else:
+            self.logger.warning("Cannot clear mode override: EventHandlerModeManager not initialized")
+    
+    def force_redis_health_check(self) -> bool:
+        """
+        Force an immediate Redis health check.
+        
+        Returns:
+            True if health check was successful
+        """
+        if self.redis_health_monitor:
+            return self.redis_health_monitor.force_health_check()
+        else:
+            self.logger.warning("Cannot force health check: RedisHealthMonitor not initialized")
+            return False
+    
+    def validate_redis_configuration(self) -> tuple[bool, str]:
+        """
+        Validate current Redis configuration.
+        
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        if not self.redis_config:
+            return False, "No Redis configuration provided"
+        
+        try:
+            self.redis_config.validate()
+            return True, "Configuration is valid"
+        except Exception as e:
+            return False, str(e)
+    
+    def shutdown_redis(self):
+        """
+        Gracefully shutdown Redis components.
+        
+        Should be called when the agent is being destroyed or no longer needs Redis.
+        """
+        try:
+            self._cleanup_redis_components()
+            self.redis_config = None
+            self._current_stream_id = None
+            self.logger.info("Redis components shut down successfully")
+        except Exception as e:
+            self.logger.error(f"Error during Redis shutdown: {e}")
+    
+    def __del__(self):
+        """
+        Destructor to ensure proper cleanup of Redis components.
+        """
+        try:
+            if hasattr(self, 'event_handler_mode_manager') and self.event_handler_mode_manager:
+                self.shutdown_redis()
+        except Exception:
+            # Ignore errors during destruction
+            pass
 
     async def _log_internal_error(self, error_type, error_message, related_event=None):
         """
@@ -306,58 +702,56 @@ class BaseAgent:
             self.logger.exception(f"Failed to log internal error as event: {e}")
             self.logger.error(f"Original error - {error_type}: {error_message}")
 
+    async def _raise_typed_event(self, event_class, *args, stream_id: Optional[str] = None, **kwargs):
+        """
+        Helper method to raise a typed event with common handling pattern.
+        
+        Args:
+            event_class: The event class to instantiate
+            *args: Positional arguments to pass to the event constructor
+            stream_id: Optional stream ID for event tracking
+            **kwargs: Keyword arguments to pass to the event constructor
+            
+        Returns:
+            The raised event instance
+        """
+        streaming_callback = kwargs.pop('streaming_callback', None)
+        effective_stream_id = stream_id or self._current_stream_id
+        event = event_class(*args, **kwargs)
+        await self._raise_event(event, streaming_callback=streaming_callback, stream_id=effective_stream_id)
+        return event
+
     async def _raise_system_event(self, content: str, severity: str = "error", stream_id: Optional[str] = None, **data):
         """
         Raise a system event to the event stream.
         """
-        streaming_callback = data.pop('streaming_callback', None)
-        effective_stream_id = stream_id or self._current_stream_id
-        await self._raise_event(SystemMessageEvent(role="system", severity=severity, content=content,
-                                                   session_id=data.get("session_id", "none")),
-                                                   streaming_callback=streaming_callback,
-                                                   stream_id=effective_stream_id)
+        return await self._raise_typed_event(
+            SystemMessageEvent,
+            role="system",
+            severity=severity,
+            content=content,
+            session_id=data.get("session_id", "none"),
+            stream_id=stream_id,
+            **data
+        )
 
     async def _raise_history_delta(self, messages, stream_id: Optional[str] = None, **data):
-        """
-        Raise a history delta event to the event stream.
-        """
+        """Raise a history delta event to the event stream."""
         data['role'] = data.get('role', 'assistant')
         data['session_id'] = data.get("session_id", "none")
-        streaming_callback = data.pop('streaming_callback', None)
-        effective_stream_id = stream_id or self._current_stream_id
-        await self._raise_event(HistoryDeltaEvent(messages=messages, **data), 
-                               streaming_callback=streaming_callback,
-                               stream_id=effective_stream_id)
+        return await self._raise_typed_event(HistoryDeltaEvent, messages=messages, stream_id=stream_id, **data)
 
     async def _raise_completion_start(self, comp_options, stream_id: Optional[str] = None, **data):
-        """
-        Raise a completion start event to the event stream.
-        """
+        """Raise a completion start event to the event stream."""
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
-        streaming_callback = data.pop('streaming_callback', None)
-        effective_stream_id = stream_id or self._current_stream_id
-
-        await self._raise_event(CompletionEvent(running=True, completion_options=completion_options, **data),
-                                streaming_callback=streaming_callback,
-                                stream_id=effective_stream_id)
+        return await self._raise_typed_event(CompletionEvent, running=True, completion_options=completion_options, stream_id=stream_id, **data)
 
     async def _raise_completion_end(self, comp_options, stream_id: Optional[str] = None, **data):
-        """
-        Raise a completion end event to the event stream.
-        """
-        # logging.debug(f"_raise_completion_end called with stop_reason={data.get('stop_reason', 'none')}")
+        """Raise a completion end event to the event stream."""
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
-        streaming_callback = data.pop('streaming_callback', None)
-        effective_stream_id = stream_id or self._current_stream_id
-        # logging.debug(f"Creating CompletionEvent with running=False, data={data}")
-        event = CompletionEvent(running=False, completion_options=completion_options, **data)
-        # logging.debug(f"CompletionEvent created: type={event.type}, stop_reason={getattr(event, 'stop_reason', 'none')}")
-
-        # logging.debug(f"About to raise CompletionEvent through _raise_event")
-        await self._raise_event(event, streaming_callback=streaming_callback, stream_id=effective_stream_id)
-        # logging.debug(f"Completed raising CompletionEvent")
+        return await self._raise_typed_event(CompletionEvent, running=False, completion_options=completion_options, stream_id=stream_id, **data)
 
     async def _raise_tool_call_start(self, tool_calls, stream_id: Optional[str] = None, **data):
         streaming_callback = data.pop('streaming_callback', None)
@@ -412,18 +806,12 @@ class BaseAgent:
                                stream_id=effective_stream_id)
 
     async def _raise_text_delta(self, content: str, stream_id: Optional[str] = None, **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        effective_stream_id = stream_id or self._current_stream_id
-        await self._raise_event(TextDeltaEvent(content=content, **data), 
-                               streaming_callback=streaming_callback,
-                               stream_id=effective_stream_id)
+        """Raise a text delta event to the event stream."""
+        return await self._raise_typed_event(TextDeltaEvent, content=content, stream_id=stream_id, **data)
 
     async def _raise_thought_delta(self, content: str, stream_id: Optional[str] = None, **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        effective_stream_id = stream_id or self._current_stream_id
-        await self._raise_event(ThoughtDeltaEvent(content=content, **data), 
-                               streaming_callback=streaming_callback,
-                               stream_id=effective_stream_id)
+        """Raise a thought delta event to the event stream."""
+        return await self._raise_typed_event(ThoughtDeltaEvent, content=content, stream_id=stream_id, **data)
 
     async def _raise_complete_thought(self, content: str, stream_id: Optional[str] = None, **data):
         data['role'] = data.get('role', 'assistant')

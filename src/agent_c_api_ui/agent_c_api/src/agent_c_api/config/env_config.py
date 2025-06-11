@@ -54,11 +54,44 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
     REDIS_USERNAME: Optional[str] = None
     REDIS_PASSWORD: Optional[str] = None
-    
+
     # Connection timeouts and pooling
     REDIS_CONNECTION_TIMEOUT: int = 5  # Connection timeout in seconds
     REDIS_SOCKET_TIMEOUT: int = 5      # Socket timeout in seconds
     REDIS_MAX_CONNECTIONS: int = 50    # Maximum connections in pool
+    
+    # Redis Resilient Mode Configuration
+    #rohan batra
+    REDIS_OPERATION_MODE: str = "REDIS_ONLY"  # REDIS_ONLY, HYBRID, ASYNC_ONLY
+    REDIS_ENABLE_RESILIENT_MODE: bool = True  # Enable/disable resilient mode features
+    REDIS_AUTO_MODE_SWITCHING: bool = False  # Enable automatic mode switching based on health
+    # end
+    REDIS_FALLBACK_MODE: str = "ASYNC_ONLY"  # Default fallback mode when Redis is unavailable
+    
+    # Health Monitoring Configuration
+    #rohan
+    REDIS_HEALTH_CHECK_INTERVAL: int = 30  #initially 30 Interval for health checks in seconds
+    REDIS_HEALTH_CHECK_TIMEOUT: int = 5  # Timeout for health checks in seconds
+    #rohan
+    REDIS_FAILURE_THRESHOLD: int = 3  #initialy 3 Number of failures before switching modes
+    REDIS_RECOVERY_THRESHOLD: int = 5  # Number of successes before recovering
+    
+    # Performance Configuration
+    REDIS_CIRCUIT_BREAKER_TIMEOUT: int = 60  # Circuit breaker timeout duration in seconds
+    REDIS_MAX_RETRIES: int = 3  # Maximum retry attempts for operations
+    REDIS_RETRY_BACKOFF: str = "exponential"  # Backoff strategy: exponential or linear
+    REDIS_CONNECTION_POOL_SIZE: int = 20  # Redis connection pool size
+    
+    # Stream Configuration
+    REDIS_STREAM_MAX_LEN: int = 10000  # Maximum stream length for trimming
+    REDIS_CONSUMER_GROUP_PREFIX: str = "agent_c"  # Prefix for consumer group names
+    REDIS_EVENT_TTL: int = 604800  # Event time-to-live in streams (7 days in seconds)
+    
+    # Mode Switching Configuration
+    REDIS_MODE_SWITCH_DELAY: int = 30  # Minimum delay between mode switches in seconds
+    REDIS_MAX_TRANSITION_RETRIES: int = 3  # Maximum retries for mode transitions
+    REDIS_ENABLE_AUTO_RECOVERY: bool = True  # Enable automatic recovery from failures
+    REDIS_PERFORMANCE_MONITORING: bool = True  # Enable performance monitoring
     
     # DEPRECATED SETTINGS - No longer used after Redis refactor
     # Redis should be externally managed (Docker, systemd, cloud service, etc.)
@@ -74,6 +107,8 @@ class Settings(BaseSettings):
 
     # Feature Flags
     USE_REDIS_SESSIONS: bool = True
+    # rohan
+    USE_REDIS_STREAMS: bool = True
 
     # Redis Stream Configuration
     STREAM_PREFIX: str = "agent_c:stream:"

@@ -1,5 +1,7 @@
 import os
 import json
+import queue
+import time
 import asyncio
 import threading
 import traceback
@@ -23,6 +25,10 @@ from agent_c_api.config.config_loader import MODELS_CONFIG
 from agent_c_tools.tools.workspace import LocalStorageWorkspace
 from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c_api.core.util.redis_stream import RedisStreamManager
+from agent_c_api.core.util.resilient_mode import (
+    EventHandlerModeManager, ResilientModeConfig, OperationMode, TransitionReason
+)
+from agent_c_api.core.util.redis_health_monitor import RedisHealthMonitor
 from agent_c.prompting import PromptBuilder, CoreInstructionSection
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 from agent_c.agents.claude import ClaudeChatAgent, ClaudeBedrockChatAgent
@@ -166,6 +172,17 @@ class AgentBridge:
         self.redis_stream_manager = None
         self._current_redis_stream_id = None
         self._redis_streams_enabled = False
+        
+        # Resilient mode components
+        self.mode_manager: Optional[EventHandlerModeManager] = None
+        self.health_monitor: Optional[RedisHealthMonitor] = None
+        self.resilient_config: Optional[ResilientModeConfig] = None
+        
+        # Session flushing optimization attributes
+        self._flush_batch_queue: Optional[asyncio.Queue] = None
+        self._flush_batch_task: Optional[asyncio.Task] = None
+        self._flush_batch_size: int = getattr(settings, 'HISTORY_BATCH_SIZE', 5)
+        self._flush_batch_timeout: float = getattr(settings, 'HISTORY_BATCH_TIMEOUT', 2.0)
 
     def __init_events(self) -> None:
         """
@@ -414,13 +431,54 @@ class AgentBridge:
         """
         Reset streaming state to ensure clean session.
         
-        Creates a new asyncio Queue for streaming responses, ensuring that
-        each chat interaction starts with a clean state.
+        Creates a new asyncio Queue for streaming responses and cleans up
+        batch processing resources, ensuring that each chat interaction 
+        starts with a clean state.
         """
         self.logger.info(
             f"Resetting streaming state for session {self.chat_session.session_id}"
         )
         self._stream_queue = asyncio.Queue()
+        
+        # Clean up batch processing resources
+        await self._cleanup_batch_resources()
+    
+    async def _cleanup_batch_resources(self) -> None:
+        """
+        Clean up batch processing resources.
+        
+        Cancels running batch tasks and clears queues to prevent
+        resource leaks and ensure clean state for new sessions.
+        """
+        try:
+            # Cancel running batch task if exists
+            if self._flush_batch_task and not self._flush_batch_task.done():
+                self._flush_batch_task.cancel()
+                try:
+                    await self._flush_batch_task
+                except asyncio.CancelledError:
+                    pass  # Expected when cancelling
+                except Exception as e:
+                    self.logger.warning(f"Error during batch task cleanup: {e}")
+            
+            # Clear batch queue if exists
+            if self._flush_batch_queue:
+                # Drain any remaining items
+                try:
+                    while not self._flush_batch_queue.empty():
+                        try:
+                            self._flush_batch_queue.get_nowait()
+                        except asyncio.QueueEmpty:
+                            break
+                except Exception as e:
+                    self.logger.warning(f"Error draining batch queue: {e}")
+            
+            # Reset batch attributes
+            self._flush_batch_queue = None
+            self._flush_batch_task = None
+            
+        except Exception as e:
+            self.logger.error(f"Error cleaning up batch resources: {e}")
 
     async def __build_prompt_metadata(self) -> Dict[str, Any]:
         """
@@ -792,8 +850,8 @@ class AgentBridge:
         """
         Handle history events which update the chat log.
         
-        Updates the chat session with new message history and flushes
-        the session to persistent storage.
+        Updates the chat session with new message history and optimally flushes
+        the session to persistent storage using async operations and optional batching.
         
         Args:
             event: Session event containing message history.
@@ -804,9 +862,12 @@ class AgentBridge:
         Raises:
             Exception: If session flushing fails.
         """
+        # Update session messages
         self.chat_session.messages = event.messages
-        await self.session_manager.flush(self.chat_session.session_id)
-
+        
+        # Use optimized async flushing strategy
+        await self._flush_session_optimized()
+        
         payload = json.dumps({
             "type": "history",
             "messages": event.messages,
@@ -814,6 +875,150 @@ class AgentBridge:
             "model_name": self.model_name,
         }) + "\n"
         return payload
+    
+    async def _flush_session_optimized(self) -> None:
+        """
+        Optimized session flushing with batching and async operations.
+        
+        This method provides several optimization strategies:
+        1. Non-blocking async flushing
+        2. Optional batched flushing to reduce I/O operations
+        3. Error resilience with fallback to immediate flush
+        
+        The batching behavior is controlled by environment variables:
+        - HISTORY_BATCH_FLUSH: Enable/disable batched flushing (default: False)
+        - HISTORY_BATCH_SIZE: Number of events to batch (default: 5)
+        - HISTORY_BATCH_TIMEOUT: Max time to wait for batch in seconds (default: 2.0)
+        """
+        # Check if batched flushing is enabled
+        batch_flush_enabled = getattr(settings, 'HISTORY_BATCH_FLUSH', False)
+        
+        if batch_flush_enabled:
+            await self._batch_flush_session()
+        else:
+            await self._immediate_flush_session()
+    
+    async def _immediate_flush_session(self) -> None:
+        """
+        Immediate async session flushing for real-time consistency.
+        """
+        try:
+            # Use asyncio.create_task to make flush non-blocking if session manager supports it
+            if hasattr(self.session_manager, 'flush') and asyncio.iscoroutinefunction(self.session_manager.flush):
+                # Session manager already supports async operations
+                await self.session_manager.flush(self.chat_session.session_id)
+            else:
+                # Fallback: Run sync flush in thread pool to avoid blocking
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    None, 
+                    self.session_manager.flush, 
+                    self.chat_session.session_id
+                )
+        except Exception as e:
+            self.logger.error(f"Failed to flush session {self.chat_session.session_id}: {e}")
+            # Don't re-raise to avoid breaking the event stream
+    
+    async def _batch_flush_session(self) -> None:
+        """
+        Batched session flushing to reduce I/O operations.
+        
+        Collects multiple flush requests and processes them together to reduce
+        overhead from frequent database/storage operations.
+        """
+        # Initialize batch tracking if not already done
+        if not hasattr(self, '_flush_batch_queue'):
+            self._flush_batch_queue = asyncio.Queue()
+            self._flush_batch_task = None
+            self._flush_batch_size = getattr(settings, 'HISTORY_BATCH_SIZE', 5)
+            self._flush_batch_timeout = getattr(settings, 'HISTORY_BATCH_TIMEOUT', 2.0)
+        
+        try:
+            # Add flush request to batch queue
+            await self._flush_batch_queue.put(self.chat_session.session_id)
+            
+            # Start batch processing task if not already running
+            if self._flush_batch_task is None or self._flush_batch_task.done():
+                self._flush_batch_task = asyncio.create_task(self._process_flush_batches())
+                
+        except Exception as e:
+            self.logger.error(f"Failed to queue batch flush for session {self.chat_session.session_id}: {e}")
+            # Fallback to immediate flush
+            await self._immediate_flush_session()
+    
+    async def _process_flush_batches(self) -> None:
+        """
+        Background task to process batched flush requests.
+        """
+        while True:
+            try:
+                batch_sessions = set()
+                
+                # Collect session IDs for batching
+                try:
+                    # Wait for first session with timeout
+                    first_session = await asyncio.wait_for(
+                        self._flush_batch_queue.get(),
+                        timeout=self._flush_batch_timeout
+                    )
+                    batch_sessions.add(first_session)
+                    
+                    # Collect additional sessions up to batch size
+                    for _ in range(self._flush_batch_size - 1):
+                        try:
+                            session_id = await asyncio.wait_for(
+                                self._flush_batch_queue.get(),
+                                timeout=0.1  # Short timeout for additional items
+                            )
+                            batch_sessions.add(session_id)
+                        except asyncio.TimeoutError:
+                            break  # No more items available quickly
+                            
+                except asyncio.TimeoutError:
+                    # No sessions to flush, exit the task
+                    break
+                
+                # Process the batch
+                if batch_sessions:
+                    await self._flush_session_batch(batch_sessions)
+                    
+            except Exception as e:
+                self.logger.error(f"Error in batch flush processing: {e}")
+                # Continue processing despite errors
+    
+    async def _flush_session_batch(self, session_ids: set) -> None:
+        """
+        Flush multiple sessions efficiently.
+        
+        Args:
+            session_ids: Set of session IDs to flush
+        """
+        try:
+            # Check if session manager supports batch operations
+            if hasattr(self.session_manager, 'flush_batch'):
+                # Use native batch flush if available
+                await self.session_manager.flush_batch(list(session_ids))
+            else:
+                # Fallback: Process sessions concurrently
+                flush_tasks = []
+                for session_id in session_ids:
+                    if hasattr(self.session_manager, 'flush') and asyncio.iscoroutinefunction(self.session_manager.flush):
+                        task = self.session_manager.flush(session_id)
+                    else:
+                        # Run sync flush in thread pool
+                        loop = asyncio.get_event_loop()
+                        task = loop.run_in_executor(None, self.session_manager.flush, session_id)
+                    flush_tasks.append(task)
+                
+                # Execute all flushes concurrently
+                if flush_tasks:
+                    await asyncio.gather(*flush_tasks, return_exceptions=True)
+            
+            self.logger.debug(f"Successfully flushed batch of {len(session_ids)} sessions")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to flush session batch: {e}")
+            # Don't re-raise to avoid breaking the batch processing
 
     @staticmethod
     async def _handle_audio_delta(_: SessionEvent) -> None:
@@ -930,8 +1135,9 @@ class AgentBridge:
         types including text updates, tool calls, media rendering, and completion status.
         It formats the events into JSON payloads suitable for streaming to the client.
         
-        Enhanced with Redis Streams support for distributed event processing while
-        maintaining backward compatibility with async queue fallback.
+        Enhanced with Redis Streams support for distributed event processing with
+        EventHandlerModeManager integration for dynamic mode switching. Maintains
+        backward compatibility with async queue fallback.
 
         Args:
             event: The session event to process, containing type and payload information.
@@ -964,8 +1170,17 @@ class AgentBridge:
         # except Exception as e:
         #     self.logger.debug(f"Error serializing event {event.type}: {e}")
 
-        # Publish raw event to Redis Stream first (before processing)
-        await self._publish_to_redis_stream(event, redis_stream_id)
+        # Determine routing strategy based on mode manager
+        should_use_redis = await self._should_route_to_redis_streams(redis_stream_id)
+        
+        # Determine current operation mode to avoid dual processing
+        current_mode = None
+        if self.mode_manager:
+            current_mode = self.mode_manager.current_mode
+        
+        # Route to Redis Streams if mode manager permits
+        if should_use_redis:
+            await self._publish_to_redis_stream(event, redis_stream_id)
 
         # A simple dispatch dictionary that maps event types to handler methods.
         handlers = {
@@ -990,8 +1205,13 @@ class AgentBridge:
             try:
                 payload = await handler(event)
 
-                # Always publish to async queue for backward compatibility and fallback
-                if payload is not None and hasattr(self, "_stream_queue"):
+                # Optimize: Only publish to async queue when not in REDIS_ONLY mode
+                # This eliminates dual processing overhead in REDIS_ONLY mode
+                should_use_async_queue = (
+                    current_mode != OperationMode.REDIS_ONLY or not should_use_redis
+                )
+                
+                if payload is not None and hasattr(self, "_stream_queue") and should_use_async_queue:
                     await self._stream_queue.put(payload)
 
                     # If this is the end-of-stream event, push final payload and then a termination marker.
@@ -1008,9 +1228,9 @@ class AgentBridge:
         """
         Publish an event to Redis Stream if enabled and configured.
         
-        This method handles the Redis Stream publishing with proper error handling
-        and fallback behavior. It will not raise exceptions to ensure the async
-        queue fallback mechanism continues to work.
+        This method handles the Redis Stream publishing with proper error handling,
+        mode manager integration, and fallback behavior. It will not raise exceptions
+        to ensure the async queue fallback mechanism continues to work.
         
         Args:
             event: The SessionEvent to publish
@@ -1031,17 +1251,74 @@ class AgentBridge:
                 # Publish the raw event to Redis Stream
                 message_id = await self.redis_stream_manager.publish_event(redis_stream_key, event)
 
+                # Record successful Redis operation with mode manager
+                if self.mode_manager:
+                    self.mode_manager.record_redis_success()
+
                 # Log success (debug level to avoid spam)
                 self.logger.debug(f"Published event {event.type} to Redis Stream {redis_stream_key}: {message_id}")
 
         except Exception as e:
+            # Record Redis failure with mode manager
+            if self.mode_manager:
+                self.mode_manager.record_redis_failure()
+                
+                # For REDIS_ONLY mode, check if we should trigger emergency transition
+                if (self.mode_manager.current_mode == OperationMode.REDIS_ONLY and
+                    self.mode_manager.redis_circuit_breaker.state == "open"):
+                    self.logger.warning(
+                        f"Redis circuit breaker open in REDIS_ONLY mode. "
+                        f"Consider switching to HYBRID mode for reliability."
+                    )
+            
             # Log error but don't re-raise to ensure async queue fallback works
             self.logger.error(f"Failed to publish event {event.type} to Redis Stream: {e}")
             # Could increment a metric here for monitoring
 
+    async def _should_route_to_redis_streams(self, redis_stream_id: Optional[str] = None) -> bool:
+        """
+        Determine if events should be routed to Redis Streams based on mode manager.
+        
+        This method integrates with EventHandlerModeManager to make routing decisions
+        based on current operation mode and Redis health status.
+        
+        Args:
+            redis_stream_id: Optional Redis Stream ID to check
+            
+        Returns:
+            bool: True if Redis Streams should be used for routing
+        """
+        # Check basic Redis Streams availability first
+        if not self._should_use_redis_streams(redis_stream_id):
+            return False
+        
+        # If mode manager is not available, fall back to basic check
+        if not self.mode_manager:
+            return True
+        
+        # Use mode manager to determine if Redis can be used
+        try:
+            can_use_redis = self.mode_manager.can_use_redis()
+            
+            # For HYBRID mode, handle fallback logic in _publish_to_redis_stream
+            # For REDIS_ONLY mode, only use Redis if available
+            # For ASYNC_ONLY mode, never use Redis
+            
+            if self.mode_manager.current_mode == OperationMode.ASYNC_ONLY:
+                return False
+            elif self.mode_manager.current_mode == OperationMode.REDIS_ONLY:
+                return can_use_redis
+            else:  # HYBRID mode
+                return can_use_redis
+                
+        except Exception as e:
+            self.logger.error(f"Error checking mode manager for Redis routing: {e}")
+            # Fall back to basic availability check
+            return True
+    
     def _should_use_redis_streams(self, redis_stream_id: Optional[str] = None) -> bool:
         """
-        Determine if Redis Streams should be used for event publishing.
+        Determine if Redis Streams should be used for event publishing (basic check).
         
         Args:
             redis_stream_id: Optional Redis Stream ID to check
@@ -1055,38 +1332,354 @@ class AgentBridge:
             (redis_stream_id is not None or self._current_redis_stream_id is not None)
         )
 
-    async def initialize_redis_streams(self) -> None:
+    async def initialize_redis_streams(self, redis_config: Optional['RedisConfig'] = None) -> Dict[str, Any]:
         """
-        Initialize Redis Streams functionality if enabled in configuration.
+        Initialize Redis Streams functionality with resilient mode support.
         
-        This method should be called during the bridge initialization process.
-        It will attempt to set up the Redis Stream manager and enable Redis
-        Streams functionality if the configuration allows it.
+        This method initializes Redis Streams functionality with RedisConfig parameter
+        support and sets up resilient mode components including EventHandlerModeManager
+        and RedisHealthMonitor for dynamic mode switching.
+        
+        Args:
+            redis_config: Optional RedisConfig instance for configuration-driven setup.
+                         If not provided, uses environment variables for backward compatibility.
+        
+        Returns:
+            Dict[str, Any]: Initialization status containing:
+                - success: bool - True if initialization completed successfully
+                - mode: str - Current operation mode
+                - redis_enabled: bool - True if Redis Streams are enabled
+                - health_monitoring: bool - True if health monitoring is active
+                - error: Optional[str] - Error message if initialization failed
         """
+        from agent_c_api.config.redis_config import RedisConfig
+        
+        initialization_status = {
+            "success": False,
+            "mode": "async_only",
+            "redis_enabled": False,
+            "health_monitoring": False,
+            "error": None
+        }
+        
         # Check if Redis Streams are enabled via configuration
-        use_redis_streams = getattr(settings, 'USE_REDIS_STREAMS', False)
+        #rohan
+        use_redis_streams = getattr(settings, 'USE_REDIS_STREAMS', True)
 
         if not use_redis_streams:
             self.logger.info("Redis Streams disabled via configuration")
-            return
+            # Still set up resilient mode in ASYNC_ONLY mode
+            await self._initialize_async_only_mode()
+            initialization_status.update({
+                "success": True,
+                "mode": "async_only"
+            })
+            return initialization_status
 
         try:
-            # Build Redis URL from settings
-            redis_url = self._build_redis_url()
+            # Initialize or get resilient configuration
+            if redis_config:
+                self.resilient_config = redis_config.get_resilient_config()
+                if not self.resilient_config:
+                    self.resilient_config = redis_config.create_default_resilient_config()
+            else:
+                # Create default configuration for backward compatibility
+                self.resilient_config = RedisConfig.create_default_resilient_config()
+            
+            # Initialize RedisHealthMonitor
+            await self._initialize_health_monitor(redis_config)
+            
+            # Initialize EventHandlerModeManager
+            await self._initialize_mode_manager()
+            
+            # Test Redis connectivity
+            redis_available = await self._test_redis_connectivity(redis_config)
+            
+            if redis_available:
+                # Initialize Redis Stream manager
+                await self._initialize_redis_stream_manager(redis_config)
+                
+                # Set initial mode based on configuration and Redis health
+                initial_mode = await self._determine_initial_mode()
+                
+                initialization_status.update({
+                    "success": True,
+                    "mode": initial_mode.value,
+                    "redis_enabled": True,
+                    "health_monitoring": True
+                })
+                
+                self.logger.info(
+                    f"Redis Streams with resilient mode initialized successfully. "
+                    f"Mode: {initial_mode.value}"
+                )
+            else:
+                # Redis not available, start in ASYNC_ONLY mode
+                await self._fallback_to_async_only_mode("Redis connectivity failed during initialization")
+                
+                initialization_status.update({
+                    "success": True,
+                    "mode": "async_only",
+                    "redis_enabled": False,
+                    "health_monitoring": True
+                })
 
+        except Exception as e:
+            self.logger.error(f"Failed to initialize Redis Streams with resilient mode: {e}")
+            
+            # Attempt graceful fallback to async-only mode
+            try:
+                await self._fallback_to_async_only_mode(f"Initialization error: {e}")
+                initialization_status.update({
+                    "success": True,
+                    "mode": "async_only",
+                    "error": str(e)
+                })
+            except Exception as fallback_error:
+                self.logger.error(f"Failed to initialize even async-only fallback: {fallback_error}")
+                initialization_status.update({
+                    "success": False,
+                    "error": f"Complete initialization failure: {e}, fallback error: {fallback_error}"
+                })
+        
+        return initialization_status
+    
+    async def _initialize_async_only_mode(self) -> None:
+        """
+        Initialize resilient mode components for ASYNC_ONLY operation.
+        """
+        from agent_c_api.config.redis_config import RedisConfig
+        
+        # Create ASYNC_ONLY configuration
+        self.resilient_config = RedisConfig.configure_resilient_mode(
+            operation_mode=OperationMode.ASYNC_ONLY
+        )
+        
+        # Initialize mode manager in ASYNC_ONLY mode
+        self.mode_manager = EventHandlerModeManager(self.resilient_config)
+        
+        self.logger.info("Initialized in ASYNC_ONLY mode")
+    
+    async def _initialize_health_monitor(self, redis_config: Optional['RedisConfig'] = None) -> None:
+        """
+        Initialize RedisHealthMonitor for Redis connectivity and performance monitoring.
+        """
+        from agent_c_api.config.redis_config import RedisConfig
+        
+        try:
+            # Create Redis client getter function
+            async def get_redis_client():
+                if redis_config:
+                    return await redis_config.get_redis_client()
+                else:
+                    return await RedisConfig.get_redis_client()
+            
+            # Initialize health monitor
+            self.health_monitor = RedisHealthMonitor(
+                redis_client_getter=get_redis_client,
+                check_interval=self.resilient_config.health_check_interval_seconds,
+                failure_threshold=self.resilient_config.redis_failure_threshold,
+                latency_threshold_ms=100.0,  # Default latency threshold
+                error_rate_threshold=0.05   # Default error rate threshold
+            )
+            
+            # Register health callback with mode manager
+            self.health_monitor.register_health_callback(
+                "mode_manager", 
+                self._health_status_callback
+            )
+            
+            # Start background monitoring
+            await self.health_monitor.start_monitoring()
+            
+            self.logger.info("RedisHealthMonitor initialized and started")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to initialize health monitor: {e}")
+            raise
+    
+    async def _initialize_mode_manager(self) -> None:
+        """
+        Initialize EventHandlerModeManager with configuration and health monitoring.
+        """
+        try:
+            self.mode_manager = EventHandlerModeManager(self.resilient_config)
+            
+            # Link health monitor to mode manager
+            if self.health_monitor:
+                self.mode_manager.set_health_monitor(self.health_monitor)
+            
+            # Register state change callbacks
+            self.mode_manager.register_state_callback(
+                "agent_bridge",
+                self._mode_transition_callback
+            )
+            
+            self.logger.info(f"EventHandlerModeManager initialized in {self.mode_manager.current_mode.value} mode")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to initialize mode manager: {e}")
+            raise
+    
+    async def _test_redis_connectivity(self, redis_config: Optional['RedisConfig'] = None) -> bool:
+        """
+        Test Redis connectivity during initialization.
+        """
+        from agent_c_api.config.redis_config import RedisConfig
+        
+        try:
+            if redis_config:
+                status = await redis_config.validate_connection()
+            else:
+                status = await RedisConfig.validate_connection()
+            
+            if status["connected"]:
+                self.logger.info(f"Redis connectivity test passed: {status['host']}:{status['port']}")
+                return True
+            else:
+                self.logger.warning(f"Redis connectivity test failed: {status.get('error', 'Unknown error')}")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Redis connectivity test error: {e}")
+            return False
+    
+    async def _initialize_redis_stream_manager(self, redis_config: Optional['RedisConfig'] = None) -> None:
+        """
+        Initialize Redis Stream manager with proper configuration.
+        """
+        try:
+            # Build Redis URL
+            if redis_config:
+                redis_url = redis_config.build_redis_url()
+            else:
+                redis_url = self._build_redis_url()
+            
             # Initialize the Redis Stream manager (class-level)
             await RedisStreamManager.initialize(redis_url)
-
+            
             # Set instance variables
             self.redis_stream_manager = RedisStreamManager
             self._redis_streams_enabled = True
-
-            self.logger.info(f"Redis Streams initialized successfully: {redis_url}")
-
+            
+            self.logger.info(f"Redis Stream manager initialized: {redis_url}")
+            
         except Exception as e:
-            self.logger.error(f"Failed to initialize Redis Streams: {e}")
-            self.logger.info("Continuing with async queue fallback only")
+            self.logger.error(f"Failed to initialize Redis Stream manager: {e}")
+            raise
+    
+    async def _determine_initial_mode(self) -> OperationMode:
+        """
+        Determine initial operation mode based on configuration and Redis health.
+        """
+        # Check configured operation mode
+        configured_mode = self.resilient_config.operation_mode
+        
+        # For REDIS_ONLY mode, ensure Redis is healthy
+        if configured_mode == OperationMode.REDIS_ONLY:
+            if self.health_monitor and not await self.health_monitor.is_redis_healthy():
+                self.logger.warning(
+                    "REDIS_ONLY mode requested but Redis is unhealthy. "
+                    "Switching to HYBRID mode for safety."
+                )
+                configured_mode = OperationMode.HYBRID
+        
+        # Set mode in mode manager
+        if self.mode_manager:
+            await self.mode_manager.request_mode_transition(
+                target_mode=configured_mode,
+                reason=TransitionReason.STARTUP_INITIALIZATION,
+                force=True
+            )
+        
+        return configured_mode
+    
+    async def _fallback_to_async_only_mode(self, reason: str) -> None:
+        """
+        Fallback to ASYNC_ONLY mode with proper initialization.
+        """
+        self.logger.warning(f"Falling back to ASYNC_ONLY mode: {reason}")
+        
+        try:
+            # Ensure we have a mode manager in ASYNC_ONLY mode
+            if not self.mode_manager:
+                await self._initialize_async_only_mode()
+            else:
+                # Transition existing mode manager to ASYNC_ONLY
+                await self.mode_manager.request_mode_transition(
+                    target_mode=OperationMode.ASYNC_ONLY,
+                    reason=TransitionReason.CONNECTION_ERROR,
+                    force=True
+                )
+            
+            # Disable Redis Streams
             self._redis_streams_enabled = False
+            self.redis_stream_manager = None
+            
+            self.logger.info("Successfully transitioned to ASYNC_ONLY mode")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to initialize ASYNC_ONLY fallback mode: {e}")
+            raise
+    
+    async def _health_status_callback(self, health_status: 'HealthStatus') -> None:
+        """
+        Callback for health status changes from RedisHealthMonitor.
+        """
+        try:
+            if not health_status.is_healthy and self.mode_manager:
+                current_mode = self.mode_manager.current_mode
+                
+                # Trigger mode transition for unhealthy Redis
+                if current_mode == OperationMode.REDIS_ONLY:
+                    await self.mode_manager.request_mode_transition(
+                        target_mode=OperationMode.HYBRID,
+                        reason=TransitionReason.HEALTH_CHECK_FAILURE,
+                        metadata={"health_status": health_status.details}
+                    )
+                elif current_mode == OperationMode.HYBRID and health_status.consecutive_failures > 5:
+                    await self.mode_manager.request_mode_transition(
+                        target_mode=OperationMode.ASYNC_ONLY,
+                        reason=TransitionReason.HEALTH_CHECK_FAILURE,
+                        metadata={"health_status": health_status.details}
+                    )
+            
+            elif health_status.is_healthy and self.mode_manager:
+                # Potentially recover from ASYNC_ONLY back to HYBRID
+                if (self.mode_manager.current_mode == OperationMode.ASYNC_ONLY and
+                    self.resilient_config.enable_auto_recovery):
+                    await self.mode_manager.request_mode_transition(
+                        target_mode=OperationMode.HYBRID,
+                        reason=TransitionReason.RECOVERY_COMPLETE,
+                        metadata={"health_status": health_status.details}
+                    )
+        
+        except Exception as e:
+            self.logger.error(f"Error in health status callback: {e}")
+    
+    async def _mode_transition_callback(self, event_type: str, transition: 'ModeTransition', error: Exception = None) -> None:
+        """
+        Callback for mode transition events from EventHandlerModeManager.
+        """
+        try:
+            if event_type == "transition_complete":
+                self.logger.info(
+                    f"Mode transition completed: {transition.from_mode.value} → {transition.to_mode.value} "
+                    f"(reason: {transition.reason.name})"
+                )
+            elif event_type == "transition_failed":
+                self.logger.error(
+                    f"Mode transition failed: {transition.from_mode.value} → {transition.to_mode.value} "
+                    f"(reason: {transition.reason.name}, error: {transition.error_message})"
+                )
+            elif event_type == "transition_error":
+                self.logger.error(
+                    f"Mode transition error: {transition.from_mode.value} → {transition.to_mode.value} "
+                    f"(error: {error})"
+                )
+        
+        except Exception as e:
+            self.logger.error(f"Error in mode transition callback: {e}")
 
     def _build_redis_url(self) -> str:
         """
@@ -1275,33 +1868,65 @@ class AgentBridge:
                 self.agent_runtime.chat(**full_params)
             )
 
-            # Determine which consumption method to use
-            use_redis_streams = self._should_use_redis_streams(redis_stream_id)
-
-            if use_redis_streams:
-                self.logger.debug(f"Using Redis Streams for consumption: {redis_stream_id}")
-                try:
-                    # Consume from Redis Streams
-                    async for content in self._consume_redis_stream_events(redis_stream_id, client_wants_cancel):
+            # Use mode manager to determine streaming approach
+            consumption_strategy = await self._determine_consumption_strategy(redis_stream_id)
+            self.logger.debug(
+                f"Using consumption strategy: {consumption_strategy['method']} "
+                f"(mode: {consumption_strategy.get('mode', 'unknown')})"
+            )
+            
+            # Execute consumption strategy with dynamic switching support
+            try:
+                if consumption_strategy['method'] == 'redis_streams':
+                    # Consume from Redis Streams with fallback capability
+                    async for content in self._consume_with_mode_manager(
+                        redis_stream_id, 
+                        client_wants_cancel, 
+                        initial_strategy=consumption_strategy
+                    ):
                         if content is not None:
                             yield content
                         else:
-                            self.logger.info("Received Redis Stream termination signal")
+                            self.logger.info("Received termination signal")
                             break
-                except Exception as e:
-                    self.logger.error(f"Redis Stream consumption failed, falling back to async queue: {e}")
-                    # Fall back to async queue consumption
-                    use_redis_streams = False
-
-            if not use_redis_streams:
-                self.logger.debug("Using async queue for consumption (fallback or disabled)")
-                # Consume from async queue (original implementation)
-                async for content in self._consume_async_queue_events(queue, client_wants_cancel):
-                    if content is not None:
-                        yield content
-                    else:
-                        self.logger.info("Received async queue termination signal")
-                        break
+                            
+                elif consumption_strategy['method'] == 'hybrid':
+                    # Hybrid consumption with fallback monitoring
+                    async for content in self._consume_hybrid_mode(
+                        redis_stream_id, 
+                        queue, 
+                        client_wants_cancel
+                    ):
+                        if content is not None:
+                            yield content
+                        else:
+                            self.logger.info("Received termination signal")
+                            break
+                            
+                else:
+                    # Async queue only
+                    async for content in self._consume_async_queue_events(queue, client_wants_cancel):
+                        if content is not None:
+                            yield content
+                        else:
+                            self.logger.info("Received async queue termination signal")
+                            break
+                            
+            except Exception as e:
+                self.logger.error(f"Consumption strategy {consumption_strategy['method']} failed: {e}")
+                
+                # Emergency fallback to async queue if all else fails
+                if consumption_strategy['method'] != 'async_queue':
+                    self.logger.warning("Emergency fallback to async queue consumption")
+                    async for content in self._consume_async_queue_events(queue, client_wants_cancel):
+                        if content is not None:
+                            yield content
+                        else:
+                            self.logger.info("Received async queue termination signal")
+                            break
+                else:
+                    # Re-raise if async queue itself failed
+                    raise
 
             await chat_task
             await self.session_manager.flush(self.chat_session.session_id)
@@ -1318,6 +1943,231 @@ class AgentBridge:
         finally:
             # Clear Redis Stream ID for this interaction
             self.clear_redis_stream_id()
+    
+    async def _determine_consumption_strategy(self, redis_stream_id: str) -> Dict[str, Any]:
+        """
+        Determine consumption strategy based on mode manager and current operation mode.
+        
+        Args:
+            redis_stream_id: Redis Stream ID for this interaction
+            
+        Returns:
+            Dict[str, Any]: Strategy information containing method and mode details
+        """
+        strategy = {
+            "method": "async_queue",
+            "mode": "unknown",
+            "can_use_redis": False,
+            "fallback_available": True
+        }
+        
+        # Check basic Redis Streams availability
+        basic_redis_available = self._should_use_redis_streams(redis_stream_id)
+
+        # Debug logging rohan
+        self.logger.debug(
+            f"Redis streams availability check: _redis_streams_enabled={self._redis_streams_enabled}, redis_stream_manager={self.redis_stream_manager is not None}, stream_id available={redis_stream_id is not None or self._current_redis_stream_id is not None}")
+        self.logger.debug(
+            f"basic_redis_available={basic_redis_available}, mode_manager_available={self.mode_manager is not None}")
+        if self.mode_manager:
+            self.logger.debug(
+                f"mode_manager: current_mode={self.mode_manager.current_mode.value}, can_use_redis={self.mode_manager.can_use_redis()}, circuit_breaker={self.mode_manager.redis_circuit_breaker.state}")
+        #
+        if not basic_redis_available:
+            return strategy
+        
+        # Use mode manager to determine strategy
+        if self.mode_manager:
+            try:
+                current_mode = self.mode_manager.current_mode
+                can_use_redis = self.mode_manager.can_use_redis()
+
+                strategy.update({
+                    "mode": current_mode.value,
+                    "can_use_redis": can_use_redis
+                })
+                
+                if current_mode == OperationMode.REDIS_ONLY:
+                    if can_use_redis:
+                        strategy["method"] = "redis_streams"
+                        strategy["fallback_available"] = False
+                    else:
+                        # Redis required but not available - this is an error condition
+                        self.logger.error(
+                            "REDIS_ONLY mode but Redis is not available. "
+                            "This may cause consumption failures."
+                        )
+                        strategy["method"] = "redis_streams"  # Attempt anyway
+                        strategy["fallback_available"] = False
+                        
+                elif current_mode == OperationMode.HYBRID:
+                    if can_use_redis:
+                        strategy["method"] = "hybrid"
+                    else:
+                        strategy["method"] = "async_queue"
+                        
+                elif current_mode == OperationMode.ASYNC_ONLY:
+                    strategy["method"] = "async_queue"
+                    
+            except Exception as e:
+                self.logger.error(f"Error determining consumption strategy: {e}")
+                # Fall back to basic availability check
+                if basic_redis_available:
+                    strategy["method"] = "redis_streams"
+        else:
+            # No mode manager, use basic availability
+            if basic_redis_available:
+                strategy["method"] = "redis_streams"
+
+        return strategy
+    
+    async def _consume_with_mode_manager(
+        self, 
+        redis_stream_id: str, 
+        client_wants_cancel: threading.Event,
+        initial_strategy: Dict[str, Any]
+    ) -> AsyncGenerator[Optional[str], None]:
+        """
+        Consume events using mode manager with dynamic switching support.
+        
+        This method monitors the mode manager during consumption and can switch
+        consumption methods if the mode changes during an active session.
+        
+        Args:
+            redis_stream_id: Redis Stream ID
+            client_wants_cancel: Cancellation event
+            initial_strategy: Initial consumption strategy
+            
+        Yields:
+            Optional[str]: Event payloads or None for termination
+        """
+        current_strategy = initial_strategy.copy()
+        
+        try:
+            # Monitor for mode changes during consumption
+            last_mode_check = time.time()
+            mode_check_interval = 5.0  # Check mode every 5 seconds
+            
+            async for content in self._consume_redis_stream_events(redis_stream_id, client_wants_cancel):
+                # Periodically check if mode has changed
+                current_time = time.time()
+                if current_time - last_mode_check > mode_check_interval:
+                    if await self._should_switch_consumption_method(current_strategy):
+                        self.logger.info("Mode change detected during consumption, continuing with Redis...")
+                        # Note: For now we continue with current method rather than switching mid-stream
+                        # Full mid-stream switching would require more complex session management
+                    last_mode_check = current_time
+                
+                if content is not None:
+                    yield content
+                else:
+                    break
+                    
+                # Check for cancellation
+                if client_wants_cancel.is_set():
+                    self.logger.debug("Client requested cancellation during mode-managed consumption")
+                    break
+                    
+        except Exception as e:
+            self.logger.error(f"Mode-managed consumption failed: {e}")
+            
+            # Record Redis failure if we have mode manager
+            if self.mode_manager:
+                self.mode_manager.record_redis_failure()
+            
+            # For REDIS_ONLY mode, this is a critical failure
+            if (self.mode_manager and 
+                self.mode_manager.current_mode == OperationMode.REDIS_ONLY):
+                self.logger.error(
+                    "Critical: Redis consumption failed in REDIS_ONLY mode. "
+                    "No fallback available."
+                )
+                raise
+            else:
+                # For other modes, this will trigger fallback in the caller
+                raise
+    
+    async def _consume_hybrid_mode(
+        self, 
+        redis_stream_id: str, 
+        queue: asyncio.Queue,
+        client_wants_cancel: threading.Event
+    ) -> AsyncGenerator[Optional[str], None]:
+        """
+        Consume events in hybrid mode with Redis primary and async queue fallback.
+        
+        Args:
+            redis_stream_id: Redis Stream ID
+            queue: Async queue for fallback
+            client_wants_cancel: Cancellation event
+            
+        Yields:
+            Optional[str]: Event payloads or None for termination
+        """
+        try:
+            # Start with Redis Streams
+            self.logger.debug("Starting hybrid consumption with Redis Streams primary")
+            
+            async for content in self._consume_redis_stream_events(redis_stream_id, client_wants_cancel):
+                if content is not None:
+                    yield content
+                else:
+                    break
+                    
+                if client_wants_cancel.is_set():
+                    break
+                    
+        except Exception as e:
+            self.logger.warning(f"Redis consumption failed in hybrid mode, falling back to async queue: {e}")
+            
+            # Record Redis failure
+            if self.mode_manager:
+                self.mode_manager.record_redis_failure()
+            
+            # Fallback to async queue
+            self.logger.debug("Falling back to async queue in hybrid mode")
+            async for content in self._consume_async_queue_events(queue, client_wants_cancel):
+                if content is not None:
+                    yield content
+                else:
+                    break
+    
+    async def _should_switch_consumption_method(self, current_strategy: Dict[str, Any]) -> bool:
+        """
+        Check if consumption method should be switched due to mode changes.
+        
+        Args:
+            current_strategy: Current consumption strategy
+            
+        Returns:
+            bool: True if method should be switched
+        """
+        if not self.mode_manager:
+            return False
+        
+        try:
+            current_mode = self.mode_manager.current_mode
+            
+            # Check if mode has changed from what we expected
+            if current_strategy.get("mode") != current_mode.value:
+                self.logger.debug(
+                    f"Mode change detected: {current_strategy.get('mode')} → {current_mode.value}"
+                )
+                return True
+            
+            # Check if Redis availability has changed
+            can_use_redis = self.mode_manager.can_use_redis()
+            if current_strategy.get("can_use_redis") != can_use_redis:
+                self.logger.debug(
+                    f"Redis availability changed: {current_strategy.get('can_use_redis')} → {can_use_redis}"
+                )
+                return True
+            
+            return False
+            
+        except Exception as e:
+            self.logger.error(f"Error checking for consumption method switch: {e}")
+            return False
 
             # Drain any remaining items in the queue.
             while not queue.empty():
