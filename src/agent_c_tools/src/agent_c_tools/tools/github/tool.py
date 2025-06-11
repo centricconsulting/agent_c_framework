@@ -22,22 +22,33 @@ class GithubTools(Toolset):
     """
     
     def __init__(self, **kwargs):
-        """
-        Initialize the GitHub toolset.
-        
-        Args:
-            **kwargs: Additional arguments to pass to the Toolset constructor.
-        """
-        super().__init__(**kwargs)
+        # Set the name for this toolset
+        # kwargs['name'] = kwargs.get('name', 'GithubTools')
+        super().__init__(**kwargs, name='GithubTools', needed_keys=['GITHUB_MCP_BINARY', 'GITHUB_PERSONAL_ACCESS_TOKEN'])
+
+        if not self.tool_valid:
+            logging.error("tool not valid")
+            return
+
+
         
         # Get binary path from kwargs or environment
-        binary_path = kwargs.get('binary_path') or os.environ.get('GITHUB_MCP_BINARY')
-        
-        # Get token from kwargs or environment
-        token = kwargs.get('token') or os.environ.get('GITHUB_PERSONAL_ACCESS_TOKEN')
+        # binary_path = kwargs.get('binary_path') or os.environ.get('GITHUB_MCP_BINARY')
+        # # If not found, use the path to your executable
+        # if not binary_path:
+        #     binary_path = 'PATH_TO_YOUR_GITHUB_MCP_SERVER_EXE'  # Replace with your actual path
+        #
+        # # Get token from kwargs or environment
+        # token = kwargs.get('token') or os.environ.get('GITHUB_PERSONAL_ACCESS_TOKEN')
+        # if not token:
+        #     self.logger.warning("GitHub token not provided. Set GITHUB_PERSONAL_ACCESS_TOKEN environment variable.")
         
         # Create server manager and client
-        self.server_manager = ServerManager(binary_path=binary_path, token=token)
+        self.binary_path: str = kwargs.get('binary_path', os.getenv('GITHUB_MCP_BINARY'))
+        logging.info(f"GitHub MCP Binary Path is : {self.binary_path}")
+        self.token: str = kwargs.get('token', os.getenv('GITHUB_PERSONAL_ACCESS_TOKEN'))
+        logging.info(f"GitHub MCP Token is : {self.token}")
+        self.server_manager = ServerManager(binary_path=self.binary_path, token=self.token)
         self.client = GithubMCPClient(self.server_manager)
         
         # Set up prompt section
@@ -128,7 +139,7 @@ class GithubTools(Toolset):
             }
         }
     )
-    async def search_repositories(self, query: str, page: int = 1, per_page: int = 10) -> str:
+    async def search_repositories(self, **kwargs) -> str:
         """
         Search for GitHub repositories matching a query.
         
@@ -140,12 +151,32 @@ class GithubTools(Toolset):
         Returns:
             JSON string containing search results.
         """
+        # Get the client_wants_cancel event from tool_context
+        tool_context = kwargs.get('tool_context', {})
+        client_wants_cancel = tool_context.get('client_wants_cancel')
+        
+        # Extract other parameters
+        query = kwargs.get('query')
+        page = kwargs.get('page', 1)
+        per_page = kwargs.get('per_page', 10)
+        
+        if not query:
+            return json.dumps({"error": "query parameter is required"})
+        
+        # Check if cancellation is requested
+        if client_wants_cancel and client_wants_cancel.is_set():
+            return json.dumps({"error": "Operation cancelled by user"})
+        
         # Ensure server is running
         success, error = await self._ensure_server()
         if not success:
             return json.dumps({"error": error})
         
         try:
+            # Check again before making the API call
+            if client_wants_cancel and client_wants_cancel.is_set():
+                return json.dumps({"error": "Operation cancelled by user"})
+                
             # Call the client method
             result = await self.client.search_repositories(query, page, per_page)
             return json.dumps(result)
@@ -177,7 +208,7 @@ class GithubTools(Toolset):
             }
         }
     )
-    async def get_file_contents(self, owner: str, repo: str, path: str, ref: str = None) -> str:
+    async def get_file_contents(self, **kwargs) -> str:
         """
         Get the contents of a file from a GitHub repository.
         
@@ -190,12 +221,33 @@ class GithubTools(Toolset):
         Returns:
             JSON string containing file contents and metadata.
         """
+        # Get the client_wants_cancel event from tool_context
+        tool_context = kwargs.get('tool_context', {})
+        client_wants_cancel = tool_context.get('client_wants_cancel')
+        
+        # Extract other parameters
+        owner = kwargs.get('owner')
+        repo = kwargs.get('repo')
+        path = kwargs.get('path')
+        ref = kwargs.get('ref')
+        
+        if not owner or not repo or not path:
+            return json.dumps({"error": "owner, repo, and path parameters are required"})
+        
+        # Check if cancellation is requested
+        if client_wants_cancel and client_wants_cancel.is_set():
+            return json.dumps({"error": "Operation cancelled by user"})
+        
         # Ensure server is running
         success, error = await self._ensure_server()
         if not success:
             return json.dumps({"error": error})
         
         try:
+            # Check again before making the API call
+            if client_wants_cancel and client_wants_cancel.is_set():
+                return json.dumps({"error": "Operation cancelled by user"})
+                
             # Call the client method
             result = await self.client.get_file_contents(owner, repo, path, ref)
             return json.dumps(result)
@@ -227,7 +279,7 @@ class GithubTools(Toolset):
             }
         }
     )
-    async def list_commits(self, owner: str, repo: str, page: int = 1, per_page: int = 10) -> str:
+    async def list_commits(self, **kwargs) -> str:
         """
         List commits for a GitHub repository.
         
@@ -240,12 +292,33 @@ class GithubTools(Toolset):
         Returns:
             JSON string containing list of commits.
         """
+        # Get the client_wants_cancel event from tool_context
+        tool_context = kwargs.get('tool_context', {})
+        client_wants_cancel = tool_context.get('client_wants_cancel')
+        
+        # Extract other parameters
+        owner = kwargs.get('owner')
+        repo = kwargs.get('repo')
+        page = kwargs.get('page', 1)
+        per_page = kwargs.get('per_page', 10)
+        
+        if not owner or not repo:
+            return json.dumps({"error": "owner and repo parameters are required"})
+        
+        # Check if cancellation is requested
+        if client_wants_cancel and client_wants_cancel.is_set():
+            return json.dumps({"error": "Operation cancelled by user"})
+        
         # Ensure server is running
         success, error = await self._ensure_server()
         if not success:
             return json.dumps({"error": error})
         
         try:
+            # Check again before making the API call
+            if client_wants_cancel and client_wants_cancel.is_set():
+                return json.dumps({"error": "Operation cancelled by user"})
+                
             # Call the client method
             result = await self.client.list_commits(owner, repo, page, per_page)
             return json.dumps(result)
@@ -272,7 +345,7 @@ class GithubTools(Toolset):
             }
         }
     )
-    async def search_code(self, query: str, page: int = 1, per_page: int = 10) -> str:
+    async def search_code(self, **kwargs) -> str:
         """
         Search for code within GitHub repositories.
         
@@ -284,12 +357,32 @@ class GithubTools(Toolset):
         Returns:
             JSON string containing search results.
         """
+        # Get the client_wants_cancel event from tool_context
+        tool_context = kwargs.get('tool_context', {})
+        client_wants_cancel = tool_context.get('client_wants_cancel')
+        
+        # Extract other parameters
+        query = kwargs.get('query')
+        page = kwargs.get('page', 1)
+        per_page = kwargs.get('per_page', 10)
+        
+        if not query:
+            return json.dumps({"error": "query parameter is required"})
+        
+        # Check if cancellation is requested
+        if client_wants_cancel and client_wants_cancel.is_set():
+            return json.dumps({"error": "Operation cancelled by user"})
+        
         # Ensure server is running
         success, error = await self._ensure_server()
         if not success:
             return json.dumps({"error": error})
         
         try:
+            # Check again before making the API call
+            if client_wants_cancel and client_wants_cancel.is_set():
+                return json.dumps({"error": "Operation cancelled by user"})
+                
             # Call the client method
             result = await self.client.search_code(query, page, per_page)
             return json.dumps(result)
@@ -302,23 +395,38 @@ class GithubTools(Toolset):
         description="Get information about the authenticated GitHub user",
         params={}
     )
-    async def get_me(self) -> str:
+    async def get_me(self, **kwargs) -> str:
         """
         Get information about the authenticated GitHub user.
         
         Returns:
             JSON string containing user information.
         """
+        # Get the client_wants_cancel event from tool_context
+        tool_context = kwargs.get('tool_context', {})
+        client_wants_cancel = tool_context.get('client_wants_cancel')
+        
+        # Check if cancellation is requested
+        if client_wants_cancel and client_wants_cancel.is_set():
+            return json.dumps({"error": "Operation cancelled by user"})
+        
         # Ensure server is running
         success, error = await self._ensure_server()
         if not success:
             return json.dumps({"error": error})
         
         try:
+            # Check again before making the API call
+            if client_wants_cancel and client_wants_cancel.is_set():
+                return json.dumps({"error": "Operation cancelled by user"})
+                
             # Call the client method
             result = await self.client.get_me()
+            logging.info(f"get_me() returned: {result}")
             return json.dumps(result)
         except Exception as e:
+            logging.error(f"Detailed error in get_me: {repr(e)}")
+            logging.error(f"Error getting user information: {str(e)}")
             return json.dumps({"error": f"Error getting user information: {str(e)}"})
     
     # Additional methods would be implemented here for all GitHub MCP functionalities

@@ -156,6 +156,7 @@ class ServerManager:
             raise Exception("Server is not running")
         
         request_id = str(self.next_id)
+        logging.info(f"Server manager request ID: {request_id}")
         self.next_id += 1
         
         # Create request message
@@ -176,6 +177,7 @@ class ServerManager:
         # Wait for response
         try:
             response = await response_future
+            logging.info(f"Server manager response: {response}")
             if "error" in response:
                 raise Exception(f"Method call failed: {response['error']['message']}")
             return response.get("result", {})
