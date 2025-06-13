@@ -84,7 +84,8 @@ class TextDeltaEvent(SessionEvent):
         super().__init__( **data)
 
     content: str = Field(..., description="A chunk of content text.")
-    format: str = Field("markdown", description="The format of the content, default is markdown")
+    format: str = Field("raw", description="The format of the content, default is raw")
+    vendor: str = Field(..., description="The vendor of the completion API")
 
 class ThoughtDeltaEvent(TextDeltaEvent):
     def __init__(self, **data):

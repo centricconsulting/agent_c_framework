@@ -118,6 +118,7 @@ class AgentAssistToolBase(Toolset):
 
             tool_context = opts.get("tool_call_context", {})
             tool_context['active_agent'] = agent
+            tool_context['agent_config'] = agent
             opts['tool_call_context'] = tool_context
 
 
