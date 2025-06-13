@@ -4,6 +4,7 @@ from pydantic import Field
 from typing import List, Optional, Dict, Any, Callable, Awaitable
 
 from agent_c.agents.base import BaseAgent
+from agent_c.models.context.interaction_inputs import InteractionInputs
 from agent_c.models.events import BaseEvent
 from agent_c.models.context.base import BaseContext
 from agent_c.models.agent_config import AgentConfiguration
@@ -20,7 +21,7 @@ class InteractionContext(BaseContext):
                                             "Will be generated if not provided")
     chat_session: ChatSession = Field(..., description="The chat session that this interaction is part of. "
                                                               "This is used to group interactions together.")
-
+    inputs: InteractionInputs = Field(..., description="The inputs for the interaction. ")
     agent_runtime: BaseAgent = Field(..., description="The agent runtime to use for the interaction")
     tool_chest: ToolChest = Field(..., description="The tool chest to use for the interaction")
     client_wants_cancel: threading.Event = Field(default_factory=threading.Event,
@@ -45,6 +46,7 @@ class InteractionContext(BaseContext):
 
     parent_context: Optional['InteractionContext'] = Field(None, description="The parent context of this interaction. "
                                                                            "This is used to link interactions together in a hierarchy.")
+    runtime_role: Optional[str] = Field("assistant", description="The role the runtime should used for events in the interaction. ")
 
     def __init__(self, **data) -> None:
         if 'interaction_id' not in data:
