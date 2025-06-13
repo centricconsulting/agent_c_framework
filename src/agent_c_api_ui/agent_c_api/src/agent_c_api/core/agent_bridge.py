@@ -12,7 +12,7 @@ from agent_c.models.agent_config import AgentConfiguration
 from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.models.input import AudioInput
 from agent_c.agents.gpt import GPTChatAgent, AzureGPTChatAgent
-from agent_c.models.events import SessionEvent
+from agent_c.models.events import SessionEvent, TextDeltaEvent
 from agent_c.toolsets import ToolChest, ToolCache
 from agent_c_api.config.env_config import settings
 from agent_c.models.input.file_input import FileInput
@@ -564,7 +564,7 @@ class AgentBridge:
         }) + "\n"
         return payload
 
-    async def _handle_text_delta(self, event: SessionEvent) -> str:
+    async def _handle_text_delta(self, event: TextDeltaEvent) -> str:
         """
         Handle text delta events from the agent/tools.
         
@@ -1022,7 +1022,6 @@ class AgentBridge:
             full_params = chat_params | tool_params
 
             context = InteractionContext(client_wants_cancel=client_wants_cancel,
-                                         agent_config=self.chat_session.agent_config,
                                          tool_chest=self.tool_chest, sections=agent_sections,
                                          streaming_callback=self.streaming_callback_with_logging,
                                          chat_session=self.chat_session, tool_schemas=tool_params["schemas"],
