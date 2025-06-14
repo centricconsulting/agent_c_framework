@@ -39,14 +39,18 @@ class MermaidChartTools(Toolset):
         cache_key = f"chart://{svg_name}"
         self.tool_cache.set(cache_key, rendered_graph.svg_response.text)
 
-        await self._render_media_markdown(f"\n\nRender complete, cached as: `{cache_key}`.",
-                                          "render_graph", **kwargs)
-        await self._raise_render_media(content_type="image/svg+xml", url=svg_link,
-                                       name=svg_name, content=rendered_graph.svg_response.text,
-                                       tool_context=kwargs.get('tool_context', {}))
         if rendered_graph.svg_graph.svg_response.text is None:
-            self.logger.debug("`rendered_graph.svg_response.text` is None, therefore, graph won't display.")
-        return f"Render complete, cached as: `{cache_key}`. IF your client supports SVG, it will have been displayed by now."
+            await self._render_media_markdown( kwargs.get('tool_context'), "rendered_graph.svg_response.text` is None, therefore, graph won't display.",
+                                              "render_graph")
+
+            return "Rendered_graph.svg_response.text` is None, therefore, graph won't display."
+
+        else:
+            await self._raise_render_media(kwargs.get('tool_context'),
+                                           content_type="image/svg+xml", url=svg_link,
+                                           name=svg_name, content=rendered_graph.svg_response.text)
+
+            return f"Render complete, cached as: `{cache_key}`. IF your client supports SVG, it will have been displayed by now."
 
 
 Toolset.register(MermaidChartTools)

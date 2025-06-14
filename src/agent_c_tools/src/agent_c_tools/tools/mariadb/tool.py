@@ -17,6 +17,7 @@ import sqlparse
 from sqlparse.sql import IdentifierList, Identifier, Function
 from sqlparse.tokens import Keyword, DML
 
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.toolsets.json_schema import json_schema
 from ...helpers.media_file_html_helper import get_file_html
@@ -549,6 +550,7 @@ class MariadbTools(Toolset):
             workspace_name = kwargs.get("workspace_name", "project")
             file_path = kwargs.get('file_path', f'mariadb_query_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
             force_save = kwargs.get("force_save", False)
+            tool_context: InteractionContext = kwargs.get('tool_context')
 
             if not query:
                 return "ERROR: Query cannot be empty."
@@ -564,12 +566,11 @@ class MariadbTools(Toolset):
                 return f"ERROR: {result['error']}"
 
             await self._raise_render_media(
+                tool_context,
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='execute_query',
                 content_type="text/html",
-                content="<b>Query executed successfully</b>",
-                tool_context=kwargs.get('tool_context', {})
-            )
+                content="<b>Query executed successfully</b>")
 
             if force_save:
                 try:
@@ -591,12 +592,12 @@ class MariadbTools(Toolset):
                         os_path = os_file_system_path(self.workspace_tool, unc_path)
 
                         await self._raise_render_media(
+                            tool_context,
                             sent_by_class=self.__class__.__name__,
                             sent_by_function='execute_query',
                             content_type="text/html",
-                            content=get_file_html(os_path, unc_path),
-                            tool_context=kwargs.get('tool_context', {}),
-                        )
+                            content=get_file_html(os_path, unc_path))
+
                         self.logger.debug(save_result)
                 except Exception as df_error:
                     self.logger.debug(f"Error converting result to DataFrame: {df_error}")
@@ -681,10 +682,10 @@ class MariadbTools(Toolset):
             # Render schema as an HTML table for better readability
             schema_html = self._schema_to_html(result['schema'], table_name)
             await self._raise_render_media(
+                kwargs.get('tool_context'),
                 content_type="text/html",
                 content=schema_html,
-                name=f"{table_name}_schema.html",
-                tool_context=kwargs.get('tool_context', {})
+                name=f"{table_name}_schema.html"
             )
             
             response = {

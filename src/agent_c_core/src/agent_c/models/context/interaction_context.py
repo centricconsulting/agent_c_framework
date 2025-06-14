@@ -44,7 +44,7 @@ class InteractionContext(BaseContext):
                                                                     "This is used to identify the user session that this interaction belongs to.")
 
     parent_context: Optional['InteractionContext'] = Field(None, description="The parent context of this interaction. "
-                                                                           "This is used to link interactions together in a hierarchy.")
+                                                                                    "This is used to link interactions together in a hierarchy.")
     runtime_role: Optional[str] = Field("assistant", description="The role the runtime should used for events in the interaction. ")
 
     def __init__(self, **data) -> None:

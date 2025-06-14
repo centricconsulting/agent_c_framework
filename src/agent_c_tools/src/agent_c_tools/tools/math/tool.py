@@ -745,14 +745,13 @@ class MathTools(Toolset):
             
             # Return the image by raising a render media event
             await self._raise_render_media(
+                kwargs.get('tool_context'),
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='plot_function',
                 content_type="image/png",
                 name=img_name,
                 content_bytes=img_bytes,
-                content=base64_img,
-                tool_context=kwargs.get('tool_context')
-            )
+                content=base64_img)
             
             return f"Plot created for y = {expression}"
         
@@ -860,14 +859,13 @@ class MathTools(Toolset):
             
             # Return the image by raising a render media event
             await self._raise_render_media(
+                kwargs.get('tool_context'),
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='plot_multiple_functions',
                 content_type="image/png",
                 name=img_name,
                 content_bytes=img_bytes,
-                content=base64_img,
-                tool_context=kwargs.get('tool_context')
-            )
+                content=base64_img)
             
             return f"Plot created comparing {len(expressions)} functions"
         except Exception as e:
@@ -976,7 +974,7 @@ class MathTools(Toolset):
                 "q3": float(np.percentile(values, 75)),
             }
             
-            return yaml.dump(result_dict, allow_unicode=True)
+            return self._yaml_dump(result_dict)
         except Exception as e:
             return f"ERROR: {str(e)}"
 
@@ -1028,7 +1026,7 @@ class MathTools(Toolset):
                 "p_value": float(p)
             }
             
-            return yaml.dump(result_dict, allow_unicode=True)
+            return self._yaml_dump(result_dict)
         except Exception as e:
             return f"ERROR: {str(e)}"
 

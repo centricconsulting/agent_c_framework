@@ -4,6 +4,7 @@ import json
 from ts_tool import api
 from typing import Any, List, Tuple, Optional, Callable, Awaitable, Union
 
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.models.context.base import BaseContext
 from agent_c.toolsets.json_schema import json_schema
@@ -203,7 +204,7 @@ class WorkspaceTools(Toolset):
         unc_path = kwargs.get('path', '')
         folder_depth = kwargs.get('folder_depth', 5)
         file_depth = kwargs.get('file_depth', 3)
-        tool_context = kwargs.get("tool_context")
+        tool_context: InteractionContext = kwargs.get("tool_context")
         max_tokens = kwargs.get("max_tokens", 4000)
 
         error, workspace, relative_path = self.validate_and_get_workspace_path(unc_path)

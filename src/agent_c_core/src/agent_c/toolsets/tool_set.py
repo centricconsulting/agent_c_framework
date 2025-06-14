@@ -7,6 +7,7 @@ import markdown
 
 from typing import Union, List, Dict, Any, Optional
 
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.toolsets.tool_cache import ToolCache
 from agent_c.models.context.base import BaseContext
 from agent_c.util.logging_utils import LoggingManager
@@ -117,7 +118,7 @@ class Toolset:
         if not text or len(text) == 0:
             return 0
 
-        return tool_context['agent_runtime'].count_tokens(text)
+        return tool_context.agent_runtime.count_tokens(text)
 
     def get_dependency(self, toolset_name: str) -> Optional['Toolset']:
         """
@@ -212,15 +213,15 @@ class Toolset:
 
         return formatted
 
-    async def _render_media_markdown(self, markdown_text: str, sent_by: str, **kwargs: Any) -> None:
-        await self._raise_render_media(
+    async def _render_media_markdown(self, tool_context: InteractionContext, markdown_text: str, sent_by: str, **kwargs: Any) -> None:
+        await self._raise_render_media(tool_context,
                 sent_by_class=self.__class__.__name__,
                 sent_by_function=sent_by,
                 content_type="text/html",
                 content=markdown.markdown(markdown_text),
                 **kwargs)
 
-    async def _raise_render_media(self, **kwargs: Any) -> None:
+    async def _raise_render_media(self, tool_context: InteractionContext, content_type: Optional[str] = 'text/markdown', **kwargs: Any) -> None:
         """
         Raises a render media event.
 
@@ -229,13 +230,9 @@ class Toolset:
         """
         kwargs['role'] = kwargs.get('role', self.tool_role)
 
-        # Format markdown content if content_type is text/markdown
-        content_type = kwargs.get('content_type')
         if content_type == 'text/markdown' and 'content' in kwargs:
-            kwargs['content'] = self._format_markdown(kwargs['content'])
-
-        tool_context = kwargs.pop('tool_context')
-        kwargs['session_id'] = kwargs.get('session_id', tool_context.get('user_session_id', tool_context['session_id']))
+            content_type= 'text/html'
+            kwargs['content'] = markdown.markdown(kwargs['content'])
 
         # Create the event object
         render_media_event = RenderMediaEvent(**kwargs)

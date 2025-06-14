@@ -1,5 +1,5 @@
+from typing import List
 from pydantic import Field
-from typing import Optional, List
 
 from agent_c.models.base import BaseModel
 from agent_c.models.input import TextInput, FileInput, ImageInput, AudioInput, VideoInput

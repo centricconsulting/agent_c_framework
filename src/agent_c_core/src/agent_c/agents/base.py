@@ -153,7 +153,7 @@ class BaseAgent:
         await self._raise_event(context, SystemMessageEvent(role="system",
                                                             severity=severity,
                                                             content=content,
-                                                            session_id=context.user_session_id))
+                                                            session_id=context.chat_session.user_session_id))
 
     async def _raise_history_delta(self, context: InteractionContext, messages):
         """
@@ -161,7 +161,7 @@ class BaseAgent:
         """
         await self._raise_event(context, HistoryDeltaEvent(messages=messages,
                                                            role=context.runtime_role,
-                                                           session_id=context.user_session_id,
+                                                           session_id=context.chat_session.user_session_id,
                                                            vendor=self.tool_format))
 
     async def _raise_completion_start(self, context: InteractionContext, comp_options):
@@ -173,7 +173,7 @@ class BaseAgent:
 
         await self._raise_event(context, CompletionEvent(running=True,
                                                          completion_options=completion_options,
-                                                         session_id=context.user_session_id))
+                                                         session_id=context.chat_session.user_session_id))
 
     async def _raise_completion_end(self, context: InteractionContext, comp_options, stop_reason: str, intput_tokens: int = 0, output_tokens: int = 0):
         """
@@ -183,7 +183,7 @@ class BaseAgent:
         completion_options.pop("messages", None)
         await self._raise_event(context, CompletionEvent(running=False,
                                                          completion_options=completion_options,
-                                                         session_id=context.user_session_id,
+                                                         session_id=context.chat_session.user_session_id,
                                                          intput_tokens=intput_tokens,
                                                          output_tokens=output_tokens,
                                                          stop_reason=stop_reason))
@@ -191,59 +191,53 @@ class BaseAgent:
     async def _raise_tool_call_start(self, context: InteractionContext, tool_calls):
         await self._raise_event(context, ToolCallEvent(active=True,
                                                        tool_calls=tool_calls,
-                                                       session_id=context.user_session_id,
+                                                       session_id=context.chat_session.user_session_id,
                                                        vendor=self.tool_format))
 
     async def _raise_system_prompt(self, context: InteractionContext, prompt: str):
         await self._raise_event(context, SystemPromptEvent(content=prompt,
-                                                           session_id=context.user_session_id,))
+                                                           session_id=context.chat_session.user_session_id,))
 
     async def _raise_user_request(self, context: InteractionContext):
         await self._raise_event(context, UserRequestEvent(data={"message": context.inputs.text},
-                                                          session_id=context.user_session_id))
+                                                          session_id=context.chat_session.user_session_id))
 
     async def _raise_tool_call_delta(self, context: InteractionContext, tool_calls):
         await self._raise_event(context, ToolCallDeltaEvent(tool_calls=tool_calls,
-                                                            session_id=context.user_session_id))
+                                                            session_id=context.chat_session.user_session_id))
 
     async def _raise_tool_call_end(self, context: InteractionContext, tool_calls, tool_results):
         await self._raise_event(context, ToolCallEvent(active=False,
                                                        tool_calls=tool_calls,
                                                        tool_results=tool_results,
-                                                       session_id=context.user_session_id,))
+                                                       session_id=context.chat_session.user_session_id,))
 
     async def _raise_interaction_start(self, context: InteractionContext):
         await self._raise_event(context, InteractionEvent(started=True,
                                                           id=context.interaction_id,
-                                                          session_id=context.user_session_id))
+                                                          session_id=context.chat_session.user_session_id))
         return context.interaction_id
 
     async def _raise_interaction_end(self, context: InteractionContext):
         await self._raise_event(context, InteractionEvent(started=False,
                                                            id=context.interaction_id,
-                                                           session_id=context.user_session_id))
+                                                           session_id=context.chat_session.user_session_id))
 
     async def _raise_text_delta(self, context: InteractionContext, content: str):
         await self._raise_event(context, TextDeltaEvent(content=content,
-                                                        session_id=context.user_session_id,
+                                                        session_id=context.chat_session.user_session_id,
                                                         vendor=self.tool_format,
                                                         role=context.runtime_role))
 
     async def _raise_thought_delta(self, context: InteractionContext, content: str):
             await self._raise_event(context, ThoughtDeltaEvent(content=content,
-                                                               session_id=context.user_session_id,
+                                                               session_id=context.chat_session.user_session_id,
                                                                vendor=self.tool_format,
                                                                role=context.runtime_role))
 
-    async def _raise_complete_thought(self, context: InteractionContext, content: str):
-            await self._raise_event(context, CompleteThoughtEvent(content=content,
-                                                                  session_id=context.user_session_id,
-                                                                  vendor=self.tool_format,
-                                                                  role=context.runtime_role))
-
     async def _raise_history_event(self, context: InteractionContext, messages: List[dict[str, Any]]):
         await self._raise_event(context, HistoryEvent(messages=messages,
-                                                      session_id = context.user_session_id,
+                                                      session_id = context.chat_session.user_session_id,
                                                       vendor=self.tool_format))
 
     async def _exponential_backoff(self, delay: int) -> None:

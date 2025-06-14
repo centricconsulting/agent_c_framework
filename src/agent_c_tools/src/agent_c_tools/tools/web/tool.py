@@ -5,6 +5,7 @@ from typing import List, Optional, Dict, Tuple
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c_tools.tools.web.formatters import *
 from agent_c.toolsets import json_schema, Toolset
 from agent_c_tools.tools.workspace.tool import WorkspaceTools
@@ -155,7 +156,7 @@ class WebTools(Toolset):
         raw_output: bool = kwargs.get('raw_output', False)
         max_tokens: int = kwargs.get('max_tokens', 20000)
         default_expire: int = kwargs.get("expire_secs", 3600)
-        tool_context = kwargs.get('tool_context')
+        tool_context: InteractionContext = kwargs.get('tool_context')
         additional_headers: Dict[str, str] = kwargs.get('additional_headers', {})
         workspace: Optional[BaseWorkspace] = None
 
@@ -185,7 +186,7 @@ class WebTools(Toolset):
 
         if not raw_output:
             content = self.format_content(content, url)
-            await self._render_media_markdown(content, "fetch_url", tool_context=tool_context)
+            await self._render_media_markdown(tool_context, content, "fetch_url")
 
         token_count = tool_context['agent_runtime'].count_tokens(content)
 

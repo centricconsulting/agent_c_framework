@@ -9,6 +9,7 @@ from openai import AsyncOpenAI
 from openai.types import ImagesResponse
 
 from agent_c.models.chat_event import RenderMedia
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.toolsets import json_schema, Toolset
 from agent_c_tools.tools.workspace.tool import WorkspaceTools
 from agent_c_tools.tools.workspace.local_storage import LocalStorageWorkspace
@@ -62,8 +63,8 @@ class DallETools(Toolset):
         }
     )
     async def create_image(self, **kwargs):
-        tool_context = kwargs.get('tool_context')
-        session_id = tool_context.get('user_session_id', tool_context['session_id'])
+        tool_context: InteractionContext = kwargs.get('tool_context')
+        session_id = tool_context.user_session_id
 
         prompt = kwargs.get('prompt')
         quality: Literal['hd', 'standard'] = 'standard' if kwargs.get('quality', 'standard') == 'standard' else 'hd'
@@ -85,7 +86,7 @@ class DallETools(Toolset):
         await self._render_media_markdown(f"### Generating image from prompt:\n> {prompt}\n\n",
                                           "DALL-E-3 Image Generation", session_id=session_id)
 
-        user: str = tool_context.get('current_user_username', 'Agent C User')
+        user: str = tool_context.chat_session.user_id
 
         try:
             response: ImagesResponse = await self.openai_client.images.generate(prompt=prompt, size=size, quality=quality, style=style,

@@ -63,27 +63,17 @@ class RandomNumberTools(Toolset):
 
             # Generate random number
             number = random.randint(min_level, max_ceiling)
-            self.logger.info(f"Generated random number between {min_level} and {max_ceiling}: {number}")
-            # self.logger.debug(
-            #     f"About to call chat_callback, streaming_callback exists: {self.streaming_callback is not None}")
-            await self._raise_render_media(
-                sent_by_class=self.__class__.__name__,
-                sent_by_function='generate_random_number',
-                content_type="text/html",
-                content=f"<div>Example Raise Media Event: Number is <b>{number}</b></div>",
-                tool_context=kwargs.get('tool_context', {})
+            self.logger.debug(f"Generated random number between {min_level} and {max_ceiling}: {number}")
+            await self._render_media_markdown(
+                kwargs.get('tool_context'),
+                "### Your number, chosen by a totally fair and legitimate dice roll you can't see, is:\n\n# {number}\n\n",
             )
-            return json.dumps({
-                "number": number,
-                "message": "Random number generated successfully"
-            })
+            return f"number ({number}) generated successfully"
 
         except Exception as e:
             error_msg = f"Error generating random number: {str(e)}"
             self.logger.error(error_msg)
-            return json.dumps({
-                "error": error_msg
-            })
+            return error_msg
 
 
 # Register the tool

@@ -692,11 +692,11 @@ class WorkspacePlanningTools(Toolset):
 
             file_system_path = os_file_system_path(self.workspace_tool, output_path)
             await self._raise_render_media(
+                kwargs.get('tool_context'),
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='export_plan_report',
                 content_type="text/html",
-                content=f"<p>Interactive HTML plan report created: <a href='file://{file_system_path}' target='_blank'>{output_path}</a></p>",
-                tool_context=kwargs.get('tool_context', {})
+                content=f"<p>Interactive HTML plan report created: <a href='file://{file_system_path}' target='_blank'>{output_path}</a></p>"
             )
 
             return f"Plan report exported successfully to: {output_path}"

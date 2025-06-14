@@ -107,8 +107,8 @@ class MarkdownToHtmlReportTools(Toolset):
 
         # Validate required fields
         if validation_error:
-            return json.dumps({"success": False, "error": validation_error})
-
+            return  validation_error
+        file_count = 0
         workspace = kwargs.get('workspace')
         input_path = kwargs.get('file_path')
         output_filename = kwargs.get('output_filename')
@@ -119,6 +119,7 @@ class MarkdownToHtmlReportTools(Toolset):
         try:
             # Create UNC input path
             input_path_full = create_unc_path(workspace, input_path)
+            file_structure = None
 
             # Create UNC output filename
             output_filename = ensure_file_extension(output_filename, 'html')
@@ -152,16 +153,10 @@ class MarkdownToHtmlReportTools(Toolset):
                         else:
                             error = f"Error reading file at {input_path}: {file_content}"
                             logger.error(error)
-                            return json.dumps({
-                                "success": False,
-                                "error": error
-                            })
+                            return error
                     else:
                         logger.error(f"Error validating input path: {error}")
-                        return json.dumps({
-                            "success": False,
-                            "error": f"Input path '{input_path}' is not accessible: {error}"
-                        })
+                        return f"Input path '{input_path}' is not accessible: {error}"
                 except:
                     pass  # Not a file, treat as directory
 
@@ -172,10 +167,8 @@ class MarkdownToHtmlReportTools(Toolset):
                 ls_data = json.loads(ls_result)
 
                 if 'error' in ls_data:
-                    return json.dumps({
-                        "success": False,
-                        "error": f"Input path '{input_path}' is not accessible: {ls_data['error']}"
-                    })
+                    return f"Input path '{input_path}' is not accessible: {ls_data['error']}"
+
 
                 # Collect markdown files
                 logger.debug("Collecting markdown files...")
@@ -196,10 +189,7 @@ class MarkdownToHtmlReportTools(Toolset):
 
                     # If still no files found
                     if not markdown_files:
-                        return json.dumps({
-                            "success": False,
-                            "error": f"No markdown files found in {input_path} or its subdirectories"
-                        })
+                        return  f"No markdown files found in {input_path} or its subdirectories"
 
                 logger.debug(f"Found {len(markdown_files)} markdown files. Building file structure...")
 
@@ -208,10 +198,8 @@ class MarkdownToHtmlReportTools(Toolset):
                 file_count = len(markdown_files)
 
             if not file_structure:
-                return json.dumps({
-                    "success": False,
-                    "error": "Failed to build file structure"
-                })
+                return "Failed to build file structure"
+
 
             # Get the HTML template
             logger.debug("Preparing HTML template...")
@@ -237,10 +225,7 @@ class MarkdownToHtmlReportTools(Toolset):
 
             write_data = json.loads(write_result)
             if 'error' in write_data:
-                return json.dumps({
-                    "success": False,
-                    "error": f"Failed to write HTML file: {write_data['error']}"
-                })
+                return  f"Failed to write HTML file: {write_data['error']}"
 
             message = f"Successfully generated HTML viewer at {output_filename}."
             logger.debug(message)
@@ -260,23 +245,16 @@ class MarkdownToHtmlReportTools(Toolset):
             try:
                 html_content = await self.media_helper.create_result_html(output_info)
                 await self._raise_render_media(
+                    kwargs.get('tool_context'),
                     sent_by_class=self.__class__.__name__,
                     sent_by_function='generate_md_viewer',
                     content_type="text/html",
-                    content=html_content,
-                    tool_context=kwargs.get('tool_context', {})
-                )
-                # markdown_content = await self.media_helper.create_markdown_media(output_info)
-                # await self._raise_render_media(
-                #     sent_by_class=self.__class__.__name__,
-                #     sent_by_function='generate_report',
-                #     content_type="text/markdown",  # Use text/markdown content type
-                #     content=markdown_content
-                # )
+                    content=html_content)
+
             except Exception as e:
                 logger.error(f"Failed to raise media event: {str(e)}")
 
-            return json.dumps({
+            return self._yaml_dump({
                 "success": True,
                 "message": message,
                 "output_file": output_filename,
@@ -287,10 +265,7 @@ class MarkdownToHtmlReportTools(Toolset):
 
         except Exception as e:
             logger.exception("Error generating markdown viewer")
-            return json.dumps({
-                "success": False,
-                "error": f"Error generating markdown viewer: {str(e)}"
-            })
+            return f"Error generating markdown viewer: {str(e)}"
 
     @json_schema(
         description="Generate an interactive HTML viewer with custom file hierarchy structure",
@@ -336,7 +311,7 @@ class MarkdownToHtmlReportTools(Toolset):
 
         # Validate required fields
         if validation_error:
-            return json.dumps({"success": False, "error": validation_error})
+            return validation_error
 
         workspace = kwargs.get('workspace')
         output_filename = kwargs.get('output_filename')
@@ -348,10 +323,7 @@ class MarkdownToHtmlReportTools(Toolset):
             try:
                 custom_structure = json.loads(custom_structure_json)
             except json.JSONDecodeError as e:
-                return json.dumps({
-                    "success": False,
-                    "error": f"Invalid JSON in custom_structure: {str(e)}"
-                })
+                return  f"Invalid JSON in custom_structure: {str(e)}"
 
             # Create base path for file resolution
             base_path = f"//{workspace}"
@@ -365,25 +337,16 @@ class MarkdownToHtmlReportTools(Toolset):
                 # Use enhanced validation from MarkdownFileCollector
                 is_valid, error_msg = await file_collector.validate_custom_structure(custom_structure, base_path)
                 if not is_valid:
-                    return json.dumps({
-                        "success": False,
-                        "error": f"Invalid custom structure: {error_msg}"
-                    })
+                    return f"Invalid custom structure: {error_msg}"
 
                 # Build the structure using enhanced MarkdownFileCollector
                 structure = await file_collector.build_custom_structure(custom_structure, base_path)
                 
                 if not structure:
-                    return json.dumps({
-                        "success": False,
-                        "error": "No valid markdown files found in the custom structure"
-                    })
+                    return f"No valid markdown files found in the custom structure"
 
             except ValueError as e:
-                return json.dumps({
-                    "success": False,
-                    "error": str(e)
-                })
+                return f"error: {str(e)}"
 
             # Count files in the structure
             file_count = self._count_files_in_structure(structure)
@@ -418,12 +381,10 @@ class MarkdownToHtmlReportTools(Toolset):
 
             write_data = json.loads(write_result)
             if 'error' in write_data:
-                return json.dumps({
-                    "success": False,
-                    "error": f"Failed to write HTML file: {write_data['error']}"
-                })
+                return f"Failed to write HTML file: {write_data['error']}"
 
-            message = f"Successfully generated custom HTML viewer at {output_filename}."
+
+            message = f"Successfully generated custom viewer at {output_filename}."
             logger.debug(message)
 
             # Get file system path and raise a media event
@@ -450,7 +411,7 @@ class MarkdownToHtmlReportTools(Toolset):
             except Exception as e:
                 logger.error(f"Failed to raise media event: {str(e)}")
 
-            return json.dumps({
+            return self._yaml_dump({
                 "success": True,
                 "message": message,
                 "output_file": output_filename,
@@ -462,10 +423,7 @@ class MarkdownToHtmlReportTools(Toolset):
 
         except Exception as e:
             logger.exception("Error generating custom markdown viewer")
-            return json.dumps({
-                "success": False,
-                "error": f"Error generating custom markdown viewer: {str(e)}"
-            })
+            return f"Error generating custom markdown viewer: {str(e)}"
 
     def _count_files_in_structure(self, structure):
         """Count the number of files in a processed structure.
@@ -543,16 +501,14 @@ class MarkdownToHtmlReportTools(Toolset):
         """
         """Convert a markdown file to Word (DOCX) format."""
         if not self.docx_converter.docx_conversion_available:
-            return json.dumps({
-                "success": False,
-                "error": "Required dependencies not available. Please install python-markdown, python-docx, and beautifulsoup4."
-            })
+            return  "Required dependencies not available. Please install python-markdown, python-docx, and beautifulsoup4."
+
 
         # Validate required fields
         validation_error = self.validation_helper.validate_required_fields(
             kwargs, ["workspace", "input_path"])
         if validation_error:
-            return json.dumps({"success": False, "error": validation_error})
+            return validation_error
 
         workspace = kwargs.get('workspace')
         input_path = kwargs.get('input_path')
@@ -566,10 +522,8 @@ class MarkdownToHtmlReportTools(Toolset):
             input_path_full = create_unc_path(workspace, input_path)
 
             if not has_file_extension(input_path_full, ['.md', '.markdown']):
-                return json.dumps({
-                    "success": False,
-                    "error": f"Input file '{input_path_full}' is not a markdown file."
-                })
+                return f"Input file '{input_path_full}' is not a markdown file."
+
             input_filename = normalize_path(input_path_full).split('/')[-1]
 
             # Determine output path
@@ -587,11 +541,12 @@ class MarkdownToHtmlReportTools(Toolset):
             # Read and Process the markdown file
             error, workspace, relative_path = self.workspace_tool.validate_and_get_workspace_path(input_path_full)
             if error:
-                raise ValueError(f"Error reading file: {error}")
+                return f"Error reading file: {error}"
+
             file_content = await workspace.read_internal(relative_path)
 
             if file_content.startswith('{"error":'):
-                raise ValueError(f"Error reading file: {file_content}")
+                return f"Error reading file: {file_content}"
 
             # Convert markdown to Word document
             docx_content_bytes = await self.docx_converter.convert_to_docx(
@@ -605,17 +560,11 @@ class MarkdownToHtmlReportTools(Toolset):
                 )
             except Exception as e:
                 logger.error(f"Error writing docx file: {e}")
-                return json.dumps({
-                    "success": False,
-                    "error": f"Failed to write Word document: {str(e)}"
-                })
+                return f"Failed to write Word document: {str(e)}"
 
             write_data = json.loads(write_result)
             if 'error' in write_data:
-                return json.dumps({
-                    "success": False,
-                    "error": f"Failed to write Word document: {write_data['error']}"
-                })
+                return  f"Failed to write Word document: {write_data['error']}"
 
             # Get file system path
             file_system_path = os_file_system_path(self.workspace_tool, output_path_full)
@@ -643,23 +592,20 @@ class MarkdownToHtmlReportTools(Toolset):
             try:
                 html_content = await self.media_helper.create_result_html(output_info)
                 await self._raise_render_media(
+                    kwargs.get('tool_context'),
                     sent_by_class=self.__class__.__name__,
                     sent_by_function='markdown_to_docx',
                     content_type="text/html",
-                    content=html_content,
-                    tool_context=kwargs.get('tool_context', {})
-                )
+                    content=html_content)
+
             except Exception as e:
                 logger.error(f"Failed to raise media event: {str(e)}")
 
-            return json.dumps(result)
+            return self._yaml_dump(result)
 
         except Exception as e:
             logger.exception("Error converting markdown to Word document")
-            return json.dumps({
-                "success": False,
-                "error": f"Error converting markdown to Word document: {str(e)}"
-            })
+            return  f"Error converting markdown to Word document: {str(e)}"
 
 
 # Register the toolset with the Agent C framework

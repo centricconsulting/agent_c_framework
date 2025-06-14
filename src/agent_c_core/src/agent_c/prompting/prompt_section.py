@@ -1,9 +1,8 @@
 import inspect
-import logging
 from functools import wraps
 from string import Template
 
-from typing import Callable, Any, Dict
+from typing import Callable, Any, Dict, Optional
 from pydantic import BaseModel, ConfigDict
 
 from agent_c.util.logging_utils import LoggingManager
@@ -56,12 +55,23 @@ class PromptSection(BaseModel):
         logging_manager = LoggingManager(self.__class__.__name__)
         self._logger = logging_manager.get_logger()
 
+    @classmethod
+    def default_context(cls) -> Optional['BaseContext']:
+        """
+        Returns the default context for the prompt section.
+
+        Returns:
+            Optional[BaseContext]: The default context, or None if not set.
+        """
+        return None
+
     async def get_dynamic_properties(self, context) -> Dict[str, Any]:
         """
         Retrieves the dynamic properties of the PromptSection.
 
         Args:
             data: Dict[str, Any]: The data dictionary to pass to attributes that accept it
+            context: InteractionContext: The context of the interaction, used to pass additional data to dynamic properties.
 
         Returns:
             Dict[str, Any]: A dictionary of dynamic property names and their values.
@@ -74,6 +84,10 @@ class PromptSection(BaseModel):
                 continue
 
             attr = getattr(self, attr_name)
+            # This always trips me up when I see it and I wrote it...
+            # Check if the attribute is a callable and has the property_bag_item flag
+            # the DEFAULT is false, so if the attribute is not callable or does not have the flag,
+            # it will be skipped
             if callable(attr) and getattr(attr, 'is_property_bag_item', False):
                 try:
                     sig = inspect.signature(attr)
@@ -88,6 +102,7 @@ class PromptSection(BaseModel):
                         self._logger.exception(f"Dynamic property '{attr_name}' has too many parameters: {param_count}")
                 except Exception as e:
                     self._logger.exception(f"Error getting dynamic property '{attr_name}': {e}")
+
         return dynamic_props
 
     async def render(self, context) -> str:

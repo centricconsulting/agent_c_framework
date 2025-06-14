@@ -7,6 +7,7 @@ import threading
 import yaml
 from typing import Optional
 
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.toolsets.json_schema import json_schema
 from ... import WorkspaceTools
@@ -101,8 +102,8 @@ class OfficeToMarkdownTools(Toolset):
             output_workspace = kwargs.get('output_workspace', input_workspace)
             input_path = kwargs.get('input_path')
             output_path = kwargs.get('output_path')
-            tool_context=kwargs.get('tool_context', {})
-            client_wants_cancel: threading.Event = tool_context['client_wants_cancel']
+            tool_context: InteractionContext =kwargs.get('tool_context')
+            client_wants_cancel: threading.Event = tool_context.client_wants_cancel
 
 
             # Create UNC path and get OS path for tool
@@ -123,48 +124,41 @@ class OfficeToMarkdownTools(Toolset):
             output_unc_path = create_unc_path(output_workspace, output_path)
             
             # Write converted markdown content
-            if client_wants_cancel.is_set():
-                await self._render_media_markdown("**Processing cancelled by user**", 'convert_office_to_markdown',tool_context=tool_context)
-                return self._format_response(
-                    True,
-                    "User cancelled operation before file was written.",
-                )
-            else:
-                write_result = await self.workspace_tool.write(
+            write_result = await self.workspace_tool.write(
                     path=output_unc_path,
                     data=result.markdown_content,
-                    mode="write"
+                    mode="write")
+
+
+            # Check for write errors
+            write_data = json.loads(write_result)
+            if 'error' in write_data:
+                return self._format_response(False, f"Failed to write output file: {write_data['error']}",
+                                           input_file=input_unc_path)
+
+            # Get OS path for media event
+            output_file_system_path = os_file_system_path(self.workspace_tool, output_unc_path)
+
+            # Raise media event for successful conversion
+            if output_file_system_path:
+                await self._raise_render_media(
+                    tool_context,
+                    sent_by_class=self.__class__.__name__,
+                    sent_by_function='convert_office_to_markdown',
+                    content_type="text/html",
+                    content=f"<p>Office file converted to markdown: <a href='file://{output_file_system_path}'>{output_path}</a></p>",
                 )
 
-                # Check for write errors
-                write_data = json.loads(write_result)
-                if 'error' in write_data:
-                    return self._format_response(False, f"Failed to write output file: {write_data['error']}",
-                                               input_file=input_unc_path)
+            logger.info(f"Successfully converted {input_unc_path} to {output_unc_path}")
 
-                # Get OS path for media event
-                output_file_system_path = os_file_system_path(self.workspace_tool, output_unc_path)
-
-                # Raise media event for successful conversion
-                if output_file_system_path:
-                    await self._raise_render_media(
-                        sent_by_class=self.__class__.__name__,
-                        sent_by_function='convert_office_to_markdown',
-                        content_type="text/html",
-                        content=f"<p>Office file converted to markdown: <a href='file://{output_file_system_path}'>{output_path}</a></p>",
-                        tool_context=tool_context
-                    )
-
-                logger.info(f"Successfully converted {input_unc_path} to {output_unc_path}")
-
-                return self._format_response(
-                    True,
-                    "Office file converted to markdown successfully",
-                    input_file=input_unc_path,
-                    output_file=output_unc_path,
-                    file_type=result.file_type,
-                    os_path=output_file_system_path
-                )
+            return self._format_response(
+                True,
+                "Office file converted to markdown successfully",
+                input_file=input_unc_path,
+                output_file=output_unc_path,
+                file_type=result.file_type,
+                os_path=output_file_system_path
+            )
             
         except Exception as e:
             logger.exception("Error in convert_office_to_markdown")

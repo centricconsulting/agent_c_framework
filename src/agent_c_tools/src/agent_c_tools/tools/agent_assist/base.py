@@ -5,26 +5,26 @@ from datetime import datetime
 from functools import partial
 from typing import Any, Dict, List, Optional, cast, Tuple
 
-
-from agent_c.prompting.prompt_section import PromptSection
-from agent_c.config.model_config_loader import ModelConfigurationLoader
-from agent_c.config.agent_config_loader import AgentConfigLoader
-from agent_c.models.events import SessionEvent
-from agent_c.models.events.chat import HistoryDeltaEvent, CompleteThoughtEvent
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.toolsets.tool_set import Toolset
-from agent_c.models.agent_config import AgentConfiguration
-from agent_c_tools.tools.agent_assist.expiring_session_cache import AsyncExpiringCache
+from agent_c.models.events import SessionEvent
+from agent_c.models.events.chat import HistoryDeltaEvent
 from agent_c_tools.tools.think.prompt import ThinkSection
+from agent_c.prompting.prompt_section import PromptSection
+from agent_c.models.agent_config import AgentConfiguration
 from agent_c.prompting.prompt_builder import PromptBuilder
 from agent_c_tools.tools.workspace.tool import WorkspaceTools
+from agent_c.config.agent_config_loader import AgentConfigLoader
+from agent_c.config.model_config_loader import ModelConfigurationLoader
 from agent_c.agents.gpt import BaseAgent, GPTChatAgent, AzureGPTChatAgent
 from agent_c.agents.claude import ClaudeChatAgent, ClaudeBedrockChatAgent
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 from agent_c_tools.tools.agent_assist.prompt import AssistantBehaviorSection
-
+from agent_c_tools.tools.agent_assist.expiring_session_cache import AsyncExpiringCache
 
 class AgentAssistToolBase(Toolset):
+    # TODO: Make this a core singleton map
     __vendor_agent_map = {
         "azure_openai": AzureGPTChatAgent,
         "openai": GPTChatAgent,
@@ -49,7 +49,7 @@ class AgentAssistToolBase(Toolset):
         self.workspace_tool: Optional[WorkspaceTools] = None
 
 
-    async def _emit_content_from_agent(self, agent: AgentConfiguration, content: str, tool_context, name: Optional[str] = None):
+    async def _emit_content_from_agent(self, agent: AgentConfiguration, content: str, tool_context: InteractionContext, name: Optional[str] = None):
         if name is None:
             name = agent.name
         await self._raise_render_media(
@@ -59,7 +59,7 @@ class AgentAssistToolBase(Toolset):
             content=markdown.markdown(content),
             tool_context=tool_context)
 
-    async def _handle_history_delta(self, agent, event: HistoryDeltaEvent):
+    async def _handle_history_delta(self, agent, event: HistoryDeltaEvent, tool_context: InteractionContext):
         content = []
         for message in event.messages:
             contents = message.get('content', [])
@@ -68,15 +68,7 @@ class AgentAssistToolBase(Toolset):
                     content.append(resp['text'])
 
         if len(content):
-            await self._emit_content_from_agent(agent, "\n\n".join(content))
-
-    async def _handle_complete_thought(self, agent: AgentConfiguration, event: CompleteThoughtEvent):
-        await self._emit_content_from_agent(agent, event.content, name=f"{agent.name} (thinking)")
-
-    async def _streaming_callback_for_subagent(self, agent: AgentConfiguration, parent_streaming_callback, parent_session_id, event: SessionEvent):
-        if event.type not in [ 'interaction', 'history'] and parent_streaming_callback is not None:
-            event.session_id = parent_session_id
-            await parent_streaming_callback(event)
+            await self._emit_content_from_agent(agent, "\n\n".join(content), tool_context)
 
     async def post_init(self):
         self.workspace_tool = cast(WorkspaceTools, self.tool_chest.available_tools.get('WorkspaceTools'))
@@ -105,7 +97,7 @@ class AgentAssistToolBase(Toolset):
 
         return runtime_cls(model_name=model_config["id"], client=client,prompt_builder=PromptBuilder(sections=agent_sections))
 
-    async def __chat_params(self, agent: AgentConfiguration, agent_runtime: BaseAgent, user_session_id: Optional[str] = None, **opts) -> Dict[str, Any]:
+    async def __chat_params(self, agent: AgentConfiguration, agent_runtime: BaseAgent, tool_context: InteractionContext, **opts) -> Dict[str, Any]:
         tool_params = {}
         client_wants_cancel = opts.get('client_wants_cancel')
         parent_streaming_callback = self.streaming_callback
