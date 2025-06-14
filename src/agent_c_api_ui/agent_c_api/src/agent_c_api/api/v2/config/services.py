@@ -1,17 +1,13 @@
-import os
-import glob
 from typing import Optional
 from fastapi_cache.decorator import cache
 
-from agent_c.config.agent_config_loader import AgentConfigLoader
-from agent_c.models.agent_config import AgentConfigurationV2, AgentConfiguration
 from agent_c.toolsets.tool_set import Toolset
+from agent_c.models.agent_config import AgentConfiguration
 from agent_c_api.config.config_loader import MODELS_CONFIG
-from agent_c_api.config.env_config import settings
-from agent_c_api.core.agent_manager import UItoAgentBridgeManager
+from agent_c.config.agent_config_loader import AgentConfigLoader
 
 from agent_c_api.api.v2.models.config_models import (
-    ModelInfo, PersonaInfo, ToolInfo, ModelParameter, ToolParameter,
+    ModelInfo, ToolInfo, ModelParameter,
     ModelsResponse, AgentConfigsResponse, ToolsResponse, SystemConfigResponse
 )
 
@@ -126,12 +122,7 @@ class ConfigService:
                     break
                     
             categories.add(category)
-            
-            # Check if tool is essential
-            is_essential = tool_class.__name__ in UItoAgentBridgeManager.ESSENTIAL_TOOLS
-            if is_essential:
-                essential_tools.append(tool_class.__name__)
-            
+
             # Get parameters from tool class (simplified approach)
             parameters = []
             # For now, we don't have easy access to parameter info
@@ -144,7 +135,7 @@ class ConfigService:
                 description=tool_class.__doc__ or "",
                 category=category,
                 parameters=parameters,
-                is_essential=is_essential
+                is_essential=False
             )
             tool_list.append(tool_info)
         
@@ -171,12 +162,12 @@ class ConfigService:
         Get combined system configuration
         """
         models_response = await self.get_models()
-        personas_response = await self.get_personas()
+        agent_configs_response = await self.get_agent_configs()
         tools_response = await self.get_tools()
         
         return SystemConfigResponse(
             models=models_response.models,
-            personas=personas_response.personas,
+            agent_configs=agent_configs_response.agents,
             tools=tools_response.tools,
             tool_categories=tools_response.categories,
             essential_tools=tools_response.essential_tools

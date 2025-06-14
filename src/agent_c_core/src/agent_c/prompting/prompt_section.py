@@ -56,7 +56,7 @@ class PromptSection(BaseModel):
         logging_manager = LoggingManager(self.__class__.__name__)
         self._logger = logging_manager.get_logger()
 
-    async def get_dynamic_properties(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def get_dynamic_properties(self, context) -> Dict[str, Any]:
         """
         Retrieves the dynamic properties of the PromptSection.
 
@@ -66,6 +66,7 @@ class PromptSection(BaseModel):
         Returns:
             Dict[str, Any]: A dictionary of dynamic property names and their values.
         """
+        data = {}
         dynamic_props: Dict[str, Any] = {}
         for attr_name in dir(self):
             # Skip internal or special attributes
@@ -76,20 +77,20 @@ class PromptSection(BaseModel):
             if callable(attr) and getattr(attr, 'is_property_bag_item', False):
                 try:
                     sig = inspect.signature(attr)
-                    # If it has exactly one parameter (excluding 'self'), pass data
                     param_count = len(sig.parameters)
                     if param_count == 0:
                         dynamic_props[attr_name] = await attr()
                     elif param_count == 1:
                         dynamic_props[attr_name] = await attr(data)
+                    elif param_count == 2:
+                        dynamic_props[attr_name] = await attr(context, data)
                     else:
                         self._logger.exception(f"Dynamic property '{attr_name}' has too many parameters: {param_count}")
                 except Exception as e:
                     self._logger.exception(f"Error getting dynamic property '{attr_name}': {e}")
         return dynamic_props
 
-    async def render(self, data: Dict[str, Any]) -> str:
-        section_data: Dict[str, Any] = {**data, **await self.get_dynamic_properties(data)}
+    async def render(self, context) -> str:
         template: Template = Template(self.template)
-        result = template.substitute(section_data)
+        result = template.substitute(await self.get_dynamic_properties(context))
         return result

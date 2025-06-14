@@ -1,6 +1,8 @@
 import re
 import logging
 from typing import List, Dict, Any, Set, Optional
+
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.prompting.prompt_section import PromptSection
 from agent_c.util.logging_utils import LoggingManager
 
@@ -13,15 +15,11 @@ class PromptBuilder:
         sections (List[PromptSection]): A list of PromptSection objects that define the structure of the prompt.
     """
 
-    def __init__(self, sections: List[PromptSection], tool_sections: List[PromptSection]=None) -> None:
+    def __init__(self) -> None:
         """
         Initialize the PromptBuilder with a list of sections.
-
-        Args:
-            sections (List[PromptSection]): A list of PromptSection objects.
         """
-        self.sections: List[PromptSection] = sections
-        self.tool_sections: List[PromptSection] = tool_sections or []
+
         logging_manager = LoggingManager(self.__class__.__name__)
         self.logger = logging_manager.get_logger()
 
@@ -38,12 +36,13 @@ class PromptBuilder:
         """
         return set(re.findall(r'\{(.+?)\}', template))
 
-    async def render(self, data: Dict[str, Any], tool_sections: Optional[List[PromptSection]] = None) -> str:
+    async def render(self, context: InteractionContext, sections: List[PromptSection], tool_sections: Optional[List[PromptSection]] = None) -> str:
         """
         Render the prompt sections with the provided data.
 
         Args:
-            data (Dict[str, Any]): A dictionary containing the data to render the sections with.
+            context (InteractionContext): The interaction context containing data to render the prompt.
+            sections (List[PromptSection]): A list of prompt sections to render.
             tool_sections (Optional[List[PromptSection]]): A list of prompt sections to use in the rendering process
                                                            instead of the active tool sections from the toolchest
         Returns:
@@ -54,10 +53,7 @@ class PromptBuilder:
             Exception: If an unexpected error occurs during rendering.
         """
         rendered_sections: List[str] = []
-        if tool_sections is None:
-            tool_sections = self.tool_sections
-
-        section_lists = [self.sections, tool_sections]
+        section_lists = [sections, tool_sections]
         section_list_titles= ["Core Operating Guidelines", "Additional Tool Operation Guidelines"]
 
         for index, section_list in enumerate(section_lists):
@@ -70,7 +66,7 @@ class PromptBuilder:
 
             for section in section_list:
                 try:
-                    rendered_section: str = await section.render(data)
+                    rendered_section: str = await section.render(context)
                     rendered_section += "\n\n"
 
                     if section.render_section_header:
@@ -82,7 +78,7 @@ class PromptBuilder:
                     template_vars = self._get_template_variables(section.template)
                     self.logger.error(
                         f"Error rendering section '{section.name}': Missing key '{missing_key}'. "
-                        f"Template variables: {template_vars}. Data provided: {data.keys()}"
+                        f"Template variables: {template_vars}."
                     )
                     if section.required:
                         raise

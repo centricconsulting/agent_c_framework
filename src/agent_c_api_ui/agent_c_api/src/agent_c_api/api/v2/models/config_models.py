@@ -238,7 +238,7 @@ class ToolsResponse(BaseModel):
 class SystemConfigResponse(BaseModel):
     """Combined system configuration response"""
     models: List[ModelInfo] = Field(description="List of available LLM models")
-    personas: List[PersonaInfo] = Field(description="List of available personas")
+    agent_configs: List[AgentConfiguration] = Field(description="List of available agent configurations")
     tools: List[ToolInfo] = Field(description="List of available tools")
     tool_categories: List[str] = Field(description="Available tool categories")
     essential_tools: List[str] = Field(description="Tools considered essential for basic functionality")
@@ -246,6 +246,7 @@ class SystemConfigResponse(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
+
                 "models": [
                     {
                         "id": "gpt-4",

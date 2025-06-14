@@ -7,7 +7,6 @@ from asyncio import Semaphore
 from typing import Any, Dict, List, Union, Optional, Callable, Awaitable, Tuple
 
 from agent_c.models.chat_history.chat_session import ChatSession
-from agent_c.chat.session_manager import ChatSessionManager
 from agent_c.models import ChatEvent, ImageInput
 from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.models.events.chat import ThoughtDeltaEvent, HistoryDeltaEvent, CompleteThoughtEvent, SystemPromptEvent, UserRequestEvent
@@ -15,10 +14,9 @@ from agent_c.models.input import FileInput, AudioInput
 from agent_c.models.events import ToolCallEvent, InteractionEvent, TextDeltaEvent, HistoryEvent, CompletionEvent, ToolCallDeltaEvent, SystemMessageEvent
 from agent_c.prompting.prompt_builder import PromptBuilder
 from agent_c.toolsets.tool_chest import ToolChest
-from agent_c.util.slugs import MnemonicSlugs
 from agent_c.util.logging_utils import LoggingManager
 from agent_c.util.token_counter import TokenCounter
-from agent_c_api.tests.v2.history.test_events import session_id
+
 
 
 class BaseAgent:
@@ -56,11 +54,7 @@ class BaseAgent:
         self.max_delay: int = kwargs.get("max_delay", 120)
         self.concurrency_limit: int = kwargs.get("concurrency_limit", 3)
         self.semaphore: Semaphore = asyncio.Semaphore(self.concurrency_limit)
-        self.tool_chest: Optional[ToolChest] = kwargs.get("tool_chest", None)
-        if self.tool_chest is not None:
-            self.tool_chest.agent = self
-        self.prompt: Optional[str] = kwargs.get("prompt", None)
-        self.prompt_builder: Optional[PromptBuilder] = kwargs.get("prompt_builder", None)
+        self.prompt_builder: PromptBuilder = PromptBuilder()
         self.schemas: Union[None, List[Dict[str, Any]]] = None
         self.streaming_callback: Optional[Callable[[ChatEvent], Awaitable[None]]] = kwargs.get("streaming_callback",
                                                                                                None)
@@ -97,9 +91,9 @@ class BaseAgent:
     def count_tokens(self, text: str) -> int:
         return self.token_counter.count_tokens(text)
 
-    async def one_shot(self, context: InteractionContext,  **kwargs) -> Optional[List[dict[str, Any]]]:
+    async def one_shot(self, context: InteractionContext) -> Optional[List[dict[str, Any]]]:
         """For text in, text out processing. without chat"""
-        messages = await self.chat(**kwargs)
+        messages = await self.chat(context)
         if len(messages) > 0:
             return messages
 
@@ -107,10 +101,10 @@ class BaseAgent:
 
     async def parallel_one_shots(self, contexts: List[InteractionContext], **kwargs):
         """Run multiple one-shot tasks in parallel"""
-        tasks = [self.one_shot(user_message=oneshot_input, **kwargs) for oneshot_input in inputs]
+        tasks = [self.one_shot(context=oneshot_input, **kwargs) for oneshot_input in contexts]
         return await asyncio.gather(*tasks)
 
-    async def chat(self, **kwargs) -> List[dict[str, Any]]:
+    async def chat(self, context: InteractionContext) -> List[dict[str, Any]]:
         """For chat interactions"""
         raise NotImplementedError
 
@@ -135,27 +129,6 @@ class BaseAgent:
         prompt_context['system_prompt'] = sys_prompt
 
         return tool_call_context | prompt_context, prompt_context
-
-    @staticmethod
-    def _callback_opts(**kwargs) -> Dict[str, Any]:
-        """
-        Returns a dictionary of options for the callback method to be used by default.
-        """
-        agent_role: str = kwargs.get("agent_role", 'assistant')
-        chat_session: Optional[ChatSession] = kwargs.get("chat_session", None)
-
-        if chat_session is not None:
-            session_id = chat_session.session_id
-        else:
-            session_id = kwargs.get("session_id", "unknown")
-
-        opts = {'session_id': session_id, 'role': agent_role}
-
-        callback = kwargs.get("streaming_callback", None)
-        if callback is not None:
-            opts['streaming_callback'] = callback
-
-        return opts
 
     async def _raise_event(self, context: InteractionContext, event):
         """
@@ -284,33 +257,6 @@ class BaseAgent:
         """
         await asyncio.sleep(min(2 * delay, self.max_delay))
 
-    async def _construct_message_array(self, **kwargs) -> List[dict[str, Any]]:
-        """
-        Constructs a message array for LLM interaction, handling various input types.
-
-        This method retrieves messages from session manager if available, and adds
-        the current user message (including any multimodal content) to the array.
-
-        Args:
-            **kwargs: Keyword arguments including:
-                - session_manager (ChatSessionManager): For retrieving session messages
-                - messages (List[Dict[str, Any]]): Pre-existing messages
-                - user_message (str): Text message from user
-                - images (List[ImageInput]): Image inputs
-                - audio (List[AudioInput]): Audio inputs
-                - files (List[FileInput]): File inputs
-
-        Returns:
-            List[dict[str, Any]]: Formatted message array for LLM API
-        """
-        messages: Optional[List[Dict[str, Any]]] = kwargs.get("messages", None)
-        if messages is None:
-            chat_session: Optional[ChatSession] = kwargs.get("chat_session", None)
-            messages = chat_session.messages if chat_session is not None else []
-            kwargs["messages"] = messages
-
-        return await self.__construct_message_array(**kwargs)
-
 
     async def _generate_multi_modal_user_message(self, user_input: str,  images: List[ImageInput], audio: List[AudioInput], files: List[FileInput]) -> Union[List[dict[str, Any]], None]:
         """
@@ -318,7 +264,7 @@ class BaseAgent:
         """
         return None
 
-    async def __construct_message_array(self, **kwargs) -> List[dict[str, Any]]:
+    async def _construct_message_array(self, context: InteractionContext, sys_prompt: Optional[str] = None) -> List[dict[str, Any]]:
         """
        Construct a message using an array of messages.
 
@@ -330,13 +276,7 @@ class BaseAgent:
 
        Returns: Message array as a list.
        """
-        user_message: str = kwargs.get("user_message")
-        messages: Union[List[dict[str, str]], None] = kwargs.get("messages", None)
-        sys_prompt: Union[str, None] = kwargs.get("system_prompt", None)
-        images: List[ImageInput] = kwargs.get("images") or []
-        audio_clips: List[AudioInput] = kwargs.get("audio") or []
-        files: List[FileInput] = kwargs.get("files") or []
-
+        messages: List[dict[str, Any]] = context.chat_session.messages
         message_array: List[dict[str, Any]] = []
 
         if sys_prompt is not None:
@@ -348,10 +288,10 @@ class BaseAgent:
         if messages is not None:
             message_array += messages
 
-        if len(images) > 0 or len(audio_clips) > 0 or len(files) > 0:
-            multimodal_user_message = await self._generate_multi_modal_user_message(user_message, images, audio_clips, files)
+        if len(context.inputs.images) > 0 or len(context.inputs.audio) > 0 or len(context.inputs.files) > 0:
+            multimodal_user_message = await self._generate_multi_modal_user_message(context)
             message_array += multimodal_user_message
         else:
-            message_array.append({"role": "user", "content": user_message})
+            message_array.append({"role": "user", "content": context.inputs.text})
 
         return message_array

@@ -78,32 +78,23 @@ class ClaudeChatAgent(BaseAgent):
     def tool_format(self) -> str:
         return "claude"
 
-    async def __interaction_setup(self, **kwargs) -> dict[str, Any]:
-        model_name: str = kwargs.get("model_name", self.model_name)
-        if model_name is None:
-            raise ValueError('Claude agent is missing a model_name')
+    async def __interaction_setup(self, context: InteractionContext,  **kwargs) -> dict[str, Any]:
+        model_name: str = context.chat_session.agent_config.agent_params.model_name
 
-        temperature: float = kwargs.get("temperature", self.temperature)
-        max_tokens: int = kwargs.get("max_tokens", self.max_tokens)
-        allow_server_tools: bool = kwargs.get("allow_server_tools", False)
-        callback_opts = self._callback_opts(**kwargs)
-        tool_chest = kwargs.get("tool_chest", self.tool_chest)
-        toolsets: List[str] = kwargs.get("toolsets", [])
-        if len(toolsets) == 0:
-            functions: List[Dict[str, Any]] = tool_chest.active_claude_schemas
-        else:
-            inference_data = tool_chest.get_inference_data(toolsets, "claude")
-            functions: List[Dict[str, Any]] = inference_data['schemas']
-            kwargs['tool_sections'] = inference_data['sections']
+        allow_server_tools: bool = False
 
-        messages = await self._construct_message_array(**kwargs)
-        kwargs['prompt_metadata']['model_id'] = model_name
+        inference_data = context.tool_chest.get_inference_data(context.chat_session.agent_config.tools, "claude")
+        context.sections.extend(inference_data['sections'])
+        functions: List[Dict[str, Any]] = inference_data['schemas']
+
+        messages = await self._construct_message_array(context)
         (tool_context, prompt_context) = await self._render_contexts(**kwargs)
         sys_prompt: str = prompt_context["system_prompt"]
         allow_betas: bool = kwargs.get("allow_betas", self.allow_betas)
-        completion_opts = {"model": model_name.removeprefix("bedrock_"), "messages": messages,
-                           "system": sys_prompt,  "max_tokens": max_tokens,
-                           'temperature': temperature}
+
+        completion_opts = context.chat_session.agent_config.agent_params.model_dump(exclude_none=True, exclude=['type'])
+        completion_opts["messages"] = messages
+        completion_opts["system"] = sys_prompt
 
         if '3-7-sonnet' in model_name or '-4-' in model_name:
             if allow_server_tools:
