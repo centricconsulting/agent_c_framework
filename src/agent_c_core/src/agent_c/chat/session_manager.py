@@ -47,6 +47,35 @@ class ChatSessionManager:
         self.session_id_list.append(session.session_id)
         session.touch()
 
+    async def get_user_session_for(self, chat_session: ChatSession) -> ChatSession:
+        """
+        Returns the user chat session for the given chat session.
+
+        Args:
+            chat_session (ChatSession): The chat session to retrieve the user session for.
+
+        Returns:
+            ChatSession: The user session associated with the chat session.
+        """
+        if chat_session.user_session_id is None or chat_session.user_session_id == chat_session.session_id:
+            return chat_session
+
+        return await self.get_session(chat_session.user_session_id)
+
+    async def get_parent_session_for(self, chat_session: ChatSession) -> Optional[ChatSession]:
+        """
+        Returns the parent chat session for the given chat session is any
+
+        Args:
+            chat_session (ChatSession): The chat session to retrieve the parent seession for.
+
+        Returns:
+            ChatSession: The user session associated with the chat session.
+        """
+        if chat_session.parent_session_id is None or chat_session.parent_session_id == chat_session.session_id:
+            return None
+
+        return await self.get_session(chat_session.parent_session_id)
 
     async def get_session(self, session_id: str) -> Optional[ChatSession]:
         """

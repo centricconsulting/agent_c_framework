@@ -158,7 +158,7 @@ class CodeExplorer:
                         language=language,
                         signature=method_info['signature'],
                         class_name=class_info['name'],
-                        return_type=method_info['return_type']
+                        return_type=method_info.get('return_type', '')
                     )
                     class_entity.methods.append(method_entity)
                 
@@ -173,7 +173,7 @@ class CodeExplorer:
                     docstring=func_info.get('docstring'),
                     language=language,
                     signature=func_info['signature'],
-                    return_type=func_info['return_type']
+                    return_type=func_info.get('return_type', '')
                 )
                 module.functions.append(func_entity)
             

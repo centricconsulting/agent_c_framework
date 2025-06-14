@@ -13,7 +13,10 @@ class ChatSession(BaseModel):
     and other attributes.
     """
     session_id: str = Field(default_factory=lambda: MnemonicSlugs.generate_slug(3))
-    token_count: int = Field(0, description="The number of tokens used in the session")
+    parent_session_id: Optional[str] = Field(None, description="The ID of the parent session, if any")
+    user_session_id: Optional[str] = Field(None, description="The user session ID associated with the session")
+    input_token_count: int = Field(0, description="The number of input tokens in the session")
+    output_token_count: int = Field(0, description="The number of output tokens in the session")
     context_window_size: int = Field(0, description="The number of tokens in the context window")
     session_name: Optional[str] = Field(None, description="The name of the session, if any")
     created_at: Optional[str] = Field(default_factory=lambda: datetime.datetime.now().isoformat())

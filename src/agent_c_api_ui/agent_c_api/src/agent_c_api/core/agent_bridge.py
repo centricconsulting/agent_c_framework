@@ -768,7 +768,8 @@ class AgentBridge:
             size = event.input_tokens + event.output_tokens
             if size > 0:
                 self.chat_session.context_window_size = size
-                self.chat_session.token_count += size
+                self.chat_session.output_token_count += event.output_tokens
+                self.chat_session.input_token_count += event.input_tokens
 
         payload = json.dumps({
             "type": "completion_status",

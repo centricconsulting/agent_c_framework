@@ -55,9 +55,8 @@ class CodeEntity:
         return {
             'name': self.name,
             'type': self.__class__.__name__,
-            'line_range': ((self.line_range[0][0], self.line_range[0][1]),
-                          (self.line_range[1][0], self.line_range[1][1])),
-            'byte_range': (self.byte_range[0], self.byte_range[1]),
+            'line_range': { 'start': self.start_line, 'end': self.end_line },
+            'byte_range': { 'start': self.byte_range[0], 'send': self.byte_range[1]},
             'has_docstring': self.is_documented,
             'language': self.language
         }

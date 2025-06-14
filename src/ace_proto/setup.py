@@ -9,6 +9,7 @@ setup(
         "tree-sitter>=0.20.1",
         "tree-sitter-python",
         "tree-sitter-c-sharp",
+        "tree-sitter-javascript",
     ],
     extras_require={
         "dev": [

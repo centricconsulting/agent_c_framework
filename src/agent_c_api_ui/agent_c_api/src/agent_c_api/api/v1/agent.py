@@ -1,7 +1,6 @@
 from typing import Dict, Any
 
-from fastapi import APIRouter, HTTPException, Form, Depends, Request
-from huggingface_hub import model_info
+from fastapi import APIRouter, HTTPException, Depends
 
 from agent_c.models.agent_config import AgentConfiguration
 from agent_c_api.api.dependencies import get_agent_manager
@@ -81,13 +80,12 @@ async def update_agent_settings(
                                 "from": safe_truncate(old_value),
                                 "to": safe_truncate(value)
                             }
-                            needs_agent_reinitialization = True
+
                         logger.debug(f"Updated {key}: {safe_truncate(old_value)} -> {safe_truncate(value)}")
 
 
 
         logger.info(f"Settings updated for session {update_params.ui_session_id}: {changes_made}")
-        # logger.info(f"Skipped null values: {[k for k, v in updates.items() if v is None]}")
         logger.info(f"Failed updates: {failed_updates}")
 
         return {

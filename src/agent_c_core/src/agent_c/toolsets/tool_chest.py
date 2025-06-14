@@ -1,18 +1,14 @@
-import asyncio
 import copy
 import json
+import asyncio
 import logging
+
 from typing import Type, List, Union, Dict, Any, Tuple, Optional
 
-from fastapi_pagination.utils import await_if_async
-from pyarrow.ipc import new_stream
-
-from agent_c.models.context.interaction_context import InteractionContext
-from agent_c.prompting.basic_sections.tool_guidelines import EndToolGuideLinesSection, BeginToolGuideLinesSection
-from agent_c.prompting.prompt_section import PromptSection
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.util.logging_utils import LoggingManager
-
+from agent_c.prompting.prompt_section import PromptSection
+from agent_c.models.context.interaction_context import InteractionContext
 
 class ToolChest:
     """
@@ -437,19 +433,14 @@ class ToolChest:
                 ai_call = copy.deepcopy(tool_call)
             else:  # gpt
                 fn = tool_call['name']
-                # Handle the case where the test provides Claude format but expects GPT processing
-                if 'arguments' in tool_call:
-                    args = json.loads(tool_call['arguments'])
-                elif 'input' in tool_call:
-                    # Fallback to 'input' if 'arguments' is not available
-                    args = tool_call['input']
-                    # Add 'arguments' field to the tool_call for compatibility
-                    tool_call['arguments'] = json.dumps(args)
+                args = json.loads(tool_call['arguments'])
+
                 ai_call = {
                     "id": tool_call['id'],
                     "function": {"name": fn, "arguments": tool_call['arguments']},
                     'type': 'function'
                 }
+
                 
             try:
 
