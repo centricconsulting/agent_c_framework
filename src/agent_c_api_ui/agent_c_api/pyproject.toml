@@ -13,19 +13,18 @@ dependencies = [
     "fastapi-pagination>=0.13.1",
     "fastapi-versioning>=0.10.0",
     "fastapi-jwt-auth>=0.5.0",
-    "structlog>=25.3.0",
+    "structlog>=25.4.0",
     "pyhumps>=3.8.0",
     "spectree>=1.4.7",
     "fastapi-utils>=0.8.0",
-    "uvicorn==0.34.0",
+    "uvicorn==0.34.3",
     "pydantic==2.9.2",
-    "pydantic-settings==2.6.0",
-    "weaviate-client==4.8.1", # Also used by agent_c-rag
-    "python-multipart",
-    "markitdown==0.0.2",
-    "aiofiles",
+    "pydantic-settings==2.9.1",
+    "python-multipart==0.0.20",
+    "markitdown==0.1.2",
+    "aiofiles==24.1.0",
     "fastapi-cache2>=0.2.2",
-    "redis>=5.0.0"
+    "redis>=6.2.0"
 ]
 
 requires-python = ">=3.12"
