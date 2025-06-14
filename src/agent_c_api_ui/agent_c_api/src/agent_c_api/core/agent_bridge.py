@@ -10,7 +10,8 @@ from agent_c.chat import ChatSessionManager
 from agent_c.config import ModelConfigurationLoader
 from agent_c.models.agent_config import AgentConfiguration
 from agent_c.models.context.interaction_context import InteractionContext
-from agent_c.models.input import AudioInput
+from agent_c.models.context.interaction_inputs import InteractionInputs
+from agent_c.models.input import AudioInput, TextInput
 from agent_c.agents.gpt import GPTChatAgent, AzureGPTChatAgent
 from agent_c.models.events import SessionEvent, TextDeltaEvent
 from agent_c.toolsets import ToolChest, ToolCache
@@ -1011,26 +1012,25 @@ class AgentBridge:
                                not isinstance(input_obj, ImageInput) and
                                not isinstance(input_obj, AudioInput)]
 
-            # Only add parameters if there are inputs of that type
-            if image_inputs:
-                chat_params["images"] = image_inputs
-            if audio_inputs:
-                chat_params["audio_clips"] = audio_inputs
-            if document_inputs:
-                chat_params["files"] = document_inputs
-
             full_params = chat_params | tool_params
 
+            inputs = InteractionInputs(text=TextInput(content=user_message),
+                                       images=image_inputs,
+                                       audio=audio_inputs,
+                                       files=document_inputs)
+
             context = InteractionContext(client_wants_cancel=client_wants_cancel,
-                                         tool_chest=self.tool_chest, sections=agent_sections,
+                                         tool_chest=self.tool_chest,
+                                         sections=agent_sections,
                                          streaming_callback=self.streaming_callback_with_logging,
-                                         chat_session=self.chat_session, tool_schemas=tool_params["schemas"],
+                                         chat_session=self.chat_session,
+                                         tool_schemas=tool_params["schemas"],
                                          agent_runtime=agent_runtime,
                                          user_session_id=self.chat_session.session_id,
-                                          )
+                                         inputs=inputs)
 
             # Start the chat task
-            chat_task = asyncio.create_task(agent_runtime.chat(**full_params))
+            chat_task = asyncio.create_task(agent_runtime.chat(context, **full_params))
 
             while True:
                 try:

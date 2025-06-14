@@ -119,6 +119,7 @@ class HistoryEvent(SessionEvent):
         super().__init__(type = "history", **data)
 
     messages: List[dict] = Field(..., description="The list of messages in the current chat history")
+    vendor: str = Field(..., description="The vendor of the completion API")
 
 class HistoryDeltaEvent(SessionEvent):
     """
@@ -128,3 +129,4 @@ class HistoryDeltaEvent(SessionEvent):
         super().__init__(type = "history_delta", **data)
 
     messages: List[dict] = Field(..., description="The list of messages that have been added to the history")
+    vendor: str = Field(..., description="The vendor of the completion API")

@@ -7,6 +7,7 @@ from typing import Type, List, Union, Dict, Any, Tuple, Optional
 from fastapi_pagination.utils import await_if_async
 from pyarrow.ipc import new_stream
 
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.prompting.basic_sections.tool_guidelines import EndToolGuideLinesSection, BeginToolGuideLinesSection
 from agent_c.prompting.prompt_section import PromptSection
 from agent_c.toolsets.tool_set import Toolset
@@ -415,12 +416,13 @@ class ToolChest:
         self.__tool_opts = local_tool_opts
         await self.activate_toolset(self.__essential_toolsets, local_tool_opts)
 
-    async def call_tools(self, tool_calls: List[dict], tool_context: Dict[str,Any], format_type: str = "claude") -> List[dict]:
+    async def call_tools(self, tool_calls: List[dict], context: InteractionContext, format_type: str = "claude") -> List[dict]:
         """
         Execute multiple tool calls concurrently and return the results.
         
         Args:
             tool_calls (List[dict]): List of tool calls to execute.
+            context (InteractionContext): The interaction context for the tool calls.
             format_type (str): The format to use for the results ("claude" or "gpt").
             
         Returns:
@@ -452,7 +454,7 @@ class ToolChest:
             try:
 
                 full_args = copy.deepcopy(args)
-                full_args['tool_context'] = tool_context
+                full_args['context'] = context
                 function_response = await self._execute_tool_call(fn, full_args)
                 
                 if format_type == "claude":

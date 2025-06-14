@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Union, Optional, Callable, Awaitable, Tuple
 from agent_c.models.chat_history.chat_session import ChatSession
 from agent_c.chat.session_manager import ChatSessionManager
 from agent_c.models import ChatEvent, ImageInput
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.models.events.chat import ThoughtDeltaEvent, HistoryDeltaEvent, CompleteThoughtEvent, SystemPromptEvent, UserRequestEvent
 from agent_c.models.input import FileInput, AudioInput
 from agent_c.models.events import ToolCallEvent, InteractionEvent, TextDeltaEvent, HistoryEvent, CompletionEvent, ToolCallDeltaEvent, SystemMessageEvent
@@ -17,6 +18,7 @@ from agent_c.toolsets.tool_chest import ToolChest
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.util.logging_utils import LoggingManager
 from agent_c.util.token_counter import TokenCounter
+from agent_c_api.tests.v2.history.test_events import session_id
 
 
 class BaseAgent:
@@ -95,7 +97,7 @@ class BaseAgent:
     def count_tokens(self, text: str) -> int:
         return self.token_counter.count_tokens(text)
 
-    async def one_shot(self, **kwargs) -> Optional[List[dict[str, Any]]]:
+    async def one_shot(self, context: InteractionContext,  **kwargs) -> Optional[List[dict[str, Any]]]:
         """For text in, text out processing. without chat"""
         messages = await self.chat(**kwargs)
         if len(messages) > 0:
@@ -103,12 +105,7 @@ class BaseAgent:
 
         return None
 
-    async def chat_sync(self, **kwargs) -> List[dict[str, Any]]:
-        """For chat interactions, synchronous version"""
-        raise NotImplementedError
-
-
-    async def parallel_one_shots(self, inputs: List[str], **kwargs):
+    async def parallel_one_shots(self, contexts: List[InteractionContext], **kwargs):
         """Run multiple one-shot tasks in parallel"""
         tasks = [self.one_shot(user_message=oneshot_input, **kwargs) for oneshot_input in inputs]
         return await asyncio.gather(*tasks)
@@ -160,142 +157,121 @@ class BaseAgent:
 
         return opts
 
-    async def _raise_event(self, event, streaming_callback: Optional[Callable[[ChatEvent], Awaitable[None]]] = None):
+    async def _raise_event(self, context: InteractionContext, event):
         """
         Raise a chat event to the event stream.
 
         Events are sent to the streaming_callback if configured. For event logging,
         use EventSessionLogger as your streaming_callback.
         """
-        if streaming_callback is None:
-            streaming_callback = self.streaming_callback
 
-        if streaming_callback is not None:
-            try:
-                await streaming_callback(event)
-            except Exception as e:
-                self.logger.exception(
-                    f"Streaming callback error for event: {e}. Event Type: {getattr(event, 'type', 'unknown')}")
-                # Log internal error as system event
-                await self._raise_system_event(
-                    f"Streaming callback error: {str(e)}",
-                    severity="error",
-                    error_type="streaming_callback_error",
-                    original_event_type=getattr(event, 'type', 'unknown')
-                )
-
-    async def _log_internal_error(self, error_type, error_message, related_event=None):
-        """
-        Log internal errors as system events.
-
-        Args:
-            error_type: Type/category of the error
-            error_message: The error message or exception text
-            related_event: The event that was being processed when the error occurred
-        """
         try:
-            # Create system event for internal error
-            await self._raise_system_event(
-                f"Internal error ({error_type}): {error_message}",
-                severity="error",
-                error_type=error_type,
-                error_message=str(error_message),
-                related_event_type=getattr(related_event, 'type', None) if related_event else None
-            )
+            # TODO: Try asyncio tasks to allow for fire and forget
+
+            await context.streaming_callback(event)
         except Exception as e:
-            # Fallback to standard logging if event raising fails
-            self.logger.exception(f"Failed to log internal error as event: {e}")
-            self.logger.error(f"Original error - {error_type}: {error_message}")
+            self.logger.exception(
+                f"Streaming callback error for event: {e}. Event Type: {getattr(event, 'type', 'unknown')}")
 
-    async def _raise_system_event(self, content: str, severity: str = "error", **data):
+    async def _raise_system_event(self, context: InteractionContext, content: str, severity: str = "error"):
         """
         Raise a system event to the event stream.
         """
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(SystemMessageEvent(role="system", severity=severity, content=content,
-                                                   session_id=data.get("session_id", "none")),
-                                                   streaming_callback=streaming_callback)
+        await self._raise_event(context, SystemMessageEvent(role="system",
+                                                            severity=severity,
+                                                            content=content,
+                                                            session_id=context.user_session_id))
 
-    async def _raise_history_delta(self, messages, **data):
+    async def _raise_history_delta(self, context: InteractionContext, messages):
         """
-        Raise a system event to the event stream.
+        Raise a HistoryDelta event to the event stream.
         """
-        data['role'] = data.get('role', 'assistant')
-        data['session_id'] = data.get("session_id", "none")
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(HistoryDeltaEvent(messages=messages, **data), streaming_callback=streaming_callback)
+        await self._raise_event(context, HistoryDeltaEvent(messages=messages,
+                                                           role=context.runtime_role,
+                                                           session_id=context.user_session_id,
+                                                           vendor=self.tool_format))
 
-    async def _raise_completion_start(self, comp_options, **data):
+    async def _raise_completion_start(self, context: InteractionContext, comp_options):
         """
         Raise a completion start event to the event stream.
         """
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
-        streaming_callback = data.pop('streaming_callback', None)
 
-        await self._raise_event(CompletionEvent(running=True, completion_options=completion_options, **data),
-                                streaming_callback=streaming_callback)
+        await self._raise_event(context, CompletionEvent(running=True,
+                                                         completion_options=completion_options,
+                                                         session_id=context.user_session_id))
 
-    async def _raise_completion_end(self, comp_options, **data):
+    async def _raise_completion_end(self, context: InteractionContext, comp_options, stop_reason: str, intput_tokens: int = 0, output_tokens: int = 0):
         """
         Raise a completion start event to the event stream.
         """
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
-        streaming_callback = data.pop('streaming_callback', None)
-        event = CompletionEvent(running=False, completion_options=completion_options, **data)
+        await self._raise_event(context, CompletionEvent(running=False,
+                                                         completion_options=completion_options,
+                                                         session_id=context.user_session_id,
+                                                         intput_tokens=intput_tokens,
+                                                         output_tokens=output_tokens,
+                                                         stop_reason=stop_reason))
 
-        await self._raise_event(event, streaming_callback=streaming_callback)
-        # logging.debug(f"Completed raising CompletionEvent")
+    async def _raise_tool_call_start(self, context: InteractionContext, tool_calls):
+        await self._raise_event(context, ToolCallEvent(active=True,
+                                                       tool_calls=tool_calls,
+                                                       session_id=context.user_session_id,
+                                                       vendor=self.tool_format))
 
-    async def _raise_tool_call_start(self, tool_calls, **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(ToolCallEvent(active=True, tool_calls=tool_calls, **data), streaming_callback=streaming_callback )
+    async def _raise_system_prompt(self, context: InteractionContext, prompt: str):
+        await self._raise_event(context, SystemPromptEvent(content=prompt,
+                                                           session_id=context.user_session_id,))
 
-    async def _raise_system_prompt(self, prompt: str, **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(SystemPromptEvent(content=prompt, **data), streaming_callback=streaming_callback )
+    async def _raise_user_request(self, context: InteractionContext):
+        await self._raise_event(context, UserRequestEvent(data={"message": context.inputs.text},
+                                                          session_id=context.user_session_id))
 
-    async def _raise_user_request(self, request: str, **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(UserRequestEvent(data={"message": request}, **data), streaming_callback=streaming_callback )
+    async def _raise_tool_call_delta(self, context: InteractionContext, tool_calls):
+        await self._raise_event(context, ToolCallDeltaEvent(tool_calls=tool_calls,
+                                                            session_id=context.user_session_id))
 
-    async def _raise_tool_call_delta(self, tool_calls, **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(ToolCallDeltaEvent(tool_calls=tool_calls, **data), streaming_callback=streaming_callback)
+    async def _raise_tool_call_end(self, context: InteractionContext, tool_calls, tool_results):
+        await self._raise_event(context, ToolCallEvent(active=False,
+                                                       tool_calls=tool_calls,
+                                                       tool_results=tool_results,
+                                                       session_id=context.user_session_id,))
 
-    async def _raise_tool_call_end(self, tool_calls, tool_results, **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(ToolCallEvent(active=False, tool_calls=tool_calls,
-                                              tool_results=tool_results,  **data),
-                                              streaming_callback=streaming_callback)
+    async def _raise_interaction_start(self, context: InteractionContext):
+        await self._raise_event(context, InteractionEvent(started=True,
+                                                          id=context.interaction_id,
+                                                          session_id=context.user_session_id))
+        return context.interaction_id
 
-    async def _raise_interaction_start(self, **data):
-        iid = data.get('interaction_id',MnemonicSlugs.generate_slug(3))
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(InteractionEvent(started=True, id=iid, **data), streaming_callback=streaming_callback)
-        return iid
+    async def _raise_interaction_end(self, context: InteractionContext):
+        await self._raise_event(context, InteractionEvent(started=False,
+                                                           id=context.interaction_id,
+                                                           session_id=context.user_session_id))
 
-    async def _raise_interaction_end(self, **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(InteractionEvent(started=False, **data), streaming_callback=streaming_callback)
+    async def _raise_text_delta(self, context: InteractionContext, content: str):
+        await self._raise_event(context, TextDeltaEvent(content=content,
+                                                        session_id=context.user_session_id,
+                                                        vendor=self.tool_format,
+                                                        role=context.runtime_role))
 
-    async def _raise_text_delta(self, content: str, **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(TextDeltaEvent(content=content, **data), streaming_callback=streaming_callback)
+    async def _raise_thought_delta(self, context: InteractionContext, content: str):
+            await self._raise_event(context, ThoughtDeltaEvent(content=content,
+                                                               session_id=context.user_session_id,
+                                                               vendor=self.tool_format,
+                                                               role=context.runtime_role))
 
-    async def _raise_thought_delta(self, content: str, **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(ThoughtDeltaEvent(content=content, **data), streaming_callback=streaming_callback)
+    async def _raise_complete_thought(self, context: InteractionContext, content: str):
+            await self._raise_event(context, CompleteThoughtEvent(content=content,
+                                                                  session_id=context.user_session_id,
+                                                                  vendor=self.tool_format,
+                                                                  role=context.runtime_role))
 
-    async def _raise_complete_thought(self, content: str, **data):
-        data['role'] = data.get('role', 'assistant')
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(CompleteThoughtEvent(content=content, **data), streaming_callback=streaming_callback)
-
-    async def _raise_history_event(self, messages: List[dict[str, Any]], **data):
-        streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(HistoryEvent(messages=messages, **data), streaming_callback=streaming_callback)
+    async def _raise_history_event(self, context: InteractionContext, messages: List[dict[str, Any]]):
+        await self._raise_event(context, HistoryEvent(messages=messages,
+                                                      session_id = context.user_session_id,
+                                                      vendor=self.tool_format))
 
     async def _exponential_backoff(self, delay: int) -> None:
         """
