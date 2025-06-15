@@ -25,7 +25,7 @@ async def initialize_user_session(params: AgentInitializationParams,
         logging.info(f"Creating/resuming session with agent-key: {agent_key}. Existing session ID (if passed): {session_id}")
         session_data = await agent_manager.create_user_session(agent_key, session_id)
         logger.debug(f"Current sessions in memory: {list(agent_manager.ui_sessions.keys())}")
-        logger.debug(f"User Session {session_data.session_id} with session details: {session_data}")
+        logger.debug(f"Start user Session {session_data.session_id} for user {session_data.chat_session.user_id}")
 
         return {"ui_session_id": session_data.session_id,
                 "agent_c_session_id": session_data.session_id}

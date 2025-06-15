@@ -52,3 +52,23 @@ class InteractionContext(BaseContext):
             data['interaction_id'] = f"{data['chat_session'].session_id}:{MnemonicSlugs.generate_slug(2)}"
 
         super().__init__(**data)
+
+    @classmethod
+    def model_rebuild(
+        cls,
+        *,
+        force: bool = False,
+        raise_errors: bool = True,
+        _parent_namespace_depth: int = 2,
+        _types_namespace: dict[str, Any] | None = None,
+    ) -> bool | None:
+        from agent_c.agents.base import BaseAgent
+        from agent_c.toolsets.tool_chest import ToolChest
+        from agent_c.prompting.prompt_section import PromptSection
+
+        super().model_rebuild(
+            force=force,
+            raise_errors=raise_errors,
+            _parent_namespace_depth=_parent_namespace_depth,
+            _types_namespace=_types_namespace
+        )

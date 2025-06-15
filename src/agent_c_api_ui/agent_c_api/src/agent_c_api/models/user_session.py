@@ -12,7 +12,7 @@ from agent_c.models.agent_config import AgentConfiguration
 class UserSession(BaseModel):
     chat_session: ChatSession = Field(..., description="The chat session associated with the user session.")
     agent_bridge: AgentBridge = Field(..., description="The agent bridge instance managing the chat session.")
-    cancel_event: threading.Event = Field(lambda: threading.Event(), description="Event to signal cancellation of the session.")
+    cancel_event: threading.Event = Field(None, description="Event to signal cancellation of the session.")
     created_at: str = Field(default_factory=lambda: datetime.datetime.now().isoformat(), description="The timestamp when the user session was created.")
     session_id: Optional[str] = Field(None, description="The unique identifier for the user session.")
     llm_model: Optional[str] = Field(None, description="The LLM model used for the agent.")
@@ -22,6 +22,8 @@ class UserSession(BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
+        if not self.cancel_event:
+            self.cancel_event = threading.Event()
 
         if self.session_id is None:
             self.session_id = self.chat_session.session_id

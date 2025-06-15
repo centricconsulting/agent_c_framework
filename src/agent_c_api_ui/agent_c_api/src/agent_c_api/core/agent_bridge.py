@@ -7,25 +7,22 @@ from typing import Any, Dict, List, Union, Optional, AsyncGenerator
 from datetime import datetime, timezone
 
 from agent_c.agents.base import BaseAgent
-
+from agent_c.toolsets.tool_chest import ToolChest
 from agent_c_api.config.env_config import settings
 from agent_c.config import ModelConfigurationLoader
 from agent_c.chat import ChatSessionManager, ChatSession
 from agent_c.models.agent_config import AgentConfiguration
 from agent_c_tools.tools.workspace.base import BaseWorkspace
-from agent_c.models.context.interaction_context import InteractionContext
-
 from agent_c.agents.gpt import GPTChatAgent, AzureGPTChatAgent
 from agent_c.models.events import SessionEvent, TextDeltaEvent
-from agent_c.toolsets.tool_chest import ToolChest, ToolCache
 
+from agent_c.models.context.interaction_context import InteractionContext
 
 from agent_c_api.core.file_handler import FileHandler
 from agent_c_tools.tools.think.prompt import ThinkSection
-from agent_c_api.config.config_loader import MODELS_CONFIG
 from agent_c_tools.tools.workspace import LocalStorageWorkspace
 from agent_c_api.core.util.logging_utils import LoggingManager
-from agent_c.prompting import PromptBuilder, CoreInstructionSection
+from agent_c.prompting import PromptBuilder
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 from agent_c.agents.claude import ClaudeChatAgent, ClaudeBedrockChatAgent
 from agent_c.util.event_session_logger_factory import create_with_callback
@@ -90,9 +87,11 @@ class AgentBridge:
             Exception: If there are errors during tool or agent initialization.
         """
         self.logger = LoggingManager(__name__).get_logger()
+        InteractionContext.model_rebuild()
         self.chat_session = chat_session
         self.session_manager = session_manager
         self.file_handler = file_handler
+        self.prompt_builder = PromptBuilder()
 
         self.logger.info(f"Initializing agent bridge for chat session '{self.chat_session.session_id}', user ID: '{self.chat_session.user_id}', Agent Key: `{self.chat_session.agent_config.key}`...")
 
@@ -191,7 +190,7 @@ class AgentBridge:
             f"Requesting new tool list for agent {self.chat_session.agent_config.key} to: {new_tools}"
         )
         self.chat_session.agent_config.tools = new_tools
-        await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
+        await self.tool_chest.initialize_toolsets(self.chat_session.agent_config.tools)
         self.logger.info(
             f"Tools updated successfully. Current Active tools: "
             f"{list(self.tool_chest.active_tools.keys())}"
@@ -235,7 +234,7 @@ class AgentBridge:
 
             # Initialize the tool chest essential tools
             await self.tool_chest.init_tools(tool_opts)
-            await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
+            await self.tool_chest.initialize_toolsets(self.chat_session.agent_config.tools)
             
             self.logger.info( f"Agent {self.chat_session.agent_config.key} successfully initialized")
 
@@ -257,28 +256,6 @@ class AgentBridge:
             self.logger.exception("Error initializing tools: %s", e, exc_info=True)
             raise
 
-    async def _sys_prompt_builder(self) -> PromptBuilder:
-        """
-        Build the system prompt for the agent.
-        
-        Creates a PromptBuilder with the core operational sections and
-        active tool sections from the tool chest.
-        
-        Returns:
-            PromptBuilder: Configured prompt builder with all necessary sections.
-        """
-        operating_sections = [
-            CoreInstructionSection(),
-            ThinkSection(),
-            DynamicPersonaSection()
-        ]
-
-        prompt_builder = PromptBuilder(
-            sections=operating_sections,
-            tool_sections=self.tool_chest.active_tool_sections
-        )
-
-        return prompt_builder
 
     async def initialize_agent_parameters(self) -> None:
         """
@@ -301,7 +278,7 @@ class AgentBridge:
             Sets self.agent_runtime to the initialized agent instance, which will be
             one of ClaudeChatAgent, ClaudeBedrockChatAgent, or GPTChatAgent.
         """
-        prompt_builder = await self._sys_prompt_builder()
+        prompt_builder = PromptBuilder()
         agent_params = self.chat_session.agent_config.agent_params.model_dump(exclude_none=True)
 
         agent_params |= {
@@ -802,7 +779,6 @@ class AgentBridge:
             Exception: If initialization of tools or agent parameters fails.
         """
         await self.__init_tool_chest()
-        await self.initialize_agent_parameters()
 
 
     async def consolidated_streaming_callback(self, event: SessionEvent) -> None:
@@ -939,9 +915,7 @@ class AgentBridge:
                 tool_params = self.tool_chest.get_inference_data(self.chat_session.agent_config.tools, agent_runtime.tool_format)
                 tool_params["toolsets"] = self.chat_session.agent_config.tools
 
-            if self.sections is not None:
-                agent_sections = self.sections
-            elif "ThinkTools" in self.chat_session.agent_config.tools:
+            if "ThinkTools" in self.chat_session.agent_config.tools:
                 agent_sections = [ThinkSection(), DynamicPersonaSection()]
             else:
                 agent_sections = [DynamicPersonaSection()]
@@ -957,7 +931,7 @@ class AgentBridge:
                 "client_wants_cancel": client_wants_cancel,
                 "streaming_callback": self.streaming_callback_with_logging,
                 'tool_call_context': {'active_agent': self.chat_session.agent_config},
-                'prompt_builder': PromptBuilder(sections=agent_sections)
+                'prompt_builder': PromptBuilder()
             }
 
             # Categorize file inputs by type to pass to appropriate parameters

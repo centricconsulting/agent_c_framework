@@ -52,22 +52,7 @@ def mock_toolset_classes():
 class TestToolChest:
     """Tests for the ToolChest class."""
     
-    @pytest.mark.asyncio
-    async def test_init_with_essential_toolsets(self, mock_toolset_classes):
-        """Test initializing with essential toolsets."""
-        chest = ToolChest(essential_toolset_names=["EssentialMockToolset"])
-        
-        # Before init_tools, no toolsets should be active
-        assert len(chest.active_tools) == 0
-        
-        # Initialize tools
-        await chest.init_tools()
-        
-        # After init_tools, only essential toolsets should be active
-        assert len(chest.active_tools) == 1
-        assert "EssentialMockToolset" in chest.active_tools
-        assert chest.active_tools["EssentialMockToolset"].post_init_called
-    
+
     @pytest.mark.asyncio
     async def test_backward_compatibility(self, mock_toolset_classes):
         """Test backward compatibility (no essential toolsets)."""
@@ -84,11 +69,11 @@ class TestToolChest:
     @pytest.mark.asyncio
     async def test_activate_toolset(self, mock_toolset_classes):
         """Test activating a toolset."""
-        chest = ToolChest(essential_toolset_names=["EssentialMockToolset"])
+        chest = ToolChest()
         await chest.init_tools()
         
         # Activate a non-essential toolset
-        success = await chest.activate_toolset("NonEssentialMockToolset")
+        success = await chest.initialize_toolsets("NonEssentialMockToolset")
         assert success
         
         # Both toolsets should now be active
@@ -129,34 +114,20 @@ class TestToolChest:
     @pytest.mark.asyncio
     async def test_set_active_toolsets(self, mock_toolset_classes):
         """Test setting the complete list of active toolsets."""
-        chest = ToolChest(essential_toolset_names=["EssentialMockToolset"])
-        await chest.init_tools()
+        chest = ToolChest()
+        await chest.init_tools({})
         
         # Activate both toolsets
-        await chest.activate_toolset("NonEssentialMockToolset")
-        assert len(chest.active_tools) == 2
-        
-        # Set active toolsets to just NonEssentialMockToolset
-        # EssentialMockToolset should remain active because it's essential
-        success = await chest.set_active_toolsets(["NonEssentialMockToolset"])
-        assert success
-        assert len(chest.active_tools) == 2
-        
-        # Set active toolsets to empty list
-        # This should deactivate NonEssentialMockToolset but keep EssentialMockToolset
-        success = await chest.set_active_toolsets([])
-        assert success
-        assert len(chest.active_tools) == 1
-        assert "EssentialMockToolset" in chest.active_tools
-        assert "NonEssentialMockToolset" not in chest.active_tools
-    
+        await chest.initialize_toolsets("NonEssentialMockToolset")
+        assert len(chest.available_tools) == 2
+
     @pytest.mark.asyncio
     async def test_activate_nonexistent_toolset(self, mock_toolset_classes):
         """Test activating a toolset that doesn't exist."""
         chest = ToolChest()
         
         # Try to activate a nonexistent toolset
-        success = await chest.activate_toolset("NonexistentToolset")
+        success = await chest.initialize_toolsets("NonexistentToolset")
         assert not success
         
         # No toolsets should be active
@@ -168,7 +139,7 @@ class TestToolChest:
         chest = ToolChest()
         
         # Activate both toolsets at once
-        success = await chest.activate_toolset(["EssentialMockToolset", "NonEssentialMockToolset"])
+        success = await chest.initialize_toolsets(["EssentialMockToolset", "NonEssentialMockToolset"])
         assert success
         
         # Both toolsets should be active

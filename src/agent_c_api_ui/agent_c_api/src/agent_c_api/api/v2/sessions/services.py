@@ -439,12 +439,7 @@ class SessionService:
         # Reinitialize the agent if needed
         if needs_agent_reinitialization:
             await agent_bridge.initialize_agent_parameters()
-            
-            # Update Redis session with new values
-            await self.session_repository.update_session(
-                session_id,
-                SessionUpdate(**{k: v["to"] for k, v in changes_applied.items()})
-            )
+
         
         # Get updated agent configuration
         updated_config = await self.get_agent_config(session_id)

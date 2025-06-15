@@ -2,14 +2,73 @@
 
 ## What is Agent C?
 
-Agent C is a minimalist framework for building interactive, tool-using AI agents. Created by Centric Consulting, it provides a runtime environment that handles:
+Agent C is a framework for building interactive, AI agents that make use of advanced planning and delegation patterns to accomplish much larger workloads per chat session than most. (to say the least) 
 
-- Streaming responses
-- Parallel tool execution
-- Asynchronous operations
-- Multiple ways to consume AI content (callbacks or async generators)
+Created by Donavan Stanly, a Centric Consulting architect, it provides a runtime environment that provides:
 
-All components are designed to be non-blocking and fully asynchronous.
+- Vendor flexibility
+  - Anthropic (base and via AWS Bedrock)
+    - Note: Claude 4 Sonnet is FAR and away the top model for agentic work requiring problem solving.
+  - Open AI (base and via Azure)
+  - Google Gemini
+- Stateless Agent Runtime
+  - The agent runtime and tools maintain no state beyond internal caching.
+  - All necessary context is provided on a per-call basis to the runtime / tools
+  - Designed to allow decoupling the runtime from the application layer.
+- Runtime components are designed to be non-blocking and fully asynchronous. 
+- Event stream based interactions
+  - The agent runtime and it's tools communicate with the application layer via events.
+  - All events contain routing information to allow the application layer to route events based on user ID and/or session ID
+  - This designed to be "pipe agnostic".  You supply a callback handler to receive events from the runtime and shove them in whatever pipe you want.
+- Best-in-breed agent tools
+  - Our tools are optimized to reduce token consumption by agents.
+    - For example, MCP provides a file system tool with read, write, list operations.
+      - Agent C provides a Workspace tool that provides those basic features plus
+        - read_lines, grep, replace_strings, tree, examine_code and metadata
+        - Support multiple workspaces
+        - Allows you control which workspaces which agents can see
+        - Allows you to control read/write status on a per agent basis.
+        - AND it supports more AWS S3 and Azure as a backing stores
+    - Other frameworks allow an agent to fetch a web page and feed it HTML wasting tokens.
+      - Our web tool ALLOWS for HTML to be retrieved but by default content is ran through the "Readability" algorithm and then converted to Markdown before handing to the agent.
+      - It allows for saving of content to any workspace.
+        - And FORCES it if the content is too large.
+    - Our tools can interconnect and build on each other
+      - Tools can declare other tools as dependencies and make use of them at runtime
+        - Tools that are loaded in this way are NOT shown to the agents, only their own list of tools is shown to them.
+      - Many *many* tools make use of the Workspace tool as a place to store / share information.
+    - Other frameworks return JSON to agents, again wasting precious tokens
+      - Our tools use YAML as a serialization mechanism which saves tokens, time and money.
+    - Our tools can bypass the agent and pass information back to the user.  Again saving time, tokens and money:
+      - Media files
+      - HTML
+      - Markdown
+      - etc
+- Unique interaction model
+  - Our agent to agent interaction model is born out of battle tested "agent as code" then later "agent as tool" technologies.  In Agent C, an agent is just a prompt and a set of tools.  It's easy to hide an agent behind a any generic method for someone to call, and because of that it's easy to make agent into a tool for another agent.
+    - Agent C agents can be provided with advanced delegation tools:
+      - **Agent Clone** allows an agent to make a copy of itself with an empty context window and task it with completing an objective.
+      - **Agent Team** allows for the creation of agent teams, led by a supervisor agent under the direction of the user.  The user essentially becomes "AI Management".
+      - **Agent Assist** allows agents to make use of special purpose non-interactive agents.
+        - Digging through a bunch of company blogs for info you care about can brun a LOT of tokens. So agent C includes an example "news pro" assistant that can be used by any agent on your behalf. 
+  - The user/agent interaction model is based around the "paired programming" model of development. Even for non-coding agents.
+    - As the human side of the pair, your job is to provide oversight, verification of work, etc.
+    - This becomes even more important when dealing with agent teams.
+- Planning, tracking, reasoning
+  - All work, done by agent C agents is first *planned*.
+    - Our planning tool allows for hierarchical plans, with steps and step steps
+      - Each step has explict process and context information
+      - Steps can require signoff, by supervisor agents or by the human in the loop
+      - NO top level step of any plan can be completed without human approval
+        - But our agents make that easier by giving your a "validation and signoff package"
+    - All plans include a "lesson learned" to prevent repeated mistakes.
+  - At each step of the way our agents engage in reasoning, not just at the start of the interaction.  Explicit when:
+    - Reading in a step of a plan.
+    - Receiving information from a clone, team member or assistant agent.
+    - Receiving information from an external source such as a file, tool or web page.
+  - Every single step is tracked and shared memory updated along the way.
+    - Resuming from a cold session is as simple as "bring yourself up to speed and tell me our next steps"
+    - Providing supervision, even deep into an agent team, is as simple as hitting the "stop interaction" button and then sending: "I had to stop you because of X, please make AGENT_NAME aware of KEY_DETAIL and resume working"
 
 ## Getting Started
 
@@ -107,10 +166,18 @@ Run the setup script for your platform - these scripts are kept up-to-date with 
 
 If you need to understand what dependencies are being installed, please review these setup scripts to see the exact packages and versions being used.
 
-#### Step 3: Get an OpenAI API Key
+#### Step 3: Get a vendor API Key
 
-Agent C requires an OpenAI API key to function:
+Agent C requires at least one API key from a major vendor to function.
 
+**NOTE: If you must choose only one, choose Anthropic.  Right now, NOTHING comes close to Claude for Agentic work.**
+
+**Anthropic**
+Follow the [Get Started With Claude](https://docs.anthropic.com/en/docs/get-started) guide 
+
+> **Important**: Until you have reached "[Tier 3](https://docs.anthropic.com/en/api/rate-limits#requirements-to-advance-tier)" with Anthropic you will receive warnings in the chat stream about hitting your rate limit. The runtime will "back off" and slow down for an increasing amount of time until enough time has passed to allow number of tokens you have through.  Expect delays of up to 32 seconds when on Tier 2 or below.
+
+**Open AI**
 1. Sign up at the [OpenAI Platform](https://platform.openai.com/signup)
 2. Navigate to [API Keys](https://platform.openai.com/settings/organization/api-keys)
 3. Create a new API key
@@ -146,25 +213,6 @@ dockerfiles\start_agent_c.bat
 
 This provides a full-featured experience with an intuitive interface for configuring and using agents. For detailed information about the Web UI features, see the [Web UI Documentation](docs/web_ui_README.md).
 
-### Alternative: Command Line Interface
-
-For development or scripting purposes, you can also use the CLI mode:
-
-```bash
-agent_c-cli [options]
-```
-
-#### CLI Commands (Available Within the CLI App)
-
-When using the CLI version, you can use these special commands:
-
-- `!exit` or `!!!`: Exit the app
-- `!keep`: Mark the current session to be saved after exiting
-- `!!!!`: Exit without deleting the current session
-- `!compact`: Reduce the message history to save tokens
-- `!?`: Show all available commands
-
-The up/down arrow keys let you navigate through your command history.
 
 ## Configuration File
 
@@ -176,67 +224,61 @@ When you first run Agent C, it will create a configuration file (similar to `.en
 # Mac/Linux: ~/.agent_c/agent_c.config
 ```
 
+
+### Alternative: Command Line Interface
+
+For development or to allow for mapping of ANY folder as a workspace (Docker makes that hard to do on the fly) you may run the API and React frontend directly on your machine with:
+
+**Windows**
+```commandline
+start scripts\start_api.bat
+start scripts\start_fe.bat
+```
+
+**OSX/Liunx
+```bash
+scripts\start_api.bat &
+scripts\start_fe.bat &
+```
+
 ### Essential Configuration
 
 These settings are required for basic functionality:
 
-```
-# Required: OpenAI API key (you MUST set this)
-OPENAI_API_KEY=your-openai-api-key-here
-
-# Required: Set your user ID (default is "default")
-CLI_CHAT_USER_ID=YourName
-
-# Required: Zep API key for memory management
-# Create a free Zep Cloud account at: https://app.getzep.com/api/auth/register
-# Zep API keys are specific to a project. Visit "Project Settings" in the Zep dashboard to manage your keys.
-ZEP_API_KEY=your-zep-api-key-here
+```bash
+ANTHROPIC_API_KEY=your-anthropic-key-here
 ```
 
 ### Optional Configuration
 
 The following sections allow additional functionality if you have these services:
 
-```
-# Optional: Claude/Anthropic API key (if you want to use Claude models)
-#ANTHROPIC_API_KEY=your-anthropic-key-here
+```bash
+# Optional Vendor Keys 
+OPENAI_API_KEY=your-openai-api-key-here
 
 # Optional: Azure OpenAI (uncomment if using Azure instead of OpenAI)
-#AZURE_OPENAI_API_KEY=your-azure-key-here
-#AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-#AZURE_OPENAI_API_VERSION=2024-03-01-preview
+AZURE_OPENAI_API_KEY=your-azure-key-here
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_VERSION=2024-03-01-preview
 
 # Optional: AWS Storage
-#AWS_REGION_NAME=your-region-name
-#AWS_SECRET_ACCESS_KEY=your-secret-access-key
-#AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_REGION_NAME=your-region-name
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+AWS_ACCESS_KEY_ID=your-access-key-id
 
-# Optional: If you're using Zep CE locally instead of Zep Cloud
-#ZEP_CE_KEY=your-zep-ce-key-here
-#ZEP_URL=http://localhost:8001
 
 # Optional: Debug information
 ENHANCED_DEBUG_INFO=False
 
 # Optional: API keys for various tools
 # Uncomment and add keys for tools you want to use
-#SERPAPI_API_KEY=your-serpapi-key-here        # For web searches
-#SEC_API_KEY=your-sec-api-key-here            # For SEC filings access
-#TAVILI_API_KEY=your-tavili-key-here          # For Tavili integration
-#NEWSAPI_API_KEY=your-newsapi-key-here        # For news access
+SERPAPI_API_KEY=your-serpapi-key-here        # For web searches
+SEC_API_KEY=your-sec-api-key-here            # For SEC filings access
+TAVILI_API_KEY=your-tavili-key-here          # For Tavili integration
+NEWSAPI_API_KEY=your-newsapi-key-here        # For news access
 ```
 
-### Example Configuration
-
-A minimal configuration to get started would look like:
-
-```
-OPENAI_API_KEY=sk-abcd1234567890abcdefg
-CLI_CHAT_USER_ID=JaneDoe
-ZEP_API_KEY=zep-cloud-api-key-12345abcde
-```
-
-After updating your configuration file, run the startup script again to launch Agent C with your settings.
 
 ## Working with Files
 
@@ -244,12 +286,6 @@ Agent C creates a `LocalStorageWorkspace` called `project` that gives the agent 
 
 To reference files, use: "Could you load temp/data.csv from the project workspace and..."
 
-## Personas
-
-The `personas` folder contains various persona files that give Agent C different capabilities:
-
-- Use them with the `--prompt_file` option
-- For example, the `py_polish.md` persona specializes in cleaning up Python code, adding type hints, and improving documentation
 
 ## Additional Documentation
 

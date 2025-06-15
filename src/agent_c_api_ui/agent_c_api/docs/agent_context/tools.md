@@ -16,11 +16,6 @@ Retrieves a list of all available tools categorized by type.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `essential_toolsets` | array | Tools always loaded with every agent |
-| `essential_toolsets[].name` | string | Tool class name |
-| `essential_toolsets[].module` | string | Python module containing the tool |
-| `essential_toolsets[].doc` | string | Documentation for the tool |
-| `essential_toolsets[].essential` | boolean | Whether the tool is automatically loaded |
 | `groups` | object | Tools categorized by groups |
 | `groups.{group_name}` | array | List of tools in a specific group |
 | `groups.{group_name}[].name` | string | Tool class name |

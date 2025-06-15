@@ -28,16 +28,9 @@ class LocalStorageWorkspace(BaseWorkspace):
         if self.valid:
             self.workspace_root: Path = Path(workspace_path).resolve()
 
-        # Check environment for development/local mode
-        # We only allow symlinks in those environments by default
-        # Otherwise the default is to disallow symlinks unless explicitly set
         env = os.environ.get('ENVIRONMENT', '').lower()
         self.allow_symlinks: bool = kwargs.get('allow_symlinks', 'local' in env or 'dev' in env)
         self.logger: logging.Logger = logging.getLogger(__name__)
-
-        if self.allow_symlinks:
-            self.logger.info("Symlink paths are allowed in workspace")
-
         self.max_filename_length = 200
 
     @staticmethod
