@@ -32,7 +32,7 @@ class SessionMigration:
         """
         try:
             # Get session data from agent manager
-            session_data = await self.agent_manager.get_session_data(session_id)
+            session_data = await self.agent_manager.get_user_session(session_id)
             if not session_data:
                 self.logger.warning("migrate_session_not_found", session_id=session_id)
                 return False
@@ -130,7 +130,7 @@ class SessionMigration:
         
         try:
             # Check agent manager
-            manager_data = await self.agent_manager.get_session_data(session_id)
+            manager_data = await self.agent_manager.get_user_session(session_id)
             results["exists_in_manager"] = manager_data is not None
             
             # Check Redis

@@ -9,7 +9,7 @@ from fastapi_cache.decorator import cache
 
 from agent_c.models.events.chat import MessageEvent, InteractionEvent
 from agent_c.models.events.tool_calls import ToolCallEvent
-from agent_c_api.api.dependencies import get_agent_manager, get_redis_client
+from agent_c_api.api.dependencies import get_bridge_manager, get_redis_client
 from agent_c_api.core.repositories.chat_repository import ChatRepository
 from agent_c_api.core.services.chat_service import ChatService as CoreChatService
 
@@ -29,7 +29,7 @@ async def get_chat_service(
     Returns:
         ChatService: Initialized chat service
     """
-    agent_manager = get_agent_manager(request)
+    agent_manager = get_bridge_manager(request)
     return ChatService(agent_manager=agent_manager, redis_client=redis_client)
 
 from agent_c_api.api.v2.models.chat_models import (
@@ -89,7 +89,7 @@ class ChatService:
             HTTPException(500): If there's an error processing the message
         """
         # Verify the session exists
-        session_data = await self.agent_manager.get_session_data(session_id)
+        session_data = await self.agent_manager.get_user_session(session_id)
         if not session_data:
             self.logger.error("User session_not_found", session_id=session_id)
             raise HTTPException(status_code=404, detail="Session not found")
@@ -147,7 +147,7 @@ class ChatService:
             HTTPException(404): If the session doesn't exist
         """
         # Verify the session exists
-        session_data = await self.agent_manager.get_session_data(session_id)
+        session_data = await self.agent_manager.get_user_session(session_id)
         if not session_data:
             self.logger.error("cancel_session_not_found", session_id=session_id)
             raise HTTPException(status_code=404, detail="Session not found")

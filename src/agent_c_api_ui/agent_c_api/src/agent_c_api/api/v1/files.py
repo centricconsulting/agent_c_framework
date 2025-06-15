@@ -7,7 +7,7 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, B
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 
-from agent_c_api.api.dependencies import get_agent_manager
+from agent_c_api.api.dependencies import get_bridge_manager
 from agent_c_api.core.file_handler import FileHandler, FileMetadata
 
 
@@ -43,7 +43,7 @@ async def upload_file(
         ui_session_id: str = Form(...),
         file: UploadFile = File(...),
         background_tasks: BackgroundTasks = BackgroundTasks(),
-        agent_manager=Depends(get_agent_manager)
+        agent_manager=Depends(get_bridge_manager)
 ):
     """
     Upload a file for use in chat.
@@ -63,7 +63,7 @@ async def upload_file(
     try:
         # Verify session exists
         logger.debug(f"Agent keys are {agent_manager.ui_sessions.keys()}")
-        session_data = await agent_manager.get_session_data(ui_session_id)
+        session_data = await agent_manager.get_user_session(ui_session_id)
         if not session_data:
             logger.error(f"No session found for session_id: {ui_session_id}")
             raise HTTPException(status_code=404, detail="Session not found")
@@ -98,7 +98,7 @@ async def upload_file(
 @router.get("/files/{ui_session_id}")
 async def get_session_files(
         ui_session_id: str,
-        agent_manager=Depends(get_agent_manager)
+        agent_manager=Depends(get_bridge_manager)
 ):
     """
     List all files for a session.
@@ -112,7 +112,7 @@ async def get_session_files(
     """
     try:
         # Verify session exists
-        session_data = await agent_manager.get_session_data(ui_session_id)
+        session_data = await agent_manager.get_user_session(ui_session_id)
         if not session_data:
             logger.error(f"No session found for session_id: {ui_session_id}")
             raise HTTPException(status_code=404, detail="Session not found")
@@ -147,7 +147,7 @@ async def get_session_files(
 async def get_file(
         ui_session_id: str,
         file_id: str,
-        agent_manager=Depends(get_agent_manager)
+        agent_manager=Depends(get_bridge_manager)
 ):
     """
     Get a specific file.
@@ -162,7 +162,7 @@ async def get_file(
     """
     try:
         # Verify session exists
-        session_data = await agent_manager.get_session_data(ui_session_id)
+        session_data = await agent_manager.get_user_session(ui_session_id)
         if not session_data:
             logger.error(f"No session found for session_id: {ui_session_id}")
             raise HTTPException(status_code=404, detail="Session not found")
@@ -189,7 +189,7 @@ async def get_file(
 async def delete_file(
         ui_session_id: str,
         file_id: str,
-        agent_manager=Depends(get_agent_manager)
+        agent_manager=Depends(get_bridge_manager)
 ):
     """
     Delete a specific file.
@@ -204,7 +204,7 @@ async def delete_file(
     """
     try:
         # Verify session exists
-        session_data = await agent_manager.get_session_data(ui_session_id)
+        session_data = await agent_manager.get_user_session(ui_session_id)
         if not session_data:
             logger.error(f"No session found for session_id: {ui_session_id}")
             raise HTTPException(status_code=404, detail="Session not found")

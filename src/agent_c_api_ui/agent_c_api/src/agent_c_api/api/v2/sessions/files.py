@@ -131,7 +131,7 @@ async def upload_file(
         metadata = await file_handler.save_file(file, str(session_id))
         
         # Set the file handler on the agent if needed
-        session_data = await session_service.agent_manager.get_session_data(str(session_id))
+        session_data = await session_service.agent_manager.get_user_session(str(session_id))
         agent_bridge = session_data.get("agent_bridge")
         if agent_bridge and not hasattr(agent_bridge, "file_handler"):
             agent_bridge.file_handler = file_handler

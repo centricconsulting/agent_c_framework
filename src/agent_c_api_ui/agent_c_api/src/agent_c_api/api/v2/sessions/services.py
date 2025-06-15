@@ -4,7 +4,7 @@ from typing import Optional, Any, Dict
 from fastapi import Depends, HTTPException, Request
 import structlog
 
-from agent_c_api.api.dependencies import get_agent_manager
+from agent_c_api.api.dependencies import get_bridge_manager
 from agent_c_api.core.agent_manager import UItoAgentBridgeManager
 from agent_c_api.core.repositories import get_session_repository, SessionRepository
 
@@ -33,7 +33,7 @@ async def get_session_service(
     Returns:
         SessionService: Initialized session service
     """
-    agent_manager = get_agent_manager(request)
+    agent_manager = get_bridge_manager(request)
     return SessionService(agent_manager=agent_manager, session_repository=session_repository)
 
 class SessionService:
@@ -101,7 +101,7 @@ class SessionService:
             )
             
             # Get the created session data
-            session_data = await self.agent_manager.get_session_data(ui_session_id)
+            session_data = await self.agent_manager.get_user_session(ui_session_id)
             if not session_data:
                 raise HTTPException(status_code=500, detail="Session created but data not found")
             
@@ -197,7 +197,7 @@ class SessionService:
         #return await self.session_repository.get_session(session_id)
 
         # Get session data using the manager's method
-        session_data = await self.agent_manager.get_session_data(session_id)
+        session_data = await self.agent_manager.get_user_session(session_id)
         if not session_data:
             return None
             
@@ -252,7 +252,7 @@ class SessionService:
                 raise HTTPException(status_code=500, detail="Failed to update session in Redis")
             
             # Get current session data from agent manager
-            current_agent_data = await self.agent_manager.get_session_data(session_id)
+            current_agent_data = await self.agent_manager.get_user_session(session_id)
             if not current_agent_data:
                 raise HTTPException(status_code=404, detail=f"Agent session {session_id} not found")
             
@@ -342,7 +342,7 @@ class SessionService:
             return None
             
         # Get agent data from manager
-        session_data = await self.agent_manager.get_session_data(session_id)
+        session_data = await self.agent_manager.get_user_session(session_id)
         if not session_data:
             return None
             
@@ -388,7 +388,7 @@ class SessionService:
             return None
             
         # Get agent data from manager
-        session_data = await self.agent_manager.get_session_data(session_id)
+        session_data = await self.agent_manager.get_user_session(session_id)
         if not session_data:
             return None
             

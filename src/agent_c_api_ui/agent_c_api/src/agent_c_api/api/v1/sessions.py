@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 import logging
 from agent_c_api.core.agent_manager import UItoAgentBridgeManager
-from agent_c_api.api.dependencies import get_agent_manager
+from agent_c_api.api.dependencies import get_bridge_manager
 from agent_c_api.api.v1.llm_models.agent_params import AgentInitializationParams
 
 router = APIRouter()
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 @router.post("/initialize")
 async def initialize_user_session(params: AgentInitializationParams,
-                                  agent_manager=Depends(get_agent_manager)
+                                  agent_manager=Depends(get_bridge_manager)
                                   ):
     """
     Creates an agent session with the provided parameters.
@@ -40,7 +40,7 @@ async def initialize_user_session(params: AgentInitializationParams,
             **additional_params,
             **session_params
         )
-        session_data = await agent_manager.get_session_data(new_session_id)
+        session_data = await agent_manager.get_user_session(new_session_id)
         logger.debug(f"Current sessions in memory: {list(agent_manager.ui_sessions.keys())}")
         logger.debug(
             f"User Session {new_session_id} with session details: {session_data}")
@@ -54,15 +54,15 @@ async def initialize_user_session(params: AgentInitializationParams,
 
 
 @router.get("/verify_session/{ui_session_id}")
-async def verify_session(ui_session_id: str, agent_manager=Depends(get_agent_manager)):
+async def verify_session(ui_session_id: str, agent_manager=Depends(get_bridge_manager)):
     """
     Verifies if a session exists and is valid
     """
-    session_data = agent_manager.get_session_data(ui_session_id)
+    session_data = agent_manager.get_user_session(ui_session_id)
     return {"valid": session_data is not None}
 
 @router.get("/sessions")
-async def get_sessions(agent_manager=Depends(get_agent_manager)):
+async def get_sessions(agent_manager=Depends(get_bridge_manager)):
     """
     Retrieves all available sessions.
 
@@ -85,7 +85,7 @@ async def get_sessions(agent_manager=Depends(get_agent_manager)):
         )
 
 @router.delete("/sessions")
-async def delete_all_sessions(agent_manager=Depends(get_agent_manager)):
+async def delete_all_sessions(agent_manager=Depends(get_bridge_manager)):
     """
     Delete all active sessions and cleanup their resources.
 

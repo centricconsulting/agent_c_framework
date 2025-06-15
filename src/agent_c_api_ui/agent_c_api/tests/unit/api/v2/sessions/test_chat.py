@@ -457,7 +457,7 @@ class TestChatEndpoints:
         Returns:
             FastAPI: A configured FastAPI application
         """
-        from agent_c_api.api.dependencies import get_agent_manager
+        from agent_c_api.api.dependencies import get_bridge_manager
         
         app = FastAPI()
         # Set up the router with the proper prefix for the tests
@@ -467,7 +467,7 @@ class TestChatEndpoints:
         app.state.agent_manager = mock_agent_manager
         
         # Override the dependency
-        app.dependency_overrides[get_agent_manager] = lambda request: mock_agent_manager
+        app.dependency_overrides[get_bridge_manager] = lambda request: mock_agent_manager
         
         return app
 

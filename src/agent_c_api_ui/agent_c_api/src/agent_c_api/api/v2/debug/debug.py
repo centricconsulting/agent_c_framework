@@ -8,7 +8,7 @@ from fastapi_versioning import version
 from ....core.agent_bridge import AgentBridge
 from ....core.agent_manager import UItoAgentBridgeManager
 from typing import Any
-from ...dependencies import get_agent_manager
+from ...dependencies import get_bridge_manager
 from ..models.debug_models import SessionDebugInfo, AgentDebugInfo
 from ..models.response_models import APIResponse, APIStatus
 
@@ -112,7 +112,7 @@ router = APIRouter(
 @version(2)
 async def get_session_debug_info(
     session_id: UUID, 
-    agent_manager: Any = Depends(get_agent_manager)  # Use Any instead of UItoAgentBridgeManager
+    agent_manager: Any = Depends(get_bridge_manager)  # Use Any instead of UItoAgentBridgeManager
 ):
     """
     Get comprehensive debug information about a session.
@@ -199,7 +199,7 @@ async def get_session_debug_info(
 @version(2)
 async def get_agent_debug_info(
     session_id: UUID, 
-    agent_manager: Any = Depends(get_agent_manager)  # Use Any instead of UItoAgentBridgeManager
+    agent_manager: Any = Depends(get_bridge_manager)  # Use Any instead of UItoAgentBridgeManager
 ):
     """
     Get detailed debug information about an agent's state and configuration.
@@ -219,7 +219,7 @@ async def get_agent_debug_info(
         500: If there's an error retrieving debug information
     """
     try:
-        session_data = await agent_manager.get_session_data(str(session_id))
+        session_data = await agent_manager.get_user_session(str(session_id))
         if not session_data:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 

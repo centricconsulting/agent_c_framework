@@ -88,6 +88,7 @@ class ChatSessionManager:
             Optional[ChatSession]: The chat session if found, otherwise None.
         """
         if session_id in self._session_cache:
+            self._session_cache[session_id].touch()
             return self._session_cache[session_id]
 
         if session_id in self.session_id_list:

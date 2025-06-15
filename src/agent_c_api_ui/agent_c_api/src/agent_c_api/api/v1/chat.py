@@ -6,8 +6,9 @@ import logging
 from fastapi.responses import StreamingResponse, JSONResponse
 import traceback
 
-from agent_c_api.api.dependencies import get_agent_manager
+from agent_c_api.api.dependencies import get_bridge_manager
 from agent_c_api.core.file_handler import FileHandler
+from agent_c_api.models.user_session import UserSession
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ async def chat_endpoint(
         ui_session_id: str = Form(...),
         message: str = Form(...),
         file_ids: Optional[str] = Form(None),
-        agent_manager=Depends(get_agent_manager)
+        agent_manager=Depends(get_bridge_manager)
 ):
     """
     Endpoint for sending a message and getting a streaming response from the agent.
@@ -33,7 +34,7 @@ async def chat_endpoint(
         StreamingResponse: Streaming response from the agent
     """
     logger.info(f"Received chat request for session: {ui_session_id}")
-    session_data = await agent_manager.get_session_data(ui_session_id)
+    session_data = await agent_manager.get_user_session(ui_session_id)
     # logger.debug(f"Available sessions: {list(agent_manager.sessions.keys())}")
 
     if not session_data:
@@ -104,7 +105,7 @@ async def chat_endpoint(
 @router.post("/cancel")
 async def cancel_chat(
         ui_session_id: str = Form(...),
-        agent_manager=Depends(get_agent_manager)
+        agent_manager=Depends(get_bridge_manager)
 ):
     """
     Endpoint for cancelling an ongoing chat interaction.
@@ -117,7 +118,7 @@ async def cancel_chat(
         JSONResponse: Status of the cancellation request
     """
     logger.info(f"Received cancellation request for session: {ui_session_id}")
-    session_data = await agent_manager.get_session_data(ui_session_id)
+    session_data: UserSession = await agent_manager.get_user_session(ui_session_id)
     
     if not session_data:
         logger.error(f"No session found for session_id: {ui_session_id}")

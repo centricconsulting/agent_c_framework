@@ -16,7 +16,7 @@ logging_manager = LoggingManager(__name__)
 logger = logging_manager.get_logger()
 
 
-def get_agent_manager(request: Request) -> UItoAgentBridgeManager:
+def get_bridge_manager(request: Request) -> UItoAgentBridgeManager:
     return request.app.state.agent_manager
 
 
@@ -311,7 +311,7 @@ async def get_dynamic_params(request: Request, model_name: str, backend: str):
         raise HTTPException(status_code=400, detail=f"Invalid parameters: {str(e)}")
 
 
-async def get_dynamic_form_params(request: Request, agent_manager=Depends(get_agent_manager)):
+async def get_dynamic_form_params(request: Request, agent_manager=Depends(get_bridge_manager)):
     """
     Process form parameters with dynamic validation.
 
