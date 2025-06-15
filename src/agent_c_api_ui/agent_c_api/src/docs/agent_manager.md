@@ -124,7 +124,7 @@ Thread safety is ensured through:
 manager = AgentManager()
 
 # Create a new session
-session_id = await manager.create_session(
+session_id = await manager.create_user_session(
     llm_model="gpt-4",
     backend="openai",
     additional_tools=["CustomTool1", "CustomTool2"]

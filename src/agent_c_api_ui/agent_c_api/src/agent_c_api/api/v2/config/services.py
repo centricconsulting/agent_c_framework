@@ -105,8 +105,7 @@ class ConfigService:
         # Using the same approach as in v1/tools.py
         tool_list = []
         categories = set()
-        essential_tools = []
-        
+
         # Categories mapping similar to v1 implementation
         category_mapping = {
             'agent_c_tools': 'Core Tools'
@@ -142,7 +141,7 @@ class ConfigService:
         return ToolsResponse(
             tools=tool_list,
             categories=sorted(list(categories)),
-            essential_tools=essential_tools
+            essential_tools=[]
         )
     
     @cache(expire=300)  # Cache for 5 minutes
@@ -170,5 +169,5 @@ class ConfigService:
             agent_configs=agent_configs_response.agents,
             tools=tools_response.tools,
             tool_categories=tools_response.categories,
-            essential_tools=tools_response.essential_tools
+            essential_tools=[]
         )

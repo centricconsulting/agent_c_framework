@@ -40,7 +40,7 @@ async def tools_list():
                 'name': tool_class.__name__,
                 'module': tool_class.__module__,
                 'doc': tool_class.__doc__,
-                'essential': tool_class.__name__ in UItoAgentBridgeManager.ESSENTIAL_TOOLS
+                'essential': False
             }
 
             # Categorize non-essential tools
@@ -53,13 +53,11 @@ async def tools_list():
             if category:
                 tool_groups[category].append(tool_info)
 
-        # Sort tools
-        essential_tools.sort(key=lambda x: x['name'].lower())
         for category in tool_groups:
             tool_groups[category].sort(key=lambda x: x['name'].lower())
 
         return {
-            "essential_toolsets": essential_tools,
+            "essential_toolsets": [],
             "groups": tool_groups,
             "categories": list(categories.values()),
             "tool_name_mapping": tool_name_mapping

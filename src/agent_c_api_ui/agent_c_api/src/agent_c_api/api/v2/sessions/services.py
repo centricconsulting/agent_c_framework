@@ -64,7 +64,7 @@ class SessionService:
         """
         try:
             # Create session in Redis first
-            session = await self.session_repository.create_session(session_data)
+            session = await self.session_repository.create_user_session(session_data)
             if not session:
                 raise HTTPException(status_code=500, detail="Failed to create session in Redis")
             
@@ -93,7 +93,7 @@ class SessionService:
             session_params = {"existing_ui_session_id": str(session.id)}
             
             # Create session in agent manager
-            ui_session_id = await self.agent_manager.create_session(
+            ui_session_id = await self.agent_manager.create_user_session(
                 llm_model=session_data.model_id,
                 **model_params,
                 **additional_params,
@@ -290,7 +290,7 @@ class SessionService:
             session_params = {"existing_ui_session_id": session_id}
             
             # Update agent manager session
-            await self.agent_manager.create_session(
+            await self.agent_manager.create_user_session(
                 llm_model=current_session.model_id,
                 **model_params,
                 **additional_params,

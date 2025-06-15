@@ -1,5 +1,4 @@
 import os
-import re
 import copy
 import yaml
 import inspect
@@ -7,12 +6,17 @@ import markdown
 
 from typing import Union, List, Dict, Any, Optional
 
-from agent_c.models.context.interaction_context import InteractionContext
+
 from agent_c.toolsets.tool_cache import ToolCache
+from agent_c.models.events import RenderMediaEvent
 from agent_c.models.context.base import BaseContext
+from agent_c.util.markdown_to_html import md_to_html
 from agent_c.util.logging_utils import LoggingManager
 from agent_c.prompting.prompt_section import PromptSection
-from agent_c.models.events import RenderMediaEvent, MessageEvent, TextDeltaEvent
+from agent_c.models.context.interaction_context import InteractionContext
+
+
+
 
 class Toolset:
     tool_registry: List[Any] = []
@@ -114,7 +118,8 @@ class Toolset:
         self.output_format: str = kwargs.get('output_format', 'raw')
         self.tool_role: str = kwargs.get('tool_role', 'tool')
 
-    def _count_tokens(self, text: str, tool_context) -> int:
+    @staticmethod
+    def _count_tokens(text: str, tool_context) -> int:
         if not text or len(text) == 0:
             return 0
 
@@ -171,7 +176,8 @@ class Toolset:
         function_to_call: Any = getattr(self, function_name)
         return await function_to_call(**args)
 
-    def _yaml_dump(self, data: Any) -> str:
+    @staticmethod
+    def _yaml_dump(data: Any) -> str:
         """
         Dumps data to a YAML formatted string.
 
@@ -183,42 +189,13 @@ class Toolset:
         """
         return yaml.dump(data, allow_unicode=True, sort_keys=False)
 
-    def _format_markdown(self, markdown: str) -> str:
-        """
-        Formats markdown to ensure proper rendering by fixing spacing issues.
-
-        Args:
-            markdown (str): The markdown string to format.
-
-        Returns:
-            str: Properly formatted markdown string.
-        """
-        if not markdown:
-            return ''
-
-        # Step 1: Trim leading/trailing whitespace
-        formatted = markdown.strip()
-
-        # Step 2: Fix headers - remove spaces between newlines and # symbols
-        formatted = re.sub(r'\n\s+#', r'\n#', formatted)
-
-        # Step 3: Fix list items - remove spaces between newlines and list markers
-        formatted = re.sub(r'\n\s+[-*]', r'\n-', formatted)
-
-        # Step 4: Fix the first line if it starts with space+#
-        formatted = re.sub(r'^\s+#', '#', formatted)
-
-        # Step 5: Remove extra spaces at the beginning of lines that aren't headers or list items
-        formatted = re.sub(r'\n\s+([^-#*])', r'\n\1', formatted)
-
-        return formatted
 
     async def _render_media_markdown(self, tool_context: InteractionContext, markdown_text: str, sent_by: str, **kwargs: Any) -> None:
         await self._raise_render_media(tool_context,
                 sent_by_class=self.__class__.__name__,
                 sent_by_function=sent_by,
                 content_type="text/html",
-                content=markdown.markdown(markdown_text),
+                content=md_to_html(markdown_text),
                 **kwargs)
 
     async def _raise_render_media(self, tool_context: InteractionContext, content_type: Optional[str] = 'text/markdown', **kwargs: Any) -> None:
@@ -228,45 +205,17 @@ class Toolset:
         Args:
             kwargs: The arguments to be passed to the render media event.
         """
-        kwargs['role'] = kwargs.get('role', self.tool_role)
-
+        kwargs['role']  = kwargs.get('role', self.tool_role)
         if content_type == 'text/markdown' and 'content' in kwargs:
-            content_type= 'text/html'
+            content_type = 'text/html'
             kwargs['content'] = markdown.markdown(kwargs['content'])
 
         # Create the event object
-        render_media_event = RenderMediaEvent(**kwargs)
+        render_media_event = RenderMediaEvent(content_type=content_type,
+                                              session_id=tool_context.chat_session.user_session_id,
+                                              **kwargs)
 
-        # Send it to the streaming callback
-        if self.streaming_callback:
-            await self.streaming_callback(render_media_event)
-
-    async def _raise_message_event(self, **kwargs: Any) -> None:
-        """
-        Raises a message event.
-
-        Args:
-            kwargs: The arguments to be passed to the message event.
-        """
-        kwargs['role'] = kwargs.get('role', self.tool_role)
-        kwargs['format'] = kwargs.get('format', self.output_format)
-        tool_context = kwargs.pop('tool_context')
-        kwargs['session_id'] = kwargs.get('session_id', tool_context.get('user_session_id', tool_context['session_id']))
-        await self.streaming_callback(MessageEvent(**kwargs))
-
-    async def _raise_text_delta_event(self, **kwargs: Any) -> None:
-        """
-        Raises a text delta event with additional text
-
-        Args:
-            kwargs: The arguments to be passed to the message event.
-        """
-        kwargs['role'] = kwargs.get('role', self.tool_role)
-        kwargs['format'] = kwargs.get('format', self.output_format)
-        tool_context = kwargs.pop('tool_context')
-        kwargs['session_id'] = kwargs.get('session_id', tool_context.get('user_session_id', tool_context['session_id']))
-
-        await self.streaming_callback(TextDeltaEvent(**kwargs))
+        await tool_context.streaming_callback(render_media_event)
 
 
     async def post_init(self) -> None:

@@ -10,43 +10,23 @@ logger = logging.getLogger(__name__)
 
 @router.post("/initialize")
 async def initialize_user_session(params: AgentInitializationParams,
-                                  agent_manager=Depends(get_bridge_manager)
+                                  agent_manager:UItoAgentBridgeManager=Depends(get_bridge_manager)
                                   ):
     """
     Creates an agent session with the provided parameters.
     """
     try:
+        agent_key: str = params.persona_name
+        session_id = params.ui_session_id
+
         # Create a new session with both model and backend parameters
-        logging.debug(f"Creating new session with model: {params.model_name}, backend: {params.backend}")
-
-        # Get only the relevant model parameters using your filtering method.
-        model_params = params.to_agent_kwargs()
-        logging.debug(f"--->Model parameters: {model_params} identified")
-
-        # Get the additional parameters (including persona_name and custom prompt).
-        additional_params = params.to_additional_params()
-        logging.debug(f"--->Additional parameters: {additional_params} identified")
-
-        # Use ui_session_id if provided (for model changes) - this allows us to transfer chat history
-        session_params = {}
-        existing_ui_session_id = getattr(params, 'ui_session_id', None)
-        if existing_ui_session_id:
-            session_params['existing_ui_session_id'] = existing_ui_session_id
-        logger.debug(f"Existing session ID (if passed): {existing_ui_session_id}")
-
-
-        new_session_id = await agent_manager.create_session(
-            **model_params,
-            **additional_params,
-            **session_params
-        )
-        session_data = await agent_manager.get_user_session(new_session_id)
+        logging.info(f"Creating/resuming session with agent-key: {agent_key}. Existing session ID (if passed): {existing_ui_session_id}")
+        session_data = await agent_manager.create_user_session(agent_key, session_id)
         logger.debug(f"Current sessions in memory: {list(agent_manager.ui_sessions.keys())}")
-        logger.debug(
-            f"User Session {new_session_id} with session details: {session_data}")
+        logger.debug(f"User Session {session_data.session_id} with session details: {session_data}")
 
-        return {"ui_session_id": new_session_id,
-                "agent_c_session_id": new_session_id}
+        return {"ui_session_id": session_data.session_id,
+                "agent_c_session_id": session_data.session_id}
 
     except Exception as e:
         logger.error(f"Error during session initialization: {str(e)}")

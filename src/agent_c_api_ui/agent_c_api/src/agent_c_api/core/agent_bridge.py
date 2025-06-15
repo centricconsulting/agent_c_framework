@@ -277,10 +277,7 @@ class AgentBridge:
             await self.tool_chest.init_tools(tool_opts)
             await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
             
-            self.logger.info(
-                f"Agent {self.chat_session.agent_config.key} successfully initialized "
-                f"essential tools: {list(self.tool_chest.active_tools.keys())}"
-            )
+            self.logger.info( f"Agent {self.chat_session.agent_config.key} successfully initialized")
 
             # Check for tools that were selected but not initialized
             # Usually indicates misspelling of the tool class name

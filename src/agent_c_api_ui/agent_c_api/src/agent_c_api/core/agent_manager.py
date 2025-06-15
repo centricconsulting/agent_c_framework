@@ -6,6 +6,7 @@ import traceback
 
 from typing import Dict, Optional, List, Any
 
+from agent_c.chat import DefaultSessionManager
 from agent_c.util import MnemonicSlugs
 from agent_c.config.agent_config_loader import AgentConfigLoader
 from agent_c.models.agent_config import AgentConfiguration
@@ -39,7 +40,7 @@ class UItoAgentBridgeManager:
         self._locks: Dict[str, asyncio.Lock] = {}
         self._cancel_events: Dict[str, threading.Event] = {}
         self.agent_config_loader: AgentConfigLoader = AgentConfigLoader()
-        self.chat_session_manager: ChatSessionManager = ChatSessionManager()
+        self.chat_session_manager: DefaultSessionManager = DefaultSessionManager()
 
 
 
@@ -55,14 +56,14 @@ class UItoAgentBridgeManager:
                 information, or None if session doesn't exist
         """
         if user_session_id not in self.ui_sessions:
-            await self.create_session(existing_ui_session_id=user_session_id)
+            return await self.create_user_session(existing_ui_session_id=user_session_id)
 
         return self.ui_sessions.get(user_session_id)
 
-    async def create_session(self,
-                             agent_key: str = None,
-                             existing_ui_session_id: str = None,
-                             user_id: str = "Agent_C_User") -> str:
+    async def create_user_session(self,
+                                  agent_key: str = None,
+                                  existing_ui_session_id: str = None,
+                                  user_id: str = "Agent_C_User") -> UserSession:
         """
         Create a new session or update an existing session with a new agent.
 
@@ -96,11 +97,11 @@ class UItoAgentBridgeManager:
             if existing_session is not None:
                 # This is the "client disconnected" case where we re-use an existing session
                 if existing_session.chat_session.agent_config.key == agent_key:
-                    return ui_session_id  # No change needed, return existing session
+                    return existing_session  # No change needed, return existing session
                 else:
                     agent_config = self.agent_config_loader.duplicate(agent_key)
                     existing_session.chat_session.agent_config = agent_config
-                    return ui_session_id
+                    return existing_session
 
             if ui_session_id in self.chat_session_manager.session_id_list:
                 # The user is resuming an existing session
@@ -127,7 +128,7 @@ class UItoAgentBridgeManager:
             self.ui_sessions[ui_session_id] = user_session
 
             self.logger.info(f"Session {ui_session_id} created with agent: {agent_bridge}")
-            return ui_session_id
+            return user_session
 
     async def cleanup_session(self, ui_session_id: str):
         """

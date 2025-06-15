@@ -100,7 +100,7 @@ default_markdown_extensions: List[str] = ['nl2br', # Will cause newlines to be t
                                                        # is converted to a link.
                                          ]
 
-def mmd_to_html(markdown_text: str, extensions: Optional[List[str]] = None) -> str:
+def md_to_html(markdown_text: str, extensions: Optional[List[str]] = None) -> str:
     """
     Convert Markdown text to HTML.
 

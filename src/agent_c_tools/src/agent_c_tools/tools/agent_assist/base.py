@@ -1,14 +1,12 @@
 import markdown
-import threading
 
 from datetime import datetime
 from functools import partial
 from typing import Any, Dict, List, Optional, cast, Tuple
 
-from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.toolsets.tool_set import Toolset
-from agent_c.models.events import SessionEvent
+from agent_c.chat import DefaultSessionManager
 from agent_c.models.events.chat import HistoryDeltaEvent
 from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c.prompting.prompt_section import PromptSection
@@ -16,6 +14,7 @@ from agent_c.models.agent_config import AgentConfiguration
 from agent_c.prompting.prompt_builder import PromptBuilder
 from agent_c_tools.tools.workspace.tool import WorkspaceTools
 from agent_c.config.agent_config_loader import AgentConfigLoader
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.config.model_config_loader import ModelConfigurationLoader
 from agent_c.agents.gpt import BaseAgent, GPTChatAgent, AzureGPTChatAgent
 from agent_c.agents.claude import ClaudeChatAgent, ClaudeBedrockChatAgent
@@ -38,14 +37,13 @@ class AgentAssistToolBase(Toolset):
         super().__init__( **kwargs)
         self.agent_loader = AgentConfigLoader()
         self.model_config_loader = ModelConfigurationLoader()
+        self.chat_session_manager = DefaultSessionManager()
 
         self.sections: List[PromptSection] = [ThinkSection(), AssistantBehaviorSection(),  DynamicPersonaSection()]
 
         self.session_cache = AsyncExpiringCache(default_ttl=kwargs.get('agent_session_ttl', 300))
         self.model_configs: Dict[str, Any] = self.model_config_loader.flattened_config()
         self.runtime_cache: Dict[str, BaseAgent] = {}
-        self._model_name = kwargs.get('agent_assist_model_name', 'claude-3-7-sonnet-latest')
-        self.persona_cache: Dict[str, AgentConfiguration] = {}
         self.workspace_tool: Optional[WorkspaceTools] = None
 
 
@@ -177,25 +175,25 @@ class AgentAssistToolBase(Toolset):
 
     async def agent_chat(self,
                          user_message: str,
-                         agent: AgentConfiguration,
-                         user_session_id: Optional[str] = None,
+                         agent_config: AgentConfiguration,
                          agent_session_id: Optional[str] = None,
-                         tool_context: Optional[Dict[str, Any]] = None,
+                         tool_context: InteractionContext = None,
                          **additional_metadata) -> Tuple[str, List[Dict[str, Any]]]:
         """
         Chat with a persona, maintaining conversation history.
         """
-        self.logger.info(f"Running chat with persona: {agent.name}, user session: {user_session_id}")
-        agent_runtime = await self.runtime_for_agent(agent)
+        user_session_id = tool_context.chat_session.user_session_id
+        self.logger.info(f"Running chat with persona: {agent_config.name}, user session: {user_session_id}")
+        agent_runtime = await self.runtime_for_agent(agent_config)
 
         if agent_session_id is None:
-            agent_session_id = MnemonicSlugs.generate_id_slug(2)
+            agent_session_id = f"{MnemonicSlugs.generate_id_slug(3)}"
 
         session = self.session_cache.get(agent_session_id)
         if session is None:
-            session = await self._new_agent_session(agent, user_session_id, agent_session_id=agent_session_id)
+            session = await self._new_agent_session(agent_config, tool_context.chat_session.user_session_id, agent_session_id=agent_session_id)
         try:
-            chat_params = await self.__chat_params(agent, agent_runtime, user_session_id, parent_tool_context=tool_context, agent_session_id=agent_session_id, **additional_metadata)
+            chat_params = await self.__chat_params(agent_config, agent_runtime, user_session_id, parent_tool_context=tool_context, agent_session_id=agent_session_id, **additional_metadata)
             chat_params['messages'] = session['messages']
             #chat_params['allow_server_tools'] = True  # Allow server tools to be used in the chat
             # Use non-streaming chat to avoid flooding the event stream
