@@ -6,6 +6,7 @@ import logging
 from typing import Type, List, Union, Dict, Any, Tuple, Optional
 
 from agent_c.toolsets.tool_set import Toolset
+from agent_c.toolsets.tool_cache import ToolCache
 from agent_c.util.logging_utils import LoggingManager
 from agent_c.prompting.prompt_section import PromptSection
 from agent_c.models.context.interaction_context import InteractionContext
@@ -37,42 +38,43 @@ class ToolChest:
         _execute_tool_call(function_id: str, function_args: Dict) -> Any: Execute a single tool call.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, tool_cache: Optional[ToolCache] = None):
         """
         Initializes the ToolChest with toolset instances, toolset classes, and a logger.
         
         Args:
             **kwargs: Arbitrary keyword arguments. Supports:
-                - available_toolset_classes: List of toolset classes available for activation
-                - essential_toolset_names: List of names of toolsets that should always be active
-                - (legacy) tool_classes: Alias for available_toolset_classes for backward compatibility
                 - tool_cache: Optional ToolCache instance to use
-                - session_manager: Optional SessionManager instance to use
         """
-        # Initialize main dictionaries for toolset tracking
-        self.__toolset_instances: dict[str, Toolset] = {}  # All instantiated toolsets
-        self.__active_toolset_instances: dict[str, Toolset] = {}  # Currently active toolsets
-        
-        # Get available toolset classes (support both new and old parameter names)
-        self.__available_toolset_classes = kwargs.get('available_toolset_classes', 
-                                                      kwargs.get('tool_classes', Toolset.tool_registry))
-        
-        # Get essential toolset names
-        self.__essential_toolsets = kwargs.get('essential_toolsets', [])
+        self.logger = LoggingManager(__name__).get_logger()
+
+        if tool_cache is None:
+            self.logger.warning("No tool_cache provided, using default ToolCache which stores in agent_c_config/tool_cache.")
+            self.tool_cache = ToolCache()
+        else:
+            self.tool_cache = tool_cache
+
+        # This list is all POSSIBLE toolsets that could be used, provided
+        # you have any required keys etc.
+        self.__available_toolset_classes = Toolset.tool_registry
+
+        # This list contains instances of toolsets that have been instantiated.
+        # The key is the toolset class name.
+        self.__toolset_instances: dict[str, Toolset] = {}
+
+        # This maps actual TOOL methods names to the toolset instance that contains them.
+        self._tool_name_to_instance_map: Dict[str, Toolset] = {}
 
         # Initialize tracking for lazy initialization
         self.__toolsets_awaiting_init = {}
         self.__tool_opts = {}
-        
-        # Initialize metadata tracking
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
+
+        # This list contains the names of "active" toolsets, this is for legacy compatibility  and will be removed
+        self.__active_toolset_instances: dict[str, Toolset] = {}  # Currently active toolsets
         self._active_tool_schemas: List[dict] = []
-        self._tool_name_to_instance_map: Dict[str, Toolset] = {}
-        
-        # Initialize tool_cache
-        self.tool_cache = kwargs.get('tool_cache')
-        # self.session_manager = kwargs.get('session_manager')
+
+
+
 
     @property
     def available_toolset_classes(self) -> List:

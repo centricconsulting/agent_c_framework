@@ -6,20 +6,21 @@ import traceback
 from typing import Any, Dict, List, Union, Optional, AsyncGenerator
 from datetime import datetime, timezone
 
-from agent_c.chat import ChatSessionManager
+from agent_c.agents.base import BaseAgent
+
+from agent_c_api.config.env_config import settings
 from agent_c.config import ModelConfigurationLoader
+from agent_c.chat import ChatSessionManager, ChatSession
 from agent_c.models.agent_config import AgentConfiguration
+from agent_c_tools.tools.workspace.base import BaseWorkspace
 from agent_c.models.context.interaction_context import InteractionContext
-from agent_c.models.context.interaction_inputs import InteractionInputs
-from agent_c.models.input import AudioInput, TextInput
+
 from agent_c.agents.gpt import GPTChatAgent, AzureGPTChatAgent
 from agent_c.models.events import SessionEvent, TextDeltaEvent
-from agent_c.toolsets import ToolChest, ToolCache
-from agent_c_api.config.env_config import settings
-from agent_c.models.input.file_input import FileInput
-from agent_c.agents.base import BaseAgent, ChatSession
+from agent_c.toolsets.tool_chest import ToolChest, ToolCache
+
+
 from agent_c_api.core.file_handler import FileHandler
-from agent_c.models.input.image_input import ImageInput
 from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c_api.config.config_loader import MODELS_CONFIG
 from agent_c_tools.tools.workspace import LocalStorageWorkspace
@@ -28,8 +29,8 @@ from agent_c.prompting import PromptBuilder, CoreInstructionSection
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 from agent_c.agents.claude import ClaudeChatAgent, ClaudeBedrockChatAgent
 from agent_c.util.event_session_logger_factory import create_with_callback
-from agent_c_tools.tools.workspace.base import BaseWorkspace
 from agent_c_tools.tools.workspace.local_storage import LocalProjectWorkspace
+from agent_c.models.context.interaction_inputs import InteractionInputs, AudioInput, TextInput, FileInput, ImageInput
 
 # Constants
 DEFAULT_BACKEND = 'claude'
@@ -71,8 +72,7 @@ class AgentBridge:
         self,
         chat_session: ChatSession,
         session_manager: ChatSessionManager,
-        file_handler: Optional[FileHandler] = None,
-        **kwargs: Any
+        file_handler: Optional[FileHandler] = None
     ) -> None:
         """
         Initialize the AgentBridge instance.
@@ -84,17 +84,18 @@ class AgentBridge:
         Args:
             chat_session: The chat session to manage.
             session_manager: Session manager for chat sessions.
-            model_name: Name of the AI model to use. Defaults to 'claude-sonnet-4-20250514'.
             file_handler: Handler for file operations. Defaults to None.
-            **kwargs: Additional optional keyword arguments including:
-                - tool_cache_dir (str): Directory for tool cache
-                - sections (List): Sections for the prompt builder
-        
+
         Raises:
             Exception: If there are errors during tool or agent initialization.
         """
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
+        self.logger = LoggingManager(__name__).get_logger()
+        self.chat_session = chat_session
+        self.session_manager = session_manager
+        self.file_handler = file_handler
+
+        self.logger.info(f"Initializing agent bridge for chat session '{self.chat_session.session_id}', user ID: '{self.chat_session.user_id}', Agent Key: `{self.chat_session.agent_config.key}`...")
+
         # Set up streaming_callback with logging
         self.streaming_callback_with_logging = create_with_callback(
             log_base_dir=os.getenv('AGENT_LOG_DIR', DEFAULT_LOG_DIR),
@@ -102,39 +103,15 @@ class AgentBridge:
             include_system_prompt=True
         )
 
-        self.__init_events()
-
-        self.chat_session = chat_session
-        self.logger.info(f"Using provided agent config : {self.chat_session.agent_config.key}...")
-
-        self.sections = kwargs.get('sections', None)  # Sections for the prompt builder, if any
-
         self.model_config_loader = ModelConfigurationLoader()
-        self.model_configs: Dict[str, Any] = self.model_config_loader.flattened_config()
         self.runtime_cache: Dict[str, BaseAgent] = {}
 
-
-        self.debug_event = None
-        self.session_manager = session_manager
-
-
-        # Tool Chest, Cache, and Setup
-        # - Tool Chest: A collection of toolsets that the agent can use, Set to None initialization.
-        # - Tool Cache: A cache for storing tool data, set to a default directory.
-        # - Output Tool Arguments: A placeholder for tool argument output preference.
-        self.tool_chest: Union[ToolChest, None] = None
-        self.tool_cache_dir = kwargs.get("tool_cache_dir", DEFAULT_TOOL_CACHE_DIR)
-        self.tool_cache = ToolCache(cache_dir=self.tool_cache_dir)
-        self.output_tool_arguments = True  # Placeholder for tool argument output preference
+        self.tool_chest = ToolChest()
 
         # Agent Workspace Setup
         self.workspaces: Optional[List[BaseWorkspace]] = None
         self.__init_workspaces()
 
-        # Initialize file handling capabilities
-        self.file_handler = file_handler
-        self.image_inputs: List[ImageInput] = []
-        self.audio_inputs: List[AudioInput] = []
 
     def runtime_for_agent(self, agent_config: AgentConfiguration):
         if agent_config.key in self.runtime_cache:
@@ -144,25 +121,12 @@ class AgentBridge:
             return self.runtime_cache[agent_config.key]
 
     def _runtime_for_agent(self, agent_config: AgentConfiguration) -> BaseAgent:
-        model_config = self.model_configs[agent_config.model_id]
+        model_config = self.model_config_loader.flattened_config()[agent_config.model_id]
         runtime_cls = self.__vendor_agent_map[model_config["vendor"]]
 
         auth_info = agent_config.agent_params.auth.model_dump() if agent_config.agent_params.auth is not None else  {}
         client = runtime_cls.client(**auth_info)
         return runtime_cls(model_name=model_config["id"], client=client)
-
-
-    def __init_events(self) -> None:
-        """
-        Initialize threading events used for debugging and input/output management.
-        
-        Sets up various threading events for coordinating agent operations,
-        including exit handling, input state management, and TTS cancellation.
-        """
-        self.exit_event = threading.Event()
-        self.input_active_event = threading.Event()
-        self.cancel_tts_event = threading.Event()
-        self.debug_event = LoggingManager.get_debug_event()
 
 
     def __init_workspaces(self) -> None:
@@ -263,15 +227,11 @@ class AgentBridge:
 
         try:
             tool_opts = {
-                'tool_cache': self.tool_cache,
-                'session_manager': self.session_manager,
-                'workspaces': self.workspaces,
-                'streaming_callback': self.streaming_callback_with_logging,
-                'model_configs': MODELS_CONFIG
+                'workspaces': self.workspaces
             }
 
             # Initialize the tool chest with essential tools first
-            self.tool_chest = ToolChest(**tool_opts)
+
 
             # Initialize the tool chest essential tools
             await self.tool_chest.init_tools(tool_opts)

@@ -34,7 +34,7 @@ class MCPToolChest(ToolChest):
                 - essential_toolset_names: List of names of toolsets that should always be active
                 - mcp_servers: Dict of MCPServer instances to include
         """
-        super().__init__(**kwargs)
+        super().__init__(kwargs.get('tool_cache', None))
         self.mcp_servers: Dict[str, MCPServer] = kwargs.get("mcp_servers", {})
         self.logger = logging.getLogger("agent_c.mcp_tool_chest")
     

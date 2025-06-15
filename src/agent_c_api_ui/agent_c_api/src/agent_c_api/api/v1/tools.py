@@ -63,5 +63,5 @@ async def tools_list():
             "tool_name_mapping": tool_name_mapping
         }
     except Exception as e:
-        logger.error(f"Error retrieving tools: {e}")
+        logger.exception(f"Error retrieving tools: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

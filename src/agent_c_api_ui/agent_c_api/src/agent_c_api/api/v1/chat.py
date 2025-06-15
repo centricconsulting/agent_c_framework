@@ -38,7 +38,7 @@ async def chat_endpoint(
     # logger.debug(f"Available sessions: {list(agent_manager.sessions.keys())}")
 
     if not session_data:
-        logger.error(f"No session found for session_id: {ui_session_id}")
+        logger.exception(f"No session found for session_id: {ui_session_id}", exc_info=True)
         raise HTTPException(status_code=404, detail="Session not found")
 
     # Parse file IDs if provided
@@ -48,7 +48,7 @@ async def chat_endpoint(
             file_id_list = json.loads(file_ids)
             logger.info(f"Chat includes files: {file_id_list}")
         except json.JSONDecodeError:
-            logger.error(f"Invalid file_ids format: {file_ids}")
+            logger.exception(f"Invalid file_ids format: {file_ids}", exc_info=True)
             raise HTTPException(status_code=400, detail="Invalid file_ids format")
 
     async def event_stream():
@@ -67,11 +67,8 @@ async def chat_endpoint(
                     token += '\n'
                 yield token
         except Exception as e:
-            logger.error(f"Error in stream_response: {e}")
-            error_type = type(e).__name__
-            error_traceback = traceback.format_exc()
-            logger.error(f"Error in chat.py:stream_response - {error_type}: {str(e)}\n{error_traceback}")
-            yield f"Error: {str(e)}\n{error_traceback}"
+            logger.exception(f"Error in stream_response: {e}", exc_info=True)
+            yield f"Error: {str(e)}"
 
     return StreamingResponse(
         event_stream(),

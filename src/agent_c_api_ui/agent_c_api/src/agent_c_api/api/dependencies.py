@@ -1,19 +1,16 @@
-from fastapi import Request, Depends, HTTPException
-from typing import Dict, Any, Optional, List, Tuple, Set, Annotated, cast
-from pydantic import create_model
-import logging
-import re
-from collections import defaultdict
-from contextlib import asynccontextmanager
 
+from pydantic import create_model
+from redis import asyncio as aioredis
+from typing import Dict, Any, Optional
+from fastapi import Request, Depends, HTTPException
+
+from agent_c_api.config.redis_config import RedisConfig
 from agent_c_api.config.config_loader import get_allowed_params
 from agent_c_api.core.agent_manager import UItoAgentBridgeManager
 from agent_c_api.core.util.logging_utils import LoggingManager
-from agent_c_api.config.redis_config import RedisConfig
-from redis import asyncio as aioredis
 
-logging_manager = LoggingManager(__name__)
-logger = logging_manager.get_logger()
+
+logger = LoggingManager(__name__).get_logger()
 
 
 def get_bridge_manager(request: Request) -> UItoAgentBridgeManager:
@@ -98,7 +95,6 @@ def analyze_config_structure(config: Dict[str, Any], prefix: str = "", result: D
                     result[current_path]["children"].append(child_path)
         else:
             # This is a leaf node (actual parameter)
-            param_type = None
             if key == "temperature":
                 param_type = float
             elif key in ["max_tokens", "budget_tokens"]:
@@ -228,7 +224,7 @@ def transform_flat_to_nested(params: Dict[str, Any], param_map: Dict[str, Dict])
                         json_value = json.loads(parent_value)
                         nested_obj.update(json_value)
                         needs_parent = True
-                except:
+                except:  # noqa
                     # If we can't parse as JSON, treat as a direct value
                     pass
 
@@ -251,7 +247,7 @@ def transform_flat_to_nested(params: Dict[str, Any], param_map: Dict[str, Dict])
         # If parent is required and children have been processed, ensure parent exists
         if parent_info.get("required", True) and needs_parent:
             result[parent_name] = nested_obj
-        # If parent is not required but we have child values, add it
+        # If parent is not required, but we have child values, add it
         elif not parent_info.get("required", True) and needs_parent:
             result[parent_name] = nested_obj
         # If parent is required but no children were processed, create an empty object with defaults
@@ -304,10 +300,10 @@ async def get_dynamic_params(request: Request, model_name: str, backend: str):
 
         # Validate with the dynamic model
         logger.debug(f"Validating params for {model_name}: {transformed_params}")
-        validated_params = DynamicParams.parse_obj(transformed_params)
+        validated_params = DynamicParams.model_validate(transformed_params)
         return validated_params
     except Exception as e:
-        logger.error(f"Parameter validation error for {model_name}: {e}")
+        logger.exception(f"Parameter validation error for {model_name}: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"Invalid parameters: {str(e)}")
 
 
@@ -359,7 +355,7 @@ async def get_dynamic_form_params(request: Request, agent_manager=Depends(get_br
 
             try:
                 logger.debug(f"MODEL SCHEMA: {DynamicFormParams.model_json_schema()}")
-                validated_params = DynamicFormParams.parse_obj(transformed_form)
+                validated_params = DynamicFormParams.model_validate(transformed_form)
                 logger.debug(f"VALIDATED PARAMS: {validated_params}")
                 return {
                     "params": validated_params,
@@ -368,15 +364,11 @@ async def get_dynamic_form_params(request: Request, agent_manager=Depends(get_br
                     "backend": backend
                 }
             except Exception as e:
-                logger.error(f"Form parameter validation error: {str(e)}")
-                import traceback
-                logger.error(f"VALIDATION ERROR DETAILS: {traceback.format_exc()}")
+                logger.exception(f"Form parameter validation error: {str(e)}", exc_info=True)
                 raise HTTPException(status_code=400, detail=f"Invalid parameters: {str(e)}")
         except Exception as e:
-            logger.error(f"Error processing form parameters: {str(e)}")
-            import traceback
-            logger.error(f"PROCESSING ERROR DETAILS: {traceback.format_exc()}")
-            raise HTTPException(status_code=400, detail=f"Error processing parameters: {str(e)}")
+            logger.exception(f"Error processing form parameters: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Error processing parameters: {str(e)}")
 
     # If we're missing model info, just return the form data
     # We'll handle fetching the model details in the route handler
@@ -450,7 +442,7 @@ async def get_redis_client() -> aioredis.Redis:
         redis_client = await RedisConfig.get_redis_client()
         return redis_client
     except Exception as e:
-        logger.error(f"Failed to get Redis client: {e}")
+        logger.exception(f"Failed to get Redis client: {e}", exc_info=True)
         raise HTTPException(
             status_code=503,
             detail="Redis service is currently unavailable. Please try again later."
@@ -494,7 +486,7 @@ async def get_redis_client_managed() -> RedisClientManager:
         redis_client = await RedisConfig.get_redis_client()
         return RedisClientManager(redis_client)
     except Exception as e:
-        logger.error(f"Failed to get managed Redis client: {e}")
+        logger.exception(f"Failed to get managed Redis client: {e}", exc_info=True)
         raise HTTPException(
             status_code=503,
             detail="Redis service is currently unavailable. Please try again later."

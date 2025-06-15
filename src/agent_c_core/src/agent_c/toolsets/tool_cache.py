@@ -1,8 +1,9 @@
 import os
-from diskcache import Cache
 
+from diskcache import Cache
 from typing import Any, Optional, Union
 
+from agent_c.config import locate_config_folder
 
 class ToolCache:
     """
@@ -18,17 +19,17 @@ class ToolCache:
         clear: Clear the entire cache.
     """
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, supplied_cache: Optional[Cache] = None) -> None:
         """
         Keyword Arguments:
             cache (Optional[Cache]): An existing diskcache Cache instance. If not provided, one will be created.
-            cache_dir (Optional[str]): The directory path for storing cache data if a new cache is created. Defaults to ".tool_cache".
         """
-        self.cache: Optional[Cache] = kwargs.get('cache')
-        if self.cache is None:
-            cache_dir: str = kwargs.get('cache_dir', ".tool_cache")
+        if supplied_cache is None:
+            cache_dir = os.path.join(locate_config_folder(), "tool_cache")
             os.makedirs(cache_dir, exist_ok=True)
             self.cache = Cache(cache_dir)
+        else:
+            self.cache = supplied_cache
 
     def set(self, key: Any, value: Any, expire: Optional[int] = None) -> None:
         """Set a key-value pair in the cache with optional expiration time.

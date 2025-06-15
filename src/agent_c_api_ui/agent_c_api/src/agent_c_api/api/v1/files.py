@@ -1,18 +1,18 @@
-import json
+import os
 import logging
 import traceback
-from typing import List, Optional
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, BackgroundTasks
-from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
+from fastapi.responses import FileResponse
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, BackgroundTasks
 
+from agent_c.util.logging_utils import LoggingManager
+from agent_c_api.core.file_handler import FileHandler
 from agent_c_api.api.dependencies import get_bridge_manager
-from agent_c_api.core.file_handler import FileHandler, FileMetadata
 
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+logger = LoggingManager(__name__).get_logger()
 
 
 # Create a shared file handler
@@ -35,7 +35,7 @@ def cleanup_expired_files():
         if count > 0:
             logger.info(f"Cleaned up {count} expired files")
     except Exception as e:
-        logger.error(f"Error cleaning up expired files: {str(e)}")
+        logger.exception(f"Error cleaning up expired files: {str(e)}", exc_info=True)
 
 
 @router.post("/upload_file", response_model=UserFileResponse)
@@ -90,8 +90,7 @@ async def upload_file(
     except HTTPException:
         raise
     except Exception as e:
-        error_traceback = traceback.format_exc()
-        logger.error(f"Error uploading file: {str(e)}\n{error_traceback}")
+        logger.exception(f"Error uploading file: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")
 
 
@@ -138,8 +137,7 @@ async def get_session_files(
     except HTTPException:
         raise
     except Exception as e:
-        error_traceback = traceback.format_exc()
-        logger.error(f"Error listing files: {str(e)}\n{error_traceback}")
+        logger.exception(f"Error listing files: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error listing files: {str(e)}")
 
 
@@ -180,8 +178,7 @@ async def get_file(
     except HTTPException:
         raise
     except Exception as e:
-        error_traceback = traceback.format_exc()
-        logger.error(f"Error retrieving file: {str(e)}\n{error_traceback}")
+        logger.exception(f"Error retrieving file: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error retrieving file: {str(e)}")
 
 
@@ -216,10 +213,9 @@ async def delete_file(
 
         # Delete the file
         try:
-            import os
             os.remove(metadata.filename)
         except Exception as e:
-            logger.error(f"Error deleting file {file_id}: {str(e)}")
+            logger.exception(f"Error deleting file {file_id}: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
 
         # Update the session files
@@ -232,6 +228,5 @@ async def delete_file(
     except HTTPException:
         raise
     except Exception as e:
-        error_traceback = traceback.format_exc()
-        logger.error(f"Error deleting file: {str(e)}\n{error_traceback}")
+        logger.exception(f"Error deleting file: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")

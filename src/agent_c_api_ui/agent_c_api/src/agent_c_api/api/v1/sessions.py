@@ -1,12 +1,14 @@
 from fastapi import APIRouter, HTTPException, Depends
 import logging
+
+from agent_c.util.logging_utils import LoggingManager
 from agent_c_api.core.agent_manager import UItoAgentBridgeManager
 from agent_c_api.api.dependencies import get_bridge_manager
 from agent_c_api.api.v1.llm_models.agent_params import AgentInitializationParams
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
 
+logger = LoggingManager(__name__).get_logger()
 
 @router.post("/initialize")
 async def initialize_user_session(params: AgentInitializationParams,
@@ -20,7 +22,7 @@ async def initialize_user_session(params: AgentInitializationParams,
         session_id = params.ui_session_id
 
         # Create a new session with both model and backend parameters
-        logging.info(f"Creating/resuming session with agent-key: {agent_key}. Existing session ID (if passed): {existing_ui_session_id}")
+        logging.info(f"Creating/resuming session with agent-key: {agent_key}. Existing session ID (if passed): {session_id}")
         session_data = await agent_manager.create_user_session(agent_key, session_id)
         logger.debug(f"Current sessions in memory: {list(agent_manager.ui_sessions.keys())}")
         logger.debug(f"User Session {session_data.session_id} with session details: {session_data}")
@@ -29,7 +31,7 @@ async def initialize_user_session(params: AgentInitializationParams,
                 "agent_c_session_id": session_data.session_id}
 
     except Exception as e:
-        logger.error(f"Error during session initialization: {str(e)}")
+        logger.exception(f"Error during session initialization: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -58,7 +60,7 @@ async def get_sessions(agent_manager=Depends(get_bridge_manager)):
         return {"session_ids": sessions}
 
     except Exception as e:
-        logger.error(f"Error retrieving sessions: {str(e)}")
+        logger.exception(f"Error retrieving sessions: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Failed to retrieve sessions: {str(e)}"
@@ -96,7 +98,7 @@ async def delete_all_sessions(agent_manager=Depends(get_bridge_manager)):
         }
 
     except Exception as e:
-        logger.error(f"Error deleting sessions: {str(e)}")
+        logger.exception(f"Error deleting sessions: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Failed to delete sessions: {str(e)}"

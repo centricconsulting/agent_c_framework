@@ -45,5 +45,5 @@ async def list_models():
         return {"models": models}
 
     except Exception as e:
-        logger.error(f"Error reading model config: {e}")
+        logger.exception(f"Error reading model config: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

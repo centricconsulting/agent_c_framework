@@ -3,15 +3,15 @@ from typing import Dict, Any
 from fastapi import APIRouter, HTTPException, Depends
 
 from agent_c_api.core.agent_bridge import AgentBridge
+from agent_c_api.models.user_session import UserSession
 from agent_c.models.agent_config import AgentConfiguration
 from agent_c_api.api.dependencies import get_bridge_manager
 from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c_api.api.v1.llm_models.agent_params import AgentUpdateParams
 from agent_c_api.api.v1.llm_models.tool_model import ToolUpdateRequest
-from agent_c_api.models.user_session import UserSession
 
-logging_manager = LoggingManager(__name__)
-logger = logging_manager.get_logger()
+
+logger = LoggingManager(__name__).get_logger()
 
 router = APIRouter()
 
@@ -154,7 +154,7 @@ async def update_agent_tools(
             "agent_c_session_id": ui_session_data.get('agent_c_session_id', "Unknown")
         }
     except Exception as e:
-        logger.error(f"Error updating tools: {str(e)}")
+        logger.exception(f"Error updating tools: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -169,7 +169,7 @@ async def get_agent_tools(ui_session_id: str, agent_manager=Depends(get_bridge_m
             "status": "success"
         }
     except Exception as e:
-        logger.error(f"Error getting agent tools: {e}")
+        logger.exception(f"Error getting agent tools: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -203,7 +203,7 @@ async def debug_agent_state(ui_session_id: str, agent_manager=Depends(get_bridge
             "internal_agent_params": internal_agent_params,
         }
     except Exception as e:
-        logger.error(f"Error debugging agent state: {e}")
+        logger.exception(f"Error debugging agent state: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 # http://localhost:8000/api/v1/chat_session_debug/2971f215-a631-4177-852e-c3595b6d256a
