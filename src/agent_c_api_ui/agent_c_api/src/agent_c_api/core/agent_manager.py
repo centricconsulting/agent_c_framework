@@ -94,17 +94,16 @@ class UItoAgentBridgeManager:
             existing_session = self.ui_sessions.get(ui_session_id, None)
 
             if existing_session is not None:
-                chat_session: ChatSession = existing_session.chat_session
-
-                if chat_session.agent_config.key == agent_key:
+                # This is the "client disconnected" case where we re-use an existing session
+                if existing_session.chat_session.agent_config.key == agent_key:
                     return ui_session_id  # No change needed, return existing session
                 else:
                     agent_config = self.agent_config_loader.duplicate(agent_key)
-                    chat_session.agent_config = agent_config
-                    chat_session.touch()
+                    existing_session.chat_session.agent_config = agent_config
                     return ui_session_id
 
             if ui_session_id in self.chat_session_manager.session_id_list:
+                # The user is resuming an existing session
                 chat_session = await self.chat_session_manager.get_session(ui_session_id)
 
                 if chat_session.agent_config.key != agent_key:
@@ -112,6 +111,7 @@ class UItoAgentBridgeManager:
                     chat_session.agent_config = agent_config
                     chat_session.touch()
             else:
+                # This is a legit new session creation
                 agent_config = self.agent_config_loader.duplicate(agent_key)
                 chat_session = ChatSession(session_id=ui_session_id, agent_config=agent_config, user_id=user_id)
                 await self.chat_session_manager.new_session(chat_session)
