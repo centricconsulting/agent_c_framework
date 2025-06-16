@@ -25,23 +25,25 @@ The new EventSessionLogger provides:
 ### Basic File Logging
 
 **OLD PATTERN (Deprecated):**
+
 ```python
 from agent_c.util.session_logger import SessionLogger
-from agent_c.agents.claude import ClaudeChatAgent
+from agent_c.agent_runtimes.claude import ClaudeChatAgentRuntime
 
 # Old embedded pattern
 session_logger = SessionLogger(log_file_path="./logs/session.log")
-agent = ClaudeChatAgent(session_logger=session_logger)
+agent = ClaudeChatAgentRuntime(session_logger=session_logger)
 ```
 
 **NEW PATTERN (Recommended):**
+
 ```python
 from agent_c.util.event_session_logger_factory import create_session_logger
-from agent_c.agents.claude import ClaudeChatAgent
+from agent_c.agent_runtimes.claude import ClaudeChatAgentRuntime
 
 # New gateway pattern
 logger = create_session_logger(log_base_dir="./logs")
-agent = ClaudeChatAgent(streaming_callback=logger)
+agent = ClaudeChatAgentRuntime(streaming_callback=logger)
 ```
 
 ### With Callback Function

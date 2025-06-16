@@ -326,7 +326,7 @@ class ToolChest:
     async def _execute_tool_call(self, function_id: str, function_args: Dict) -> Any:
         """
         Execute a single tool call.
-        This method is similar to BaseAgent._call_function but lives in ToolChest.
+        This method is similar to AgentRuntime._call_function but lives in ToolChest.
         
         Args:
             function_id (str): The function identifier.

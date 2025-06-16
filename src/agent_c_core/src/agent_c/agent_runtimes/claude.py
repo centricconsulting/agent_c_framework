@@ -7,10 +7,11 @@ import httpcore
 from enum import Enum, auto
 from typing import Any, List, Union, Dict, Tuple, Optional
 from anthropic import AsyncAnthropic, APITimeoutError, Anthropic, RateLimitError, AsyncAnthropicBedrock
+from anthropic.types import MessageParam
 
-from agent_c.agents.base import BaseAgent
+from agent_c.agent_runtimes.base import AgentRuntime
 from agent_c.util.token_counter import TokenCounter
-from agent_c.agents.runtime_registry import RuntimeRegistry
+from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
 from agent_c.models.completion.claude import ClaudeCompletionParams
 from agent_c.models.context.interaction_context import InteractionContext
 
@@ -20,47 +21,32 @@ class ThinkToolState(Enum):
     WAITING = auto()    # Waiting for the JSON to start
     EMITTING = auto()   # Processing and emitting think tool content
 
+class ClaudeTokenCounter(TokenCounter):
+    def __init__(self):
+        self.anthropic: Anthropic = Anthropic()
 
-class ClaudeChatAgent(BaseAgent):
+    def count_tokens(self, text: str) -> int:
+        response = self.anthropic.messages.count_tokens(
+            model="claude-3-7-sonnet-latest",
+            system="",
+            messages=[MessageParam(role="user", content=text)]
+        )
+
+        return response.input_tokens
+
+class ClaudeChatAgentRuntime(AgentRuntime):
     CLAUDE_MAX_TOKENS: int = 64000
-    class ClaudeTokenCounter(TokenCounter):
 
-        def __init__(self):
-            self.anthropic: Anthropic = Anthropic()
-
-        def count_tokens(self, text: str) -> int:
-            response = self.anthropic.messages.count_tokens(
-                model="claude-3-5-sonnet-latest",
-                system="",
-                messages=[{
-                    "role": "user",
-                    "content": text
-                }],
-            )
-
-            return response.input_tokens
-
-
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, client: Optional[Union[AsyncAnthropic, AsyncAnthropicBedrock]] = None) -> None:
         """
         Initialize ChatAgent object.
 
         Non-Base Parameters:
         client: AsyncAnthropic, default is AsyncAnthropic()
             The client to use for making requests to the Anthropic API.
-        max_tokens: int, optional
-            The maximum number of tokens to generate in the response.
         """
-        kwargs['token_counter'] = kwargs.get('token_counter', ClaudeChatAgent.ClaudeTokenCounter())
-        super().__init__(**kwargs)
-        self.client: Union[AsyncAnthropic,AsyncAnthropicBedrock] = kwargs.get("client", self.__class__.client())
-        self.supports_multimodal = True
-        self.can_use_tools = True
-        self.allow_betas = kwargs.get("allow_betas", True)
-
-        # JO: I need these as class level variables to adjust outside a chat call.
-        self.max_tokens = kwargs.get("max_tokens", self.CLAUDE_MAX_TOKENS)
-        self.budget_tokens = kwargs.get("budget_tokens", 0)
+        super().__init__(ClaudeTokenCounter())
+        self.client: Union[AsyncAnthropic, AsyncAnthropicBedrock] = client or self.__class__.client()
 
     @classmethod
     def client(cls, **opts):
@@ -595,7 +581,7 @@ class ClaudeChatAgent(BaseAgent):
         return [{"role": "user", "content": contents}]
 
 
-class ClaudeBedrockChatAgent(ClaudeChatAgent):
+class ClaudeBedrockChatAgent(ClaudeChatAgentRuntime):
     @classmethod
     def client(cls, **opts):
         return AsyncAnthropicBedrock(**opts)
@@ -616,5 +602,5 @@ class ClaudeBedrockChatAgent(ClaudeChatAgent):
 
 
 # Register the chat agents with the runtime registry
-RuntimeRegistry.register(ClaudeChatAgent, "claude")
+RuntimeRegistry.register(ClaudeChatAgentRuntime, "claude")
 RuntimeRegistry.register(ClaudeBedrockChatAgent, "bedrock")

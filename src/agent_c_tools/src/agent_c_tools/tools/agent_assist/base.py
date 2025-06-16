@@ -16,8 +16,8 @@ from agent_c_tools.tools.workspace.tool import WorkspaceTools
 from agent_c.config.agent_config_loader import AgentConfigLoader
 from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.config.model_config_loader import ModelConfigurationLoader
-from agent_c.agents.gpt import BaseAgent, GPTChatAgent, AzureGPTChatAgent
-from agent_c.agents.claude import ClaudeChatAgent, ClaudeBedrockChatAgent
+from agent_c.agent_runtimes.gpt import AgentRuntime, GPTChatAgentRuntime, AzureGPTChatAgent
+from agent_c.agent_runtimes.claude import ClaudeChatAgentRuntime, ClaudeBedrockChatAgent
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 from agent_c_tools.tools.agent_assist.prompt import AssistantBehaviorSection
 from agent_c_tools.tools.agent_assist.expiring_session_cache import AsyncExpiringCache
@@ -26,8 +26,8 @@ class AgentAssistToolBase(Toolset):
     # TODO: Make this a core singleton map
     __vendor_agent_map = {
         "azure_openai": AzureGPTChatAgent,
-        "openai": GPTChatAgent,
-        "claude": ClaudeChatAgent,
+        "openai": GPTChatAgentRuntime,
+        "claude": ClaudeChatAgentRuntime,
         "claude_aws": ClaudeBedrockChatAgent
     }
 
@@ -43,7 +43,7 @@ class AgentAssistToolBase(Toolset):
 
         self.session_cache = AsyncExpiringCache(default_ttl=kwargs.get('agent_session_ttl', 300))
         self.model_configs: Dict[str, Any] = self.model_config_loader.model_id_map
-        self.runtime_cache: Dict[str, BaseAgent] = {}
+        self.runtime_cache: Dict[str, AgentRuntime] = {}
         self.workspace_tool: Optional[WorkspaceTools] = None
 
 
@@ -78,7 +78,7 @@ class AgentAssistToolBase(Toolset):
             self.runtime_cache[agent_config.name] = await self._runtime_for_agent(agent_config)
             return self.runtime_cache[agent_config.name]
 
-    async def _runtime_for_agent(self, agent_config: AgentConfiguration) -> BaseAgent:
+    async def _runtime_for_agent(self, agent_config: AgentConfiguration) -> AgentRuntime:
         model_config = self.model_configs[agent_config.model_id]
         runtime_cls = self.__vendor_agent_map[model_config["vendor"]]
 
@@ -95,7 +95,7 @@ class AgentAssistToolBase(Toolset):
 
         return runtime_cls(model_name=model_config["id"], client=client,prompt_builder=PromptBuilder(sections=agent_sections))
 
-    async def __chat_params(self, agent: AgentConfiguration, agent_runtime: BaseAgent, tool_context: InteractionContext, **opts) -> Dict[str, Any]:
+    async def __chat_params(self, agent: AgentConfiguration, agent_runtime: AgentRuntime, tool_context: InteractionContext, **opts) -> Dict[str, Any]:
         tool_params = {}
         client_wants_cancel = opts.get('client_wants_cancel')
         parent_streaming_callback = self.streaming_callback

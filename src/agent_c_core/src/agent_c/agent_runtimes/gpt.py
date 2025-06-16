@@ -12,14 +12,14 @@ from tiktoken import Encoding, encoding_for_model
 from openai.types.chat import ChatCompletionChunk
 from typing import Any, Dict, List, Union, Optional, Tuple
 
-from agent_c.agents.runtime_registry import RuntimeRegistry
+from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
 from agent_c.chat.session_manager import ChatSessionManager
 from agent_c.models.input import FileInput
 from agent_c.models.input.audio_input import AudioInput
 from agent_c.models.events.chat import ReceivedAudioDeltaEvent
 from agent_c.models.input.image_input import ImageInput
 from agent_c.util.token_counter import TokenCounter
-from agent_c.agents.base import BaseAgent
+from agent_c.agent_runtimes.base import AgentRuntime
 from agent_c.util.logging_utils import LoggingManager
 
 
@@ -35,7 +35,7 @@ class TikTokenTokenCounter(TokenCounter):
         return len(self.encoder.encode(text))
 
 
-class GPTChatAgent(BaseAgent):
+class GPTChatAgentRuntime(AgentRuntime):
     REASONING_MODELS: List[str] = ["o1", 'o1-mini', 'o3', 'o3-mini']
 
     def __init__(self, **kwargs) -> None:
@@ -489,15 +489,15 @@ class GPTChatAgent(BaseAgent):
     async def __tool_calls_to_messages(self, tool_calls, tool_chest, tool_context):
         return await tool_chest.call_tools(tool_calls, tool_context, format_type="openai")
 
-class AzureGPTChatAgent(GPTChatAgent):
+class AzureGPTChatAgent(GPTChatAgentRuntime):
     """
-    Azure-specific implementation of the GPTChatAgent.
-    Inherits from GPTChatAgent and overrides the client initialization.
+    Azure-specific implementation of the GPTChatAgentRuntime.
+    Inherits from GPTChatAgentRuntime and overrides the client initialization.
     """
     @classmethod
     def client(cls, **opts):
         return AsyncAzureOpenAI(**opts)
 
 # Register the chat agents with the runtime registry
-RuntimeRegistry.register(GPTChatAgent, "openai")
+RuntimeRegistry.register(GPTChatAgentRuntime, "openai")
 RuntimeRegistry.register(AzureGPTChatAgent, "azure_openai")

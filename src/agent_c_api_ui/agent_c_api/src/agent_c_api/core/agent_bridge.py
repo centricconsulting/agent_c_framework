@@ -6,14 +6,14 @@ import traceback
 from typing import Any, Dict, List, Union, Optional, AsyncGenerator
 from datetime import datetime, timezone
 
-from agent_c.agents.base import BaseAgent
+from agent_c.agent_runtimes.base import AgentRuntime
 from agent_c.toolsets.tool_chest import ToolChest
 from agent_c_api.config.env_config import settings
 from agent_c.config import ModelConfigurationLoader
 from agent_c.chat import ChatSessionManager, ChatSession
 from agent_c.models.agent_config import AgentConfiguration
 from agent_c_tools.tools.workspace.base import BaseWorkspace
-from agent_c.agents.gpt import GPTChatAgent, AzureGPTChatAgent
+from agent_c.agent_runtimes.gpt import GPTChatAgentRuntime, AzureGPTChatAgent
 from agent_c.models.events import SessionEvent, TextDeltaEvent
 
 from agent_c.models.context.interaction_context import InteractionContext
@@ -24,7 +24,7 @@ from agent_c_tools.tools.workspace import LocalStorageWorkspace
 from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c.prompting import PromptBuilder
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
-from agent_c.agents.claude import ClaudeChatAgent, ClaudeBedrockChatAgent
+from agent_c.agent_runtimes.claude import ClaudeChatAgentRuntime, ClaudeBedrockChatAgent
 from agent_c.util.event_session_logger_factory import create_with_callback
 from agent_c_tools.tools.workspace.local_storage import LocalProjectWorkspace
 from agent_c.models.context.interaction_inputs import InteractionInputs, AudioInput, TextInput, FileInput, ImageInput
@@ -60,8 +60,8 @@ class AgentBridge:
     """
     __vendor_agent_map = {
         "azure_openai": AzureGPTChatAgent,
-        "openai": GPTChatAgent,
-        "claude": ClaudeChatAgent,
+        "openai": GPTChatAgentRuntime,
+        "claude": ClaudeChatAgentRuntime,
         "bedrock": ClaudeBedrockChatAgent
     }
 
@@ -103,7 +103,7 @@ class AgentBridge:
         )
 
         self.model_config_loader = ModelConfigurationLoader()
-        self.runtime_cache: Dict[str, BaseAgent] = {}
+        self.runtime_cache: Dict[str, AgentRuntime] = {}
 
         self.tool_chest = ToolChest()
 
@@ -119,7 +119,7 @@ class AgentBridge:
             self.runtime_cache[agent_config.key] = self._runtime_for_agent(agent_config)
             return self.runtime_cache[agent_config.key]
 
-    def _runtime_for_agent(self, agent_config: AgentConfiguration) -> BaseAgent:
+    def _runtime_for_agent(self, agent_config: AgentConfiguration) -> AgentRuntime:
         model_config = self.model_config_loader.model_id_map[agent_config.model_id]
         runtime_cls = self.__vendor_agent_map[model_config.vendor]
 
@@ -276,7 +276,7 @@ class AgentBridge:
             
         Note:
             Sets self.agent_runtime to the initialized agent instance, which will be
-            one of ClaudeChatAgent, ClaudeBedrockChatAgent, or GPTChatAgent.
+            one of ClaudeChatAgentRuntime, ClaudeBedrockChatAgent, or GPTChatAgentRuntime.
         """
         prompt_builder = PromptBuilder()
         agent_params = self.chat_session.agent_config.agent_params.model_dump(exclude_none=True)
