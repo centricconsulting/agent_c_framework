@@ -1,7 +1,7 @@
 import os
 
 from pydantic import Field
-from typing import Any, Optional, Literal, Union
+from typing import Any, Optional, Literal, Union, List, Dict
 
 from agent_c.models.completion.common import CommonCompletionParams
 
@@ -22,11 +22,14 @@ class ClaudeNonReasoningParams(CommonCompletionParams):
 
         super().__init__(**data)
 
-    def as_completion_params(self, extra_excludes: list[str]) -> dict[str, Any]:
+    def as_completion_params(self, extra_excludes: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Converts the model to a dictionary of completion parameters.
         """
-        return super().as_completion_params(extra_excludes + ['type','allow_betas', 'allow_server_tools'])
+        if extra_excludes is None:
+            extra_excludes = []
+
+        return  super().as_completion_params(extra_excludes + ['type','allow_betas', 'allow_server_tools', 'model_name'])
 
 class ClaudeReasoningParams(CommonCompletionParams):
     type: Literal['claude_reasoning'] = Field('claude_reasoning', description="The type of the completion params.")
@@ -42,11 +45,14 @@ class ClaudeReasoningParams(CommonCompletionParams):
 
         super().__init__(**data)
 
-    def as_completion_params(self, extra_excludes: list[str]) -> dict[str, Any]:
+    def as_completion_params(self, extra_excludes: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Converts the model to a dictionary of completion parameters.
         """
-        return super().as_completion_params(extra_excludes + ['type', 'allow_betas', 'allow_server_tools', 'budget_tokens'])
+        if extra_excludes is None:
+            extra_excludes = []
+        return super().as_completion_params(extra_excludes + ['type', 'allow_betas', 'allow_server_tools', 'budget_tokens', 'model_name'])
+
 
 
 ClaudeCompletionParams = Union[ClaudeNonReasoningParams, ClaudeReasoningParams]

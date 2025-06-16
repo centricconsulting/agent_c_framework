@@ -14,7 +14,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Optional, Dict, Union, Awaitable
-from agent_c.models.events.session_event import SessionEvent, SemiSessionEvent
+from agent_c.models.events.session_event import SessionEvent
 from .logging_utils import LoggingManager
 from .transport_exceptions import (
     EventSessionLoggerError, LocalLoggingError, TransportError, 
@@ -375,7 +375,7 @@ class EventSessionLogger:
         Error isolation ensures downstream forwarding happens regardless of local logging failures.
         
         Args:
-            event: Event object (SessionEvent, SemiSessionEvent, or any serializable object)
+            event: Event object (SessionEvent,  or any serializable object)
             
         Returns:
             bool: True if local logging succeeded (transport failures don't affect return value)

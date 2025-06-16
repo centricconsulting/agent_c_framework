@@ -120,7 +120,12 @@ class ClaudeChatAgent(BaseAgent):
         allow_server_tools: bool = agent_params.allow_server_tools
         allow_betas: bool = agent_params.allow_betas
 
-        completion_opts = context.agent_params.as_completion_params()
+        try:
+            completion_opts = agent_params.as_completion_params()
+            completion_opts['model'] = agent_params.model_name.removesuffix(" (Bedrock)")
+        except Exception as e:
+            self.logger.exception(f"Error building completion options: {e}", exc_info=True)
+            raise e
 
         if allow_server_tools:
             if agent_params.max_searches > 0:
@@ -153,14 +158,15 @@ class ClaudeChatAgent(BaseAgent):
 
         await self._raise_system_prompt(context, completion_opts["system"])
 
-        if tool_sections:
+        if tool_schemas:
             completion_opts["tools"] = tool_schemas
 
         return completion_opts
 
     async def chat(self, context: InteractionContext) -> List[Dict[str, Any]]:
         # This first time through, we will build the completion options.
-        completion_opts = await self.__add_system_prompt_and_tools(context, await self.__build_completion_options(context))
+        completion_opts = await self.__build_completion_options(context)
+        completion_opts = await self.__add_system_prompt_and_tools(context, completion_opts)
 
         messages = await self._construct_message_array(context)
         completion_opts["messages"] = messages
@@ -237,6 +243,7 @@ class ClaudeChatAgent(BaseAgent):
         # Initialize state trackers
         state = self._init_stream_state()
         state['interaction_id'] = context.interaction_id
+        state['completion_options'] = completion_opts
 
         if "betas" in  completion_opts:
             stream_source = self.client.beta
@@ -400,7 +407,7 @@ class ClaudeChatAgent(BaseAgent):
         state['complete'] = True
 
         # Completion end event
-        await self._raise_completion_end(context, state['stop_reason'], state['input_tokens'], state['output_tokens'])
+        await self._raise_completion_end(context, state['completion_options'], state['stop_reason'], state['input_tokens'], state['output_tokens'])
 
         # Update messages
         msg = {'role': 'assistant', 'content': state['model_outputs']}

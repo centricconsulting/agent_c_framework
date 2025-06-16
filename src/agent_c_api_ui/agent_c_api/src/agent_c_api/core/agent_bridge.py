@@ -907,32 +907,13 @@ class AgentBridge:
                         input_types[type(input_obj).__name__] += 1
                     self.logger.info(f"Processing {len(file_inputs)} files: {input_types}")
 
-            prompt_metadata = await self.__build_prompt_metadata()
-            # Prepare chat parameters
-            tool_params = {}
             if len(self.chat_session.agent_config.tools):
                 await self.tool_chest.initialize_toolsets(self.chat_session.agent_config.tools)
-                tool_params = self.tool_chest.get_inference_data(self.chat_session.agent_config.tools, agent_runtime.tool_format)
-                tool_params["toolsets"] = self.chat_session.agent_config.tools
 
             if "ThinkTools" in self.chat_session.agent_config.tools:
                 agent_sections = [ThinkSection(), DynamicPersonaSection()]
             else:
                 agent_sections = [DynamicPersonaSection()]
-
-            chat_params = {
-                "streaming_queue": queue,
-                "user_id": self.chat_session.user_id,
-                "chat_session": self.chat_session,
-                "tool_chest": self.tool_chest,
-                "user_message": user_message,
-                "prompt_metadata": prompt_metadata,
-                "output_format": DEFAULT_OUTPUT_FORMAT,
-                "client_wants_cancel": client_wants_cancel,
-                "streaming_callback": self.streaming_callback_with_logging,
-                'tool_call_context': {'active_agent': self.chat_session.agent_config},
-                'prompt_builder': PromptBuilder()
-            }
 
             # Categorize file inputs by type to pass to appropriate parameters
             image_inputs = [input_obj for input_obj in file_inputs
@@ -944,7 +925,6 @@ class AgentBridge:
                                not isinstance(input_obj, ImageInput) and
                                not isinstance(input_obj, AudioInput)]
 
-            full_params = chat_params | tool_params
 
             inputs = InteractionInputs(text=TextInput(content=user_message),
                                        images=image_inputs,
@@ -956,13 +936,12 @@ class AgentBridge:
                                          sections=agent_sections,
                                          streaming_callback=self.streaming_callback_with_logging,
                                          chat_session=self.chat_session,
-                                         tool_schemas=tool_params["schemas"],
                                          agent_runtime=agent_runtime,
                                          user_session_id=self.chat_session.session_id,
                                          inputs=inputs)
 
             # Start the chat task
-            chat_task = asyncio.create_task(agent_runtime.chat(context, **full_params))
+            chat_task = asyncio.create_task(agent_runtime.chat(context))
 
             while True:
                 try:

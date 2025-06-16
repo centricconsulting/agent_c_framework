@@ -7,13 +7,12 @@ from asyncio import Semaphore
 from typing import Any, Dict, List, Union, Optional, Callable, Awaitable, Tuple
 
 from agent_c.models.chat_history.chat_session import ChatSession
-from agent_c.models import ChatEvent, ImageInput
+
+from agent_c.models import ChatEvent
 from agent_c.models.context.interaction_context import InteractionContext
-from agent_c.models.events.chat import ThoughtDeltaEvent, HistoryDeltaEvent, CompleteThoughtEvent, SystemPromptEvent, UserRequestEvent
-from agent_c.models.input import FileInput, AudioInput
+from agent_c.models.events.chat import ThoughtDeltaEvent, HistoryDeltaEvent, SystemPromptEvent, UserRequestEvent
 from agent_c.models.events import ToolCallEvent, InteractionEvent, TextDeltaEvent, HistoryEvent, CompletionEvent, ToolCallDeltaEvent, SystemMessageEvent
 from agent_c.prompting.prompt_builder import PromptBuilder
-from agent_c.toolsets.tool_chest import ToolChest
 from agent_c.util.logging_utils import LoggingManager
 from agent_c.util.token_counter import TokenCounter
 
@@ -55,27 +54,11 @@ class BaseAgent:
         self.concurrency_limit: int = kwargs.get("concurrency_limit", 3)
         self.semaphore: Semaphore = asyncio.Semaphore(self.concurrency_limit)
         self.prompt_builder: PromptBuilder = PromptBuilder()
-        self.schemas: Union[None, List[Dict[str, Any]]] = None
-        self.streaming_callback: Optional[Callable[[ChatEvent], Awaitable[None]]] = kwargs.get("streaming_callback",
-                                                                                               None)
-        self.mitigate_image_prompt_injection: bool = kwargs.get("mitigate_image_prompt_injection", False)
         self.can_use_tools: bool = False
         self.supports_multimodal: bool = False
         self.token_counter: TokenCounter = kwargs.get("token_counter", TokenCounter())
         self.root_message_role: str = kwargs.get("root_message_role", os.environ.get("ROOT_MESSAGE_ROLE", "system"))
-
-        logging_manager = LoggingManager(self.__class__.__name__)
-        self.logger = logging_manager.get_logger()
-
-        # Handle deprecated session_logger parameter
-        if "session_logger" in kwargs:
-            import warnings
-            warnings.warn(
-                "The 'session_logger' parameter is deprecated. Use 'streaming_callback' with "
-                "EventSessionLogger instead. See migration guide for details.",
-                DeprecationWarning,
-                stacklevel=2
-            )
+        self.logger = LoggingManager(self.__class__.__name__).get_logger()
 
         if TokenCounter.counter() is None:
             TokenCounter.set_counter(self.token_counter)
@@ -119,7 +102,8 @@ class BaseAgent:
 
         try:
             # TODO: Try asyncio tasks to allow for fire and forget
-
+            event.session_id = context.chat_session.user_session_id
+            self.logger.info(f"Raising event: {event.type} for session: {context.chat_session.user_session_id}")
             await context.streaming_callback(event)
         except Exception as e:
             self.logger.exception(
@@ -163,7 +147,7 @@ class BaseAgent:
         await self._raise_event(context, CompletionEvent(running=False,
                                                          completion_options=completion_options,
                                                          session_id=context.chat_session.user_session_id,
-                                                         intput_tokens=intput_tokens,
+                                                         input_tokens=intput_tokens,
                                                          output_tokens=output_tokens,
                                                          stop_reason=stop_reason))
 
@@ -174,49 +158,40 @@ class BaseAgent:
                                                        vendor=self.tool_format))
 
     async def _raise_system_prompt(self, context: InteractionContext, prompt: str):
-        await self._raise_event(context, SystemPromptEvent(content=prompt,
-                                                           session_id=context.chat_session.user_session_id,))
+        await self._raise_event(context, SystemPromptEvent(content=prompt))
 
     async def _raise_user_request(self, context: InteractionContext):
-        await self._raise_event(context, UserRequestEvent(data={"message": context.inputs.text},
-                                                          session_id=context.chat_session.user_session_id))
+        await self._raise_event(context, UserRequestEvent(data={"message": context.inputs.text}))
 
     async def _raise_tool_call_delta(self, context: InteractionContext, tool_calls):
-        await self._raise_event(context, ToolCallDeltaEvent(tool_calls=tool_calls,
-                                                            session_id=context.chat_session.user_session_id))
+        await self._raise_event(context, ToolCallDeltaEvent(tool_calls=tool_calls))
 
     async def _raise_tool_call_end(self, context: InteractionContext, tool_calls, tool_results):
         await self._raise_event(context, ToolCallEvent(active=False,
                                                        tool_calls=tool_calls,
-                                                       tool_results=tool_results,
-                                                       session_id=context.chat_session.user_session_id,))
+                                                       tool_results=tool_results))
 
     async def _raise_interaction_start(self, context: InteractionContext):
         await self._raise_event(context, InteractionEvent(started=True,
-                                                          id=context.interaction_id,
-                                                          session_id=context.chat_session.user_session_id))
+                                                          id=context.interaction_id))
         return context.interaction_id
 
     async def _raise_interaction_end(self, context: InteractionContext):
         await self._raise_event(context, InteractionEvent(started=False,
-                                                           id=context.interaction_id,
-                                                           session_id=context.chat_session.user_session_id))
+                                                           id=context.interaction_id))
 
     async def _raise_text_delta(self, context: InteractionContext, content: str):
         await self._raise_event(context, TextDeltaEvent(content=content,
-                                                        session_id=context.chat_session.user_session_id,
                                                         vendor=self.tool_format,
                                                         role=context.runtime_role))
 
     async def _raise_thought_delta(self, context: InteractionContext, content: str):
             await self._raise_event(context, ThoughtDeltaEvent(content=content,
-                                                               session_id=context.chat_session.user_session_id,
                                                                vendor=self.tool_format,
                                                                role=context.runtime_role))
 
     async def _raise_history_event(self, context: InteractionContext, messages: List[dict[str, Any]]):
         await self._raise_event(context, HistoryEvent(messages=messages,
-                                                      session_id = context.chat_session.user_session_id,
                                                       vendor=self.tool_format))
 
     async def _exponential_backoff(self, delay: int) -> None:
@@ -252,19 +227,13 @@ class BaseAgent:
         messages: List[dict[str, Any]] = context.chat_session.messages
         message_array: List[dict[str, Any]] = []
 
-        if sys_prompt is not None:
-            if messages is not None and len(messages) > 0 and messages[0]["role"] == self.root_message_role:
-                messages[0]["content"] = sys_prompt
-            else:
-                message_array.append({"role": self.root_message_role, "content": sys_prompt})
-
         if messages is not None:
-            message_array += messages
+            message_array.extend(messages)
 
         if len(context.inputs.images) > 0 or len(context.inputs.audio) > 0 or len(context.inputs.files) > 0:
             multimodal_user_message = await self._generate_multi_modal_user_message(context)
             message_array += multimodal_user_message
         else:
-            message_array.append({"role": "user", "content": context.inputs.text})
+            message_array.append({"role": "user", "content": context.inputs.text.content})
 
         return message_array

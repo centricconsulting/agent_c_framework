@@ -4,6 +4,8 @@ import platform
 
 from string import Template
 from typing import Any, Optional, Dict
+
+from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.prompting.prompt_section import PromptSection, property_bag_item
 
 
@@ -90,21 +92,22 @@ class DynamicPersonaSection(PromptSection):
             return 'Warn the user that there was an error formatting the timestamp.'
 
     @property_bag_item
-    async def rendered_persona_prompt(self, context) -> str:
-        base_prompt = context.get("persona_prompt", "")
+    async def rendered_persona_prompt(self, context: InteractionContext, property_bag: Dict[str, Any]) -> str:
+        base_prompt = context.chat_session.agent_config.persona
         try:
-            ws_name = context.get('primary_workspace',  self._extract_workspace_name(base_prompt))
+            ws_name = property_bag.get('primary_workspace',  self._extract_workspace_name(base_prompt))
             if ws_name:
-                ws_tool = context['tool_chest'].active_tools.get('WorkspaceTools')
+                ws_tool = property_bag['tool_chest'].active_tools.get('WorkspaceTools')
 
                 tree = await ws_tool.tree(path=f"//{ws_name}/", folder_depth=7, file_depth=5, tool_context=context)
-                context['workspace_tree'] = f"Generated: {self.timestamp()}\n{tree}"
+                property_bag['workspace_tree'] = f"Generated: {self.timestamp()}\n{tree}"
 
             template: Template = Template(base_prompt, )
-            result = template.substitute(context)
+            result = template.substitute(property_bag)
         except Exception as e:
-            self.logger.error(f"Error rendering persona prompt: {e}")
+            self.logger.excption(f"Error rendering persona prompt: {e}", exc_info=True)
             return base_prompt
+
         return result
 
     @staticmethod

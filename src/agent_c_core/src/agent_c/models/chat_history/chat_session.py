@@ -27,6 +27,17 @@ class ChatSession(BaseModel):
     messages: List[dict[str, Any]] = Field(default_factory=list, description="List of messages in the session")
     agent_config: Optional[AgentConfiguration] = Field(None, description="Configuration for the agent associated with the session")
 
+    def __init__(self, **data):
+        """
+        Initializes the ChatSession with the provided data.
+
+        Args:
+            **data: Arbitrary keyword arguments to initialize the session.
+        """
+        super().__init__(**data)
+        if self.user_session_id is None:
+            self.user_session_id = self.session_id
+
     def touch(self) -> None:
         """
         Updates the updated_at timestamp to the current time.
