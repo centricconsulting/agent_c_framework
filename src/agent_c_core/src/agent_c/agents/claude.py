@@ -131,7 +131,7 @@ class ClaudeChatAgent(BaseAgent):
                 context.external_tool_schemas.append({"type": "code_execution_20250522","name": "code_execution"})
 
             if self.__is_claude_4(agent_params):
-                completion_opts['betas'] = ['interleaved-thinking-2025-05-14', "files-api-2025-04-14"] #, "code-execution-2025-05-22"]
+                completion_opts['betas'] = ['interleaved-thinking-2025-05-14', "files-api-2025-04-14"] # , "code-execution-2025-05-22"]
             else:
                 completion_opts['betas'] = ["token-efficient-tools-2025-02-19", "output-128k-2025-02-19", "files-api-2025-04-14"] # , "code-execution-2025-05-22"]
 
@@ -274,7 +274,8 @@ class ClaudeChatAgent(BaseAgent):
         return messages, state
 
 
-    def _init_stream_state(self) -> Dict[str, Any]:
+    @staticmethod
+    def _init_stream_state() -> Dict[str, Any]:
         """Initialize the state object for stream processing."""
         return {
             "collected_messages": [],
@@ -316,7 +317,8 @@ class ClaudeChatAgent(BaseAgent):
             self._handle_message_delta(event, state)
 
 
-    async def _handle_message_start(self, event, state):
+    @staticmethod
+    async def _handle_message_start(event, state):
         """Handle the message_start event."""
         state["input_tokens"] = event.message.usage.input_tokens
 
@@ -384,7 +386,6 @@ class ClaudeChatAgent(BaseAgent):
         """Process the thought buffer, handling escape sequences."""
         processed = self.process_escapes(state['think_escape_buffer'])
         state['think_escape_buffer'] = ""  # Clear the buffer after processing
-        complete: bool = False
 
         # Check if we've hit the end of the JSON
         if processed.endswith('"}'):
@@ -470,7 +471,8 @@ class ClaudeChatAgent(BaseAgent):
         await self._raise_thought_delta(context, content)
 
 
-    def _handle_input_json(self, event, state):
+    @staticmethod
+    def _handle_input_json(event, state):
         """Handle input_json event."""
         if state['collected_tool_calls']:
             state['collected_tool_calls'][-1]['input'] = event.snapshot
@@ -489,7 +491,8 @@ class ClaudeChatAgent(BaseAgent):
                 await self._raise_thought_delta(context, event.text)
 
 
-    def _handle_message_delta(self, event, state):
+    @staticmethod
+    def _handle_message_delta(event, state):
         """Handle message_delta event."""
         state['stop_reason'] = event.delta.stop_reason
 
@@ -497,7 +500,8 @@ class ClaudeChatAgent(BaseAgent):
     async def _finalize_tool_calls(self, state, context: InteractionContext, messages):
         """Finalize tool calls after receiving a complete message."""
         await self._raise_tool_call_start(context, state['collected_tool_calls'])
-        tool_response_messages = await self.__tool_calls_to_messages(state, context)
+
+        tool_response_messages = await context.tool_chest.call_tools(state['collected_tool_calls'], context, format_type="claude")
         messages.extend(tool_response_messages)
 
         await self._raise_tool_call_end(context, state['collected_tool_calls'], messages[-1]['content'])
@@ -577,12 +581,6 @@ class ClaudeChatAgent(BaseAgent):
         contents.append({"type": "text", "text": main_text})
 
         return [{"role": "user", "content": contents}]
-
-    async def __tool_calls_to_messages(self, state, context: InteractionContext) -> List[dict[str, Any]]:
-        # Use the new centralized tool call handling in ToolChest
-        tools_calls = await context.tool_chest.call_tools(state['collected_tool_calls'], context, format_type="claude")
-
-        return tools_calls
 
 
 class ClaudeBedrockChatAgent(ClaudeChatAgent):
