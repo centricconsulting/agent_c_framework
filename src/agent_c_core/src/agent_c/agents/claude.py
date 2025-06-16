@@ -3,7 +3,7 @@ import base64
 import httpcore
 
 from enum import Enum, auto
-from typing import Any, List, Union, Dict, Tuple
+from typing import Any, List, Union, Dict, Tuple, Optional
 from anthropic import AsyncAnthropic, APITimeoutError, Anthropic, RateLimitError, AsyncAnthropicBedrock
 
 from agent_c.agents.base import BaseAgent
@@ -68,7 +68,7 @@ class ClaudeChatAgent(BaseAgent):
         return "claude"
 
     @staticmethod
-    def process_escapes(text):
+    def process_escapes(text: str):
         return text.replace("\\n", "\n").replace('\\"', '"').replace("\\\\", "\\")
 
     def _correct_max_tokens_in_context(self, context: InteractionContext):
@@ -111,7 +111,7 @@ class ClaudeChatAgent(BaseAgent):
         """
         return 'opus' in agent_params.model_name
 
-    async def __build_completion_options(self, context: InteractionContext) -> dict[str, Any]:
+    async def __build_completion_options(self, context: InteractionContext) -> Dict[str, Any]:
         # Make sure we have the correct max tokens set in the context,
         # the UI might have set it to and old default value.
         self._correct_max_tokens_in_context(context)
@@ -142,7 +142,7 @@ class ClaudeChatAgent(BaseAgent):
 
         return completion_opts
 
-    async def __add_system_prompt_and_tools(self, context: InteractionContext,  completion_opts: dict[str, Any]) -> dict[str, Any]:
+    async def __add_system_prompt_and_tools(self, context: InteractionContext,  completion_opts: Dict[str, Any]) -> Dict[str, Any]:
         """
         Add system prompt and tools to the completion options.
         """
@@ -158,8 +158,7 @@ class ClaudeChatAgent(BaseAgent):
 
         return completion_opts
 
-    async def chat(self, context: InteractionContext) -> List[dict[str, Any]]:
-
+    async def chat(self, context: InteractionContext) -> List[Dict[str, Any]]:
         # This first time through, we will build the completion options.
         completion_opts = await self.__add_system_prompt_and_tools(context, await self.__build_completion_options(context))
 
@@ -231,7 +230,7 @@ class ClaudeChatAgent(BaseAgent):
 
 
     async def _handle_claude_stream(self, context: InteractionContext, completion_opts,
-                                    messages: List[Dict[str, Any]]) -> Tuple[List[dict[str, Any]], dict[str, Any]]:
+                                    messages: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """Handle the Claude API streaming response."""
         await self._raise_completion_start(context, completion_opts)
 
@@ -507,7 +506,7 @@ class ClaudeChatAgent(BaseAgent):
         await self._raise_tool_call_end(context, state['collected_tool_calls'], messages[-1]['content'])
 
 
-    async def _generate_multi_modal_user_message(self, context: InteractionContext) -> Union[List[dict[str, Any]], None]:
+    async def _generate_multi_modal_user_message(self, context: InteractionContext) -> Optional[List[dict[str, Any]]]:
         """
         Generates a multimodal message containing text, images, and file content.
 
