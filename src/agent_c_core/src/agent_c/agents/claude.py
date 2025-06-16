@@ -1,26 +1,15 @@
 import copy
-import json
-
-import httpcore
-import yaml
 import base64
-import threading
+import httpcore
+
 from enum import Enum, auto
 from typing import Any, List, Union, Dict, Tuple
-
-
 from anthropic import AsyncAnthropic, APITimeoutError, Anthropic, RateLimitError, AsyncAnthropicBedrock
 
-
 from agent_c.agents.base import BaseAgent
-from agent_c.chat.session_manager import ChatSessionManager
-from agent_c.models.context.interaction_context import InteractionContext
-from agent_c.models.input import FileInput
-from agent_c.models.input.audio_input import AudioInput
-from agent_c.models.input.image_input import ImageInput
-from agent_c.prompting import PromptBuilder
 from agent_c.util.token_counter import TokenCounter
-
+from agent_c.models.completion.claude import ClaudeCompletionParams
+from agent_c.models.context.interaction_context import InteractionContext
 
 class ThinkToolState(Enum):
     """Enum representing the state of the think tool processing."""
@@ -78,78 +67,105 @@ class ClaudeChatAgent(BaseAgent):
     def tool_format(self) -> str:
         return "claude"
 
-    async def __interaction_setup(self, context: InteractionContext,  **kwargs) -> dict[str, Any]:
-        model_name: str = context.chat_session.agent_config.agent_params.model_name
-
-        allow_server_tools: bool = False
-
-        inference_data = context.tool_chest.get_inference_data(context.chat_session.agent_config.tools, "claude")
-        context.sections.extend(inference_data['sections'])
-        functions: List[Dict[str, Any]] = inference_data['schemas']
-
-        messages = await self._construct_message_array(context)
-        (tool_context, prompt_context) = await self._render_contexts(**kwargs)
-        sys_prompt: str = prompt_context["system_prompt"]
-        allow_betas: bool = kwargs.get("allow_betas", self.allow_betas)
-
-        completion_opts = context.chat_session.agent_config.agent_params.model_dump(exclude_none=True, exclude=['type'])
-        completion_opts["messages"] = messages
-        completion_opts["system"] = sys_prompt
-
-        if '3-7-sonnet' in model_name or '-4-' in model_name:
-            if allow_server_tools:
-                max_searches: int = kwargs.get("max_searches", 0)
-                if max_searches > 0:
-                    functions.append({"type": "web_search_20250305", "name": "web_search", "max_uses": max_searches})
-
-            if allow_betas:
-                if allow_server_tools:
-                    functions.append({"type": "code_execution_20250522","name": "code_execution"})
-
-                if '-4-' in model_name:
-                    if max_tokens == self.CLAUDE_MAX_TOKENS:
-                        if 'sonnet' in model_name:
-                            completion_opts['max_tokens'] = 64000
-                        else:
-                            completion_opts['max_tokens'] = 32000
-
-                    completion_opts['betas'] = ['interleaved-thinking-2025-05-14', "files-api-2025-04-14"] #, "code-execution-2025-05-22"]
-                else:
-                    completion_opts['betas'] = ["token-efficient-tools-2025-02-19", "output-128k-2025-02-19", "files-api-2025-04-14"] # , "code-execution-2025-05-22"]
-                    if max_tokens == self.CLAUDE_MAX_TOKENS:
-                        completion_opts['max_tokens'] = 128000
-
-
-        budget_tokens: int = kwargs.get("budget_tokens", self.budget_tokens)
-        if budget_tokens > 0:
-            completion_opts['thinking'] = {"budget_tokens": budget_tokens, "type": "enabled"}
-            completion_opts['temperature'] = 1
-
-
-        if len(functions):
-            completion_opts['tools'] = functions
-
-        completion_opts["metadata"] = {'user_id': kwargs.get('user_id', 'Agent C user')}
-
-        opts = {"callback_opts": callback_opts, "completion_opts": completion_opts, 'tool_chest': tool_chest, 'tool_context': tool_context}
-        return opts
-
-
     @staticmethod
     def process_escapes(text):
         return text.replace("\\n", "\n").replace('\\"', '"').replace("\\\\", "\\")
 
+    def _correct_max_tokens_in_context(self, context: InteractionContext):
+        agent_params: ClaudeCompletionParams = context.chat_session.agent_config.agent_params
 
-    async def chat(self, context: InteractionContext,  **kwargs) -> List[dict[str, Any]]:
-        """Main method for interacting with Claude API. Split into smaller helper methods for clarity."""
-        opts = await self.__interaction_setup(**kwargs)
-        prompt_builder: PromptBuilder = kwargs.get("prompt_builder")
-        callback_opts = opts["callback_opts"]
-        tool_chest = opts['tool_chest']
-        session_manager: Union[ChatSessionManager, None] = kwargs.get("session_manager", None)
-        messages = opts["completion_opts"]["messages"]
+        if self.__is_claude_4(agent_params):
+            if agent_params == self.CLAUDE_MAX_TOKENS:
+                if self.__is_sonnet(agent_params):
+                    agent_params.max_tokens = 64000
+                else:
+                    agent_params.max_tokens = 32000
+        elif agent_params.allow_betas and agent_params.max_tokens == self.CLAUDE_MAX_TOKENS:
+            agent_params.max_tokens = 128000
 
-        await self._raise_system_prompt(context, opts["completion_opts"]["system"])
+    @staticmethod
+    def __is_claude_4(agent_params: ClaudeCompletionParams) -> bool:
+        """
+        Check if the agent parameters indicate a Claude 4 model.
+        """
+        return '-4-' in agent_params.model_name
+
+    @staticmethod
+    def __is_claude_3_7(agent_params: ClaudeCompletionParams) -> bool:
+        """
+        Check if the agent parameters indicate a Claude 3 model.
+        """
+        return '-3-7' in agent_params.model_name
+
+    @staticmethod
+    def __is_sonnet(agent_params: ClaudeCompletionParams) -> bool:
+        """
+        Check if the agent parameters indicate a Sonnet model.
+        """
+        return 'sonnet' in agent_params.model_name
+
+    @staticmethod
+    def __is_opus(agent_params: ClaudeCompletionParams) -> bool:
+        """
+        Check if the agent parameters indicate an Opus model.
+        """
+        return 'opus' in agent_params.model_name
+
+    async def __build_completion_options(self, context: InteractionContext) -> dict[str, Any]:
+        # Make sure we have the correct max tokens set in the context,
+        # the UI might have set it to and old default value.
+        self._correct_max_tokens_in_context(context)
+
+        agent_params: ClaudeCompletionParams = context.chat_session.agent_config.agent_params
+        allow_server_tools: bool = agent_params.allow_server_tools
+        allow_betas: bool = agent_params.allow_betas
+
+        completion_opts = context.agent_params.as_completion_params()
+
+        if allow_server_tools:
+            if agent_params.max_searches > 0:
+                context.external_tool_schemas.append({"type": "web_search_20250305", "name": "web_search", "max_uses": agent_params.max_searches})
+
+        if allow_betas:
+            if allow_server_tools:
+                context.external_tool_schemas.append({"type": "code_execution_20250522","name": "code_execution"})
+
+            if self.__is_claude_4(agent_params):
+                completion_opts['betas'] = ['interleaved-thinking-2025-05-14', "files-api-2025-04-14"] #, "code-execution-2025-05-22"]
+            else:
+                completion_opts['betas'] = ["token-efficient-tools-2025-02-19", "output-128k-2025-02-19", "files-api-2025-04-14"] # , "code-execution-2025-05-22"]
+
+        if agent_params.budget_tokens > 0:
+            completion_opts['thinking'] = {"budget_tokens": agent_params.budget_tokens, "type": "enabled"}
+
+        completion_opts["metadata"] = {'user_id': context.chat_session.user_id}
+
+        return completion_opts
+
+    async def __add_system_prompt_and_tools(self, context: InteractionContext,  completion_opts: dict[str, Any]) -> dict[str, Any]:
+        """
+        Add system prompt and tools to the completion options.
+        """
+        tool_sections = context.get_tool_sections() + context.external_tool_schemas
+        tool_schemas = context.get_tool_schemas(self.tool_format)
+
+        completion_opts["system"] = await self.prompt_builder.render(context, tool_sections)
+
+        await self._raise_system_prompt(context, completion_opts["system"])
+
+        if tool_sections:
+            completion_opts["tools"] = tool_schemas
+
+        return completion_opts
+
+    async def chat(self, context: InteractionContext) -> List[dict[str, Any]]:
+
+        # This first time through, we will build the completion options.
+        completion_opts = await self.__add_system_prompt_and_tools(context, await self.__build_completion_options(context))
+
+        messages = await self._construct_message_array(context)
+        completion_opts["messages"] = messages
+
         await self._raise_user_request(context)
 
         delay = 1  # Initial delay between retries
@@ -160,54 +176,50 @@ class ClaudeChatAgent(BaseAgent):
                 try:
                     # Stream handling encapsulated in a helper method
                     result, state = await self._handle_claude_stream(
-                        opts["completion_opts"],
-                        messages,
-                        callback_opts,
-                        opts["tool_context"]
+                        context,
+                        completion_opts,
+                        messages
                     )
 
                     if state['complete'] and state['stop_reason'] != 'tool_use':
                         self.logger.info(f"Interaction {context.interaction_id} stopped with reason: {state['stop_reason']}")
                         return result
 
-                    new_system_prompt  = await prompt_builder.render(opts['tool_context'], tool_sections=kwargs.get("tool_sections", None))
-                    if new_system_prompt != opts["completion_opts"]["system"]:
-                        opts["completion_opts"]["system"] = new_system_prompt
-                        await self._raise_system_prompt(context, new_system_prompt)
+                    completion_opts = await self.__add_system_prompt_and_tools(context, completion_opts)
 
                     delay = 1
                     messages = result
                 except RateLimitError:
                     self.logger.warning(f"Ratelimit. Retrying...Delay is {delay} seconds")
                     await self._raise_system_event(context, f"Rate limit reach, slowing down... Delay is {delay} seconds \n", severity="warning")
-                    await self._raise_completion_end(context, opts["completion_opts"], stop_reason="rate_limit")
+                    await self._raise_completion_end(context, completion_opts, stop_reason="rate_limit")
                     delay = await self._handle_retryable_error(delay)
                 except APITimeoutError:
                     self.logger.warning(f"API Timeout. Retrying...Delay is {delay} seconds")
                     await self._raise_system_event(context, "Claude API is overloaded (timeout), retrying... Delay is {delay} seconds \n", severity="warning")
-                    await self._raise_completion_end(context, opts["completion_opts"], stop_reason="overload")
+                    await self._raise_completion_end(context, completion_opts, stop_reason="overload")
                     delay = await self._handle_retryable_error(delay)
                 except httpcore.RemoteProtocolError:
                     self.logger.warning(f"Remote protocol error encountered, retrying...Delay is {delay} seconds")
                     await self._raise_system_event(context,f"Claude API is overloaded (remote protocol error), retrying... Delay is {delay} seconds \n", severity="warning")
-                    await self._raise_completion_end(context, opts["completion_opts"], stop_reason="overload")
+                    await self._raise_completion_end(context, completion_opts, stop_reason="overload")
                     delay = await self._handle_retryable_error(delay)
                 except Exception as e:
                     if "overloaded" in str(e).lower():
                         self.logger.warning(f"Claude API is overloaded, retrying... Delay is {delay} seconds")
                         await self._raise_system_event(context, f"Claude API is overloaded, retrying... Delay is {delay} seconds \n", severity="warning")
-                        await self._raise_completion_end(context, opts["completion_opts"], stop_reason="overload")
+                        await self._raise_completion_end(context, completion_opts, stop_reason="overload")
                         delay = await self._handle_retryable_error(delay)
                     else:
                         self.logger.exception(f"Uncoverable error during Claude chat: {e}", exc_info=True)
                         await self._raise_system_event(context, f"Exception calling `client.messages.stream`.\n\n{e}\n")
-                        await self._raise_completion_end(context, opts["completion_opts"], stop_reason="exception")
+                        await self._raise_completion_end(context, completion_opts, stop_reason="exception")
                         await self._raise_interaction_end(context)
                         return messages
 
         self.logger.warning("ABNORMAL TERMINATION OF CLAUDE CHAT")
         await self._raise_system_event(context,f"ABNORMAL TERMINATION OF CLAUDE CHAT")
-        await self._raise_completion_end(context, opts["completion_opts"], stop_reason="overload")
+        await self._raise_completion_end(context, completion_opts, stop_reason="overload")
         await self._raise_interaction_end(context)
         return messages
 
@@ -219,7 +231,7 @@ class ClaudeChatAgent(BaseAgent):
 
 
     async def _handle_claude_stream(self, context: InteractionContext, completion_opts,
-                                    messages, tool_context: Dict[str, Any]) -> Tuple[List[dict[str, Any]], dict[str, Any]]:
+                                    messages: List[Dict[str, Any]]) -> Tuple[List[dict[str, Any]], dict[str, Any]]:
         """Handle the Claude API streaming response."""
         await self._raise_completion_start(context, completion_opts)
 
@@ -235,7 +247,7 @@ class ClaudeChatAgent(BaseAgent):
 
         async with stream_source.messages.stream(**completion_opts) as stream:
             async for event in stream:
-                await self._process_stream_event(event, state, context.tool_chest, messages)
+                await self._process_stream_event(context, event, state, messages)
 
                 if context.client_wants_cancel.is_set():
                     state['complete'] = True
@@ -296,8 +308,6 @@ class ClaudeChatAgent(BaseAgent):
             await self._handle_message_stop(event, state, messages, context)
         elif event_type == "content_block_start":
             await self._handle_content_block_start(event, state, context)
-        elif event_type == "content_block_stop":
-            await self._handle_content_block_end(event, state, context)
         elif event_type == "input_json":
             self._handle_input_json(event, state)
         elif event_type == "text":
@@ -381,12 +391,8 @@ class ClaudeChatAgent(BaseAgent):
             state['think_tool_state'] = ThinkToolState.INACTIVE
             # Remove closing quote and brace
             processed = processed[:-2]
-            complete = True
 
         await self._raise_thought_delta(context, processed)
-        if complete:
-            await self._raise_complete_thought(context, processed)
-
 
     async def _handle_message_stop(self, event, state, messages, context):
         """Handle the message_stop event."""
@@ -400,10 +406,6 @@ class ClaudeChatAgent(BaseAgent):
         msg = {'role': 'assistant', 'content': state['model_outputs']}
         messages.append(msg)
         await self._raise_history_delta(context, [msg])
-
-    async def _handle_content_block_end(self, _, state, context):
-        if state['current_block_type'] == "thinking":
-            await self._raise_complete_thought(context, state['current_thought']['thinking'])
 
     async def _handle_content_block_start(self, event, state, context: InteractionContext):
         """Handle the content_block_start event."""
@@ -509,10 +511,7 @@ class ClaudeChatAgent(BaseAgent):
         the Claude API, adhering to the Anthropic message format.
 
         Args:
-            user_input (str): The user's text message
-            images (List[ImageInput]): List of image inputs to include
-            audio (List[AudioInput]): List of audio inputs (not directly supported by Claude)
-            files (List[FileInput]): List of file inputs to include
+            context (InteractionContext): The interaction context containing user inputs.
 
         Returns:
             Union[List[dict[str, Any]], None]: Formatted message content for Claude

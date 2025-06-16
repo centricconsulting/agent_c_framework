@@ -36,10 +36,8 @@ class InteractionContext(BaseContext):
 
     sections: List['PromptSection'] = Field(default_factory=list, description="A list of prompt sections that are used in the interaction. "
                                                                                       "This is used to store the prompt sections that are used in the interaction.")
-    tool_sections: List['PromptSection'] = Field(default_factory=list, description="A list of prompt sections from tools that are used in the interaction. "
-                                                                                   "This is used to store the prompt sections that are used in the interaction.")
-    tool_schemas: Optional[List[Dict[str, Any]]] = Field(default_factory=dict, description="A dictionary of tool schemas that are used in the interaction. "
-                                                                                     "This is used to store the schemas of the tools that are used in the interaction.")
+    external_tool_schemas: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="A dictionary of tool schemas that are used in the interaction. "
+                                                                                           "This is used to store the schemas of the tools that are used in the interaction.")
     user_session_id: Optional[str] = Field(None, description="The user session ID associated with the interaction. If this is a sub session "
                                                                     "This is used to identify the user session that this interaction belongs to.")
 
@@ -72,3 +70,15 @@ class InteractionContext(BaseContext):
             _parent_namespace_depth=_parent_namespace_depth,
             _types_namespace=_types_namespace
         )
+
+    def get_tool_schemas(self, vendor: str) -> List[Dict[str, Any]]:
+        """
+        Returns the tool schemas for the interaction.
+        """
+        return self.tool_chest.get_tool_schemas(self.chat_session.agent_config.tools, vendor)
+
+    def get_tool_sections(self):
+        """
+        Returns the tool sections for the interaction.
+        """
+        return self.tool_chest.get_tool_sections(self.chat_session.agent_config.tools)

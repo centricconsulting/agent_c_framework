@@ -36,7 +36,7 @@ class PromptBuilder:
         """
         return set(re.findall(r'\{(.+?)\}', template))
 
-    async def render(self, context: InteractionContext, sections: List[PromptSection], tool_sections: Optional[List[PromptSection]] = None) -> str:
+    async def render(self, context: InteractionContext, tool_sections: Optional[List[PromptSection]] = None) -> str:
         """
         Render the prompt sections with the provided data.
 
@@ -53,7 +53,7 @@ class PromptBuilder:
             Exception: If an unexpected error occurs during rendering.
         """
         rendered_sections: List[str] = []
-        section_lists = [sections, tool_sections]
+        section_lists = [context.sections, tool_sections]
         section_list_titles= ["Core Operating Guidelines", "Additional Tool Operation Guidelines"]
 
         for index, section_list in enumerate(section_lists):

@@ -101,34 +101,13 @@ class BaseAgent:
 
     async def parallel_one_shots(self, contexts: List[InteractionContext], **kwargs):
         """Run multiple one-shot tasks in parallel"""
-        tasks = [self.one_shot(context=oneshot_input, **kwargs) for oneshot_input in contexts]
+        tasks = [self.one_shot(context=oneshot_input) for oneshot_input in contexts]
         return await asyncio.gather(*tasks)
 
     async def chat(self, context: InteractionContext) -> List[dict[str, Any]]:
         """For chat interactions"""
         raise NotImplementedError
 
-    async def _render_contexts(self, **kwargs) -> Tuple[dict[str, Any], dict[str, Any]]:
-        tool_call_context = kwargs.get("tool_context", {})
-        tool_call_context['streaming_callback'] = kwargs.get("streaming_callback", self.streaming_callback)
-        tool_call_context['calling_model_name'] = kwargs.get("model_name", self.model_name)
-        tool_call_context['client_wants_cancel'] = kwargs.get("client_wants_cancel")
-        prompt_context = kwargs.get("prompt_metadata", {})
-        prompt_builder: Optional[PromptBuilder] = kwargs.get("prompt_builder", self.prompt_builder)
-
-        sys_prompt: str = "Warn the user there's no system prompt with each response."
-        prompt_context["agent_runtime"] = self
-        prompt_context["tool_chest"] = kwargs.get("tool_chest", self.tool_chest)
-        if prompt_builder is not None:
-            sys_prompt = await prompt_builder.render(prompt_context, tool_sections=kwargs.get("tool_sections", None))
-        else:
-            sys_prompt: str = kwargs.get("prompt", sys_prompt)
-
-        # System prompt logging is now handled by EventSessionLogger via streaming_callback
-
-        prompt_context['system_prompt'] = sys_prompt
-
-        return tool_call_context | prompt_context, prompt_context
 
     async def _raise_event(self, context: InteractionContext, event):
         """
@@ -252,7 +231,7 @@ class BaseAgent:
         await asyncio.sleep(min(2 * delay, self.max_delay))
 
 
-    async def _generate_multi_modal_user_message(self, user_input: str,  images: List[ImageInput], audio: List[AudioInput], files: List[FileInput]) -> Union[List[dict[str, Any]], None]:
+    async def _generate_multi_modal_user_message(self, context: InteractionContext) -> Union[List[dict[str, Any]], None]:
         """
         Subclasses will implement this method to generate a multimodal user message.
         """

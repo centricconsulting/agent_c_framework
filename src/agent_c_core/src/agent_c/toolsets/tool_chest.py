@@ -344,6 +344,69 @@ class ToolChest:
             self.logger.exception(f"Failed calling {function_id} on {src_obj.name}. {e}", stacklevel=3)
             return f"Important! Tell the user an error occurred calling {function_id} on {src_obj.name}. {e}"
 
+    def get_tool_sections(self, toolset_names: List[str]) -> List[PromptSection]:
+        """
+        Get prompt sections for specified toolsets.
+
+        Args:
+            toolset_names: List of toolset names to get sections for
+
+        Returns:
+            List of PromptSection objects for the specified toolsets
+        """
+        sections = []
+        for name in toolset_names:
+            if name in self.__toolset_instances:
+                section = self.__toolset_instances[name].section
+                if section is not None:
+                    sections.append(section)
+            else:
+                self.logger.warning(f"Requested toolset '{name}' not found in available toolsets")
+
+        return sections
+
+    def _open_ai_tool_schemas(self, toolset_names: List[str]) -> List[Dict[str, Any]]:
+        """
+        Get OpenAI-format tool schemas for specified toolsets.
+
+        Args:
+            toolset_names: List of toolset names to get schemas for
+        Returns:
+            List of tool schemas in OpenAI format
+        """
+        schemas = []
+        for name in toolset_names:
+            if name in self.__toolset_instances:
+                schemas.extend(self.__toolset_instances[name].tool_schemas)
+            else:
+                self.logger.warning(f"toolchest._open_ai_tool_schemas Requested toolset '{name}' not found in available toolsets")
+
+        return schemas
+
+    def get_tool_schemas(self, toolset_names: List[str], tool_format: str = "claude") ->  List[Dict[str, Any]]:
+        """
+        Get tool schemas for specified toolsets.
+
+        Args:
+            toolset_names: List of toolset names to get schemas for
+            tool_format: Format for tool schemas ("claude" or "openai")
+
+        Returns:
+            List of tool schemas in OpenAI format
+        """
+        openai_schemas = self._open_ai_tool_schemas(toolset_names)
+
+        if tool_format.lower() != "claude":
+            return openai_schemas
+
+        schemas = []
+        for schema in openai_schemas:
+            new_schema = copy.deepcopy(schema['function'])
+            new_schema['input_schema'] = new_schema.pop('parameters')
+            schemas.append(new_schema)
+
+        return schemas
+
     def get_inference_data(self, toolset_names: List[str], tool_format: str = "claude") -> Dict[str, Any]:
         """
         Get inference data (schemas and prompt sections) for specified toolsets.
@@ -359,36 +422,8 @@ class ToolChest:
                 - 'schemas': List of tool schemas in the requested format
                 - 'sections': List of PromptSection objects for the toolsets
         """
-        # Validate and filter toolset names
-        valid_toolsets = []
-        for name in toolset_names:
-            if name in self.__toolset_instances:
-                valid_toolsets.append(self.__toolset_instances[name])
-            else:
-                self.logger.warning(f"Requested toolset '{name}' not found in available toolsets")
-        
-        if not valid_toolsets:
-            return {"tools": [], "sections": []}
-            
-        # Collect OpenAI-format schemas from the specified toolsets
-        openai_schemas = []
-        for toolset in valid_toolsets:
-            openai_schemas.extend(toolset.tool_schemas)
-        
-        # Convert to requested format
-        if tool_format.lower() == "claude":
-            schemas = []
-            for schema in openai_schemas:
-                new_schema = copy.deepcopy(schema['function'])
-                new_schema['input_schema'] = new_schema.pop('parameters')
-                schemas.append(new_schema)
-        else:  # Default to OpenAI format
-            schemas = openai_schemas
-        
-        # Collect prompt sections
-        sections = [toolset.section for toolset in valid_toolsets if toolset.section is not None]
-        
+
         return {
-            "schemas": schemas,
-            "sections": sections
+            "schemas": self.get_tool_schemas(toolset_names, tool_format),
+            "sections": self.get_tool_sections(toolset_names)
         }
