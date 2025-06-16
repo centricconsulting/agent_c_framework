@@ -60,9 +60,9 @@ class InteractionContext(BaseContext):
         _parent_namespace_depth: int = 2,
         _types_namespace: dict[str, Any] | None = None,
     ) -> bool | None:
-        from agent_c.agents.base import BaseAgent
-        from agent_c.toolsets.tool_chest import ToolChest
-        from agent_c.prompting.prompt_section import PromptSection
+        from agent_c.agents.base import BaseAgent # noqa
+        from agent_c.toolsets.tool_chest import ToolChest # noqa
+        from agent_c.prompting.prompt_section import PromptSection # noqa
 
         super().model_rebuild(
             force=force,
