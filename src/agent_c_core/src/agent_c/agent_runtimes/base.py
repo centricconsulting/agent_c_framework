@@ -14,7 +14,8 @@ from agent_c.models.events import ToolCallEvent, InteractionEvent, TextDeltaEven
 
 class AgentRuntime:
     def __init__(self, token_counter: TokenCounter, max_retry_delay_secs: int = 300,
-                 concurrency_limit: int = 3, can_use_tools: bool = True, supports_multimodal: bool = True):
+                 concurrency_limit: int = 3, can_use_tools: bool = True, supports_multimodal: bool = True,
+                 context=None):
         """
         Initialize ChatAgent object.
 
@@ -45,7 +46,7 @@ class AgentRuntime:
         raise NotImplementedError
 
     @classmethod
-    def can_create(cls, context: Optional[InteractionContext]) -> bool:
+    def can_create(cls, context=None) -> bool:
         raise NotImplementedError
 
     @property

@@ -18,8 +18,8 @@ class GPTNonReasoningCompletionParams(CommonCompletionParams):
     temperature: Optional[float] = Field(None, description="The temperature to use for the interaction, do not combine with top_p")
 
     def __init__(self, **data: Any) -> None:
-        if 'model_name' not in data:
-            data['model_name'] = os.environ.get("GPT_INTERACTION_MODEL", "gpt-4o")
+        if 'model_id' not in data:
+            data['model_id'] = os.environ.get("GPT_INTERACTION_MODEL", "gpt-4o")
 
         super().__init__(**data)
 
@@ -34,7 +34,7 @@ class GPTReasoningCompletionParams(CommonCompletionParams):
     reasoning_effort: Optional[str] = Field(None, description="The reasoning effort to use for the interaction, must be low, medium, or high")
 
     def __init__(self, **data: Any) -> None:
-        if 'model_name' not in data:
-            data['model_name'] = os.environ.get("GPT_INTERACTION_MODEL", "gpt-4o")
+        if 'model_id' not in data:
+            data['model_id'] = os.environ.get("GPT_INTERACTION_MODEL", "gpt-4o")
 
         super().__init__(**data)

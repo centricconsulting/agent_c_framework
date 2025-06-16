@@ -132,7 +132,7 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
             else:
                 config = AgentConfigurationV2(**data)
         except Exception as e:
-            self.logger.error(f"Failed to load agent configuration from {agent_config_path}: {e}", exc_info=True)
+            self.logger.exception(f"Failed to load agent configuration from {agent_config_path}: {e}", exc_info=True)
             return None
 
         # Track original version
@@ -161,9 +161,9 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         agent_params = data['agent_params']
         model_id = data.get('model_id', '')
         
-        # Add model_name from top-level model_id if not present
-        if 'model_name' not in agent_params:
-            agent_params['model_name'] = model_id
+        # Add model_id from top-level model_id if not present
+        if 'model_id' not in agent_params:
+            agent_params['model_id'] = model_id
             
         # Determine and add type field if not present
         if 'type' not in agent_params:
@@ -175,9 +175,9 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
                     agent_params['type'] = 'claude_non_reasoning'
             elif 'gpt' in model_id.lower() or 'o1' in model_id.lower():
                 if 'reasoning_effort' in agent_params:
-                    agent_params['type'] = 'g_p_t_reasoning'
+                    agent_params['type'] = 'gpt_reasoning'
                 else:
-                    agent_params['type'] = 'g_p_t_non_reasoning'
+                    agent_params['type'] = 'gpt_non_reasoning'
             else:
                 # Default fallback - assume Claude non-reasoning
                 agent_params['type'] = 'claude_non_reasoning'

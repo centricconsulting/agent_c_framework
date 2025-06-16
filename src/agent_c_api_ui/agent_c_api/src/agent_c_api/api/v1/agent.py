@@ -105,7 +105,7 @@ async def get_agent_config(ui_session_id: str, agent_manager=Depends(get_bridge_
         config = agent_bridge.get_agent_runtime_config()
 
         runtime_params: Dict[str, Any] = agent_bridge.chat_session.agent_config.agent_params.model_dump(exclude_none=True)
-        runtime_params["name"] =  runtime_params.pop("model_name")
+        runtime_params["name"] =  runtime_params.pop("model_id")
 
 
         # Add additional configuration info

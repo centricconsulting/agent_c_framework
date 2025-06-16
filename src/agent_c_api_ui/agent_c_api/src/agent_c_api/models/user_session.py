@@ -32,7 +32,7 @@ class UserSession(BaseModel):
             self.agent_config = self.chat_session.agent_config
 
         if self.llm_model is None:
-            self.llm_model = self.agent_config.agent_params.model_name
+            self.llm_model = self.agent_config.agent_params.model_id
 
         if self.agent_name is None:
             self.agent_name = self.agent_config.name

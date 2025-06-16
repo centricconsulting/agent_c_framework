@@ -13,7 +13,7 @@ ApiAuthInfo: TypeAlias = (SimpleAuthInfo | AzureAuthInfo | BedrockAuthInfo)
 
 
 class CommonCompletionParams(BaseModel):
-    model_name: str = Field(..., description="The name of the model to use for the interaction")
+    model_id: str = Field(..., description="The name of the model id in the model config to use for the interaction")
     max_tokens: Optional[int] = Field(None, description="The maximum number of tokens to generate, defaults to backend defaults")
     user_name: Optional[str] = Field(None, description="The name of the user interacting with the agent")
     auth: Optional[ApiAuthInfo] = Field(None, description="The vendor API key or whatnot to use for the agent")
@@ -22,4 +22,4 @@ class CommonCompletionParams(BaseModel):
         """
         Converts the model to a dictionary of completion parameters.
         """
-        return self.model_dump(exclude_none=True, exclude=set(['user_name', 'auth'] + extra_excludes))
+        return self.model_dump(exclude_none=True, exclude=set(['user_name', 'auth', 'model_id'] + extra_excludes))

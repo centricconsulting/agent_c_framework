@@ -19,7 +19,7 @@ class InteractionContext(BaseContext):
     chat_session: ChatSession = Field(..., description="The chat session that this interaction is part of. "
                                                               "This is used to group interactions together.")
     inputs: InteractionInputs = Field(..., description="The inputs for the interaction. ")
-    agent_runtime: 'AgentRuntime' = Field(..., description="The agent runtime to use for the interaction")
+    agent_runtime: Optional[ 'AgentRuntime'] = Field(None, description="The agent runtime to use for the interaction")
     tool_chest: 'ToolChest' = Field(..., description="The tool chest to use for the interaction")
     client_wants_cancel: threading.Event = Field(default_factory=threading.Event,
                                                  description="An event that is set when the client wants to cancel the interaction. T"

@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Union, Optional, AsyncGenerator
 from datetime import datetime, timezone
 
 from agent_c.agent_runtimes.base import AgentRuntime
+from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
+from agent_c.models.events.chat import ThoughtDeltaEvent
 from agent_c.toolsets.tool_chest import ToolChest
 from agent_c_api.config.env_config import settings
 from agent_c.config import ModelConfigurationLoader
@@ -14,7 +16,7 @@ from agent_c.chat import ChatSessionManager, ChatSession
 from agent_c.models.agent_config import AgentConfiguration
 from agent_c_tools.tools.workspace.base import BaseWorkspace
 from agent_c.agent_runtimes.gpt import GPTChatAgentRuntime, AzureGPTChatAgent
-from agent_c.models.events import SessionEvent, TextDeltaEvent
+from agent_c.models.events import SessionEvent, TextDeltaEvent, HistoryEvent
 
 from agent_c.models.context.interaction_context import InteractionContext
 
@@ -112,20 +114,13 @@ class AgentBridge:
         self.__init_workspaces()
 
 
-    def runtime_for_agent(self, agent_config: AgentConfiguration):
-        if agent_config.key in self.runtime_cache:
-            return self.runtime_cache[agent_config.key]
+    def runtime_for_agent(self, agent_config: AgentConfiguration, context: InteractionContext):
+        model_id = agent_config.agent_params.model_id
+        if model_id in self.runtime_cache:
+            return self.runtime_cache[model_id]
         else:
-            self.runtime_cache[agent_config.key] = self._runtime_for_agent(agent_config)
-            return self.runtime_cache[agent_config.key]
-
-    def _runtime_for_agent(self, agent_config: AgentConfiguration) -> AgentRuntime:
-        model_config = self.model_config_loader.model_id_map[agent_config.model_id]
-        runtime_cls = self.__vendor_agent_map[model_config.vendor]
-
-        auth_info = agent_config.agent_params.auth.model_dump() if agent_config.agent_params.auth is not None else  {}
-        client = runtime_cls.client(**auth_info)
-        return runtime_cls(model_name=model_config.id, client=client)
+            self.runtime_cache[model_id] = RuntimeRegistry.instantiate_model_runtime(self.model_config_loader, model_id, context)
+            return self.runtime_cache[model_id]
 
 
     def __init_workspaces(self) -> None:
@@ -146,7 +141,7 @@ class AgentBridge:
             f"Agent {self.chat_session.agent_config.key} initialized workspaces "
             f"{local_project.workspace_root}"
         )
-        # TODO: ALLOWED / DISALLOWED WORKSPACES from agent config
+
         try:
             with open(LOCAL_WORKSPACES_FILE, 'r', encoding='utf-8') as json_file:
                 local_workspaces = json.load(json_file)
@@ -157,15 +152,6 @@ class AgentBridge:
             # Local workspaces file is optional
             pass
 
-    @property
-    def current_chat_log(self) -> List[Dict[str, Any]]:
-        """
-        Returns the current chat log for the agent.
-
-        Returns:
-            Union[List[Dict], None]: The current chat log or None if not set.
-        """
-        return self.chat_session.messages
 
     async def update_tools(self, new_tools: List[str]) -> None:
         """
@@ -228,9 +214,6 @@ class AgentBridge:
             tool_opts = {
                 'workspaces': self.workspaces
             }
-
-            # Initialize the tool chest with essential tools first
-
 
             # Initialize the tool chest essential tools
             await self.tool_chest.init_tools(tool_opts)
@@ -353,7 +336,7 @@ class AgentBridge:
 
         config = {
             'backend': "anthropic",
-            'model_name': self.chat_session.agent_config.agent_params.model_name,
+            'model_name': self.chat_session.agent_config.agent_params.model_id,
             'initialized_tools': initialized_tools,
             'agent_name': self.chat_session.agent_config.name,
             'user_session_id': self.chat_session.session_id,
@@ -517,7 +500,7 @@ class AgentBridge:
         payload = json.dumps({
             "type": "content",
             "data": event.content,
-            "vendor": self.runtime_for_agent(self.chat_session.agent_config).tool_format,
+            "vendor": event.vendor,
             "format": event.format
         }) + "\n"
         return payload
@@ -642,7 +625,7 @@ class AgentBridge:
         }) + "\n"
         return payload
 
-    async def _handle_history(self, event: SessionEvent) -> str:
+    async def _handle_history(self, event: HistoryEvent) -> str:
         """
         Handle history events which update the chat log.
         
@@ -664,8 +647,8 @@ class AgentBridge:
         payload = json.dumps({
             "type": "history",
             "messages": event.messages,
-            "vendor": self.runtime_for_agent(self.chat_session.agent_config).tool_format,
-            "model_name": self.chat_session.agent_config.agent_params.model_name,
+            "vendor": event.vendor,
+            "model_name": self.chat_session.agent_config.agent_params.model_id,
         }) + "\n"
         return payload
 
@@ -744,7 +727,7 @@ class AgentBridge:
             }) + "\n"
         return payload
 
-    async def _handle_thought_delta(self, event: SessionEvent) -> str:
+    async def _handle_thought_delta(self, event: ThoughtDeltaEvent) -> str:
         """
         Handle thinking process events.
         
@@ -762,8 +745,8 @@ class AgentBridge:
         payload = json.dumps({
             "type": "thought_delta",
             "data": event.content,
-            "vendor": self.runtime_for_agent(self.chat_session.agent_config).tool_format,
-            "model_name": self.chat_session.agent_config.agent_params.model_name,
+            "vendor": event.vendor,
+            "model_name": self.chat_session.agent_config.agent_params.model_id,
             "format": "thinking"
         }) + "\n"
         return payload
@@ -895,7 +878,7 @@ class AgentBridge:
 
         try:
             await self.session_manager.update()
-            agent_runtime = self.runtime_for_agent(self.chat_session.agent_config)
+
             file_inputs = []
             if file_ids and self.file_handler:
                 file_inputs = await self.process_files_for_message(file_ids, self.chat_session.user_id)
@@ -936,9 +919,17 @@ class AgentBridge:
                                          sections=agent_sections,
                                          streaming_callback=self.streaming_callback_with_logging,
                                          chat_session=self.chat_session,
-                                         agent_runtime=agent_runtime,
                                          user_session_id=self.chat_session.session_id,
                                          inputs=inputs)
+
+            agent_runtime = self.runtime_for_agent(self.chat_session.agent_config, context)
+            if not agent_runtime:
+                error_msg = f"Agent runtime not found for agent {self.chat_session.agent_config.key}"
+                self.logger.error(error_msg)
+                yield json.dumps({"type": "error", "data": error_msg}) + "\n"
+                return
+
+            context.agent_runtime = agent_runtime
 
             # Start the chat task
             chat_task = asyncio.create_task(agent_runtime.chat(context))

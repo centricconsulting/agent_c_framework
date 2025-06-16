@@ -4,7 +4,7 @@ agent_params:
   budget_tokens: 20000
   max_searches: null
   max_tokens: 64000
-  model_name: claude-sonnet-4-20250514
+  model_id: claude-sonnet-4-20250514
   type: claude_reasoning
   user_name: null
 category:

@@ -249,7 +249,7 @@ class UItoAgentBridgeManager:
             "agent_name": agent_bridge.chat_session.agent_config.name,
             "created_at": agent_bridge.chat_session.created_at,
             "backend": agent_bridge.chat_session.agent_config.agent_params.type,
-            "model_name": agent_bridge.chat_session.agent_config.agent_params.model_name,
+            "model_name": agent_bridge.chat_session.agent_config.agent_params.model_id,
         }
 
         # Check session manager

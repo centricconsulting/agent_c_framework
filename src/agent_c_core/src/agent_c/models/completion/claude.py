@@ -19,8 +19,8 @@ class ClaudeNonReasoningParams(ClaudeCommonParams):
     max_tokens: Optional[int] = Field(None, description="The maximum number of tokensto generate in the interaction")
 
     def __init__(self, **data: Any) -> None:
-        if 'model_name' not in data:
-            data['model_name'] = os.environ.get("CLAUDE_INTERACTION_MODEL", "claude-3-4-sonnet-latest")
+        if 'model_id' not in data:
+            data['model_id'] = os.environ.get("CLAUDE_INTERACTION_MODEL", "claude-3-4-sonnet-latest")
 
         super().__init__(**data)
 
@@ -31,8 +31,8 @@ class ClaudeNonReasoningParams(ClaudeCommonParams):
         if extra_excludes is None:
             extra_excludes = []
 
-        opts = super().as_completion_params(extra_excludes + ['type', 'allow_betas', 'allow_server_tools', 'max_searches', 'model_name'])
-        opts['model'] = self.model_name
+        opts = super().as_completion_params(extra_excludes + ['type', 'allow_betas', 'allow_server_tools', 'max_searches'])
+        opts['model'] = self.model_id
         return opts
 
 class ClaudeReasoningParams(ClaudeCommonParams):
@@ -41,8 +41,8 @@ class ClaudeReasoningParams(ClaudeCommonParams):
     temperature: Literal[1] = Field(1, description="The temperature for reasoning interactions is fixed at 1")
 
     def __init__(self, **data: Any) -> None:
-        if 'model_name' not in data:
-            data['model_name'] = os.environ.get("CLAUDE_REASONING_INTERACTION_MODEL", "claude-4-sonnet-latest")
+        if 'model_id' not in data:
+            data['model_id'] = os.environ.get("CLAUDE_REASONING_INTERACTION_MODEL", "claude-4-sonnet-latest")
 
         super().__init__(**data)
 
@@ -53,8 +53,8 @@ class ClaudeReasoningParams(ClaudeCommonParams):
         if extra_excludes is None:
             extra_excludes = []
 
-        opts = super().as_completion_params(extra_excludes + ['type', 'allow_betas', 'allow_server_tools', 'budget_tokens', 'model_name'])
-        opts['model'] = self.model_name
+        opts = super().as_completion_params(extra_excludes + ['type', 'allow_betas', 'allow_server_tools', 'budget_tokens'])
+        opts['model'] = self.model_id
         return opts
 
 

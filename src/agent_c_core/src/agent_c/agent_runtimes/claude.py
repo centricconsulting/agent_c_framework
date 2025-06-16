@@ -10,10 +10,13 @@ from anthropic import AsyncAnthropic, APITimeoutError, Anthropic, RateLimitError
 from anthropic.types import MessageParam
 
 from agent_c.agent_runtimes.base import AgentRuntime
+from agent_c.util.logging_utils import LoggingManager
 from agent_c.util.token_counter import TokenCounter
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
 from agent_c.models.completion.claude import ClaudeCompletionParams
 from agent_c.models.context.interaction_context import InteractionContext
+
+logger = LoggingManager(__name__).get_logger()
 
 class ThinkToolState(Enum):
     """Enum representing the state of the think tool processing."""
@@ -37,25 +40,44 @@ class ClaudeTokenCounter(TokenCounter):
 class ClaudeChatAgentRuntime(AgentRuntime):
     CLAUDE_MAX_TOKENS: int = 64000
 
-    def __init__(self, client: Optional[Union[AsyncAnthropic, AsyncAnthropicBedrock]] = None) -> None:
+    def __init__(self, max_retry_delay_secs: int = 300, concurrency_limit: int = 3,
+                 context = None, client: Optional[Union[AsyncAnthropic, AsyncAnthropicBedrock]] = None) -> None:
         """
         Initialize ChatAgent object.
 
         Non-Base Parameters:
-        client: AsyncAnthropic, default is AsyncAnthropic()
+        client: Optional[Union[AsyncAnthropic, AsyncAnthropicBedrock]]
             The client to use for making requests to the Anthropic API.
         """
-        super().__init__(ClaudeTokenCounter())
-        self.client: Union[AsyncAnthropic, AsyncAnthropicBedrock] = client or self.__class__.client()
+        super().__init__(ClaudeTokenCounter(), max_retry_delay_secs=max_retry_delay_secs, concurrency_limit=concurrency_limit)
+        self.client: Union[AsyncAnthropic, AsyncAnthropicBedrock] = client or self.__class__.client(context)
 
     @classmethod
-    def client(cls, **opts):
-        return AsyncAnthropic(**opts)
+    def client(cls, context = None):
+        if context and hasattr(context, 'chat_session'):
+            auth = context.chat_session.agent_config.agent_params.auth
+            api_key = auth.api_key if hasattr(auth, 'api_key') else os.environ.get("ANTHROPIC_API_KEY")
+            auth_token = auth.token if hasattr(auth, 'token') else os.environ.get('ANTHROPIC_AUTH_TOKEN')
+        else:
+            api_key = os.environ.get("ANTHROPIC_API_KEY")
+            auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
+
+        if not api_key and not auth_token:
+            logger.warning("Waring an attempt was made to create an Anthropic API clint without an API key or auth token.  Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN to use this runtime ")
+            return None
+
+        if auth_token:
+            return AsyncAnthropic(auth_token=auth_token)
+        else:
+            return AsyncAnthropic(api_key=api_key)
 
     @classmethod
-    def can_create(cls, context: Optional[InteractionContext]) -> bool:
+    def can_create(cls, context = None) -> bool:
         server_key = os.environ.get("ANTHROPIC_API_KEY")
-        context_key = context.chat_session.agent_config.agent_params.auth.api_key if context else None
+        if context and hasattr(context, 'chat_session'):
+            context_key = context.chat_session.agent_config.agent_params.auth.api_key if context else None
+        else:
+            context_key = None
 
         if not server_key and not context_key:
             return False
@@ -88,28 +110,28 @@ class ClaudeChatAgentRuntime(AgentRuntime):
         """
         Check if the agent parameters indicate a Claude 4 model.
         """
-        return '-4-' in agent_params.model_name
+        return '-4-' in agent_params.model_id
 
     @staticmethod
     def __is_claude_3_7(agent_params: ClaudeCompletionParams) -> bool:
         """
         Check if the agent parameters indicate a Claude 3 model.
         """
-        return '-3-7' in agent_params.model_name
+        return '-3-7' in agent_params.model_id
 
     @staticmethod
     def __is_sonnet(agent_params: ClaudeCompletionParams) -> bool:
         """
         Check if the agent parameters indicate a Sonnet model.
         """
-        return 'sonnet' in agent_params.model_name
+        return 'sonnet' in agent_params.model_id
 
     @staticmethod
     def __is_opus(agent_params: ClaudeCompletionParams) -> bool:
         """
         Check if the agent parameters indicate an Opus model.
         """
-        return 'opus' in agent_params.model_name
+        return 'opus' in agent_params.model_id
 
     async def __build_completion_options(self, context: InteractionContext) -> Dict[str, Any]:
         # Make sure we have the correct max tokens set in the context,
