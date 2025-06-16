@@ -71,6 +71,10 @@ class BaseAgent:
     def tool_format(self) -> str:
         raise NotImplementedError
 
+    @property
+    def vendor(self) -> str:
+        return self.tool_format
+
     def count_tokens(self, text: str) -> int:
         return self.token_counter.count_tokens(text)
 
@@ -103,7 +107,6 @@ class BaseAgent:
         try:
             # TODO: Try asyncio tasks to allow for fire and forget
             event.session_id = context.chat_session.user_session_id
-            self.logger.info(f"Raising event: {event.type} for session: {context.chat_session.user_session_id}")
             await context.streaming_callback(event)
         except Exception as e:
             self.logger.exception(

@@ -120,12 +120,12 @@ class AgentBridge:
             return self.runtime_cache[agent_config.key]
 
     def _runtime_for_agent(self, agent_config: AgentConfiguration) -> BaseAgent:
-        model_config = self.model_config_loader.flattened_config()[agent_config.model_id]
-        runtime_cls = self.__vendor_agent_map[model_config["vendor"]]
+        model_config = self.model_config_loader.model_id_map[agent_config.model_id]
+        runtime_cls = self.__vendor_agent_map[model_config.vendor]
 
         auth_info = agent_config.agent_params.auth.model_dump() if agent_config.agent_params.auth is not None else  {}
         client = runtime_cls.client(**auth_info)
-        return runtime_cls(model_name=model_config["id"], client=client)
+        return runtime_cls(model_name=model_config.id, client=client)
 
 
     def __init_workspaces(self) -> None:

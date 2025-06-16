@@ -42,7 +42,7 @@ class AgentAssistToolBase(Toolset):
         self.sections: List[PromptSection] = [ThinkSection(), AssistantBehaviorSection(),  DynamicPersonaSection()]
 
         self.session_cache = AsyncExpiringCache(default_ttl=kwargs.get('agent_session_ttl', 300))
-        self.model_configs: Dict[str, Any] = self.model_config_loader.flattened_config()
+        self.model_configs: Dict[str, Any] = self.model_config_loader.model_id_map
         self.runtime_cache: Dict[str, BaseAgent] = {}
         self.workspace_tool: Optional[WorkspaceTools] = None
 

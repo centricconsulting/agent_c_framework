@@ -1,8 +1,8 @@
-from typing import Dict, List, Optional, Any, Union, ClassVar
+from typing import  List, Optional, Any
 from pydantic import BaseModel, Field, ConfigDict
 
-from agent_c.models.agent_config import AgentConfigurationV2, AgentConfiguration
-
+from agent_c.models.agent_config import AgentConfiguration
+from agent_c.models.model_config.models import ModelConfigurationWithVendor
 
 class ModelParameter(BaseModel):
     """Parameter for a model configuration"""
@@ -104,7 +104,6 @@ class ToolInfo(BaseModel):
     description: Optional[str] = Field(None, description="Detailed description of the tool's functionality")
     category: str = Field("general", description="Category the tool belongs to (web, utility, data, etc.)")
     parameters: List[ToolParameter] = Field(default_factory=list, description="Parameters accepted by the tool")
-    is_essential: bool = Field(False, description="Whether this tool is considered essential for basic agent functionality")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -133,7 +132,7 @@ class ToolInfo(BaseModel):
 
 class ModelsResponse(BaseModel):
     """Response containing available models"""
-    models: List[ModelInfo] = Field(description="List of available LLM models")
+    models: List[ModelConfigurationWithVendor] = Field(description="List of available LLM models")
 
     model_config = ConfigDict(
         json_schema_extra={

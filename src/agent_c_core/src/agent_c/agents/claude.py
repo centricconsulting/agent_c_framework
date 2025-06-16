@@ -1,5 +1,7 @@
 import copy
 import base64
+import os
+
 import httpcore
 
 from enum import Enum, auto
@@ -8,6 +10,7 @@ from anthropic import AsyncAnthropic, APITimeoutError, Anthropic, RateLimitError
 
 from agent_c.agents.base import BaseAgent
 from agent_c.util.token_counter import TokenCounter
+from agent_c.agents.runtime_registry import RuntimeRegistry
 from agent_c.models.completion.claude import ClaudeCompletionParams
 from agent_c.models.context.interaction_context import InteractionContext
 
@@ -62,6 +65,17 @@ class ClaudeChatAgent(BaseAgent):
     @classmethod
     def client(cls, **opts):
         return AsyncAnthropic(**opts)
+
+    @classmethod
+    def can_create(cls, context: Optional[InteractionContext]) -> bool:
+        server_key = os.environ.get("ANTHROPIC_API_KEY")
+        context_key = context.chat_session.agent_config.agent_params.auth.api_key if context else None
+
+        if not server_key and not context_key:
+            return False
+
+        return True
+
 
     @property
     def tool_format(self) -> str:
@@ -122,7 +136,6 @@ class ClaudeChatAgent(BaseAgent):
 
         try:
             completion_opts = agent_params.as_completion_params()
-            completion_opts['model'] = agent_params.model_name.removesuffix(" (Bedrock)")
         except Exception as e:
             self.logger.exception(f"Error building completion options: {e}", exc_info=True)
             raise e
@@ -151,8 +164,8 @@ class ClaudeChatAgent(BaseAgent):
         """
         Add system prompt and tools to the completion options.
         """
-        tool_sections = context.get_tool_sections() + context.external_tool_schemas
-        tool_schemas = context.get_tool_schemas(self.tool_format)
+        tool_sections = context.tool_sections
+        tool_schemas = context.tool_schemas
 
         completion_opts["system"] = await self.prompt_builder.render(context, tool_sections)
 
@@ -195,29 +208,17 @@ class ClaudeChatAgent(BaseAgent):
                     delay = 1
                     messages = result
                 except RateLimitError:
-                    self.logger.warning(f"Ratelimit. Retrying...Delay is {delay} seconds")
-                    await self._raise_system_event(context, f"Rate limit reach, slowing down... Delay is {delay} seconds \n", severity="warning")
-                    await self._raise_completion_end(context, completion_opts, stop_reason="rate_limit")
-                    delay = await self._handle_retryable_error(delay)
+                    delay = await self._handle_retryable_error(delay, context, "Claude API is overloaded (rate limit)", "rate_limit", completion_opts)
                 except APITimeoutError:
-                    self.logger.warning(f"API Timeout. Retrying...Delay is {delay} seconds")
-                    await self._raise_system_event(context, "Claude API is overloaded (timeout), retrying... Delay is {delay} seconds \n", severity="warning")
-                    await self._raise_completion_end(context, completion_opts, stop_reason="overload")
-                    delay = await self._handle_retryable_error(delay)
+                    delay = await self._handle_retryable_error(delay, context, "Claude API is overloaded (API timeout)", "timeout", completion_opts)
                 except httpcore.RemoteProtocolError:
-                    self.logger.warning(f"Remote protocol error encountered, retrying...Delay is {delay} seconds")
-                    await self._raise_system_event(context,f"Claude API is overloaded (remote protocol error), retrying... Delay is {delay} seconds \n", severity="warning")
-                    await self._raise_completion_end(context, completion_opts, stop_reason="overload")
-                    delay = await self._handle_retryable_error(delay)
+                    delay = await self._handle_retryable_error(delay, context, "Claude API is overloaded (remote protocol error)", "overload", completion_opts)
                 except Exception as e:
                     if "overloaded" in str(e).lower():
-                        self.logger.warning(f"Claude API is overloaded, retrying... Delay is {delay} seconds")
-                        await self._raise_system_event(context, f"Claude API is overloaded, retrying... Delay is {delay} seconds \n", severity="warning")
-                        await self._raise_completion_end(context, completion_opts, stop_reason="overload")
-                        delay = await self._handle_retryable_error(delay)
+                        delay = await self._handle_retryable_error(delay, context, "Claude API is overloaded", "overload", completion_opts)
                     else:
                         self.logger.exception(f"Uncoverable error during Claude chat: {e}", exc_info=True)
-                        await self._raise_system_event(context, f"Exception calling `client.messages.stream`.\n\n{e}\n")
+                        await self._raise_system_event(context, f"Uncoverable error during Claude chat: {e}")
                         await self._raise_completion_end(context, completion_opts, stop_reason="exception")
                         await self._raise_interaction_end(context)
                         return messages
@@ -229,8 +230,13 @@ class ClaudeChatAgent(BaseAgent):
         return messages
 
 
-    async def _handle_retryable_error(self, delay):
+    async def _handle_retryable_error(self, delay: int, context: InteractionContext, message: str,
+                                      stop_reason: str, completion_opts: Dict[str, Any]) -> int:
         """Handle retryable errors with exponential backoff."""
+        user_message = f"{message}, retrying... Delay is {delay} seconds."
+        self.logger.warning(f"{user_message} Session {context.chat_session.session_id}, User {context.chat_session.user_id}")
+        await self._raise_system_event(context, user_message, severity="warning")
+        await self._raise_completion_end(context, completion_opts, stop_reason=stop_reason)
         await self._exponential_backoff(delay)
         return delay * 2  # Return the new delay for the next attempt
 
@@ -590,10 +596,25 @@ class ClaudeChatAgent(BaseAgent):
 
 
 class ClaudeBedrockChatAgent(ClaudeChatAgent):
-    def __init__(self, **kwargs) -> None:
-        kwargs['allow_betas'] = False
-        super().__init__(**kwargs)
-
     @classmethod
     def client(cls, **opts):
         return AsyncAnthropicBedrock(**opts)
+
+    @classmethod
+    def vendor(cls) -> str:
+        return "bedrock"
+
+    @classmethod
+    def can_create(cls, context: Optional[InteractionContext]) -> bool:
+        server_key = os.environ.get("ANTHROPIC_API_KEY")
+        context_key = context.chat_session.agent_config.agent_params.auth.api_key if context else None
+
+        if not server_key and not context_key:
+            return False
+
+        return True
+
+
+# Register the chat agents with the runtime registry
+RuntimeRegistry.register(ClaudeChatAgent, "claude")
+RuntimeRegistry.register(ClaudeBedrockChatAgent, "bedrock")

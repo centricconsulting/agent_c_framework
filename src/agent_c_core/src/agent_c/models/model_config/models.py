@@ -6,7 +6,7 @@ model types, capabilities, and the main model configuration class.
 """
 
 from enum import Enum
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field, ConfigDict
 
 from .parameters import ModelParameter
@@ -133,3 +133,26 @@ class ModelConfiguration(BaseModel):
             True if the input type is supported, False otherwise
         """
         return getattr(self.allowed_inputs, input_type, False)
+
+class ModelConfigurationWithVendor(ModelConfiguration):
+    """
+    Model configuration that includes vendor information.
+
+    This extends the base model configuration to include the vendor
+    providing the model.
+    """
+    vendor: str = Field(..., description="Vendor providing the model")
+    backend: Optional[str] = Field(None, description="Backend service or API for the model")
+
+    def __init__(self, **data: Any) -> None:
+        """
+        Initialize the model configuration with vendor information.
+
+        Args:
+            **data: Additional data to initialize the model configuration
+        """
+        super().__init__(**data)
+
+        if self.backend is None:
+            self.backend = self.vendor
+

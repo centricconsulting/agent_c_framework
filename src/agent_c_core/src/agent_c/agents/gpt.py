@@ -12,6 +12,7 @@ from tiktoken import Encoding, encoding_for_model
 from openai.types.chat import ChatCompletionChunk
 from typing import Any, Dict, List, Union, Optional, Tuple
 
+from agent_c.agents.runtime_registry import RuntimeRegistry
 from agent_c.chat.session_manager import ChatSessionManager
 from agent_c.models.input import FileInput
 from agent_c.models.input.audio_input import AudioInput
@@ -45,20 +46,13 @@ class GPTChatAgent(BaseAgent):
         client: AsyncOpenAI, default is AsyncOpenAI()
             The client to use for making requests to the Open AI API.
         """
-        kwargs['model_name']: str = kwargs.get('model_name')
         kwargs['token_counter'] = kwargs.get('token_counter', TikTokenTokenCounter())
         super().__init__(**kwargs)
-        self.schemas: Union[None, List[Dict[str, Any]]] = None
-
-        # Initialize logger
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
 
         # Initialize the client based on environment or provided client
         if kwargs.get("client", None) is None:
             self.client = self.__class__.client()
         else:
-            self.logger.debug("Initializing with provided client.")
             self.client = kwargs.get("client")
 
         self.encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
@@ -503,3 +497,7 @@ class AzureGPTChatAgent(GPTChatAgent):
     @classmethod
     def client(cls, **opts):
         return AsyncAzureOpenAI(**opts)
+
+# Register the chat agents with the runtime registry
+RuntimeRegistry.register(GPTChatAgent, "openai")
+RuntimeRegistry.register(AzureGPTChatAgent, "azure_openai")

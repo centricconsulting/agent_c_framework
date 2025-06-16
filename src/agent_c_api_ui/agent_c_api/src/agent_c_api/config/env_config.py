@@ -30,11 +30,7 @@ class Settings(BaseSettings):
 
     # Base directories
     BASE_DIR: Path = get_project_root() / "src"
-    CONFIG_DIR: Path = BASE_DIR / "agent_c_api/config"
-    PERSONA_DIR: Path = BASE_DIR.parent.parent.parent.parent / "personas"
 
-    # Specific file paths
-    MODEL_CONFIG_PATH: Path = CONFIG_DIR / "model_configs.json"
 
     # FastAPI and CORS settings
     ALLOWED_ORIGINS: list[str] = ["*"]
@@ -59,13 +55,7 @@ class Settings(BaseSettings):
     REDIS_CONNECTION_TIMEOUT: int = 5  # Connection timeout in seconds
     REDIS_SOCKET_TIMEOUT: int = 5      # Socket timeout in seconds
     REDIS_MAX_CONNECTIONS: int = 50    # Maximum connections in pool
-    
-    # DEPRECATED SETTINGS - No longer used after Redis refactor
-    # Redis should be externally managed (Docker, systemd, cloud service, etc.)
-    # These settings are kept for backward compatibility but are ignored
-    REDIS_DATA_DIR: Path = Path("./data/redis")  # DEPRECATED: Use external Redis
-    REDIS_STARTUP_TIMEOUT: int = 30  # DEPRECATED: No embedded Redis startup
-    MANAGE_REDIS_LIFECYCLE: bool = False  # DEPRECATED: Always False - external Redis only
+
 
     # Session Configuration
     SESSION_TTL: int = 24 * 60 * 60  # 24 hours

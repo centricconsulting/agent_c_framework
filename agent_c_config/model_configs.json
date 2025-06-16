@@ -266,7 +266,7 @@
           "id": "claude-sonnet-4-20250514",
           "model_type": "chat",
           "ui_name": "Claude 4 Sonnet",
-          "description": "Smart, efficient model for everyday use",
+          "description": "Smart, efficient model for everyday use. HIGHLY suitable for agentic workflows.",
           "parameters": {
             "extended_thinking": {
               "enabled": true,
@@ -305,7 +305,7 @@
           "id": "claude-opus-4-20250514",
           "model_type": "chat",
           "ui_name": "Claude 4 Opus",
-          "description": "Powerful, large model for complex challenges",
+          "description": "Powerful, large model for complex challenges. Suitable for agentic work but it is not recommended for long workflows.",
           "parameters": {
             "extended_thinking": {
               "enabled": true,
@@ -344,7 +344,7 @@
           "id": "claude-3-7-sonnet-latest",
           "model_type": "chat",
           "ui_name": "Claude 3.7 Sonnet Latest",
-          "description": "Latest Claude 3.7 Sonnet model for chat interactions.",
+          "description": "Prior generation Claude Sonnet model for chat interactions. Suitable for agentic work, capable ot 128k output tokens",
           "parameters": {
             "extended_thinking": {
               "enabled": true,
@@ -385,10 +385,10 @@
       "vendor": "bedrock",
       "models": [
         {
-          "id": "bedrock_claude-sonnet-4-20250514",
+          "id": "anthropic.claude-sonnet-4-20250514-v1:0",
           "model_type": "chat",
           "ui_name": "Claude 4 Sonnet",
-          "description": "Smart, efficient model for everyday use",
+          "description": "Smart, efficient model for everyday use. HIGHLY suitable for agentic work.",
           "parameters": {
             "extended_thinking": {
               "enabled": true,
@@ -424,10 +424,10 @@
           }
         },
         {
-          "id": "bedrock_claude-opus-4-20250514",
+          "id": "anthropic.claude-opus-4-20250514-v1:0",
           "model_type": "chat",
           "ui_name": "Claude 4 Opus",
-          "description": "Powerful, large model for complex challenges",
+          "description": "Powerful, large model for complex challenges. Agentic work is possible but not recommended for long workflows.",
           "parameters": {
             "extended_thinking": {
               "enabled": true,
@@ -463,10 +463,10 @@
           }
         },
         {
-          "id": "bedrock_claude-3-7-sonnet-latest",
+          "id": "anthropic.claude-3-7-sonnet-20250219-v1:0",
           "model_type": "chat",
           "ui_name": "Claude 3.7 Sonnet Latest",
-          "description": "Latest Claude 3.7 Sonnet model for chat interactions.",
+          "description": "Prior generation Claude Sonnet model for chat interactions. Suitable for agentic work, capable of 128k output tokens.",
           "parameters": {
             "extended_thinking": {
               "enabled": true,

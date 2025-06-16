@@ -1,15 +1,18 @@
 from typing import Optional
 from fastapi_cache.decorator import cache
 
+from agent_c.config import ModelConfigurationLoader
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.models.agent_config import AgentConfiguration
-from agent_c_api.config.config_loader import MODELS_CONFIG
 from agent_c.config.agent_config_loader import AgentConfigLoader
 
 from agent_c_api.api.v2.models.config_models import (
     ModelInfo, ToolInfo, ModelParameter,
     ModelsResponse, AgentConfigsResponse, ToolsResponse, SystemConfigResponse
 )
+from agent_c_api.core.util.logging_utils import LoggingManager
+
+logger = LoggingManager(__name__).get_logger()
 
 class ConfigService:
     """Service for retrieving configuration data from existing sources"""
@@ -21,50 +24,12 @@ class ConfigService:
         """
         Get available models using the existing configuration mechanism
         """
-        # Using the same approach as in v1/models.py
-        model_list = []
-        
-        # Process models in the same format as v1 API
-        if not MODELS_CONFIG:
-            return ModelsResponse(models=[])
-            
-        for vendor in MODELS_CONFIG.get("vendors", []):
-            vendor_name = vendor.get("vendor")
-            for model in vendor.get("models", []):
-                # Transform to our v2 model format
-                parameters = []
-                for param_name, param_data in model.get("parameters", {}).items():
-                    parameters.append(ModelParameter(
-                        name=param_name,
-                        type=param_data.get("type", "string"),
-                        description=param_data.get("description", ""),
-                        default=param_data.get("default")
-                    ))
-                
-                # Transform capabilities from dict to list if needed
-                capabilities = []
-                if isinstance(model.get("capabilities", {}), dict):
-                    capabilities = [key for key, value in model.get("capabilities", {}).items() if value]
-                elif isinstance(model.get("capabilities", []), list):
-                    capabilities = model.get("capabilities", [])
-                
-                # Transform allowed_inputs from dict to list if needed
-                allowed_inputs = []
-                if isinstance(model.get("allowed_inputs", {}), dict):
-                    allowed_inputs = [key for key, value in model.get("allowed_inputs", {}).items() if value]
-                elif isinstance(model.get("allowed_inputs", []), list):
-                    allowed_inputs = model.get("allowed_inputs", [])
-                
-                model_info = ModelInfo(
-                    id=model["id"],
-                    name=model.get("ui_name", model["id"]),
-                    provider=vendor_name,
-                    description=model.get("description", ""),
-                    capabilities=capabilities,
-                    parameters=parameters,
-                    allowed_inputs=allowed_inputs
-                )
-                model_list.append(model_info)
+        try:
+            loader: ModelConfigurationLoader = ModelConfigurationLoader()
+            model_list = loader.model_list
+        except Exception as e:
+            logger.exception(f"Error reading model config: {e}", exc_info=True)
+            raise e
         
         return ModelsResponse(models=model_list)
     

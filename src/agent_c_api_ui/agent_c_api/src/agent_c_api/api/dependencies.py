@@ -266,13 +266,13 @@ def transform_flat_to_nested(params: Dict[str, Any], param_map: Dict[str, Dict])
     return result
 
 
-async def get_dynamic_params(request: Request, model_name: str, backend: str):
+async def get_dynamic_params(request: Request, model_id: str):
     """
     Dynamically validate request parameters based on model configuration.
 
     Args:
         request: FastAPI request
-        model_name: Name of the model to get parameters for
+        model_id: Name of the model to get parameters for
         backend: Backend provider (e.g., 'openai', 'claude')
 
     Returns:
@@ -282,7 +282,7 @@ async def get_dynamic_params(request: Request, model_name: str, backend: str):
         HTTPException: If parameters fail validation
     """
     # Look up allowed parameters from the configuration
-    allowed_params = get_allowed_params(backend, model_name)
+    allowed_params = get_allowed_params(model_id)
     fields = build_fields_from_config(allowed_params)
 
     # Analyze the parameter structure
@@ -299,11 +299,11 @@ async def get_dynamic_params(request: Request, model_name: str, backend: str):
         transformed_params = transform_flat_to_nested(params_dict, param_map)
 
         # Validate with the dynamic model
-        logger.debug(f"Validating params for {model_name}: {transformed_params}")
+        logger.debug(f"Validating params for {model_id}: {transformed_params}")
         validated_params = DynamicParams.model_validate(transformed_params)
         return validated_params
     except Exception as e:
-        logger.exception(f"Parameter validation error for {model_name}: {e}", exc_info=True)
+        logger.exception(f"Parameter validation error for {model_id}: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"Invalid parameters: {str(e)}")
 
 
@@ -324,17 +324,17 @@ async def get_dynamic_form_params(request: Request, agent_manager=Depends(get_br
 
     logger.debug(f"RAW FORM DATA RECEIVED: {form_dict}")
 
-    # Get model_name and backend from form
-    model_name = form_dict.get("model_name")
-    backend = form_dict.get("backend")
+    # Get model_id and backend from form
+    model_id = form_dict.get("model_name")
 
-    logger.debug(f"EXTRACTED model_name: {model_name}, backend: {backend}")
+
+    logger.debug(f"EXTRACTED model_id: {model_id}")
 
     # If both are provided, validate parameters normally
-    if model_name and backend:
+    if model_id:
         try:
             # Retrieve allowed parameters from the configuration
-            allowed_params = get_allowed_params(backend, model_name)
+            allowed_params = get_allowed_params(model_id)
             logger.debug(f"ALLOWED PARAMS: {allowed_params}")
 
             # Analyze the parameter structure
@@ -360,8 +360,8 @@ async def get_dynamic_form_params(request: Request, agent_manager=Depends(get_br
                 return {
                     "params": validated_params,
                     "original_form": form_dict,
-                    "model_name": model_name,
-                    "backend": backend
+                    "model_name": model_id,
+                    "backend": ""
                 }
             except Exception as e:
                 logger.exception(f"Form parameter validation error: {str(e)}", exc_info=True)
@@ -375,8 +375,8 @@ async def get_dynamic_form_params(request: Request, agent_manager=Depends(get_br
     return {
         "params": None,
         "original_form": form_dict,
-        "model_name": model_name,
-        "backend": backend
+        "model_name": "unknown",
+        "backend": "unknown"
     }
 
 # ============================================================================

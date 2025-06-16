@@ -36,13 +36,14 @@ class InteractionContext(BaseContext):
 
     sections: List['PromptSection'] = Field(default_factory=list, description="A list of prompt sections that are used in the interaction. "
                                                                                       "This is used to store the prompt sections that are used in the interaction.")
-    external_tool_schemas: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="A dictionary of tool schemas that are used in the interaction. "
+    external_tool_schemas: List[Dict[str, Any]] = Field(default_factory=list, description="A dictionary of tool schemas that are used in the interaction. "
                                                                                            "This is used to store the schemas of the tools that are used in the interaction.")
     user_session_id: Optional[str] = Field(None, description="The user session ID associated with the interaction. If this is a sub session "
                                                                     "This is used to identify the user session that this interaction belongs to.")
 
     parent_context: Optional['InteractionContext'] = Field(None, description="The parent context of this interaction. "
                                                                                     "This is used to link interactions together in a hierarchy.")
+
     runtime_role: Optional[str] = Field("assistant", description="The role the runtime should used for events in the interaction. ")
 
     def __init__(self, **data) -> None:
@@ -71,13 +72,23 @@ class InteractionContext(BaseContext):
             _types_namespace=_types_namespace
         )
 
-    def get_tool_schemas(self, vendor: str) -> List[Dict[str, Any]]:
+    @property
+    def internal_tool_schemas(self) -> List[Dict[str, Any]]:
         """
         Returns the tool schemas for the interaction.
         """
-        return self.tool_chest.get_tool_schemas(self.chat_session.agent_config.tools, vendor)
+        return self.tool_chest.get_tool_schemas(self.chat_session.agent_config.tools, self.agent_runtime.vendor)
 
-    def get_tool_sections(self):
+    @property
+    def tool_schemas(self) -> List[Dict[str, Any]]:
+        """
+        Returns the tool schemas for the interaction.
+        This includes both internal and external tool schemas.
+        """
+        return self.internal_tool_schemas + self.external_tool_schemas
+
+    @property
+    def tool_sections(self):
         """
         Returns the tool sections for the interaction.
         """
