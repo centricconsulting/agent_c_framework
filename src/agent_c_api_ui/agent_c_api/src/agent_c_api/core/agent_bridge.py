@@ -1256,7 +1256,7 @@ class AgentBridge:
                     self.mode_manager.record_redis_success()
 
                 # Log success (debug level to avoid spam)
-                self.logger.debug(f"Published event {event.type} to Redis Stream {redis_stream_key}: {message_id}")
+                #self.logger.debug(f"Published event {event.type} to Redis Stream {redis_stream_key}: {message_id}")
 
         except Exception as e:
             # Record Redis failure with mode manager
@@ -1560,6 +1560,7 @@ class AgentBridge:
             
             # Set instance variables
             self.redis_stream_manager = RedisStreamManager
+
             self._redis_streams_enabled = True
             
             self.logger.info(f"Redis Stream manager initialized: {redis_url}")
@@ -1637,7 +1638,7 @@ class AgentBridge:
                         reason=TransitionReason.HEALTH_CHECK_FAILURE,
                         metadata={"health_status": health_status.details}
                     )
-                elif current_mode == OperationMode.HYBRID and health_status.consecutive_failures > 5:
+                elif current_mode == OperationMode.HYBRID and health_status.failures_in_window > 5:
                     await self.mode_manager.request_mode_transition(
                         target_mode=OperationMode.ASYNC_ONLY,
                         reason=TransitionReason.HEALTH_CHECK_FAILURE,

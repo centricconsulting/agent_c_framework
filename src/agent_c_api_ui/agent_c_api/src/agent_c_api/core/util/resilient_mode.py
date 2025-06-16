@@ -69,7 +69,7 @@ class ModeTransition:
 class ResilientModeConfig:
     """Configuration for resilient mode operation."""
     #changed by rohan batra
-    operation_mode: OperationMode = OperationMode.HYBRID
+    operation_mode: OperationMode = OperationMode.ASYNC_ONLY
     mode_switch_delay_seconds: float = 30.0
     health_check_interval_seconds: float = 10.0
     redis_failure_threshold: int = 3

@@ -55,10 +55,13 @@ class EventSerializer:
             All values in the returned dict are strings as required by Redis Streams
         """
         
-        # Extract core event data
+        # Get event data, ensuring we don't duplicate the 'type' field
+        event_data_dict = event.to_dict() if hasattr(event, 'to_dict') else cls._event_to_dict(event)
+        
+        # Extract core event data - store 'type' only at the top level
         event_data = {
             "type": event.type,
-            "data": event.to_dict() if hasattr(event, 'to_dict') else cls._event_to_dict(event),
+            "data": event_data_dict,  # This should no longer contain 'type'
             "metadata": getattr(event, 'metadata', {}) or {}
         }
         
@@ -143,12 +146,14 @@ class EventSerializer:
         if hasattr(event, '__dict__'):
             result = {}
             for key, value in event.__dict__.items():
-                if not key.startswith('_'):  # Skip private attributes
+                # Skip private attributes and 'type' to avoid duplication
+                if not key.startswith('_') and key != 'type':
                     result[key] = value
             return result
         else:
             # Fallback for events that don't have __dict__
-            return {"type": getattr(event, 'type', 'unknown')}
+            # Avoid returning 'type' to prevent duplication
+            return {}
     
     @staticmethod
     def _json_serializer(obj):
@@ -166,9 +171,17 @@ class EventSerializer:
         elif isinstance(obj, uuid.UUID):
             return str(obj)
         elif hasattr(obj, 'to_dict'):
-            return obj.to_dict()
+            # Use to_dict method but remove 'type' to avoid duplication
+            result = obj.to_dict()
+            if isinstance(result, dict) and 'type' in result:
+                del result['type']
+            return result
         elif hasattr(obj, '__dict__'):
-            return obj.__dict__
+            # Use __dict__ but remove 'type' to avoid duplication
+            result = obj.__dict__.copy()
+            if 'type' in result:
+                del result['type']
+            return result
         else:
             return str(obj)
     

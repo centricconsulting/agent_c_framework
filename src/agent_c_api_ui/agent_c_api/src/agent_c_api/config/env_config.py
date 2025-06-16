@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     
     # Redis Resilient Mode Configuration
     #rohan batra
-    REDIS_OPERATION_MODE: str = "REDIS_ONLY"  # REDIS_ONLY, HYBRID, ASYNC_ONLY
+    REDIS_OPERATION_MODE: str = "HYBRID"  # REDIS_ONLY, HYBRID, ASYNC_ONLY
     REDIS_ENABLE_RESILIENT_MODE: bool = True  # Enable/disable resilient mode features
     REDIS_AUTO_MODE_SWITCHING: bool = False  # Enable automatic mode switching based on health
     # end

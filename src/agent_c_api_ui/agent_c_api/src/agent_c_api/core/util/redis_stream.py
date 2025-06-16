@@ -204,7 +204,8 @@ class RedisStreamManager:
             "tool_select_delta": ToolCallDeltaEvent,  # Reusing same class
             "system_message": SystemMessageEvent,
         }
-        
+        #rohan
+        event_data.pop('type', None)
         event_class = event_classes.get(event_type)
         if not event_class:
             cls._logger.warning(f"Unknown event type: {event_type}")
