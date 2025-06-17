@@ -63,7 +63,7 @@ class ClaudeChatAgentRuntime(AgentRuntime):
             auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
 
         if not api_key and not auth_token:
-            logger.warning("Waring an attempt was made to create an Anthropic API clint without an API key or auth token.  Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN to use this runtime ")
+            logger.warning("Waring an attempt was made to create an Anthropic API client without an API key or auth token.  Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN to use this runtime ")
             return None
 
         if auth_token:
@@ -172,10 +172,9 @@ class ClaudeChatAgentRuntime(AgentRuntime):
         """
         Add system prompt and tools to the completion options.
         """
-        tool_sections = context.tool_sections
         tool_schemas = context.tool_schemas
 
-        completion_opts["system"] = await self.prompt_builder.render(context, tool_sections)
+        completion_opts["system"] = await self.prompt_builder.render(context)
 
         await self._raise_system_prompt(context, completion_opts["system"])
 

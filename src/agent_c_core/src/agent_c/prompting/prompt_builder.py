@@ -36,15 +36,12 @@ class PromptBuilder:
         """
         return set(re.findall(r'\{(.+?)\}', template))
 
-    async def render(self, context: InteractionContext, tool_sections: Optional[List[PromptSection]] = None) -> str:
+    async def render(self, context: InteractionContext) -> str:
         """
         Render the prompt sections with the provided data.
 
         Args:
             context (InteractionContext): The interaction context containing data to render the prompt.
-            sections (List[PromptSection]): A list of prompt sections to render.
-            tool_sections (Optional[List[PromptSection]]): A list of prompt sections to use in the rendering process
-                                                           instead of the active tool sections from the toolchest
         Returns:
             str: The rendered prompt as a string.
 
@@ -53,8 +50,8 @@ class PromptBuilder:
             Exception: If an unexpected error occurs during rendering.
         """
         rendered_sections: List[str] = []
-        section_lists = [context.sections, tool_sections]
-        section_list_titles= ["Core Operating Guidelines", "Additional Tool Operation Guidelines"]
+        section_lists = [context.sections, context.tool_sections]
+        section_list_titles= ["Core Operating Guidelines", "Tool Operation Guidelines"]
 
         for index, section_list in enumerate(section_lists):
             if len(section_list) == 0:

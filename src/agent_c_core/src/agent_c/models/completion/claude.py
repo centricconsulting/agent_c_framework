@@ -16,11 +16,11 @@ class ClaudeNonReasoningParams(ClaudeCommonParams):
     """
     type: Literal['claude_non_reasoning'] = Field('claude_non_reasoning', description="The type of the completion params.")
     temperature: Optional[float] = Field(None, description="The temperature to use for the interaction, do not combine with top_p")
-    max_tokens: Optional[int] = Field(None, description="The maximum number of tokensto generate in the interaction")
+    max_tokens: Optional[int] = Field(None, description="The maximum number of tokens to generate in the interaction")
 
     def __init__(self, **data: Any) -> None:
         if 'model_id' not in data:
-            data['model_id'] = os.environ.get("CLAUDE_INTERACTION_MODEL", "claude-3-4-sonnet-latest")
+            data['model_id'] = os.environ.get("CLAUDE_INTERACTION_MODEL", "claude-sonnet-4-20250514")
 
         super().__init__(**data)
 
@@ -42,7 +42,7 @@ class ClaudeReasoningParams(ClaudeCommonParams):
 
     def __init__(self, **data: Any) -> None:
         if 'model_id' not in data:
-            data['model_id'] = os.environ.get("CLAUDE_REASONING_INTERACTION_MODEL", "claude-4-sonnet-latest")
+            data['model_id'] = os.environ.get("CLAUDE_REASONING_INTERACTION_MODEL", "claude-sonnet-4-20250514")
 
         super().__init__(**data)
 
