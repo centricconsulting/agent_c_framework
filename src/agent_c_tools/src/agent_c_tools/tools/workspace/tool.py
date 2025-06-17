@@ -157,7 +157,7 @@ class WorkspaceTools(Toolset):
         if not isinstance(content, str):
             content = self._yaml_dump(content)
 
-        token_count = self._count_tokens(content, kwargs.get("tool_context"))
+        token_count = self._count_tokens(content, kwargs.get("context"))
         if token_count > max_tokens:
             return (f"ERROR: The content of this directory listing exceeds max_tokens limit of {max_tokens}. "
                     f"Content token count: {token_count}. You will need use a clone with a raised token limit.")
@@ -204,7 +204,7 @@ class WorkspaceTools(Toolset):
         unc_path = kwargs.get('path', '')
         folder_depth = kwargs.get('folder_depth', 5)
         file_depth = kwargs.get('file_depth', 3)
-        tool_context: InteractionContext = kwargs.get("tool_context")
+        tool_context: InteractionContext = kwargs.get("context")
         max_tokens = kwargs.get("max_tokens", 4000)
 
         error, workspace, relative_path = self.validate_and_get_workspace_path(unc_path)
@@ -252,7 +252,7 @@ class WorkspaceTools(Toolset):
         unc_path = kwargs.get('path', '')
         encoding = kwargs.get('encoding', 'utf-8')
         max_tokens = kwargs.get('token_limit', 25000)
-        tool_context = kwargs.get("tool_context")
+        tool_context = kwargs.get("context")
 
         error, workspace, relative_path = self.validate_and_get_workspace_path(unc_path)
         if error:
@@ -546,7 +546,7 @@ class WorkspaceTools(Toolset):
         Returns:
             str: JSON string containing the requested lines or an error message.
         """
-        tool_context = kwargs.get("tool_context")
+        tool_context = kwargs.get("context")
         unc_path = kwargs.get('path', '')
         start_line = kwargs.get('start_line')
         end_line = kwargs.get('end_line')
@@ -682,7 +682,7 @@ class WorkspaceTools(Toolset):
         unc_path = kwargs.get('path', '')
         recursive = kwargs.get('recursive', False)
         include_hidden = kwargs.get('include_hidden', False)
-        tool_context = kwargs.get("tool_context")
+        tool_context = kwargs.get("context")
         max_tokens = kwargs.get("max_tokens", 4000)
         
         if not unc_path:
@@ -758,7 +758,7 @@ class WorkspaceTools(Toolset):
             str: Output of grep command with line numbers.
         """
         unc_paths = kwargs.get('paths', [])
-        tool_context = kwargs.get("tool_context")
+        tool_context = kwargs.get("context")
         max_tokens = kwargs.get("max_tokens", 2000)
         if not isinstance(unc_paths, list):
             if isinstance(unc_paths, str):
@@ -845,7 +845,7 @@ class WorkspaceTools(Toolset):
             str: The value for the specified key as a YAML formatted string or an error message.
         """
         path = kwargs.get("path")
-        tool_context = kwargs.get("tool_context")
+        tool_context = kwargs.get("context")
         max_tokens = kwargs.get("max_tokens", 20000)
         error, workspace, key = self._parse_unc_path(path)
         if not key:
@@ -900,7 +900,7 @@ class WorkspaceTools(Toolset):
             str: The value for the specified key as a YAML formatted string or an error message.
         """
         path = kwargs.get("path")
-        tool_context = kwargs.get("tool_context")
+        tool_context = kwargs.get("context")
         max_tokens = kwargs.get("max_tokens", 20000)
         error, workspace, key = self._parse_unc_path(path)
 

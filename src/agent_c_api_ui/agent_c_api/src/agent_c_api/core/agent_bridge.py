@@ -547,7 +547,7 @@ class AgentBridge:
                     "tool_results": results
                 }
             return json.dumps(payload_obj) + "\n"
-        elif event.vendor == "anthropic":
+        elif event.vendor == "claude":
             # For Claude, send tool calls if we have calls, and tool results if we have results
             if event.tool_results:  # We have results
                 tool_results = []

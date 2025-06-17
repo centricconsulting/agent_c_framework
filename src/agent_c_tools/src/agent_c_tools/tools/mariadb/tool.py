@@ -550,7 +550,7 @@ class MariadbTools(Toolset):
             workspace_name = kwargs.get("workspace_name", "project")
             file_path = kwargs.get('file_path', f'mariadb_query_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
             force_save = kwargs.get("force_save", False)
-            tool_context: InteractionContext = kwargs.get('tool_context')
+            tool_context: InteractionContext = kwargs.get("context")
 
             if not query:
                 return "ERROR: Query cannot be empty."
@@ -682,7 +682,7 @@ class MariadbTools(Toolset):
             # Render schema as an HTML table for better readability
             schema_html = self._schema_to_html(result['schema'], table_name)
             await self._raise_render_media(
-                kwargs.get('tool_context'),
+                kwargs.get("context"),
                 content_type="text/html",
                 content=schema_html,
                 name=f"{table_name}_schema.html"

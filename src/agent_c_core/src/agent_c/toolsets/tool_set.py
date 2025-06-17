@@ -208,7 +208,7 @@ class Toolset:
         kwargs['role']  = kwargs.get('role', self.tool_role)
         if content_type == 'text/markdown' and 'content' in kwargs:
             content_type = 'text/html'
-            kwargs['content'] = markdown.markdown(kwargs['content'])
+            kwargs['content'] = md_to_html(kwargs['content'])
 
         # Create the event object
         render_media_event = RenderMediaEvent(content_type=content_type,
@@ -247,7 +247,7 @@ class Toolset:
         Returns:
             Dict[str, Toolset]: A dictionary with the toolset name as the key and the Toolset as the value.
         """
-        return {self.name: self}
+        return {self.name: self, "schemas": self.tool_schemas, "doc": self.__doc__}
 
     @property
     def tool_schemas(self) -> List[Dict[str, Any]]:
@@ -256,15 +256,6 @@ class Toolset:
 
         Returns:
             List[Dict[str, Any]]: A list of tool schemas.
-        """
-        return self._tool_schemas()
-
-    def _tool_schemas(self) -> List[Dict[str, Any]]:
-        """
-        Generate OpenAI-compatible JSON schemas based on method metadata.
-
-        Returns:
-            List[Dict[str, Any]]: A list of JSON schemas for the registered methods in the Toolset.
         """
         if len(self._schemas) > 0:
             return self._schemas

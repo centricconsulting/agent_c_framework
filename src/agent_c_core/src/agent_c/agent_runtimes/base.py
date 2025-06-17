@@ -40,6 +40,7 @@ class AgentRuntime:
         self.semaphore: Semaphore = asyncio.Semaphore(self.concurrency_limit)
         self.prompt_builder: PromptBuilder = PromptBuilder()
         self.logger = LoggingManager(self.__class__.__name__).get_logger()
+        self.background_tasks = set()
 
     @classmethod
     def client(cls, **opts):
@@ -88,7 +89,10 @@ class AgentRuntime:
         try:
             # TODO: Try asyncio tasks to allow for fire and forget
             event.session_id = context.chat_session.user_session_id
-            await context.streaming_callback(event)
+            task = asyncio.create_task(context.streaming_callback(event))
+            self.background_tasks.add(task)
+            task.add_done_callback(lambda t: self.background_tasks.discard(t))
+            #await context.streaming_callback(event)
         except Exception as e:
             self.logger.exception(
                 f"Streaming callback error for event: {e}. Event Type: {getattr(event, 'type', 'unknown')}")
@@ -153,7 +157,8 @@ class AgentRuntime:
     async def _raise_tool_call_end(self, context: InteractionContext, tool_calls, tool_results):
         await self._raise_event(context, ToolCallEvent(active=False,
                                                        tool_calls=tool_calls,
-                                                       tool_results=tool_results))
+                                                       tool_results=tool_results,
+                                                       vendor=self.vendor))
 
     async def _raise_interaction_start(self, context: InteractionContext):
         await self._raise_event(context, InteractionEvent(started=True,

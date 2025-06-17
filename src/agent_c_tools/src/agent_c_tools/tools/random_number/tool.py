@@ -65,7 +65,7 @@ class RandomNumberTools(Toolset):
             number = random.randint(min_level, max_ceiling)
             self.logger.debug(f"Generated random number between {min_level} and {max_ceiling}: {number}")
             await self._render_media_markdown(
-                kwargs.get('tool_context'),
+                kwargs.get("context"),
                 "### Your number, chosen by a totally fair and legitimate dice roll you can't see, is:\n\n# {number}\n\n",
             )
             return f"number ({number}) generated successfully"

@@ -745,7 +745,7 @@ class MathTools(Toolset):
             
             # Return the image by raising a render media event
             await self._raise_render_media(
-                kwargs.get('tool_context'),
+                kwargs.get("context"),
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='plot_function',
                 content_type="image/png",
@@ -859,7 +859,7 @@ class MathTools(Toolset):
             
             # Return the image by raising a render media event
             await self._raise_render_media(
-                kwargs.get('tool_context'),
+                kwargs.get("context"),
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='plot_multiple_functions',
                 content_type="image/png",

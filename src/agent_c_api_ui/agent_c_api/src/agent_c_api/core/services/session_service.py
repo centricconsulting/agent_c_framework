@@ -1,10 +1,10 @@
 import time
-from typing import Dict, List, Any, Optional, Union
 
-import structlog
+from typing import Dict, List, Any, Optional
+
 from agent_c.models.chat_history.chat_session import ChatSession
-from agent_c.models.chat_history.chat_memory import ChatMemory
-from ..repositories.session_repository import SessionRepository
+from agent_c_api.core.util.logging_utils import LoggingManager
+from agent_c_api.core.repositories.session_repository import SessionRepository
 
 
 class SessionService:
@@ -20,7 +20,7 @@ class SessionService:
             session_repository (SessionRepository): Session repository instance
         """
         self.session_repository = session_repository
-        self.logger = structlog.get_logger(__name__)
+        self.logger = LoggingManager(self.__class__.__name__).get_logger()
         
         self.logger.info(
             "session_service_initialized",

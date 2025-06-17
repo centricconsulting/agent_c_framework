@@ -40,13 +40,13 @@ class MermaidChartTools(Toolset):
         self.tool_cache.set(cache_key, rendered_graph.svg_response.text)
 
         if rendered_graph.svg_graph.svg_response.text is None:
-            await self._render_media_markdown( kwargs.get('tool_context'), "rendered_graph.svg_response.text` is None, therefore, graph won't display.",
+            await self._render_media_markdown( kwargs.get("context"), "rendered_graph.svg_response.text` is None, therefore, graph won't display.",
                                               "render_graph")
 
             return "Rendered_graph.svg_response.text` is None, therefore, graph won't display."
 
         else:
-            await self._raise_render_media(kwargs.get('tool_context'),
+            await self._raise_render_media(kwargs.get("context"),
                                            content_type="image/svg+xml", url=svg_link,
                                            name=svg_name, content=rendered_graph.svg_response.text)
 

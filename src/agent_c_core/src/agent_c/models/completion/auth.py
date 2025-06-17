@@ -1,15 +1,15 @@
+from pydantic import Field
 from typing import Literal, Annotated, Union
 
-from pydantic import Field
-
-from .azure_auth_info import AzureAuthInfo
-from .open_ai_auth_info import OpenAiAuthInfo
-from  .bedrock_auth_info import BedrockAuthInfo
-from .. import BaseModel
+from agent_c.models.base import BaseModel
+from agent_c.models.completion.azure_auth_info import AzureAuthInfo
+from agent_c.models.completion.open_ai_auth_info import OpenAiAuthInfo
+from agent_c.models.completion.bedrock_auth_info import BedrockAuthInfo
+from agent_c.models.completion.gemini_auth_info import GeminiAuthInfo
 
 
 class APIkeyAuthInfo(BaseModel):
-    type: Literal['api_key'] = Field('basic', description="The type of the auth info, must be basic")
+    type: Literal['api_key'] = Field('api_key', description="The type of the auth info")
     api_key: str = Field(..., description="The API key to use for the interaction")
 
 AuthInfo = Annotated[
@@ -18,6 +18,7 @@ AuthInfo = Annotated[
         AzureAuthInfo,
         OpenAiAuthInfo,
         BedrockAuthInfo,
+        GeminiAuthInfo
     ],
     Field(discriminator='type')
 ]

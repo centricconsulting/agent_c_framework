@@ -102,7 +102,7 @@ class OfficeToMarkdownTools(Toolset):
             output_workspace = kwargs.get('output_workspace', input_workspace)
             input_path = kwargs.get('input_path')
             output_path = kwargs.get('output_path')
-            tool_context: InteractionContext =kwargs.get('tool_context')
+            tool_context: InteractionContext =kwargs.get("context")
             client_wants_cancel: threading.Event = tool_context.client_wants_cancel
 
 

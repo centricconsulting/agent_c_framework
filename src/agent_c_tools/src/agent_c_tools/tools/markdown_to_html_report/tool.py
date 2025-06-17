@@ -245,7 +245,7 @@ class MarkdownToHtmlReportTools(Toolset):
             try:
                 html_content = await self.media_helper.create_result_html(output_info)
                 await self._raise_render_media(
-                    kwargs.get('tool_context'),
+                    kwargs.get("context"),
                     sent_by_class=self.__class__.__name__,
                     sent_by_function='generate_md_viewer',
                     content_type="text/html",
@@ -592,7 +592,7 @@ class MarkdownToHtmlReportTools(Toolset):
             try:
                 html_content = await self.media_helper.create_result_html(output_info)
                 await self._raise_render_media(
-                    kwargs.get('tool_context'),
+                    kwargs.get("context"),
                     sent_by_class=self.__class__.__name__,
                     sent_by_function='markdown_to_docx',
                     content_type="text/html",

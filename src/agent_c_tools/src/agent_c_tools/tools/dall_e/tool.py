@@ -63,7 +63,7 @@ class DallETools(Toolset):
         }
     )
     async def create_image(self, **kwargs):
-        tool_context: InteractionContext = kwargs.get('tool_context')
+        tool_context: InteractionContext = kwargs.get("context")
         session_id = tool_context.user_session_id
 
         prompt = kwargs.get('prompt')

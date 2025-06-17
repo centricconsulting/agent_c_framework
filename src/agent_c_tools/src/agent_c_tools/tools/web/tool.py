@@ -156,7 +156,7 @@ class WebTools(Toolset):
         raw_output: bool = kwargs.get('raw_output', False)
         max_tokens: int = kwargs.get('max_tokens', 20000)
         default_expire: int = kwargs.get("expire_secs", 3600)
-        tool_context: InteractionContext = kwargs.get('tool_context')
+        tool_context: InteractionContext = kwargs.get("context")
         additional_headers: Dict[str, str] = kwargs.get('additional_headers', {})
         workspace: Optional[BaseWorkspace] = None
 

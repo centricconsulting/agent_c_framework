@@ -307,7 +307,7 @@ class DynamicsTools(Toolset):
                 sent_by_function='get_entities',
                 content_type="text/html",
                 content=html_content,
-                tool_context=kwargs.get('tool_context'),
+                tool_context=kwargs.get("context"),
             )
 
             if entity_id is None:

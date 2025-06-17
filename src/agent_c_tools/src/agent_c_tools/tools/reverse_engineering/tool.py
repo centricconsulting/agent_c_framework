@@ -62,7 +62,7 @@ class ReverseEngineeringTools(AgentAssistToolBase):
         }
     )
     async def analyze_source(self, **kwargs) -> str:
-        tool_context: Dict[str, Any] = kwargs['tool_context']
+        tool_context: Dict[str, Any] = kwargs["context"]
         client_wants_cancel: threading.Event = tool_context["client_wants_cancel"]
         glob: str = kwargs.get('glob')
         batch_size: int = kwargs.get('batch_size', 2)
@@ -99,7 +99,7 @@ class ReverseEngineeringTools(AgentAssistToolBase):
         }
     )
     async def analyze_tree(self, **kwargs) -> str:
-        tool_context: Dict[str, Any] = kwargs['tool_context']
+        tool_context: Dict[str, Any] = kwargs["context"]
         client_wants_cancel: threading.Event = tool_context["client_wants_cancel"]
         start_path: str = kwargs.get('start_path')
         batch_size: int = kwargs.get('batch_size', 2)
@@ -133,7 +133,7 @@ class ReverseEngineeringTools(AgentAssistToolBase):
         }
     )
     async def query_analysis(self, **kwargs) -> str:
-        tool_context: Dict[str, Any] = kwargs['tool_context']
+        tool_context: Dict[str, Any] = kwargs["context"]
         client_wants_cancel: threading.Event = tool_context["client_wants_cancel"]
         request: str = kwargs.get('request')
         workspace_name: str = kwargs.get('workspace')

@@ -92,7 +92,7 @@ default_markdown_extensions: List[str] = ['nl2br', # Will cause newlines to be t
                                                                         # specified content.
                                           'pymdownx.blocks.definition', # Adds the ability to create definition lists in Markdown documents.
                                           'pymdownx.blocks.html', # The HTML block allows a user to wrap Markdown in arbitrary HTML elements.
-                                          'pymdownx.blocks.tabbed', # creates collapsible elements that hide their content.
+                                          'pymdownx.blocks.tab',    # creates collapsible elements that hide their content.
                                                                     # It uses the HTML5 <details><summary> tags to accomplish this.
                                                                     # It supports nesting and you can also force the default state to be open
                                           'toc', # Generates a Table of Contents from a Markdown document and adds it into the resulting HTML document.

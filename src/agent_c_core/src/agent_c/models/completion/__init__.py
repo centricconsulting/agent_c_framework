@@ -1,15 +1,11 @@
-from typing import Annotated, Union
 from pydantic import Field
+from typing import Annotated, Union, TypeAlias, Optional, Literal
 
 from agent_c.models.completion.common import CommonCompletionParams
-from agent_c.models.completion.claude import (
-    ClaudeNonReasoningParams,
-    ClaudeReasoningParams,
-)
-from agent_c.models.completion.gpt import (
-    GPTNonReasoningCompletionParams,
-    GPTReasoningCompletionParams,
-)
+from agent_c.models.completion.claude import ClaudeNonReasoningParams, ClaudeReasoningParams
+from agent_c.models.completion.gpt import GPTNonReasoningCompletionParams, GPTReasoningCompletionParams
+
+ReasoningEffort: TypeAlias = Optional[Literal["low", "medium", "high"]]
 
 CompletionParams = Annotated[
     Union[
@@ -20,3 +16,9 @@ CompletionParams = Annotated[
     ],
     Field(discriminator='type')
 ]
+
+
+__all__ = ["ReasoningEffort"]
+
+
+

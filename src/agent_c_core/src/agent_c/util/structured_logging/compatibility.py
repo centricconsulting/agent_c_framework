@@ -34,26 +34,8 @@ class StructuredLoggingAdapter:
         self.logger_name = logger_name
         self._logger: Optional[logging.Logger] = None
         self._structured_logger: Optional[Any] = None
-        self._use_structured = self._should_use_structured_logging()
-        
-    def _should_use_structured_logging(self) -> bool:
-        """
-        Determine if structured logging should be used based on feature flags.
-        
-        Returns:
-            bool: True if structured logging should be used
-        """
-        # Global feature flag
-        if not os.getenv('USE_STRUCTURED_LOGGING', 'false').lower() == 'true':
-            return False
-            
-        # Module-specific control
-        module_override = os.getenv('STRUCTURED_LOGGING_MODULE_NAME')
-        if module_override:
-            return self.logger_name == module_override or self.logger_name.startswith(module_override + '.')
-            
-        return True
-    
+        self._use_structured = True
+
     def _get_logger(self) -> logging.Logger:
         """
         Get the appropriate logger (structured or traditional).

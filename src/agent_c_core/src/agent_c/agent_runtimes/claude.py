@@ -74,12 +74,15 @@ class ClaudeChatAgentRuntime(AgentRuntime):
     @classmethod
     def can_create(cls, context = None) -> bool:
         server_key = os.environ.get("ANTHROPIC_API_KEY")
+        server_auth_token = os.environ.get('ANTHROPIC_AUTH_TOKEN')
         if context and hasattr(context, 'chat_session'):
             context_key = context.chat_session.agent_config.agent_params.auth.api_key if context else None
+            context_auth_token = context.chat_session.agent_config.agent_params.auth.api_key if context  else None
         else:
             context_key = None
+            context_auth_token = None
 
-        if not server_key and not context_key:
+        if not server_key and not context_key and not server_auth_token and not context_auth_token:
             return False
 
         return True

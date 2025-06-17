@@ -41,7 +41,7 @@ class AgentAssistTools(AgentAssistToolBase):
     async def oneshot(self, **kwargs) -> str:
         request: str = ("# Agent Assist Tool Notice\nThe following oneshot request is from another agent. "
                         f"The agent is delegating a task for YOU to perform.\n\n---\n\n{kwargs.get('request')}\n")
-        tool_context: Dict[str, Any] = kwargs.get('tool_context')
+        tool_context: Dict[str, Any] = kwargs.get("context")
         process_context: Optional[str] = kwargs.get('process_context')
         try:
             agent_config = self.agent_loader.catalog[kwargs.get('agent_key')]
@@ -107,7 +107,7 @@ class AgentAssistTools(AgentAssistToolBase):
     async def chat(self, **kwargs) -> str:
         message: str = ("# Agent Assist Tool Notice\nThe following chat message is from another agent. "
                         f"The agent is delegating to YOU for your expertise.\n\n---\n\n{kwargs.get('message')}\n")
-        tool_context: Dict[str, Any] = kwargs.get('tool_context')
+        tool_context: Dict[str, Any] = kwargs.get("context")
         agent_session_id: Optional[str] = kwargs.get('session_id', None)
         process_context: Optional[str] = kwargs.get('process_context')
 
