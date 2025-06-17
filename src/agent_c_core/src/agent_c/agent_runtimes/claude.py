@@ -558,7 +558,7 @@ class ClaudeChatAgentRuntime(AgentRuntime):
 
             for idx, file in enumerate( context.inputs.files):
                 extracted_text = None
-                if self.allow_betas:
+                if context.chat_session.agent_config.agent_params.allow_betas:
                     try:
                         file_upload = await self.client.beta.files.upload(file=(file.file_name, base64.b64decode(file.content), file.content_type))
                         contents.append({"type": "document", "source": {"type": "file","file_id": file_upload.id}})

@@ -65,8 +65,7 @@ class GPTChatAgentRuntime(AgentRuntime):
         """
         return "openai"
 
-    def _generate_multi_modal_user_message(self, user_input: str, images: List[ImageInput],
-                                           audio_clips: List[AudioInput], files: List[FileInput] = None) -> Union[
+    def _generate_multi_modal_user_message(self, context: InteractionContext) -> Union[
         List[dict[str, Any]], None]:
         """
         Generates a multimodal message containing text, images, audio, and file content.
@@ -74,13 +73,11 @@ class GPTChatAgentRuntime(AgentRuntime):
         self.logger.debug("Starting _generate_multi_modal_user_message")
         contents = []
 
-        # Add text content if available
-        if user_input is not None and len(user_input) > 0:
-            contents.append({"type": "text", "text": user_input})
+        if context.inputs.text.content is not None and len(context.inputs.text.conten) > 0:
+            contents.append({"type": "text", "text": context.inputs.text.conten})
 
-        # Add images
-        for image in images:
-            url: Union[str, None] = image.url
+        for image in context.input.images:
+            url: Optional[str] = image.url
 
             if url is None and image.content is not None:
                 url = f"data:{image.content_type};base64,{image.content}"
@@ -88,28 +85,26 @@ class GPTChatAgentRuntime(AgentRuntime):
             if url is not None:
                 contents.append({"type": "image_url", "image_url": {"url": url}})
 
-        # Add audio clips
-        for clip in audio_clips:
+        for clip in context.input.audio_clips:
             contents.append({"type": "input_audio", "input_audio": {"data": clip.content, 'format': clip.format}})
 
-        # Add file content as additional text blocks
-        if files:
-            for file in files:
-                text_content = file.get_text_content()
 
-                if text_content:
-                    file_name = file.file_name or "unknown file"
-                    contents.append({
-                        "type": "text",
-                        "text": f"Content from file {file_name}:\n{text_content}"
-                    })
-                else:
-                    # If no text content available, at least mention the file
-                    file_name = file.file_name or "unknown file"
-                    contents.append({
-                        "type": "text",
-                        "text": f"[File uploaded by user: {file_name}. But preprocessing failed to extract any text]"
-                    })
+        for file in context.input.files:
+            text_content = file.get_text_content()
+
+            if text_content:
+                file_name = file.file_name or "unknown file"
+                contents.append({
+                    "type": "text",
+                    "text": f"Content from file {file_name}:\n{text_content}"
+                })
+            else:
+                # If no text content available, at least mention the file
+                file_name = file.file_name or "unknown file"
+                contents.append({
+                    "type": "text",
+                    "text": f"[File uploaded by user: {file_name}. But preprocessing failed to extract any text]"
+                })
 
         return [{"role": "user", "content": contents}]
 
@@ -199,6 +194,7 @@ class GPTChatAgentRuntime(AgentRuntime):
 
                     messages = result
                     completion_opts['messages'] = messages
+                    completion_opts = await self.__add_system_prompt_and_tools(context, completion_opts)
 
                 except openai.BadRequestError as e:
                     self.logger.exception(f"Invalid request occurred: {e}", exc_info=True)
@@ -208,7 +204,6 @@ class GPTChatAgentRuntime(AgentRuntime):
                     return messages
 
                 except (openai.APITimeoutError, openai.InternalServerError) as e:
-                    # Handle retryable errors with exponential backoff
                     delay = await self._handle_retryable_error(context, e, delay)
                     if delay > self.max_delay:
                         await self._raise_interaction_end(context)
@@ -228,18 +223,12 @@ class GPTChatAgentRuntime(AgentRuntime):
         Handle the OpenAI stream processing.
         Similar to Claude's _handle_claude_stream but adapted for OpenAI's streaming format.
         """
-        # Signal start of completion
         await self._raise_completion_start(context, completion_opts)
-
-        # Initialize state
         state = self._init_stream_state()
-
-        # Start API call
         async with await self.client.chat.completions.create(**completion_opts) as stream:
 
             try:
                 async for chunk in stream:
-                    # Process each chunk through appropriate handler
                     await self._process_stream_chunk(chunk, state, context, messages)
 
                     if context.client_wants_cancel.is_set():
@@ -248,7 +237,6 @@ class GPTChatAgentRuntime(AgentRuntime):
 
                     # If we've completed processing and it's not a tool call, we're done
                     if state['complete'] and not state['tool_calls_processed']:
-                        # Add the collected content to messages and finalize
                         output_text = "".join(state["collected_messages"]).strip()
                         if len(output_text):
                             messages.append({"role": "assistant", "content": output_text})
@@ -256,7 +244,6 @@ class GPTChatAgentRuntime(AgentRuntime):
                         if state["current_audio_id"] is not None:
                             messages.append({"role": "assistant", "audio": {"id": state["current_audio_id"]}})
 
-                        # Finalize events
                         await self._raise_history_event(context, messages)
                         await self._raise_interaction_end(context)
                         return messages, state
