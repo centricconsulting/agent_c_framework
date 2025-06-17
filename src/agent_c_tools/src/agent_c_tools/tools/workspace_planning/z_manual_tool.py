@@ -179,14 +179,12 @@ def generate_html_report(yaml_file_path: str, plan_id: Optional[str] = None) -> 
     # Determine which plan to export
     selected_plan_id = get_plan_id_from_data(data, plan_id)
     print(f"Using plan ID: {selected_plan_id}")
-    
-    # Convert back to YAML string for the converter
-    yaml_content = yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
+
     
     # Generate HTML using the converter
     print("Converting to HTML...")
     converter = PlanHTMLConverter()
-    html_content = converter.convert_plan_to_html(yaml_content, selected_plan_id)
+    html_content = converter.convert_plan_to_html(data)
     
     # Generate output path
     output_path = generate_output_path(yaml_file_path, selected_plan_id)

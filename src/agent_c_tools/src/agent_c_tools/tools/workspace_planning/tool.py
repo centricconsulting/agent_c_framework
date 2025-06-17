@@ -666,18 +666,11 @@ class WorkspacePlanningTools(Toolset):
                 output_path = ensure_file_extension(output_path, report_format)
 
             if report_format == 'md':
-                # Generate the markdown report
                 report_content = self._generate_plan_markdown(plan, path.source, plan_id)
+                await self._render_media_markdown(kwargs.get('context'), report_content, 'export_plan_report')
             elif report_format == 'html':
-                yaml_data = {
-                    '_plans': {
-                        plan_id: plan.model_dump()
-                    },
-                    'current_plan': plan_id
-                }
-                yaml_content = yaml.dump(yaml_data, default_flow_style=False, sort_keys=False, allow_unicode=True)
                 converter = PlanHTMLConverter()
-                report_content = converter.convert_plan_to_html(yaml_content, plan_id)
+                report_content = converter.convert_plan_to_html(plan)
             else:
                 return f"Error: Unsupported format '{report_format}'. Use 'md' or 'html'."
 
@@ -692,17 +685,18 @@ class WorkspacePlanningTools(Toolset):
 
             file_system_path = os_file_system_path(self.workspace_tool, output_path)
             await self._raise_render_media(
-                kwargs.get('tool_context'),
+                kwargs.get('context'),
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='export_plan_report',
                 content_type="text/html",
-                content=f"<p>Interactive HTML plan report created: <a href='file://{file_system_path}' target='_blank'>{output_path}</a></p>"
+                content=f"<p>Plan report created: <a href='file://{file_system_path}' target='_blank'>{output_path}</a></p>"
             )
 
             return f"Plan report exported successfully to: {output_path}"
 
 
         except Exception as e:
+            self.logger.exception("Error exporting plan report", exc_info=e)
             return f"Error exporting plan report: {str(e)}"
 
     def _generate_plan_markdown(self, plan: PlanModel, workspace_name: str, plan_id: str) -> str:

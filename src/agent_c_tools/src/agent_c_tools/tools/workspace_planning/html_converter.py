@@ -14,6 +14,8 @@ import re
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
+from agent_c_tools.tools.workspace_planning import PlanModel
+
 
 class PlanHTMLConverter:
     """Converts workspace planning data to interactive HTML reports."""
@@ -676,25 +678,9 @@ class PlanHTMLConverter:
 
         return '\n'.join([f'<span class="meta-item">{item}</span>' for item in meta_items])
 
-    def convert_plan_to_html(self, yaml_content: str, plan_id: str = None) -> str:
+    def convert_plan_to_html(self, plan: PlanModel) -> str:
         """Convert workspace planning YAML content to HTML"""
-        # Parse YAML
-        data = self.parse_workspace_yaml(yaml_content)
-
-        # Extract plan data
-        plans = data.get('_plans', {})
-        if not plans:
-            raise ValueError("No plans found in YAML content")
-
-        # Get the specified plan or current plan or first plan
-        if plan_id and plan_id in plans:
-            plan_data = plans[plan_id]
-        elif data.get('current_plan') and data.get('current_plan') in plans:
-            plan_data = plans[data.get('current_plan')]
-        else:
-            plan_data = list(plans.values())[0]
-
-        # Extract tasks
+        plan_data = plan.model_dump()
         tasks = plan_data.get('tasks', {})
         if not tasks:
             raise ValueError("No tasks found in plan")

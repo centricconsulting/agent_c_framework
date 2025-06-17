@@ -3,13 +3,15 @@ from datetime import datetime
 from uuid import uuid4
 from pydantic import BaseModel, Field, field_serializer
 
+from agent_c.util import MnemonicSlugs
+
 # Task Priority type
 PriorityType = Literal["low", "medium", "high"]
 
 
 class TaskModel(BaseModel):
     """Model for a task or subtask within a plan."""
-    id: str = Field(default_factory=lambda: str(uuid4()))
+    id: str = Field(default_factory=lambda: MnemonicSlugs.generate_slug(2))
     title: str
     description: str = ""
     priority: PriorityType = "medium"
@@ -31,7 +33,7 @@ class TaskModel(BaseModel):
 
 class LessonLearnedModel(BaseModel):
     """Model for a lesson learned within a plan."""
-    id: str = Field(default_factory=lambda: str(uuid4()))
+    id: str = Field(default_factory=lambda: MnemonicSlugs.generate_slug(1))
     lesson: str
     learned_task_id: str
     created_at: datetime = Field(default_factory=datetime.now)
@@ -43,7 +45,7 @@ class LessonLearnedModel(BaseModel):
 
 class PlanModel(BaseModel):
     """Model for a plan that contains tasks and lessons learned."""
-    id: str = Field(default_factory=lambda: str(uuid4()))
+    id: str = Field(default_factory=lambda: MnemonicSlugs.generate_slug(3))
     title: str
     description: str = ""
     tasks: Dict[str, TaskModel] = Field(default_factory=dict)
