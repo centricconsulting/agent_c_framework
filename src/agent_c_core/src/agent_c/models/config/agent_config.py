@@ -2,31 +2,27 @@ from pydantic import Field
 from typing import Optional, List, Any, Union, Literal
 
 from agent_c.config.model_config_loader import ModelConfigurationLoader
-from agent_c.models import ObservableModel, ObservableField
+from agent_c.models.async_observable import AsyncObservableModel, AsyncObservableField
 from agent_c.models.completion import CompletionParams
-from agent_c.util import to_snake_case
 
 
-class BaseAgentConfiguration(ObservableModel):
+class BaseAgentConfiguration(AsyncObservableModel):
     """Base configuration with common fields across all agent configuration versions"""
     name: str = Field(..., description="Name of the agent")
     key: str = Field(..., description="Key for the agent configuration, used for identification")
     agent_description: Optional[str] = Field(None, description="A description of the agent's purpose and capabilities")
     tools: List[str] = Field(default_factory=list, description="List of enabled toolset names the agent can use")
-    agent_params: Optional[CompletionParams] = ObservableField(None, description="Parameters for the interaction with the agent")
+    agent_params: Optional[CompletionParams] = AsyncObservableField(None, description="Parameters for the interaction with the agent")
     prompt_metadata: Optional[dict[str, Any]] = Field(None, description="Metadata for the prompt")
     persona: str = Field(..., description="Persona prompt defining the agent's behavior")
     uid: Optional[str] = Field(None, description="Unique identifier for the configuration")
 
 
     def __init__(self, **data) -> None:
-        if 'key' not in data:
-            data['key'] = to_snake_case(data['name'])
-
         super().__init__(**data)
         model_id = self.agent_params.model_id
         self._current_model_vendor: str = ModelConfigurationLoader.instance().model_id_map[model_id].vendor
-        self.agent_params.add_observer("model_id", self.on_agent_parms_model_id_change)
+        self.agent_params.add_observer( self.on_agent_parms_model_id_change, "model_id")
 
 
     def on_agent_parms_model_id_change(self, old_value: str, new_value: str) -> None:

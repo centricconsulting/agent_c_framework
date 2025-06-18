@@ -1,9 +1,7 @@
-import logging
-
 from contextlib import contextmanager
 from typing import Any, Callable, Generator
 
-from pydantic import Field, ConfigDict
+from pydantic import Field
 from observable import Observable
 
 from agent_c.models.base import BaseModel
