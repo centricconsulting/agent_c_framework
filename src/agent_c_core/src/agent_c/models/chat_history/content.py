@@ -1,4 +1,4 @@
-from typing import Literal, Union, List
+from typing import Literal, Union
 
 from agent_c.models import BaseModel
 from agent_c.util import TokenCounter

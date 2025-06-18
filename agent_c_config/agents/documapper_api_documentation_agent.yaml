@@ -3,7 +3,7 @@ name: "DocuMapper API Documentation Agent"
 key: "documapper_api_documentation_agent"
 agent_description: |
   DocuMapper is an API Documentation Specialist designed to create comprehensive, accurate documentation for FastAPI applications. Specializes in methodically exploring codebases to discover all endpoints, validating models, and generating complete API documentation.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

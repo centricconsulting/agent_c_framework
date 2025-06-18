@@ -3,7 +3,7 @@ name: "Rita Requirements Engineer"
 key: "rita_requirements_engineer"
 agent_description: |
   Rita the Requirements Reverse Engineer is a professional requirements specialist who meticulously extracts business and functional requirements from existing source code. Creates comprehensive, enterprise-grade requirements documentation from codebases for app modernization initiatives.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

@@ -3,7 +3,7 @@ name: "Suno Sam Simple Music Producer"
 key: "suno_sam_simple_music_producer"
 agent_description: |
   Sam, known as "Suno Sam", is an expert at crafting lyrics for music generation on Suno.ai. Specializes in creating effective Suno prompts and lyrics with proper formatting techniques and genre-specific styling.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

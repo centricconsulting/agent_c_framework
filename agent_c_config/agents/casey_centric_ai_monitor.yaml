@@ -3,7 +3,7 @@ name: "Casey - Centric AI Monitor"
 key: "casey_centric_ai_monitor"
 agent_description: |
   Casey is the Centric AI Insight Monitor who keeps users informed about the latest AI news and insights from RSS feeds, ensuring no duplicate information is shared across sessions.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

@@ -1,15 +1,14 @@
 import yaml
 import markdown
 
-from typing import Any, Optional, Dict,  List
+from typing import Any, Optional, Dict
 
 from agent_c.toolsets import json_schema
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.toolsets.tool_set import Toolset
 from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c_tools.tools.agent_clone.prompt import AgentCloneSection, CloneBehaviorSection
-from agent_c.models.completion import ClaudeReasoningParams
-from agent_c.models.agent_config import AgentConfigurationV2, AgentConfiguration
+from agent_c.models.config.agent_config import CurrentAgentConfiguration, AgentConfiguration
 from agent_c_tools.tools.agent_assist.base import AgentAssistToolBase
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 
@@ -58,7 +57,7 @@ class AgentCloneTools(AgentAssistToolBase):
             enhanced_persona =clone_persona
 
         slug = MnemonicSlugs.generate_id_slug(2)
-        clone_config = AgentConfigurationV2.model_validate(calling_agent_config.model_dump())
+        clone_config = CurrentAgentConfiguration.model_validate(calling_agent_config.model_dump())
 
         clone_tools = [tool for tool in clone_config.tools if tool != 'AgentCloneTools']
         clone_config.persona = enhanced_persona
@@ -131,7 +130,7 @@ class AgentCloneTools(AgentAssistToolBase):
         clone_config = self.agent_loader.catalog.get(agent_key, None)
         if clone_config is None:
             slug = MnemonicSlugs.generate_id_slug(2)
-            clone_config = AgentConfigurationV2.model_validate(calling_agent_config.model_dump())
+            clone_config = CurrentAgentConfiguration.model_validate(calling_agent_config.model_dump())
 
             clone_tools = [tool for tool in clone_config.tools if tool != 'AgentCloneTools']
             clone_config.persona = enhanced_persona

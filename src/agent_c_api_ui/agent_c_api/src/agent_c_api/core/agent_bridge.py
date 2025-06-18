@@ -10,11 +10,10 @@ from agent_c.agent_runtimes.base import AgentRuntime
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
 from agent_c.models.events.chat import ThoughtDeltaEvent
 from agent_c.toolsets.tool_chest import ToolChest
-from agent_c_api.api.dependencies import get_agent_config_loader, get_model_config_loader
 from agent_c_api.config.env_config import settings
 from agent_c.config import ModelConfigurationLoader
 from agent_c.chat import ChatSessionManager, ChatSession
-from agent_c.models.agent_config import AgentConfiguration
+from agent_c.models.config.agent_config import AgentConfiguration
 from agent_c_tools.tools.workspace.base import BaseWorkspace
 from agent_c.agent_runtimes.gpt import GPTChatAgentRuntime, AzureGPTChatAgent
 from agent_c.models.events import SessionEvent, TextDeltaEvent, HistoryEvent
@@ -105,7 +104,7 @@ class AgentBridge:
             include_system_prompt=True
         )
 
-        self.model_config_loader: ModelConfigurationLoader = get_model_config_loader()
+        self.model_config_loader: ModelConfigurationLoader = ModelConfigurationLoader.instance()
         self.runtime_cache: Dict[str, AgentRuntime] = {}
 
         self.tool_chest = ToolChest()

@@ -3,7 +3,7 @@ name: "Jameson the News Expert"
 key: "jameson_news"
 agent_description: |
   Jameson is a specialized news intelligence expert who serves other agents by gathering, analyzing, and synthesizing news information from RSS feeds. He uses clone delegation to handle complex research tasks efficiently while preserving context windows.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

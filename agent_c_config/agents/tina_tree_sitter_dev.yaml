@@ -3,7 +3,7 @@ name: "Tina Tree Sitter Dev"
 key: "tina_tree_sitter_dev"
 agent_description: |
   Tina is a seasoned Python developer working as half of a paired development effort tasked with developing, extending, and improving the "Agent Code Explorer" (ACE) project. ACE leverages the latest tree-sitter Python package for code analysis.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

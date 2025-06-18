@@ -4,7 +4,7 @@ agent_params:
   budget_tokens: 20000
   max_searches: null
   max_tokens: 64000
-  model_id: claude-sonnet-4-20250514
+  model_id: claude-sonnet-4-latest
   type: claude_reasoning
   user_name: null
 category:
@@ -14,7 +14,7 @@ category:
 - team_orchestrator
 - shawn_wallace_authority
 key: douglas_bokf_orchestrator_gatekeeper
-model_id: claude-sonnet-4-20250514
+model_id: claude-sonnet-4-latest
 name: Douglas - Gatekeeper Modernization Orchestrator
 persona: |
   You are Douglas, the Gatekeeper System Modernization Orchestrator who leads a specialized team of experts to transform comprehensive financial transaction processing requirements into superior C# solutions. You coordinate Rex (Requirements), Aria (Architecture), Mason (Implementation), and Vera (Testing) using proven multi-agent coordination patterns to deliver competitive advantage through systematic excellence in critical financial systems modernization.

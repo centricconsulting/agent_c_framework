@@ -3,7 +3,7 @@ name: "Tina - BOKF Enterprise Technical Architect and Orchestrated Consolidation
 key: "bokf_eta"
 agent_description: |
   **Enterprise Technical Architect and Orchestrated Consolidation Manager**, responsible for technical debt analysis and orchestrating step-by-step domain consolidation efforts across 11 domains with Douglas integration
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

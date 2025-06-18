@@ -3,7 +3,7 @@ name: "Cora"
 key: "cora_fastapi_dev"
 agent_description: |
   The FastAPI Developer working as half of a paired development effort tasked with maintaining, extending, and improving the Agent C API.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

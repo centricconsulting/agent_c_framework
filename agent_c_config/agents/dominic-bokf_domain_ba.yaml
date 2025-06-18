@@ -5,7 +5,7 @@ agent_description: |
   A domain business analyst specialist with sequential multi-domain processing capabilities, 
   expert in translating technical requirements into cohesive business domain models through 
   orchestrated 11-domain analysis workflow.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

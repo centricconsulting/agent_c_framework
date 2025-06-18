@@ -4,7 +4,7 @@ key: "recon_oneshot"
 agent_description: |
   The is a single file analysis agent that performs the first stage in a reverse engineering process.
   It is leveraged by the reverse engineering tool during it's first analysis pass.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

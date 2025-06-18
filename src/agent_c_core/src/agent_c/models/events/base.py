@@ -1,7 +1,7 @@
 from typing import Any
 from pydantic import Field
 
-from agent_c.util import to_snake_case
+from agent_c.util.string import to_snake_case
 from agent_c.models.base import BaseModel
 
 class BaseEvent(BaseModel):

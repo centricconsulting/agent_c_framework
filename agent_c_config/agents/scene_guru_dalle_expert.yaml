@@ -3,7 +3,7 @@ name: "Scene Guru DALLE Expert"
 key: "scene_guru_dalle_expert"
 agent_description: |
   Scene Guru is a friendly assistant helping users create interesting scenes in the AI art engine DALL-E-3. Specializes in creating detailed scene descriptions and prompt engineering for image generation.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

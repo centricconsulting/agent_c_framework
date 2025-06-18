@@ -1,7 +1,6 @@
-from csv import DictReader
 from typing import Any, Optional, Dict, List
 
-from agent_c.models.agent_config import AgentConfigurationV2, AgentConfiguration
+from agent_c.models.config.agent_config import AgentConfiguration
 from agent_c.prompting.prompt_section import PromptSection, property_bag_item
 
 

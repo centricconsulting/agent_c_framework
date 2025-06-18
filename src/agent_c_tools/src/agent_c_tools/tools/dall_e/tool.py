@@ -8,7 +8,6 @@ from typing import cast, Literal
 from openai import AsyncOpenAI
 from openai.types import ImagesResponse
 
-from agent_c.models.chat_event import RenderMedia
 from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.toolsets import json_schema, Toolset
 from agent_c_tools.tools.workspace.tool import WorkspaceTools

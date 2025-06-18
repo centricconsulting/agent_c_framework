@@ -1,7 +1,6 @@
 import io
 import wave
 import base64
-import logging
 import mimetypes
 import numpy as np
 import soundfile as sf
@@ -10,6 +9,7 @@ import soundfile as sf
 from typing import Union, Optional
 from pathlib import Path
 from pydantic import Field
+
 from agent_c.models.input.file_input import FileInput
 from agent_c.util.logging_utils import LoggingManager
 

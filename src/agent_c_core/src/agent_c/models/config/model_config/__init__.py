@@ -5,7 +5,7 @@ This module provides Pydantic models for representing AI model configurations
 from different vendors, including their parameters, capabilities, and constraints.
 """
 
-from .parameters import (
+from agent_c.models.config.model_config.parameters import (
     BaseParameter,
     RangeParameter,
     EnumParameter,
@@ -14,20 +14,18 @@ from .parameters import (
     ModelParameter
 )
 
-from .models import (
+from agent_c.models.config.model_config.models import (
     ModelType,
     ModelCapabilities,
     AllowedInputs,
-    ModelConfiguration
+    ModelConfiguration,
+    ModelConfigurationWithVendor
 )
 
-from .vendors import (
-    VendorConfiguration,
-    ModelConfigurationFile
-)
+from  agent_c.models.config.model_config.vendors import VendorConfiguration, ModelConfigurationFile
 
 __all__ = [
-    # Parameters
+    # Parameters models
     "BaseParameter",
     "RangeParameter", 
     "EnumParameter",
@@ -35,13 +33,14 @@ __all__ = [
     "ConditionalMaxTokensParameter",
     "ModelParameter",
     
-    # Models
+    # Model configuration models
     "ModelType",
     "ModelCapabilities",
     "AllowedInputs", 
     "ModelConfiguration",
+    "ModelConfigurationWithVendor",
     
-    # Vendors
+    # Vendor models
     "VendorConfiguration",
     "ModelConfigurationFile"
 ]

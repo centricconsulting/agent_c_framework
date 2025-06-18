@@ -1,7 +1,7 @@
 import os
 import base64
-import logging
 import tempfile
+
 from typing import Any
 
 from agent_c.models.input.file_input import FileInput
@@ -43,7 +43,7 @@ class ImageInput(FileInput):
         except Exception as e:
             logging_manager = LoggingManager(__name__)
             logger = logging_manager.get_logger()
-            logger.error(f"Failed to convert PIL image to base64: {e}")
+            logger.exception(f"Failed to convert PIL image to base64: {e}", exc_info=True)
             raise
         finally:
             if os.path.exists(temp_file_path):

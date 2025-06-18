@@ -1,8 +1,8 @@
 from typing import  List, Optional, Any
 from pydantic import BaseModel, Field, ConfigDict
 
-from agent_c.models.agent_config import AgentConfiguration
-from agent_c.models.model_config.models import ModelConfigurationWithVendor
+from agent_c.models.config.agent_config import AgentConfiguration
+from agent_c.models.config.model_config.models import ModelConfigurationWithVendor
 
 class ModelParameter(BaseModel):
     """Parameter for a model configuration"""

@@ -1,7 +1,6 @@
-from csv import DictReader
 from typing import Any, Optional, Dict, List
 
-from agent_c.models.agent_config import AgentConfigurationV2, AgentConfiguration
+from agent_c.models.config.agent_config import CurrentAgentConfiguration, AgentConfiguration
 from agent_c.prompting.prompt_section import PromptSection, property_bag_item
 
 class AssistantBehaviorSection(PromptSection):
@@ -82,7 +81,7 @@ class AgentAssistSection(PromptSection):
 
         if len(agent_sessions):
             for ses in agent_sessions:
-                agent: AgentConfigurationV2 = self.tool.agent_loader.catalog.get(ses['agent_key'])
+                agent: CurrentAgentConfiguration = self.tool.agent_loader.catalog.get(ses['agent_key'])
                 sess_list.append(f"- `{ses['session_id']}` with {agent.name}. {len(ses['messages'])} messages")
 
             return f"\n\n## Active Agent Sessions:\n{"\n".join(sess_list)}\n\n"

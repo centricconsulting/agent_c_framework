@@ -4,11 +4,10 @@ import yaml
 from pathlib import Path
 from typing import Dict, Any, Optional, List, TypeVar
 
-from agent_c.models import ModelConfigurationFile
 from agent_c.config import ModelConfigurationLoader
 from agent_c.config.config_loader import ConfigLoader
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames, to_snake_case
-from agent_c.models.agent_config import (
+from agent_c.models.config.agent_config import (
     AgentConfigurationV1,
     AgentConfigurationV2,
     AgentConfiguration,  # Union type

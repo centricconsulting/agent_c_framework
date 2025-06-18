@@ -1,8 +1,9 @@
 from typing import Optional
 
 from agent_c.agent_runtimes.base import AgentRuntime
-from agent_c.config import ModelConfigurationLoader
-from agent_c.models.model_config.models import ModelConfiguration
+from agent_c.models.config.model_config.models import ModelConfiguration
+from agent_c.config.model_config_loader import ModelConfigurationLoader
+
 
 class RuntimeRegistryEntry:
     def __init__(self, runtime_cls: type[AgentRuntime], vendor: str):

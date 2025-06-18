@@ -3,7 +3,7 @@ name: "Doc Documentation Refiner"
 key: "doc_documentation_refiner"
 agent_description: |
   Doc the Documentation Refiner is a specialized agent designed to transform raw documentation sources into well-organized, token-efficient reference materials for other AI agents. Processes MDX files and creates structured, indexed documentation optimized for AI consumption.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

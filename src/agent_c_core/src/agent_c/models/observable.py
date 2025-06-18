@@ -42,7 +42,6 @@ class ObservableModel(BaseModel):
         _batch_active (bool): Internal flag used to determine if a batch operation is active.
         _observable (Observable): Observable object for handling event-based notifications.
     """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def __init__(self, **data: Any) -> None:
         """
@@ -117,7 +116,7 @@ class ObservableModel(BaseModel):
 
         if self.model_fields[name].json_schema_extra.get('observable', False):
             self._logger.debug(f"Notifying that {name} changed")
-            self._observable.trigger(f"{name}_changed", self)
+            self._observable.trigger(f"{name}_changed", old_value, value)
 
             self._logger.debug("Notifying that model changed")
             self._observable.trigger("model_changed", self)

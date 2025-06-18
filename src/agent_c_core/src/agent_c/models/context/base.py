@@ -1,10 +1,10 @@
 from typing import Any
 from pydantic import Field
 
-from agent_c.util import to_snake_case
-from agent_c.models.base import BaseModel
+from agent_c.models.observable import ObservableModel
+from agent_c.util.string import to_snake_case
 
-class BaseContext(BaseModel):
+class BaseContext(ObservableModel):
     type: str = Field(..., description="The type of the context. Defaults to the snake case class name without event")
 
 

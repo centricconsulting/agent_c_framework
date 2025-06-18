@@ -1,17 +1,13 @@
-import os
 import asyncio
-import logging
 import threading
 import traceback
 
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List
 
 from agent_c.chat import DefaultSessionManager
-from agent_c.util import MnemonicSlugs
+from agent_c.util.slugs import MnemonicSlugs
 from agent_c.config.agent_config_loader import AgentConfigLoader
-from agent_c.models.agent_config import AgentConfiguration
 from agent_c.chat.session_manager import ChatSessionManager, ChatSession
-from agent_c_api.api.dependencies import get_agent_config_loader, get_chat_session_manager
 from agent_c_api.core.agent_bridge import AgentBridge
 from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c_api.models.user_session import UserSession
@@ -64,8 +60,6 @@ class UserSessionManager:
         Create a new session or update an existing session with a new agent.
 
         Args:
-            llm_model: The model to use
-            backend: The backend provider ('openai' or 'claude')
             agent_key: The key of the AgentConfiguration to use
             existing_ui_session_id: If provided, updates existing session instead of creating new one
             user_id: The user ID associated with the session (default: "Agent_C_User")

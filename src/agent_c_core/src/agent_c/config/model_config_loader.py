@@ -10,11 +10,12 @@ import threading
 
 from pathlib import Path
 from typing import Union, Dict, Any, Optional, List
-
-from agent_c.config.config_loader import ConfigLoader
-from agent_c.models.model_config.vendors import ModelConfigurationFile
-from agent_c.models.model_config.models import ModelConfigurationWithVendor
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames
+
+from agent_c.models.config.model_config.vendors import ModelConfigurationFile
+from agent_c.models.config.model_config.models import ModelConfigurationWithVendor
+from agent_c.config.config_loader import ConfigLoader
+
 
 _singleton_instance = None
 
@@ -86,6 +87,22 @@ class ModelConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
                 result[model["id"]] = model_with_vendor
 
         return result
+
+    def default_params_for_model(self, model_id: str) -> Dict[str, Any]:
+        """
+        Get default parameters for a specific model by its ID.
+
+        Args:
+            model_id: ID of the model to get default parameters for
+
+        Returns:
+            Dictionary of default parameters for the specified model
+        """
+        model = self.model_id_map.get(model_id)
+        if not model:
+            raise ValueError(f"Model with ID '{model_id}' not found in configuration")
+
+        return model.default_completion_params
 
     @property
     def model_id_map(self) -> Dict[str, ModelConfigurationWithVendor]:

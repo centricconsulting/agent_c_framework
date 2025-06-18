@@ -3,7 +3,7 @@ name: "DeepThought"
 key: "deep_thought_the_first_think_tool_agent"
 agent_description: |
   An agent specializing in thinking about problems and musing about content.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

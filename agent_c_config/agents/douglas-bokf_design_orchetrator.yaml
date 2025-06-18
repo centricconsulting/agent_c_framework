@@ -6,7 +6,7 @@ agent_description: |
   the complete 7-step BOKF modernization workflow: Douglas → Prime Dominic → Dominic Clones 
   (11 domains, 1 at a time) → Douglas → Prime Tina → Tina Clones (consolidation steps) → Douglas.
   Expert in workflow coordination, context management, quality gates, and recovery protocols.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

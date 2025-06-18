@@ -3,7 +3,7 @@ name: "Aria - C# Solution Architect"
 key: "aria_csharp_architect"
 agent_description: |
   Aria is a C# solution architect who designs clean, modern, testable architectures based on comprehensive requirements analysis.
-model_id: "claude-sonnet-4-20250514"
+model_id: "claude-sonnet-4-latest"
 tools:
   - ThinkTools
   - WorkspaceTools

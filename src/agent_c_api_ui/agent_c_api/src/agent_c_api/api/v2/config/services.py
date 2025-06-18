@@ -5,7 +5,7 @@ from fastapi_cache.decorator import cache
 
 from agent_c.config import ModelConfigurationLoader
 from agent_c.toolsets.tool_set import Toolset
-from agent_c.models.agent_config import AgentConfiguration
+from agent_c.models.config.agent_config import AgentConfiguration
 from agent_c.config.agent_config_loader import AgentConfigLoader
 from agent_c_api.api.dependencies import get_agent_config_loader, get_model_config_loader
 

@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 
 import yaml
 
-from agent_c.models.agent_config import AgentConfiguration, AgentConfigurationV2
+from agent_c.models.config.agent_config import CurrentAgentConfiguration
 from agent_c.toolsets.json_schema import json_schema
 from agent_c.toolsets.tool_set import Toolset
 from agent_c_tools.tools.agent_assist.base import AgentAssistToolBase

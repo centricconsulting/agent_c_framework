@@ -10,7 +10,7 @@ from agent_c.chat import DefaultSessionManager
 from agent_c.models.events.chat import HistoryDeltaEvent
 from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c.prompting.prompt_section import PromptSection
-from agent_c.models.agent_config import AgentConfiguration
+from agent_c.models.config.agent_config import AgentConfiguration
 from agent_c.prompting.prompt_builder import PromptBuilder
 from agent_c_tools.tools.workspace.tool import WorkspaceTools
 from agent_c.config.agent_config_loader import AgentConfigLoader

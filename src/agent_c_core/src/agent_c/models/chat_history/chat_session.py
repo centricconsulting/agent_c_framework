@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any, List
 
 from agent_c.models.base import BaseModel
 from agent_c.util.slugs import MnemonicSlugs
-from agent_c.models.agent_config import AgentConfiguration
+from agent_c.models.config.agent_config import AgentConfiguration
 
 
 class ChatSession(BaseModel):
