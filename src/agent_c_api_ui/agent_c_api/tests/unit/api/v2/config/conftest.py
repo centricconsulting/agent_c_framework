@@ -113,7 +113,7 @@ def mock_toolset():
     Simulates tool registry and essential tools configuration.
     """
     with patch('agent_c.Toolset.tool_registry') as mock_registry, \
-         patch('agent_c_api.core.agent_manager.UItoAgentBridgeManager.ESSENTIAL_TOOLS', new=["search"]):
+         patch('agent_c_api.core.user_session_manager.UserSessionManager.ESSENTIAL_TOOLS', new=["search"]):
         # Create mock tool classes
         search_tool = MagicMock()
         search_tool.__name__ = "search"

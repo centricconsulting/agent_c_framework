@@ -19,7 +19,7 @@ from agent_c_api.api.v2.sessions.services import SessionService
 
 @pytest.fixture
 def mock_agent_manager():
-    """Fixture for a mocked UItoAgentBridgeManager.
+    """Fixture for a mocked UserSessionManager.
     
     Returns a MagicMock with AsyncMock methods configured to return predefined session data
     and handle various test scenarios.
@@ -37,7 +37,7 @@ def mock_agent_manager():
     def get_session_data_mock(session_id):
         session_data = {
             "model_name": "gpt-4",
-            "persona_name": "programmer",
+            "agent_key": "programmer",
             "name": "Test Session",  # Required field
             "is_active": True,  # Required field
             "created_at": datetime.now(),
@@ -58,7 +58,7 @@ def mock_agent_manager():
     manager.ui_sessions = {
         "tiger-castle": {
             "model_name": "gpt-4",
-            "persona_name": "programmer",
+            "agent_key": "programmer",
             "name": "Test Session",  # Required field
             "is_active": True,  # Required field
             "created_at": datetime.now(),
@@ -73,7 +73,7 @@ def mock_agent_manager():
         },
         "banana-phone": {
             "model_name": "claude-3",
-            "persona_name": "default",
+            "agent_key": "default",
             "name": "Test Session 2",  # Required field
             "is_active": True,  # Required field
             "created_at": datetime.now(),
@@ -96,7 +96,7 @@ def service(mock_agent_manager):
     """Fixture for the SessionService with a mocked agent manager.
     
     Args:
-        mock_agent_manager: The mocked UItoAgentBridgeManager to inject
+        mock_agent_manager: The mocked UserSessionManager to inject
         
     Returns:
         SessionService: Initialized with the mocked agent manager
@@ -310,7 +310,7 @@ class TestSessionService:
         def custom_get_session_data(session_id):
             return {
                 "model_name": "gpt-4",
-                "persona_name": "default",
+                "agent_key": "default",
                 "name": "Test Session",
                 "is_active": True,
                 "additional_tools": ["search"],

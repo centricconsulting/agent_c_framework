@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException
 
 from agent_c_api.api.v2.debug.debug import get_session_debug_info, get_agent_debug_info
-from agent_c_api.core.agent_manager import UItoAgentBridgeManager
+from agent_c_api.core.user_session_manager import UserSessionManager
 from agent_c_api.api.v2.models.debug_models import SessionDebugInfo, AgentDebugInfo
 from agent_c_api.api.v2.models.response_models import APIResponse, APIStatus
 
@@ -17,7 +17,7 @@ def mock_agent_manager():
     Returns:
         MagicMock: A mocked agent manager with necessary methods configured
     """
-    manager = MagicMock(spec=UItoAgentBridgeManager)
+    manager = MagicMock(spec=UserSessionManager)
     manager.debug_session = AsyncMock()
     manager.get_session_data = MagicMock()
     return manager

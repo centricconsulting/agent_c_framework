@@ -21,6 +21,7 @@ from agent_c.util.logging_utils import LoggingManager
 # Type variable for configuration versions
 T = TypeVar('T', bound=AgentConfiguration)
 
+_singleton_instance = None
 
 class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
     """
@@ -32,7 +33,6 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
     def __init__(
             self,
             default_model: str = 'claude-sonnet-4-20250514',
-            model_configs: Optional[ModelConfigurationFile] = None,
             config_path: Optional[str] = None
     ):
         """
@@ -40,24 +40,45 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
 
         Args:
             default_model: Default model ID to use
-            model_configs: Model configuration file (if None, uses ModelConfigurationLoader singleton)
             config_path: Path to configuration directory
         """
         super().__init__(config_path)
+        global _singleton_instance
+        if _singleton_instance is None:
+            _singleton_instance = self
+
         logging_manager = LoggingManager(__name__)
         self.logger = logging_manager.get_logger()
 
         # Get model configs from singleton if not provided
-        if model_configs is None:
-            model_config_loader = ModelConfigurationLoader(self.config_path)
-            model_configs = model_config_loader.get_cached_config()
-
-        self.model_configs = model_configs
+        self.model_config_loader = ModelConfigurationLoader.instance()
         self.agent_config_folder = Path(self.config_path).joinpath("agents")
         self._agent_config_cache: Dict[str, AgentConfiguration] = {}
         self._default_model = default_model
         self._migration_log: Dict[str, Dict[str, Any]] = {}
         self.load_agents()
+
+    @property
+    def model_configs(self):
+        """
+        Get the model configurations.
+
+        Returns:
+            Dictionary of model configurations.
+        """
+        return self.model_config_loader.get_cached_config()
+
+    @classmethod
+    def instance(cls) -> 'AgentConfigLoader':
+        """
+        Get the singleton instance of AgentConfigLoader.
+
+        If it doesn't exist, create a new one with default parameters.
+        """
+        global _singleton_instance
+        if _singleton_instance is None:
+            _singleton_instance = cls()
+        return _singleton_instance
 
     def load_agents(self):
         """Load all agent configurations with caching."""
@@ -239,7 +260,7 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         if not original_config:
             raise ValueError(f"Agent {agent_key} does not exist.")
 
-        return AgentConfigurationV2(**original_config.model_dump(exclude_none=True))
+        return AgentConfigurationV2(**original_config.model_dump(exclude_none=True, exclude_defaults=True))
 
     @property
     def catalog(self) -> Dict[str, AgentConfiguration]:

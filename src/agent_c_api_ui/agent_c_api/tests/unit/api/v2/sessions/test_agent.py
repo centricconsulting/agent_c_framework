@@ -37,7 +37,7 @@ class TestAgentService:
         # Setup agent's _get_agent_config method - match the expected structure
         mock_agent._get_agent_config.return_value = {
             "model_name": "gpt-4",
-            "persona_name": "developer",
+            "agent_key": "developer",
             "custom_prompt": None,
             "agent_parameters": {
                 "temperature": 0.7,
@@ -67,7 +67,7 @@ class TestAgentService:
         # Use MnemonicSlug format for session ID
         mock_manager.get_session_data.return_value = {
             "model_name": "gpt-4",
-            "persona_name": "developer",
+            "agent_key": "developer",
             "created_at": "2023-01-01T00:00:00",
             "last_activity": "2023-01-01T01:00:00",
             "agent_c_session_id": "agent-123",
@@ -76,7 +76,7 @@ class TestAgentService:
         
         # Setup agent's attributes for testing updates
         mock_agent.temperature = 0.7
-        mock_agent.persona_name = "developer"
+        mock_agent.agent_key = "developer"
         mock_agent.reasoning_effort = 5
         mock_agent.budget_tokens = None
         mock_agent.max_tokens = 2000
@@ -190,14 +190,14 @@ class TestAgentService:
         assert hasattr(result, "changes_skipped")
         
         # The temperature change might be tracked differently in implementation
-        # Check that persona_name was updated since we know that works
-        assert "persona_name" in result.changes_applied  # Note: persona_id maps to persona_name
+        # Check that agent_key was updated since we know that works
+        assert "agent_key" in result.changes_applied  # Note: persona_id maps to agent_key
         
         # In the real implementation, temperature might be accessed differently
         # Let's modify the mock setup to ensure this test passes
         # Force the temperature to update
         mock_agent.temperature = 0.8
-        assert mock_agent.persona_name == "researcher"
+        assert mock_agent.agent_key == "researcher"
         
         # Verify initialize_agent_parameters was called
         mock_agent.initialize_agent_parameters.assert_called_once()

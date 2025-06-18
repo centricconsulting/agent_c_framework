@@ -5,9 +5,16 @@
       "models": [
         {
           "id": "gpt-4.1",
+          "model_name": "gpt-4.1",
           "model_type": "chat",
           "ui_name": "GPT-4.1",
           "description": "Latest GPT-4 OpenAI flagship model for complex tasks. It is well suited for problem solving across domains.",
+          "default_completion_params": {
+            "type": "gpt_non_reasoning",
+            "max_tokens": 32768,
+            "model_id": "gpt-4.1",
+            "model_name": "gpt-4.1"
+          },
           "parameters": {
             "temperature": {
               "default": 0.5,
@@ -36,9 +43,16 @@
         },
         {
           "id": "gpt-4.1-mini",
+          "model_name": "gpt-4.1-mini",
           "model_type": "chat",
           "ui_name": "GPT-4.1-mini",
           "description": "Mini version of the latest GPT-4 OpenAI flagship model for complex tasks. It is well suited for problem solving across domains.",
+          "default_completion_params": {
+            "type": "gpt_non_reasoning",
+            "model_id": "gpt-4.1-mini",
+            "model_name": "gpt-4.1-mini",
+            "max_tokens": 32768
+          },
           "parameters": {
             "temperature": {
               "default": 0.5,
@@ -67,9 +81,16 @@
         },
         {
           "id": "gpt-4.1-nano",
+          "model_name": "gpt-4.1-nano",
           "model_type": "chat",
           "ui_name": "GPT-4.1-Nano",
           "description": "Nano version of the latest GPT-4 OpenAI flagship model for complex tasks. It is well suited for problem solving across domains.",
+          "default_completion_params": {
+            "type": "gpt_non_reasoning",
+            "max_tokens": 32768,
+            "model_id": "gpt-4.1-nano",
+            "model_name": "gpt-4.1-nano"
+          },
           "parameters": {
             "temperature": {
               "default": 0.5,
@@ -98,9 +119,16 @@
         },
         {
           "id": "gpt-4o",
+          "model_name": "gpt-4o",
           "model_type": "chat",
           "ui_name": "GPT-4o",
           "description": "GPT-4 OpenAI model for chat interactions.",
+          "default_completion_params": {
+            "type": "gpt_non_reasoning",
+            "model_id": "gpt-4o",
+            "model_name": "gpt-4o",
+            "max_tokens": 16384
+          },
           "parameters": {
             "temperature": {
               "default": 0.5,
@@ -129,9 +157,16 @@
         },
         {
           "id": "gpt-4o-audio-preview",
+          "model_name": "gpt-4o-audio-preview",
           "model_type": "chat",
           "ui_name": "GPT-4o Audio Preview",
           "description": "OpenAI model for audio interactions.",
+          "default_completion_params": {
+            "type": "gpt_non_reasoning",
+            "max_tokens": 16384,
+            "model_id": "gpt-4o-audio-preview",
+            "model_name": "gpt-4o-audio-preview"
+          },
           "parameters": {
             "temperature": {
               "default": 0.5,
@@ -159,10 +194,18 @@
           }
         },
         {
-          "id": "o1-mini",
+          "id": "o3",
+          "model_name": "o3",
           "model_type": "reasoning",
-          "ui_name": "GPT-o1 mini",
-          "description": "Reasoning model o1.",
+          "ui_name": "GPT-o3",
+          "description": "OpenAI's most powerful reasoning model o3, designed for complex reasoning tasks.",
+          "default_completion_params": {
+            "type": "gpt_reasoning",
+            "max_tokens": 100000,
+            "reasoning_effort": "medium",
+            "model_id": "o3",
+            "model_name": "o3"
+          },
           "parameters": {
             "reasoning_effort": {
               "default": "medium",
@@ -194,9 +237,16 @@
         },
         {
           "id": "o3-mini",
+          "model_name": "o3-mini",
           "model_type": "reasoning",
           "ui_name": "GPT-o3 mini",
           "description": "Reasoning model o3.",
+          "default_completion_params": {
+            "type": "gpt_non_reasoning",
+            "max_tokens": 32768,
+            "model_id": "o3-mini",
+            "model_name": "o3-mini"
+          },
           "parameters": {
             "reasoning_effort": {
               "default": "medium",
@@ -225,37 +275,6 @@
             "audio": false,
             "file": false
           }
-        },
-        {
-          "id": "gpt-4.5-preview",
-          "model_type": "chat",
-          "ui_name": "GPT-4.5",
-          "description": "Largest most powerful OpenAI model for chat interactions.",
-          "parameters": {
-            "temperature": {
-              "default": 0.5,
-              "min": 0,
-              "max": 2,
-              "required": true
-            },
-            "max_tokens": {
-              "min": 1000,
-              "max": 16384,
-              "default": 16384,
-              "required": false
-            }
-          },
-          "context_window": 128000,
-          "capabilities": {
-            "supports_tools": true,
-            "multi_modal": true
-          },
-          "allowed_inputs": {
-            "image": true,
-            "video": false,
-            "audio": false,
-            "file": false
-          }
         }
       ]
     },
@@ -263,10 +282,18 @@
       "vendor": "claude",
       "models": [
         {
-          "id": "claude-sonnet-4-20250514",
+          "id": "claude-sonnet-4-latest-reasoning",
+          "model_name": "claude-4-sonnet-20250514",
           "model_type": "chat",
-          "ui_name": "Claude 4 Sonnet",
+          "ui_name": "Claude 4 Sonnet (Reasoning)",
           "description": "Smart, efficient model for everyday use. HIGHLY suitable for agentic workflows.",
+          "default_completion_params": {
+            "type": "claude_reasoning",
+            "budget_tokens": 20000,
+            "max_tokens": 64000,
+            "model_id": "claude-sonnet-4-latest-reasoning",
+            "model_name": "claude-sonnet-4-20250514"
+          },
           "parameters": {
             "extended_thinking": {
               "enabled": true,
@@ -278,11 +305,11 @@
               "required": true
             },
             "max_tokens": {
-              "default": 8192,
+              "default": 64000,
               "limits": {
                 "min": 1000,
                 "max": {
-                  "standard": 8192,
+                  "standard": 64000,
                   "with_extended_thinking": 64000
                 }
               },
@@ -302,13 +329,67 @@
           }
         },
         {
-          "id": "claude-opus-4-20250514",
+          "id": "claude-opus-4-latest-reasoning",
+          "model_name": "claude-4-opus-20250514",
           "model_type": "chat",
-          "ui_name": "Claude 4 Opus",
+          "ui_name": "Claude 4 Opus (Reasoning)",
           "description": "Powerful, large model for complex challenges. Suitable for agentic work but it is not recommended for long workflows.",
+          "default_completion_params": {
+            "type": "claude_reasoning",
+            "budget_tokens": 10000,
+            "max_tokens": 32000,
+            "model_id": "claude-opus-4-latest-reasoning",
+            "model_name": "claude-opus-4-20250514"
+          },
           "parameters": {
             "extended_thinking": {
               "enabled": true,
+              "budget_tokens": {
+                "min": 0,
+                "max": 20000,
+                "default": 10000
+              },
+              "required": true
+            },
+            "max_tokens": {
+              "default": 32000,
+              "limits": {
+                "min": 1000,
+                "max": {
+                  "standard": 32000,
+                  "with_extended_thinking": 32000
+                }
+              },
+              "required": true
+            }
+          },
+          "context_window": 200000,
+          "capabilities": {
+            "supports_tools": true,
+            "multi_modal": true
+          },
+          "allowed_inputs": {
+            "image": true,
+            "video": false,
+            "audio": false,
+            "file": false
+          }
+        },
+        {
+          "id": "claude-sonnet-4-latest",
+          "model_name": "claude-4-sonnet-20250514",
+          "model_type": "chat",
+          "ui_name": "Claude 4 Sonnet",
+          "description": "Smart, efficient model for everyday use.",
+          "default_completion_params": {
+            "type": "claude_non_reasoning",
+            "max_tokens": 64000,
+            "model_id": "claude-sonnet-4-latest",
+            "model_name": "claude-sonnet-4-20250514"
+          },
+          "parameters": {
+            "extended_thinking": {
+              "enabled": false,
               "budget_tokens": {
                 "min": 0,
                 "max": 24000,
@@ -317,12 +398,106 @@
               "required": true
             },
             "max_tokens": {
-              "default": 8192,
+              "default": 64000,
               "limits": {
                 "min": 1000,
                 "max": {
-                  "standard": 8192,
+                  "standard": 64000,
                   "with_extended_thinking": 64000
+                }
+              },
+              "required": true
+            }
+          },
+          "context_window": 200000,
+          "capabilities": {
+            "supports_tools": true,
+            "multi_modal": true
+          },
+          "allowed_inputs": {
+            "image": true,
+            "video": false,
+            "audio": false,
+            "file": false
+          }
+        },
+        {
+          "id": "claude-opus-4-latest",
+          "model_name": "claude-4-opus-20250514",
+          "model_type": "chat",
+          "ui_name": "Claude 4 Opus",
+          "description": "Powerful, large model for complex challenges. Suitable for agentic work but it is not recommended for long workflows.",
+          "default_completion_params": {
+            "type": "claude_non_reasoning",
+            "max_tokens": 64000,
+            "model_id": "claude-opus-4-latest",
+            "model_name": "claude-opus-4-20250514"
+          },
+          "parameters": {
+            "extended_thinking": {
+              "enabled": false,
+              "budget_tokens": {
+                "min": 0,
+                "max": 20000,
+                "default": 10000
+              },
+              "required": true
+            },
+            "max_tokens": {
+              "default": 32000,
+              "limits": {
+                "min": 1000,
+                "max": {
+                  "standard": 32000,
+                  "with_extended_thinking": 32000
+                }
+              },
+              "required": true
+            }
+          },
+          "context_window": 200000,
+          "capabilities": {
+            "supports_tools": true,
+            "multi_modal": true
+          },
+          "allowed_inputs": {
+            "image": true,
+            "video": false,
+            "audio": false,
+            "file": false
+          }
+        },
+        {
+          "id": "claude-3-7-sonnet-latest-reasoning",
+          "model_name": "claude-3-7-sonnet-latest",
+          "model_type": "chat",
+          "ui_name": "Claude 3.7 Sonnet Latest (Reasoning)",
+          "description": "Prior generation Claude Sonnet reasoning model for chat interactions. 128k output tokens!  Suitable for agentic work, capable ot 128k output tokens",
+          "default_completion_params": {
+            "type": "claude_reasoning",
+            "budget_tokens": 20000,
+            "allow_betas": true,
+            "max_tokens": 128000,
+            "model_id": "claude-3-7-sonnet-latest-reasoning",
+            "model_name": "claude-3-7-sonnet-latest"
+          },
+          "parameters": {
+            "extended_thinking": {
+              "enabled": true,
+              "budget_tokens": {
+                "min": 0,
+                "max": 24000,
+                "default": 20000
+              },
+              "required": true
+            },
+            "max_tokens": {
+              "default": 128000,
+              "limits": {
+                "min": 1000,
+                "max": {
+                  "standard": 128000,
+                  "with_extended_thinking": 128000
                 }
               },
               "required": true
@@ -342,26 +517,34 @@
         },
         {
           "id": "claude-3-7-sonnet-latest",
+          "model_name": "claude-3-7-sonnet-latest",
           "model_type": "chat",
           "ui_name": "Claude 3.7 Sonnet Latest",
-          "description": "Prior generation Claude Sonnet model for chat interactions. Suitable for agentic work, capable ot 128k output tokens",
+          "description": "Prior generation Claude Sonnet reasoning model for chat interactions. 128k output tokens!  Suitable for agentic work, capable ot 128k output tokens",
+          "default_completion_params": {
+            "type": "claude_non_reasoning",
+            "allow_betas": true,
+            "max_tokens": 128000,
+            "model_id": "claude-3-7-sonnet-latest",
+            "model_name": "claude-3-7-sonnet-latest"
+          },
           "parameters": {
             "extended_thinking": {
-              "enabled": true,
+              "enabled": false,
               "budget_tokens": {
                 "min": 0,
                 "max": 24000,
-                "default": 10000
+                "default": 20000
               },
               "required": true
             },
             "max_tokens": {
-              "default": 8192,
+              "default": 128000,
               "limits": {
                 "min": 1000,
                 "max": {
-                  "standard": 8192,
-                  "with_extended_thinking": 64000
+                  "standard": 128000,
+                  "with_extended_thinking": 128000
                 }
               },
               "required": true
@@ -385,13 +568,68 @@
       "vendor": "bedrock",
       "models": [
         {
-          "id": "anthropic.claude-sonnet-4-20250514-v1:0",
+          "id": "anthropic.claude-sonnet-4-20250514-v1:0 (Reasoning)",
+          "model_name": "anthropic.claude-sonnet-4-20250514-v1:0",
           "model_type": "chat",
-          "ui_name": "Claude 4 Sonnet",
+          "ui_name": "Claude 4 Sonnet (Reasoning)",
           "description": "Smart, efficient model for everyday use. HIGHLY suitable for agentic work.",
+          "default_completion_params": {
+            "type": "claude_reasoning",
+            "budget_tokens": 20000,
+            "max_tokens": 64000,
+            "model_id": "anthropic.claude-sonnet-4-20250514-v1:0 (Reasoning)",
+            "model_name": "anthropic.claude-sonnet-4-20250514-v1:0"
+          },
           "parameters": {
             "extended_thinking": {
               "enabled": true,
+              "budget_tokens": {
+                "min": 0,
+                "max": 24000,
+                "default": 10000
+              },
+              "required": true
+            },
+            "max_tokens": {
+              "default": 64000,
+              "limits": {
+                "min": 1000,
+                "max": {
+                  "standard": 8192,
+                  "with_extended_thinking": 64000
+                }
+              },
+              "required": true
+            }
+          },
+          "context_window": 200000,
+          "capabilities": {
+            "supports_tools": true,
+            "multi_modal": true
+          },
+          "allowed_inputs": {
+            "image": true,
+            "video": false,
+            "audio": false,
+            "file": false
+          }
+        },
+        {
+          "id": "anthropic.claude-opus-4-20250514-v1:0 (Reasoning)",
+          "model_name": "anthropic.claude-opus-4-20250514-v1:0",
+          "model_type": "chat",
+          "ui_name": "Claude 4 Opus (Reasoning)",
+          "description": "Powerful, large model for complex challenges. Agentic work is possible but not recommended for long workflows.",
+          "default_completion_params": {
+            "type": "claude_reasoning",
+            "budget_tokens": 20000,
+            "max_tokens": 64000,
+            "model_id": "anthropic.claude-opus-4-20250514-v1:0 (Reasoning)",
+            "model_name": "anthropic.claude-opus-4-20250514-v1:0"
+          },
+          "parameters": {
+            "extended_thinking": {
+              "enabled": false,
               "budget_tokens": {
                 "min": 0,
                 "max": 24000,
@@ -405,6 +643,52 @@
                 "min": 1000,
                 "max": {
                   "standard": 8192,
+                  "with_extended_thinking": 64000
+                }
+              },
+              "required": true
+            }
+          },
+          "context_window": 200000,
+          "capabilities": {
+            "supports_tools": true,
+            "multi_modal": true
+          },
+          "allowed_inputs": {
+            "image": true,
+            "video": false,
+            "audio": false,
+            "file": false
+          }
+        },
+        {
+          "id": "anthropic.claude-sonnet-4-20250514-v1:0",
+          "model_name": "anthropic.claude-sonnet-4-20250514-v1:0",
+          "model_type": "chat",
+          "ui_name": "Claude 4 Sonnet",
+          "description": "Smart, efficient model for everyday use. HIGHLY suitable for agentic work.",
+          "default_completion_params": {
+            "type": "claude_non_reasoning",
+            "max_tokens": 64000,
+            "model_id": "anthropic.claude-sonnet-4-20250514-v1:0",
+            "model_name": "anthropic.claude-sonnet-4-20250514-v1:0"
+          },
+          "parameters": {
+            "extended_thinking": {
+              "enabled": false,
+              "budget_tokens": {
+                "min": 0,
+                "max": 24000,
+                "default": 10000
+              },
+              "required": true
+            },
+            "max_tokens": {
+              "default": 64000,
+              "limits": {
+                "min": 1000,
+                "max": {
+                  "standard": 64000,
                   "with_extended_thinking": 64000
                 }
               },
@@ -425,12 +709,19 @@
         },
         {
           "id": "anthropic.claude-opus-4-20250514-v1:0",
+          "model_name": "anthropic.claude-opus-4-20250514-v1:0",
           "model_type": "chat",
           "ui_name": "Claude 4 Opus",
           "description": "Powerful, large model for complex challenges. Agentic work is possible but not recommended for long workflows.",
+          "default_completion_params": {
+            "type": "claude_non_reasoning",
+            "max_tokens": 64000,
+            "model_id": "anthropic.claude-opus-4-20250514-v1:0",
+            "model_name": "anthropic.claude-opus-4-20250514-v1:0"
+          },
           "parameters": {
             "extended_thinking": {
-              "enabled": true,
+              "enabled": false,
               "budget_tokens": {
                 "min": 0,
                 "max": 24000,
@@ -463,27 +754,36 @@
           }
         },
         {
-          "id": "anthropic.claude-3-7-sonnet-20250219-v1:0",
+          "id": "anthropic.claude-3-7-sonnet-20250219-v1:0 (Reasoning)",
+          "model_name": "anthropic.claude-3-7-sonnet-20250219-v1:0",
           "model_type": "chat",
-          "ui_name": "Claude 3.7 Sonnet Latest",
-          "description": "Prior generation Claude Sonnet model for chat interactions. Suitable for agentic work, capable of 128k output tokens.",
+          "ui_name": "Claude 3.7 Sonnet (Reasoning)",
+          "description": "Prior generation Claude Sonnet model. 128k output tokens! Suitable for agentic work, capable of 128k output tokens.",
+          "default_completion_params": {
+            "type": "claude_reasoning",
+            "budget_tokens": 20000,
+            "max_tokens": 128000,
+            "allow_betas": true,
+            "model_id": "anthropic.claude-3-7-sonnet-20250219-v1:0 (Reasoning)",
+            "model_name": "anthropic.claude-3-7-sonnet-20250219-v1:0"
+          },
           "parameters": {
             "extended_thinking": {
               "enabled": true,
               "budget_tokens": {
                 "min": 0,
-                "max": 24000,
+                "max": 20000,
                 "default": 10000
               },
               "required": true
             },
             "max_tokens": {
-              "default": 8192,
+              "default": 128000,
               "limits": {
                 "min": 1000,
                 "max": {
-                  "standard": 8192,
-                  "with_extended_thinking": 64000
+                  "standard": 128000,
+                  "with_extended_thinking": 128000
                 }
               },
               "required": true

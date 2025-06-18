@@ -48,7 +48,7 @@ def v1_to_v2_session_create(v1_params: AgentInitializationParams) -> SessionCrea
     # Create session creation model
     return SessionCreate(
         model_id=v1_params.model_name,
-        persona_id=v1_params.persona_name or "default",
+        persona_id=v1_params.agent_key or "default",
         metadata={
             "backend": v1_params.backend or "openai",
             "custom_prompt": v1_params.custom_prompt
@@ -96,7 +96,7 @@ def v2_to_v1_session_params(v2_session: SessionCreate) -> AgentInitializationPar
     return AgentInitializationParams(
         model_name=v2_session.model_id,
         backend=backend,
-        persona_name=v2_session.persona_id,
+        agent_key=v2_session.persona_id,
         custom_prompt=custom_prompt,
         # These fields will use their default values or None
         temperature=None,

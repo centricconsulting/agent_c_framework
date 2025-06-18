@@ -9,7 +9,7 @@ from fastapi_cache.decorator import cache
 
 from agent_c.models.events.chat import MessageEvent, InteractionEvent
 from agent_c.models.events.tool_calls import ToolCallEvent
-from agent_c_api.api.dependencies import get_bridge_manager, get_redis_client
+from agent_c_api.api.dependencies import get_user_session_manager, get_redis_client
 from agent_c_api.core.repositories.chat_repository import ChatRepository
 from agent_c_api.core.services.chat_service import ChatService as CoreChatService
 
@@ -29,7 +29,7 @@ async def get_chat_service(
     Returns:
         ChatService: Initialized chat service
     """
-    agent_manager = get_bridge_manager(request)
+    agent_manager = get_user_session_manager(request)
     return ChatService(agent_manager=agent_manager, redis_client=redis_client)
 
 from agent_c_api.api.v2.models.chat_models import (
@@ -54,7 +54,7 @@ class ChatService:
         Args:
             agent_manager: The agent manager instance
             redis_client: Redis client instance
-        """  # Use Any instead of UItoAgentBridgeManager type
+        """  # Use Any instead of UserSessionManager type
         self.agent_manager = agent_manager
         self.redis_client = redis_client
         self.logger = structlog.get_logger(__name__)
@@ -454,7 +454,7 @@ async def send_chat_message(
                     request.message,
                     file_ids if file_ids else None
                 ):
-                    # The events from agent_manager are already JSON strings
+                    # The events from user_session_manager are already JSON strings
                     # Just make sure they end with a newline for SSE
                     if not event_json.endswith('\n'):
                         event_json += '\n'

@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_versioning import version
 
 from ....core.agent_bridge import AgentBridge
-from ....core.agent_manager import UItoAgentBridgeManager
+from ....core.user_session_manager import UserSessionManager
 from typing import Any
-from ...dependencies import get_bridge_manager
+from ...dependencies import get_user_session_manager
 from ..models.debug_models import SessionDebugInfo, AgentDebugInfo
 from ..models.response_models import APIResponse, APIStatus
 
@@ -112,7 +112,7 @@ router = APIRouter(
 @version(2)
 async def get_session_debug_info(
     session_id: UUID, 
-    agent_manager: Any = Depends(get_bridge_manager)  # Use Any instead of UItoAgentBridgeManager
+    agent_manager: Any = Depends(get_user_session_manager)  # Use Any instead of UserSessionManager
 ):
     """
     Get comprehensive debug information about a session.
@@ -199,7 +199,7 @@ async def get_session_debug_info(
 @version(2)
 async def get_agent_debug_info(
     session_id: UUID, 
-    agent_manager: Any = Depends(get_bridge_manager)  # Use Any instead of UItoAgentBridgeManager
+    agent_manager: Any = Depends(get_user_session_manager)  # Use Any instead of UserSessionManager
 ):
     """
     Get detailed debug information about an agent's state and configuration.

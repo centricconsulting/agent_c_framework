@@ -8,10 +8,13 @@ from starlette.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 
-
+from agent_c.chat import get_default_session_manager
+from agent_c.config import ModelConfigurationLoader
+from agent_c.config.agent_config_loader import AgentConfigLoader
+from agent_c.config.saved_chat import SavedChatLoader
 from agent_c_api.config.env_config import settings
 from agent_c_api.core.util.logging_utils import LoggingManager
-from agent_c_api.core.agent_manager import UItoAgentBridgeManager
+from agent_c_api.core.user_session_manager import UserSessionManager
 from agent_c_api.core.util.middleware_logging import APILoggingMiddleware
 
 logging_manager = LoggingManager(__name__)
@@ -99,11 +102,26 @@ def create_application(router: APIRouter, **kwargs) -> FastAPI:
             logger.warning("💡 To resolve: Ensure Redis server is running and accessible")
             logger.warning(f"   Command: redis-server --port {redis_status['port']}")
             logger.warning(f"   Or check connection settings in environment configuration")
-        
+
+        # Config loaders
+        logger.info("🤖 Loading core configuration files...")
+        lifespan_app.state.model_config_loader = ModelConfigurationLoader.instance()
+        logger.info("✅ Model configurations successfully loaded")
+        lifespan_app.state.agent_config_loader = AgentConfigLoader.instance()
+        logger.info("✅ Agent configurations successfully loaded")
+
+        # Repositories
+        logger.info("💾 Initializing repositories...")
+        lifespan_app.state.chat_session_repository = SavedChatLoader.instance()
+        logger.info("✅ Chat session repository successfully loaded")
+
         # Shared AgentManager instance.
-        logger.info("🤖 Initializing Agent Manager...")
-        lifespan_app.state.agent_manager = UItoAgentBridgeManager()
-        logger.info("✅ Agent Manager initialized successfully")
+        logger.info("🤖 Initializing Session Managers...")
+        lifespan_app.state.chat_session_manager = get_default_session_manager()
+        logger.info("✅ Chat session repository successfully loaded")
+
+        lifespan_app.state.user_session_manager = UserSessionManager(lifespan_app.state.chat_session_manager)
+        logger.info("✅ User Session Manager initialized successfully")
         
         # Initialize FastAPICache with InMemoryBackend
         logger.info("💾 Initializing FastAPI Cache...")

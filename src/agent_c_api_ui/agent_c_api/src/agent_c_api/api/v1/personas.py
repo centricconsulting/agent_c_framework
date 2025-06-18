@@ -1,23 +1,19 @@
-import glob
-import os
 from typing import List, Dict
-from fastapi import APIRouter, HTTPException, Depends
-
-import logging
+from fastapi import APIRouter
 
 from agent_c.config.agent_config_loader import AgentConfigLoader
-from agent_c_api.config.env_config import settings
+from agent_c.util.logging_utils import LoggingManager
+
 
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+logger = LoggingManager(__name__).get_logger()
 
 @router.get("/personas")
 async def list_personas() -> List[Dict[str, str]]:
     """Get list of available personas from personas directory"""
-    loader: AgentConfigLoader = AgentConfigLoader()
     personas = []
-
+    loader = AgentConfigLoader.instance()
     # load the agent configuration catalog into this old persona format for now
     for key, config in loader.catalog.items():
         if "domo" in config.category:

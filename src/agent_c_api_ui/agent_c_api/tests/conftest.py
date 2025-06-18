@@ -62,7 +62,7 @@ def client():
 @pytest.fixture
 def mock_agent_manager():
     """
-    Fixture for a mocked UItoAgentBridgeManager.
+    Fixture for a mocked UserSessionManager.
     
     Returns:
         MagicMock: A configured mock of the agent manager.
@@ -79,7 +79,7 @@ def mock_agent_manager():
     manager.ui_sessions = {
         "test_session_1": {
             "model_name": "gpt-4",
-            "persona_name": "programmer",
+            "agent_key": "programmer",
             "created_at": datetime.now(),
             "last_activity": datetime.now(),
             "agent_session_id": "agent_123",
@@ -91,7 +91,7 @@ def mock_agent_manager():
         },
         "test_session_2": {
             "model_name": "claude-3",
-            "persona_name": "default",
+            "agent_key": "default",
             "created_at": datetime.now(),
             "last_activity": None,
             "agent_session_id": "agent_456",

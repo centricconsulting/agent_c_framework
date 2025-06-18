@@ -1,10 +1,13 @@
 from typing import Optional
+
+from fastapi.params import Depends
 from fastapi_cache.decorator import cache
 
 from agent_c.config import ModelConfigurationLoader
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.models.agent_config import AgentConfiguration
 from agent_c.config.agent_config_loader import AgentConfigLoader
+from agent_c_api.api.dependencies import get_agent_config_loader, get_model_config_loader
 
 from agent_c_api.api.v2.models.config_models import (
     ModelInfo, ToolInfo, ModelParameter,
@@ -17,15 +20,14 @@ logger = LoggingManager(__name__).get_logger()
 class ConfigService:
     """Service for retrieving configuration data from existing sources"""
     def __init__(self):
-        self.agent_config_loader: AgentConfigLoader = AgentConfigLoader()
+        self.agent_config_loader: AgentConfigLoader = get_agent_config_loader()
 
     @cache(expire=300)  # Cache for 5 minutes
-    async def get_models(self) -> ModelsResponse:
+    async def get_models(self, loader: ModelConfigurationLoader = Depends(get_model_config_loader)) -> ModelsResponse:
         """
         Get available models using the existing configuration mechanism
         """
         try:
-            loader: ModelConfigurationLoader = ModelConfigurationLoader()
             model_list = loader.model_list
         except Exception as e:
             logger.exception(f"Error reading model config: {e}", exc_info=True)

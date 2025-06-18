@@ -31,7 +31,7 @@ class TestChatService:
         """Create a mock agent manager with simulated behaviors
         
         This fixture creates a mock agent manager that simulates the behavior of the actual
-        UItoAgentBridgeManager for testing purposes. It includes side effects for methods
+        UserSessionManager for testing purposes. It includes side effects for methods
         like get_session_data, stream_response, and cancel_interaction to simulate real
         behaviors without requiring the actual agent implementation.
         
@@ -449,7 +449,7 @@ class TestChatEndpoints:
         
         This fixture creates a minimal FastAPI application with just the chat router
         mounted for testing the endpoints in isolation. It properly sets up the
-        agent_manager in the app.state and overrides the get_agent_manager dependency.
+        user_session_manager in the app.state and overrides the get_agent_manager dependency.
         
         Args:
             mock_agent_manager: The mock agent manager fixture
@@ -457,17 +457,17 @@ class TestChatEndpoints:
         Returns:
             FastAPI: A configured FastAPI application
         """
-        from agent_c_api.api.dependencies import get_bridge_manager
+        from agent_c_api.api.dependencies import get_user_session_manager
         
         app = FastAPI()
         # Set up the router with the proper prefix for the tests
         app.include_router(router, prefix="/sessions")
         
-        # Set the agent_manager in the app.state
-        app.state.agent_manager = mock_agent_manager
+        # Set the user_session_manager in the app.state
+        app.state.user_session_manager = mock_agent_manager
         
         # Override the dependency
-        app.dependency_overrides[get_bridge_manager] = lambda request: mock_agent_manager
+        app.dependency_overrides[get_user_session_manager] = lambda request: mock_agent_manager
         
         return app
 
@@ -476,7 +476,7 @@ class TestChatEndpoints:
         """Create a test client for the FastAPI application
         
         This fixture creates a TestClient for making requests to the test application.
-        The app already has the agent_manager in its state and the dependency override
+        The app already has the user_session_manager in its state and the dependency override
         for get_agent_manager.
         
         Args:

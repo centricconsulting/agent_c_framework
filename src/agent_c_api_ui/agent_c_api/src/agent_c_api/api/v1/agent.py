@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from agent_c_api.core.agent_bridge import AgentBridge
 from agent_c_api.models.user_session import UserSession
 from agent_c.models.agent_config import AgentConfiguration
-from agent_c_api.api.dependencies import get_bridge_manager
+from agent_c_api.api.dependencies import get_user_session_manager
 from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c_api.api.v1.llm_models.agent_params import AgentUpdateParams
 from agent_c_api.api.v1.llm_models.tool_model import ToolUpdateRequest
@@ -19,13 +19,13 @@ router = APIRouter()
 @router.post("/update_settings")
 async def update_agent_settings(
         update_params: AgentUpdateParams,
-        agent_manager=Depends(get_bridge_manager)
+        session_manager=Depends(get_user_session_manager)
 ):
     """
     Update agent settings for a given session.
     """
     # Get current session and agent
-    ui_session_data: UserSession = await agent_manager.get_user_session(update_params.ui_session_id)
+    ui_session_data: UserSession = await session_manager.get_user_session(update_params.ui_session_id)
     if not ui_session_data:
         return {"error": "Invalid session_id"}
 
@@ -47,13 +47,12 @@ async def update_agent_settings(
         changes_made = {}
         failed_updates = []
 
-        if "persona_name" in updates:
-            agent_key = updates["persona_name"]
-            agent_config: AgentConfiguration = agent_manager.agent_config_loader.duplicate(agent_key)
+        if "agent_key" in updates:
+            agent_key = updates["agent_key"]
+            agent_config: AgentConfiguration = session_manager.agent_config_loader.duplicate(agent_key)
             logger.info(f"Updating agent config for session {update_params.ui_session_id} with key: {agent_key} from{agent_bridge.chat_session.agent_config.key}")
             agent_bridge.chat_session.agent_config = agent_config
             await agent_bridge.update_tools(agent_config.tools)
-            ui_session_data.active_tools = agent_config.tools
         else:
             agent_config = agent_bridge.chat_session.agent_config
 
@@ -94,10 +93,10 @@ async def update_agent_settings(
 
 
 @router.get("/get_agent_config/{ui_session_id}")
-async def get_agent_config(ui_session_id: str, agent_manager=Depends(get_bridge_manager)):
+async def get_agent_config(ui_session_id: str, session_manager=Depends(get_user_session_manager)):
     try:
         # logger.info(f"get_agent_config called for session: {ui_session_id}")
-        ui_session_data: UserSession = await agent_manager.get_user_session(ui_session_id)
+        ui_session_data: UserSession = await session_manager.get_user_session(ui_session_id)
         if not ui_session_data:
             raise HTTPException(status_code=404, detail="Session not found")
 
@@ -129,11 +128,11 @@ async def get_agent_config(ui_session_id: str, agent_manager=Depends(get_bridge_
 @router.post("/update_tools")
 async def update_agent_tools(
         data: ToolUpdateRequest,
-        agent_manager=Depends(get_bridge_manager)
+        session_manager=Depends(get_user_session_manager)
 ):
     try:
         ui_session_id = data.ui_session_id
-        ui_session_data: UserSession = await agent_manager.get_user_session(ui_session_id)
+        ui_session_data: UserSession = await session_manager.get_user_session(ui_session_id)
         if not ui_session_data:
             raise HTTPException(status_code=404, detail="Invalid session ID")
 
@@ -159,9 +158,9 @@ async def update_agent_tools(
 
 
 @router.get("/get_agent_tools/{ui_session_id}")
-async def get_agent_tools(ui_session_id: str, agent_manager=Depends(get_bridge_manager)):
+async def get_agent_tools(ui_session_id: str, session_manager=Depends(get_user_session_manager)):
     try:
-        session_data: UserSession = await agent_manager.get_user_session(ui_session_id)
+        session_data: UserSession = await session_manager.get_user_session(ui_session_id)
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found")
         return {
@@ -175,12 +174,12 @@ async def get_agent_tools(ui_session_id: str, agent_manager=Depends(get_bridge_m
 
 # http://localhost:8000/api/v1/debug_agent_state/2971f215-a631-4177-852e-c3595b6d256a
 @router.get("/debug_agent_state/{ui_session_id}")
-async def debug_agent_state(ui_session_id: str, agent_manager=Depends(get_bridge_manager)):
+async def debug_agent_state(ui_session_id: str, session_manager=Depends(get_user_session_manager)):
     """
     Debug endpoint to check the state of an agent and its internal components.
     """
     try:
-        session_data: UserSession = await agent_manager.get_user_session(ui_session_id)
+        session_data: UserSession = await session_manager.get_user_session(ui_session_id)
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found")
 
@@ -208,9 +207,9 @@ async def debug_agent_state(ui_session_id: str, agent_manager=Depends(get_bridge
 
 # http://localhost:8000/api/v1/chat_session_debug/2971f215-a631-4177-852e-c3595b6d256a
 @router.get("/chat_session_debug/{ui_session_id}")
-async def debug_chat_session(ui_session_id: str, agent_manager=Depends(get_bridge_manager)):
+async def debug_chat_session(ui_session_id: str, session_manager=Depends(get_user_session_manager)):
     try:
-        debug_info = await agent_manager.debug_session(ui_session_id)
+        debug_info = await session_manager.debug_session(ui_session_id)
         return debug_info
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

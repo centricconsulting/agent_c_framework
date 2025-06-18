@@ -11,7 +11,7 @@ class RedisConfig:
     _redis_client: Optional[aioredis.Redis] = None
     
     @classmethod
-    async def get_redis_client(cls) -> aioredis.Redis:
+    def get_redis_client(cls) -> aioredis.Redis:
         """Get Redis client with connection pooling and proper error handling."""
         if cls._redis_client is None:
             try:

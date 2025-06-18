@@ -4,19 +4,28 @@ from typing import Optional
 
 class AgentCommonParams(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
-    persona_name: Optional[str] = Field("default", description="Name of the persona to use")
-    custom_prompt: Optional[str] = Field(None, description="Custom prompt for persona")
+    agent_key: Optional[str] = Field("default", description="Key of the agent config to use")
     temperature: Optional[float] = Field(None, description="Temperature for chat models")
+    extended_thinking: Optional[bool] = Field(None, description="Extended thinking for chat models; defaults to False if not provided")
     reasoning_effort: Optional[str] = Field(
         None, description="Reasoning effort for OpenAI models; must be 'low', 'medium', or 'high'"
     )
     budget_tokens: Optional[int] = Field(None, description="Budget tokens (used by some Claude models)")
 
+    def __init__(self, **data):
+        if 'agent_key' not in data and "persona_name" in data:
+            data['agent_key'] = data.pop('persona_name', 'default')
+        if 'custom_prompt' in data:
+            data.pop('custom_prompt', None)
+
+        super().__init__(**data)
+
+
 class AgentUpdateParams(AgentCommonParams):
     ui_session_id: str = Field(..., description="Session ID of the agent to update")
 
 class AgentInitializationParams(AgentCommonParams):
-    model_name: str = Field(..., description="The model name to use")
+    model_name: Optional[str] = Field(..., description="The model name to use")
     backend: Optional[str] = Field("openai", description="Backend provider (e.g., 'openai', 'claude')")
     max_tokens: Optional[int] = Field(None, description="Maximum tokens for the model output")
     ui_session_id: Optional[str] = Field(None, description="Existing UI session ID - this enables us to transfer chat sessions. If None or not passed, a new session will be created.")
@@ -38,7 +47,7 @@ class AgentInitializationParams(AgentCommonParams):
                 values['reasoning_effort'] = 'medium'
 
         # For Claude reasoning model: 'claude-3-7-sonnet-latest'
-        if model_name == 'claude-3-7-sonnet-latest':
+        if 'sonnet' in model_name:
             if values.get('budget_tokens') is not None:
                 # we'll use the passed in budget_tokens, and determine what max_tokens to set
                 if values.get('max_tokens') is None:
@@ -79,10 +88,10 @@ class AgentInitializationParams(AgentCommonParams):
         Returns additional parameters based on the create_session logic.
         This includes:
           - 'custom_prompt': if a custom prompt is provided.
-          - 'persona_name': always included, defaulting to 'default' if not provided.
+          - 'agent_key': always included, defaulting to 'default' if not provided.
         """
         additional = {}
-        # Always include persona_name, defaulting to 'default'
-        additional['persona_name'] = self.persona_name if self.persona_name else 'default'
-        additional['agent_key'] = self.persona_name if self.persona_name else 'default'
+        # Always include agent_key, defaulting to 'default'
+        additional['agent_key'] = self.agent_key if self.agent_key else 'default'
+        additional['agent_key'] = self.agent_key if self.agent_key else 'default'
         return additional

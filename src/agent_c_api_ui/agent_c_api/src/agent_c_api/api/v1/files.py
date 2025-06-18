@@ -8,7 +8,7 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, B
 
 from agent_c.util.logging_utils import LoggingManager
 from agent_c_api.core.file_handler import FileHandler
-from agent_c_api.api.dependencies import get_bridge_manager
+from agent_c_api.api.dependencies import get_user_session_manager
 
 
 router = APIRouter()
@@ -43,7 +43,7 @@ async def upload_file(
         ui_session_id: str = Form(...),
         file: UploadFile = File(...),
         background_tasks: BackgroundTasks = BackgroundTasks(),
-        agent_manager=Depends(get_bridge_manager)
+        session_manager=Depends(get_user_session_manager)
 ):
     """
     Upload a file for use in chat.
@@ -52,7 +52,7 @@ async def upload_file(
         ui_session_id: Session ID
         file: The file to upload
         background_tasks: FastAPI background tasks
-        agent_manager: Agent manager dependency
+        session_manager: Agent manager dependency
 
     Returns:
         FileResponse: Information about the uploaded file
@@ -62,8 +62,8 @@ async def upload_file(
 
     try:
         # Verify session exists
-        logger.debug(f"Agent keys are {agent_manager.ui_sessions.keys()}")
-        session_data = await agent_manager.get_user_session(ui_session_id)
+        logger.debug(f"Agent keys are {session_manager.ui_sessions.keys()}")
+        session_data = await session_manager.get_user_session(ui_session_id)
         if not session_data:
             logger.error(f"No session found for session_id: {ui_session_id}")
             raise HTTPException(status_code=404, detail="Session not found")
@@ -97,21 +97,21 @@ async def upload_file(
 @router.get("/files/{ui_session_id}")
 async def get_session_files(
         ui_session_id: str,
-        agent_manager=Depends(get_bridge_manager)
+        session_manager=Depends(get_user_session_manager)
 ):
     """
     List all files for a session.
 
     Args:
         ui_session_id: Session ID
-        agent_manager: Agent manager dependency
+        session_manager: Agent manager dependency
 
     Returns:
         dict: List of files for the session
     """
     try:
         # Verify session exists
-        session_data = await agent_manager.get_user_session(ui_session_id)
+        session_data = await session_manager.get_user_session(ui_session_id)
         if not session_data:
             logger.error(f"No session found for session_id: {ui_session_id}")
             raise HTTPException(status_code=404, detail="Session not found")
@@ -145,7 +145,7 @@ async def get_session_files(
 async def get_file(
         ui_session_id: str,
         file_id: str,
-        agent_manager=Depends(get_bridge_manager)
+        session_manager=Depends(get_user_session_manager)
 ):
     """
     Get a specific file.
@@ -153,14 +153,14 @@ async def get_file(
     Args:
         ui_session_id: Session ID
         file_id: File ID
-        agent_manager: Agent manager dependency
+        session_manager: Agent manager dependency
 
     Returns:
         FileResponse: The file content
     """
     try:
         # Verify session exists
-        session_data = await agent_manager.get_user_session(ui_session_id)
+        session_data = await session_manager.get_user_session(ui_session_id)
         if not session_data:
             logger.error(f"No session found for session_id: {ui_session_id}")
             raise HTTPException(status_code=404, detail="Session not found")
@@ -186,7 +186,7 @@ async def get_file(
 async def delete_file(
         ui_session_id: str,
         file_id: str,
-        agent_manager=Depends(get_bridge_manager)
+        session_manager=Depends(get_user_session_manager)
 ):
     """
     Delete a specific file.
@@ -194,14 +194,14 @@ async def delete_file(
     Args:
         ui_session_id: Session ID
         file_id: File ID
-        agent_manager: Agent manager dependency
+        session_manager: Agent manager dependency
 
     Returns:
         dict: Success message
     """
     try:
         # Verify session exists
-        session_data = await agent_manager.get_user_session(ui_session_id)
+        session_data = await session_manager.get_user_session(ui_session_id)
         if not session_data:
             logger.error(f"No session found for session_id: {ui_session_id}")
             raise HTTPException(status_code=404, detail="Session not found")

@@ -3,14 +3,14 @@ import json
 from typing import Dict, List, Any, Optional
 import structlog
 
-from agent_c_api.core.agent_manager import UItoAgentBridgeManager
+from agent_c_api.core.user_session_manager import UserSessionManager
 from agent_c_api.core.repositories.session_repository import SessionRepository
 from agent_c_api.api.v2.models.session_models import SessionCreate, SessionUpdate
 
 class SessionMigration:
     """Helper class for migrating sessions to Redis storage"""
     
-    def __init__(self, agent_manager: UItoAgentBridgeManager, session_repository: SessionRepository):
+    def __init__(self, agent_manager: UserSessionManager, session_repository: SessionRepository):
         """Initialize the session migration helper
         
         Args:
@@ -44,7 +44,7 @@ class SessionMigration:
             session_create = SessionCreate(
                 id=session_id,
                 model_id=session_data.get("model_name", ""),
-                persona_id=session_data.get("persona_name", "default"),
+                persona_id=session_data.get("agent_key", "default"),
                 temperature=session_data.get("temperature"),
                 reasoning_effort=session_data.get("reasoning_effort"),
                 budget_tokens=session_data.get("budget_tokens"),
@@ -142,7 +142,7 @@ class SessionMigration:
                 # Compare key fields
                 fields_to_compare = [
                     ("model_id", "model_name"),
-                    ("persona_id", "persona_name"),
+                    ("persona_id", "agent_key"),
                     ("temperature", "temperature"),
                     ("reasoning_effort", "reasoning_effort"),
                     ("budget_tokens", "budget_tokens"),

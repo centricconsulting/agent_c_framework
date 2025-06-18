@@ -1,6 +1,7 @@
-from typing import Dict, List, Literal, Optional, Any, Union
+
 from datetime import datetime
-from uuid import uuid4
+from typing import Dict, List, Literal, Optional
+
 from pydantic import BaseModel, Field, field_serializer
 
 from agent_c.util import MnemonicSlugs

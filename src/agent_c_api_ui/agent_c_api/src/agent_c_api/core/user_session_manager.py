@@ -11,19 +11,18 @@ from agent_c.util import MnemonicSlugs
 from agent_c.config.agent_config_loader import AgentConfigLoader
 from agent_c.models.agent_config import AgentConfiguration
 from agent_c.chat.session_manager import ChatSessionManager, ChatSession
+from agent_c_api.api.dependencies import get_agent_config_loader, get_chat_session_manager
 from agent_c_api.core.agent_bridge import AgentBridge
 from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c_api.models.user_session import UserSession
 
 
-class UItoAgentBridgeManager:
+class UserSessionManager:
     """
     Manages agent sessions in a multi-agent environment.
 
-    This class handles the lifecycle of agent sessions, including creation,
-    cleanup, and response streaming. It supports different LLM backends and
-    tool configurations while ensuring thread-safe operations through
-    per-session locks.
+    This class handles the lifecycle of user sessions, including creation,
+    cleanup, and response streaming from the runtime.
 
     Attributes:
         logger (logging.Logger): Instance logger
@@ -31,16 +30,13 @@ class UItoAgentBridgeManager:
         _locks (Dict[str, asyncio.Lock]): Session operation locks
     """
 
-    def __init__(self):
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
-        # self.debug_event = LoggingManager.get_debug_event()
-
+    def __init__(self, chat_session_manager: ChatSessionManager):
+        self.logger = LoggingManager(__name__).get_logger()
         self.ui_sessions: Dict[str, UserSession] = {}
         self._locks: Dict[str, asyncio.Lock] = {}
         self._cancel_events: Dict[str, threading.Event] = {}
-        self.agent_config_loader: AgentConfigLoader = AgentConfigLoader()
-        self.chat_session_manager: DefaultSessionManager = DefaultSessionManager()
+        self.agent_config_loader: AgentConfigLoader = AgentConfigLoader.instance()
+        self.chat_session_manager: DefaultSessionManager = chat_session_manager
 
 
 

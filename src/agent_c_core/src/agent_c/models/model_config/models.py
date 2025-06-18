@@ -7,9 +7,10 @@ model types, capabilities, and the main model configuration class.
 
 from enum import Enum
 from typing import Dict, Any, Optional
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import Field, ConfigDict
 
-from .parameters import ModelParameter
+from agent_c.models.base import BaseModel
+from agent_c.models.completion import CompletionParams
 
 
 class ModelType(str, Enum):
@@ -20,27 +21,17 @@ class ModelType(str, Enum):
 
 class ModelCapabilities(BaseModel):
     """Capabilities supported by an AI model."""
-    supports_tools: bool = Field(description="Whether the model supports tool/function calling")
-    multi_modal: bool = Field(description="Whether the model supports multiple input modalities")
-    
-    model_config = ConfigDict(
-        extra="forbid",
-        use_enum_values=True
-    )
+    supports_tools: bool = Field(True, description="Whether the model supports tool/function calling")
+    multi_modal: bool = Field(True, description="Whether the model supports multiple input modalities")
+
 
 
 class AllowedInputs(BaseModel):
     """Input modalities allowed by an AI model."""
-    image: bool = Field(description="Whether the model accepts image inputs")
-    video: bool = Field(description="Whether the model accepts video inputs") 
-    audio: bool = Field(description="Whether the model accepts audio inputs")
-    file: bool = Field(description="Whether the model accepts file inputs")
-    
-    model_config = ConfigDict(
-        extra="forbid",
-        use_enum_values=True
-    )
-
+    image: bool = Field(True, description="Whether the model accepts image inputs")
+    video: bool = Field(False, description="Whether the model accepts video inputs")
+    audio: bool = Field(False, description="Whether the model accepts audio inputs")
+    file: bool = Field(False, description="Whether the model accepts file inputs")
 
 class ModelConfiguration(BaseModel):
     """
@@ -50,7 +41,11 @@ class ModelConfiguration(BaseModel):
     parameters, capabilities, and constraints.
     """
     id: str = Field(description="Unique identifier for the model")
+    model_name: Optional[str] = Field(description="Name of the model as used in API calls, if different from ID")
+    default_completion_params: CompletionParams = Field(description="Default parameters for model completions")
+
     model_type: ModelType = Field(description="Type of model (chat, reasoning, etc.)")
+
     ui_name: str = Field(description="Human-readable name for display in UI")
     description: str = Field(description="Detailed description of the model's capabilities")
     parameters: Dict[str, Any] = Field(
@@ -61,11 +56,16 @@ class ModelConfiguration(BaseModel):
     capabilities: ModelCapabilities = Field(description="Capabilities supported by the model")
     allowed_inputs: AllowedInputs = Field(description="Input modalities supported by the model")
 
-    model_config = ConfigDict(
-        protected_namespaces=(),
-        extra="forbid",
-        use_enum_values=True
-    )
+
+    def __init__(self, **data: Any) -> None:
+        """
+        Initialize the model configuration with parameters.
+
+        Args:
+            **data: Additional data to initialize the model configuration
+        """
+        super().__init__(**data)
+
     
     def get_parameter_default(self, parameter_name: str) -> Any:
         """

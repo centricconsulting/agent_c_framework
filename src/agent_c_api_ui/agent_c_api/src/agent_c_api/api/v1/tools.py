@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 import logging
 
 from agent_c.toolsets import Toolset
-from agent_c_api.core.agent_manager import UItoAgentBridgeManager
+from agent_c_api.core.user_session_manager import UserSessionManager
 
 # Always import the core tools - These must be available!
 from agent_c_tools import *  # noqa

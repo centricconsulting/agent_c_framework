@@ -6,15 +6,48 @@ from fastapi import Request, Depends, HTTPException
 
 from agent_c_api.config.redis_config import RedisConfig
 from agent_c_api.config.config_loader import get_allowed_params
-from agent_c_api.core.agent_manager import UItoAgentBridgeManager
 from agent_c_api.core.util.logging_utils import LoggingManager
 
 
 logger = LoggingManager(__name__).get_logger()
 
 
-def get_bridge_manager(request: Request) -> UItoAgentBridgeManager:
-    return request.app.state.agent_manager
+def get_user_session_manager(request) -> 'UserSessionManager':
+    """
+    Dependency to get the user sesion manager instance from the FastAPI application state.
+
+    Returns:
+        UserSessionManager instance
+    """
+    return request.app.state.user_session_manager
+
+def get_agent_config_loader(request) -> 'AgentConfigLoader':
+    """
+    Dependency to get the AgentConfigLoader instance from the FastAPI application state.
+
+    Returns:
+        AgentConfigLoader instance
+    """
+    return request.app.state.agent_config_loader
+
+def get_model_config_loader(request) -> 'ModelConfigurationLoader':
+    """
+    Dependency to get the model configuration loader instance from the FastAPI application state.
+
+    Returns:
+        ModelConfigurationLoader instance
+    """
+    return request.app.state.model_config_loader
+
+def get_chat_session_manager(request) -> 'ChatSessionManager':
+    """
+    Dependency to get the chat session manager instance from the FastAPI application state.
+
+    Returns:
+        chat_session_manager instance
+    """
+    return request.app.state.chat_session_manager
+
 
 
 def build_fields_from_config(config: dict) -> dict:
@@ -307,13 +340,13 @@ async def get_dynamic_params(request: Request, model_id: str):
         raise HTTPException(status_code=400, detail=f"Invalid parameters: {str(e)}")
 
 
-async def get_dynamic_form_params(request: Request, agent_manager=Depends(get_bridge_manager)):
+async def get_dynamic_form_params(request: Request):
     """
     Process form parameters with dynamic validation.
 
     Args:
         request: FastAPI request
-        agent_manager: Dependency that provides the agent manager
+
 
     Returns:
         Dict containing validated parameters, original form data, and model info
@@ -375,7 +408,7 @@ async def get_dynamic_form_params(request: Request, agent_manager=Depends(get_br
     return {
         "params": None,
         "original_form": form_dict,
-        "model_name": "unknown",
+        "model_name": model_id,
         "backend": "unknown"
     }
 

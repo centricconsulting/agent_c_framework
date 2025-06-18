@@ -4,8 +4,8 @@ from typing import Optional, Any, Dict
 from fastapi import Depends, HTTPException, Request
 import structlog
 
-from agent_c_api.api.dependencies import get_bridge_manager
-from agent_c_api.core.agent_manager import UItoAgentBridgeManager
+from agent_c_api.api.dependencies import get_user_session_manager
+from agent_c_api.core.user_session_manager import UserSessionManager
 from agent_c_api.core.repositories import get_session_repository, SessionRepository
 
 from agent_c_api.api.v2.models.session_models import (
@@ -33,7 +33,7 @@ async def get_session_service(
     Returns:
         SessionService: Initialized session service
     """
-    agent_manager = get_bridge_manager(request)
+    agent_manager = get_user_session_manager(request)
     return SessionService(agent_manager=agent_manager, session_repository=session_repository)
 
 class SessionService:
@@ -68,7 +68,7 @@ class SessionService:
             if not session:
                 raise HTTPException(status_code=500, detail="Failed to create session in Redis")
             
-            # Convert SessionCreate to kwargs for agent_manager.create_session
+            # Convert SessionCreate to kwargs for user_session_manager.create_session
             model_params = {
                 "temperature": session_data.temperature,
                 "reasoning_effort": session_data.reasoning_effort,
@@ -77,7 +77,7 @@ class SessionService:
             }
             
             additional_params: Dict[str, Any] = {
-                "persona_name": session_data.persona_id,
+                "agent_key": session_data.persona_id,
                 "custom_prompt": session_data.custom_prompt,
             }
             
@@ -118,7 +118,7 @@ class SessionService:
             return SessionDetail(
                 id=ui_session_id,
                 model_id=session_data.get("model_name", ""),
-                persona_id=session_data.get("persona_name", "default"),
+                persona_id=session_data.get("agent_key", "default"),
                 name=session_data.get("name", f"Session {ui_session_id}"),  # Required field with default
                 is_active=True,  # Set default active status
                 created_at=session_data.get("created_at", datetime.now()),
@@ -162,7 +162,7 @@ class SessionService:
             SessionSummary(
                 id=session_id,
                 model_id=session_data.get("model_name", ""),
-                persona_id=session_data.get("persona_name", "default"),
+                persona_id=session_data.get("agent_key", "default"),
                 name=session_data.get("name", f"Session {session_id}"),  # Required field with default
                 is_active=session_data.get("is_active", True),  # Required field with default
                 created_at=session_data.get("created_at", datetime.now()),
@@ -211,7 +211,7 @@ class SessionService:
         return SessionDetail(
             id=session_id,
             model_id=session_data.get("model_name", ""),
-            persona_id=session_data.get("persona_name", "default"),
+            persona_id=session_data.get("agent_key", "default"),
             name=session_data.get("name", f"Session {session_id}"),  # Required field with default
             is_active=session_data.get("is_active", True),  # Required field with default
             created_at=session_data.get("created_at", datetime.now()),
@@ -268,7 +268,7 @@ class SessionService:
             }
             
             additional_params = {
-                "persona_name": current_session.persona_id,
+                "agent_key": current_session.persona_id,
                 "custom_prompt": current_session.custom_prompt,
                 "additional_tools": current_session.tools,
             }
@@ -276,7 +276,7 @@ class SessionService:
             # Apply updates
             for key, value in updates.items():
                 if key == "persona_id":
-                    additional_params["persona_name"] = value
+                    additional_params["agent_key"] = value
                 elif key in model_params:
                     model_params[key] = value
                 elif key in additional_params:
@@ -362,7 +362,7 @@ class SessionService:
         # Convert to AgentConfig model
         return AgentConfig(
             model_id=agent_config.get("model_name", ""),
-            persona_id=agent_config.get("persona_name", "default"),
+            persona_id=agent_config.get("agent_key", "default"),
             custom_prompt=agent_config.get("custom_prompt"),
             temperature=agent_params.get("temperature"),
             reasoning_effort=agent_params.get("reasoning_effort"),
@@ -400,9 +400,9 @@ class SessionService:
         # Create a dictionary with only the fields that were provided in the update_data
         updates = update_data.model_dump(exclude_unset=True, exclude_none=True)
         
-        # Map persona_id to persona_name if it exists
+        # Map persona_id to agent_key if it exists
         if "persona_id" in updates:
-            updates["persona_name"] = updates.pop("persona_id")
+            updates["agent_key"] = updates.pop("persona_id")
         
         # Helper function for safe string conversion and truncation
         def safe_truncate(val, length=10):
@@ -417,7 +417,7 @@ class SessionService:
         
         # Update each parameter that exists in the update payload
         for key, value in updates.items():
-            if key in ["temperature", "reasoning_effort", "budget_tokens", "max_tokens", "custom_prompt", "persona_name"]:
+            if key in ["temperature", "reasoning_effort", "budget_tokens", "max_tokens", "custom_prompt", "agent_key"]:
                 # Only update if value is not None
                 if value is not None:
                     # Record the change

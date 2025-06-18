@@ -35,7 +35,7 @@ class AgentAssistToolBase(Toolset):
         if not 'name' in kwargs:
             kwargs['name'] = 'aa'
         super().__init__( **kwargs)
-        self.agent_loader = AgentConfigLoader()
+        self.agent_loader = AgentConfigLoader.instance()
         self.model_config_loader = ModelConfigurationLoader()
         self.chat_session_manager = DefaultSessionManager()
 
@@ -166,7 +166,7 @@ class AgentAssistToolBase(Toolset):
         return result
 
     async def _new_agent_session(self, agent: AgentConfiguration, user_session_id: str, agent_session_id: str) -> Dict[str, Any]:
-        metadata = {'persona_name': agent.name}
+        metadata = {'agent_key': agent.name}
         session = {'user_session_id': user_session_id, 'messages': [], 'metadata': metadata,
                    'created_at': datetime.now(), 'agent_key': agent.key, 'session_id': agent_session_id}
 

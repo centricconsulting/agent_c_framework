@@ -75,7 +75,7 @@ class TestV1ToV2Converters:
         v1_params = AgentInitializationParams(
             model_name="claude-3-5-sonnet-latest",
             backend="anthropic",
-            persona_name="researcher",
+            agent_key="researcher",
             custom_prompt="Act as a helpful researcher",
             temperature=0.7,
             max_tokens=4000,
@@ -96,7 +96,7 @@ class TestV1ToV2Converters:
         # Test update parameters conversion
         v1_params = AgentUpdateParams(
             ui_session_id="session-to-update",
-            persona_name="coder",
+            agent_key="coder",
             custom_prompt="Act as a code reviewer",
             temperature=0.5,
             reasoning_effort="medium"
@@ -113,7 +113,7 @@ class TestV1ToV2Converters:
         v1_params = AgentInitializationParams(
             model_name="gpt-4o",
             backend=None,  # None backend should default to "openai"
-            persona_name=None,  # None persona should default to "default"
+            agent_key=None,  # None persona should default to "default"
             custom_prompt=None,
             temperature=None,
             max_tokens=None,
@@ -154,7 +154,7 @@ class TestV2ToV1Converters:
         
         assert v1_params.model_name == "gpt-4o"
         assert v1_params.backend == "openai"
-        assert v1_params.persona_name == "default"
+        assert v1_params.agent_key == "default"
         assert v1_params.ui_session_id is None
     
     def test_v2_to_v1_session_params_full(self):
@@ -173,7 +173,7 @@ class TestV2ToV1Converters:
         
         assert v1_params.model_name == "claude-3-5-sonnet-latest"
         assert v1_params.backend == "anthropic"
-        assert v1_params.persona_name == "researcher"
+        assert v1_params.agent_key == "researcher"
         assert v1_params.custom_prompt == "Act as a helpful researcher"
         # Check temperature, reasoning_effort, and budget_tokens (should be None by default)
         assert v1_params.temperature is None
@@ -196,7 +196,7 @@ class TestV2ToV1Converters:
         
         assert v1_params.model_name == "gpt-4o"
         assert v1_params.backend == "openai"  # Default backend
-        assert v1_params.persona_name == "default"
+        assert v1_params.agent_key == "default"
         assert v1_params.custom_prompt is None
 
 

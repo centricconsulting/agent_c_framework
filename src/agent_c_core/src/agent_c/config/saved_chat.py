@@ -12,6 +12,8 @@ from typing import Optional, List
 from agent_c.models.chat_history import ChatSession
 from agent_c.config.config_loader import ConfigLoader
 
+_singleton_instance = None
+
 class SavedChatLoader(ConfigLoader):
     """
     Loader for model configuration files.
@@ -23,6 +25,25 @@ class SavedChatLoader(ConfigLoader):
     def __init__(self, config_path: Optional[str] = None):
         super().__init__(config_path)
         self.save_file_folder = Path(self.config_path).joinpath("saved_sessions")
+        global _singleton_instance
+        if _singleton_instance is None:
+            _singleton_instance = self
+
+    @classmethod
+    def instance(cls) -> 'SavedChatLoader':
+        """
+        Returns the singleton instance of SavedChatLoader.
+
+        This method ensures that only one instance of SavedChatLoader is created
+        and reused throughout the application.
+
+        Returns:
+            SavedChatLoader: The singleton instance of SavedChatLoader.
+        """
+        global _singleton_instance
+        if _singleton_instance is None:
+            _singleton_instance = cls()
+        return _singleton_instance
 
     @property
     def session_id_list(self) -> List[str]:

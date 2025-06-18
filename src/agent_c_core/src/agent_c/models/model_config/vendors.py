@@ -6,8 +6,8 @@ the root configuration model that contains all vendors and models.
 """
 
 from typing import List, Optional, Dict
-from pydantic import BaseModel, Field, ConfigDict
-
+from pydantic import  Field, ConfigDict
+from agent_c.models.base import BaseModel
 from .models import ModelConfiguration
 
 

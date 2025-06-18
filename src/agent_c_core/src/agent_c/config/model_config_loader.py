@@ -16,6 +16,7 @@ from agent_c.models.model_config.vendors import ModelConfigurationFile
 from agent_c.models.model_config.models import ModelConfigurationWithVendor
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames
 
+_singleton_instance = None
 
 class ModelConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
     """
@@ -27,6 +28,9 @@ class ModelConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
     
     def __init__(self, config_path: Optional[str] = None):
         super().__init__(config_path)
+        global _singleton_instance
+        if _singleton_instance is None:
+            _singleton_instance = self
 
         self.config_file_path = Path(self.config_path).joinpath("model_configs.json")
         self._cached_config: Optional[ModelConfigurationFile] = None
@@ -34,6 +38,20 @@ class ModelConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         
         # Load configuration using enhanced caching
         self.load_from_json()
+
+    @classmethod
+    def instance(cls) -> 'ModelConfigurationLoader':
+        """
+        Get the singleton instance of ModelConfigurationLoader.
+
+        Returns:
+            ModelConfigurationLoader instance
+        """
+        global _singleton_instance
+        if _singleton_instance is None:
+            _singleton_instance = cls()
+
+        return _singleton_instance
 
     @property
     def model_configs(self) -> ModelConfigurationFile:

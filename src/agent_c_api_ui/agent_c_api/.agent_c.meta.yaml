@@ -3010,7 +3010,7 @@ _plans:
           \ most of the application's work happens.\n\n**Components to Analyze**:\n\
           - `src/agent_c_api/core/repositories/` - All repository classes (session,\
           \ chat, user)\n- `src/agent_c_api/core/services/` - Service layer components\n\
-          - `src/agent_c_api/core/agent_bridge.py` - Agent integration bridge\n- `src/agent_c_api/core/agent_manager.py`\
+          - `src/agent_c_api/core/agent_bridge.py` - Agent integration bridge\n- `src/agent_c_api/core/user_session_manager.py`\
           \ - Agent management\n- `src/agent_c_api/core/file_handler.py` - File handling\
           \ operations\n- `src/agent_c_api/core/setup.py` - Core setup and initialization\n\
           \n**Analysis Focus**:\n1. **Repository Logging**: How data access operations\

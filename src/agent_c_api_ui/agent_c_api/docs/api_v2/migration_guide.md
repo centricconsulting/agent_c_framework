@@ -342,7 +342,7 @@ Session management has been significantly restructured in v2 to follow RESTful c
 async def create_session_v1(client, model_name, persona_name="default", temperature=0.7):
     payload = {
         "model_name": model_name,
-        "persona_name": persona_name,
+        "agent_key": persona_name,
         "temperature": temperature,
         "backend": "openai"
     }
@@ -548,7 +548,7 @@ async def update_agent_settings_v1(client, session_id, temperature=None, persona
     if temperature is not None:
         update_data["temperature"] = temperature
     if persona_name is not None:
-        update_data["persona_name"] = persona_name
+        update_data["agent_key"] = persona_name
         
     response = await client.post("/api/v1/update_settings", json=update_data)
     return response.json()
@@ -1247,7 +1247,7 @@ async def basic_chat_flow_v1(client, model_name="gpt-4", persona_name="default")
     # Initialize session
     init_response = await client.post("/api/v1/initialize", json={
         "model_name": model_name,
-        "persona_name": persona_name,
+        "agent_key": persona_name,
         "temperature": 0.7
     })
     session_id = init_response.json()["ui_session_id"]
@@ -1336,7 +1336,7 @@ async def complete_app_flow_v1(client, file_path=None):
     # 2. Initialize session
     init_response = await client.post("/api/v1/initialize", json={
         "model_name": model_name,
-        "persona_name": persona_name,
+        "agent_key": persona_name,
         "temperature": 0.7
     })
     session_id = init_response.json()["ui_session_id"]

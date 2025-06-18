@@ -5,7 +5,7 @@ from agent_c.config import ModelConfigurationLoader
 
 
 def get_allowed_params(model_id: str) -> Dict[str, Any]:
-    loader: ModelConfigurationLoader = ModelConfigurationLoader()
+    loader: ModelConfigurationLoader = ModelConfigurationLoader.instance()
     model_entry = loader.model_id_map.get(model_id)
     if model_entry:
         return model_entry.parameters

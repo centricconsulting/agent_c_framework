@@ -1,7 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
-
-from agent_c.config.model_config_loader import ModelConfigurationLoader
+from fastapi import APIRouter, HTTPException
 from agent_c_api.core.util.logging_utils import LoggingManager
+from agent_c.config.model_config_loader import ModelConfigurationLoader
 
 router = APIRouter()
 logger = LoggingManager(__name__).get_logger()
@@ -11,7 +10,7 @@ logger = LoggingManager(__name__).get_logger()
 async def list_models():
     """Get list of available models from model_configs.json"""
     try:
-        loader: ModelConfigurationLoader = ModelConfigurationLoader()
+        loader: ModelConfigurationLoader = ModelConfigurationLoader.instance()
         loader_list = loader.model_list
         model_list = [model.model_dump(exclude_none=True) for model in loader_list]
         return {"models": model_list}
