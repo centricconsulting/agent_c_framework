@@ -237,7 +237,7 @@ class MnemonicSlugs:
             random.setstate(state)
             
     @classmethod
-    def generate_hierarchical_id(cls, id_parts: list[tuple[Union[int, str, None], int]], delimiter: str = ":") -> str:
+    def generate_hierarchical_id(cls, id_parts: list[tuple[Union[int, str, None], int]], delimiter: str = "~") -> str:
         """
         Generate a hierarchical ID from multiple parts.
         
@@ -264,7 +264,7 @@ class MnemonicSlugs:
         return delimiter.join(parts)
     
     @classmethod
-    def parse_hierarchical_id(cls, hierarchical_id: str, delimiter: str = ":") -> list[str]:
+    def parse_hierarchical_id(cls, hierarchical_id: str, delimiter: str = "~") -> list[str]:
         """
         Parse a hierarchical ID back into its component parts.
         

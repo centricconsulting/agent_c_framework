@@ -199,8 +199,6 @@ class TestAgentService:
         mock_agent.temperature = 0.8
         assert mock_agent.agent_key == "researcher"
         
-        # Verify initialize_agent_parameters was called
-        mock_agent.initialize_agent_parameters.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_update_agent_config_no_changes(self, mock_agent_manager):

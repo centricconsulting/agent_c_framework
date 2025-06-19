@@ -436,11 +436,7 @@ class SessionService:
             else:
                 changes_skipped[key] = "Invalid parameter"
         
-        # Reinitialize the agent if needed
-        if needs_agent_reinitialization:
-            await agent_bridge.initialize_agent_parameters()
 
-        
         # Get updated agent configuration
         updated_config = await self.get_agent_config(session_id)
         if not updated_config:

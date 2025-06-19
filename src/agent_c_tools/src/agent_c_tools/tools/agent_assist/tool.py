@@ -3,6 +3,8 @@ from typing import Any, Optional, Dict
 import markdown
 import yaml
 
+from agent_c.models import TextInput
+from agent_c.models.context import InteractionContext, InteractionInputs
 from agent_c.toolsets import Toolset, json_schema
 from .base import AgentAssistToolBase
 from .prompt import AgentAssistSection
@@ -41,31 +43,24 @@ class AgentAssistTools(AgentAssistToolBase):
     async def oneshot(self, **kwargs) -> str:
         request: str = ("# Agent Assist Tool Notice\nThe following oneshot request is from another agent. "
                         f"The agent is delegating a task for YOU to perform.\n\n---\n\n{kwargs.get('request')}\n")
-        tool_context: Dict[str, Any] = kwargs.get("context")
+        context: InteractionContext = kwargs.get("context")
+        # TODO: Fix this with agent config v3
         process_context: Optional[str] = kwargs.get('process_context')
         try:
             agent_config = self.agent_loader.catalog[kwargs.get('agent_key')]
         except FileNotFoundError:
             return f"Error: Agent {kwargs.get('agent_key')} not found in catalog."
 
-        await self._raise_render_media(
-            sent_by_class=self.__class__.__name__,
-            sent_by_function='oneshot',
-            content_type="text/html",
-            content=markdown.markdown(f"**Domo** agent requesting assistance from '*{agent_config.name}*':\n\n{request}</p>"),
-            tool_context=tool_context
-        )
+        await self._render_media_markdown(context,
+                                          f"**{context.chat_session.agent_config.key}** agent requesting assistance from '*{agent_config.key}*':\n\n{request}</p>",
+                                          'oneshot')
 
-        messages = await self.agent_oneshot(request, agent_config, tool_context['session_id'], tool_context,
-                                             process_context=process_context,
-                                             client_wants_cancel=tool_context.get('client_wants_cancel', None))
-        await self._raise_render_media(
-            sent_by_class=self.__class__.__name__,
-            sent_by_function='chat',
-            content_type="text/html",
-            content=markdown.markdown(f"Interaction complete for Agent Assist oneshot with {agent_config.name}. Control returned to requesting agent."),
-            tool_context=tool_context
-        )
+        inputs: InteractionInputs = InteractionInputs(text=TextInput(content=request))
+
+        messages = await self.agent_oneshot(inputs, agent_config, context)
+        await self._render_media_markdown(context,
+                                          f"Oneshot with {agent_config.key} complete. Control returned to requesting agent.",
+                                          'oneshot')
 
         last_message = messages[-1] if messages else None
 
@@ -107,8 +102,10 @@ class AgentAssistTools(AgentAssistToolBase):
     async def chat(self, **kwargs) -> str:
         message: str = ("# Agent Assist Tool Notice\nThe following chat message is from another agent. "
                         f"The agent is delegating to YOU for your expertise.\n\n---\n\n{kwargs.get('message')}\n")
-        tool_context: Dict[str, Any] = kwargs.get("context")
+        context: InteractionContext = kwargs.get("context")
         agent_session_id: Optional[str] = kwargs.get('session_id', None)
+
+        # TODO: Fix this with agent config v3
         process_context: Optional[str] = kwargs.get('process_context')
 
         try:
@@ -116,27 +113,17 @@ class AgentAssistTools(AgentAssistToolBase):
         except FileNotFoundError:
             return f"Error: Agent {kwargs.get('agent_key')} not found in catalog."
 
-        await self._raise_render_media(
-            sent_by_class=self.__class__.__name__,
-            sent_by_function='chat',
-            content_type="text/html",
-            content=markdown.markdown(f"**Domo agent** requesting assistance from '*{agent_config.name}*': \n\n{message}"),
-            tool_context=tool_context
-        )
+        await self._render_media_markdown(context,
+                                          f"**{context.chat_session.agent_config.key}** chatting with '*{agent_config.key}*':\n\n{message}",
+                                          'chat')
 
-        agent_session_id, messages = await self.agent_chat(message, agent_config,
-                                                           tool_context['session_id'],
-                                                           agent_session_id,
-                                                           tool_context,
-                                                           process_context=process_context,
-                                                           client_wants_cancel=tool_context.get('client_wants_cancel', None))
-        await self._raise_render_media(
-            sent_by_class=self.__class__.__name__,
-            sent_by_function='chat',
-            content_type="text/html",
-            content=markdown.markdown(f"Interaction complete for Agent Assist Session ID: {agent_session_id} with {agent_config.name}. Control returned to requesting agent."),
-            tool_context=tool_context
-        )
+        inputs: InteractionInputs = InteractionInputs(text=TextInput(content=message))
+
+        agent_session_id, messages = await self.agent_chat(inputs, agent_config, context, agent_session_id)
+
+        await self._render_media_markdown(context,
+                                          f"Interaction between **{context.chat_session.agent_config.key}** and *{agent_config.key}* complete. Agent session ID: {agent_session_id}.\n\nControl returned to requesting agent.",
+                                          'chat')
         if messages is not None and len(messages) > 0:
             last_message = messages[-1]
             agent_response = yaml.dump(last_message, allow_unicode=True)

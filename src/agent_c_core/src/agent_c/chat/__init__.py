@@ -1,9 +1,9 @@
 from agent_c.chat.session_manager import ChatSessionManager
 from agent_c.models.chat_history.chat_session import ChatSession # noqa
 
-DefaultSessionManager = ChatSessionManager
+DefaultChatSessionManager = ChatSessionManager
 
-def get_default_session_manager() -> ChatSessionManager:
+def get_default_chat_session_manager() -> ChatSessionManager:
     """
     Returns the default chat session manager instance.
 
@@ -12,4 +12,4 @@ def get_default_session_manager() -> ChatSessionManager:
     Returns:
         ChatSessionManager: The default chat session manager instance.
     """
-    return DefaultSessionManager()
+    return DefaultChatSessionManager.instance()

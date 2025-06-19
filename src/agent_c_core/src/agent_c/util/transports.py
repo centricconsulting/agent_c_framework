@@ -365,7 +365,7 @@ class FileTransport(TransportInterface):
             else:
                 self._file_handle.write(str(transport_entry) + '\n')
             
-            self._file_handle.flush()
+            self._file_handle.flush_id()
             
             # Update metrics
             self.metrics.total_sent += 1

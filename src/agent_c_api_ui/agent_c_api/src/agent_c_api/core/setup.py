@@ -8,7 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 
-from agent_c.chat import get_default_session_manager
+from agent_c.chat import get_default_chat_session_manager
 from agent_c.config import ModelConfigurationLoader
 from agent_c.config.agent_config_loader import AgentConfigLoader
 from agent_c.config.saved_chat import SavedChatLoader
@@ -117,7 +117,7 @@ def create_application(router: APIRouter, **kwargs) -> FastAPI:
 
         # Shared AgentManager instance.
         logger.info("🤖 Initializing Session Managers...")
-        lifespan_app.state.chat_session_manager = get_default_session_manager()
+        lifespan_app.state.chat_session_manager = get_default_chat_session_manager()
         logger.info("✅ Chat session repository successfully loaded")
 
         lifespan_app.state.user_session_manager = UserSessionManager(lifespan_app.state.chat_session_manager)

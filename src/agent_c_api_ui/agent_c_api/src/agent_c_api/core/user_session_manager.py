@@ -4,7 +4,7 @@ import traceback
 
 from typing import Dict, Optional, List
 
-from agent_c.chat import DefaultSessionManager
+from agent_c.chat import DefaultChatSessionManager
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.config.agent_config_loader import AgentConfigLoader
 from agent_c.chat.session_manager import ChatSessionManager, ChatSession
@@ -32,7 +32,7 @@ class UserSessionManager:
         self._locks: Dict[str, asyncio.Lock] = {}
         self._cancel_events: Dict[str, threading.Event] = {}
         self.agent_config_loader: AgentConfigLoader = AgentConfigLoader.instance()
-        self.chat_session_manager: DefaultSessionManager = chat_session_manager
+        self.chat_session_manager: DefaultChatSessionManager = chat_session_manager
 
 
 

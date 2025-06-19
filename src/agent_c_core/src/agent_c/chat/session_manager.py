@@ -1,4 +1,6 @@
 import json
+from idlelib.window import add_windows_to_menu
+
 import yaml
 
 from typing import Optional, Dict, List
@@ -6,7 +8,7 @@ from agent_c.models.chat_history import ChatSession
 from agent_c.config.saved_chat import SavedChatLoader
 from agent_c.util.logging_utils import LoggingManager
 
-
+_instance: Optional['ChatSessionManager'] = None
 
 class ChatSessionManager:
     """
@@ -20,12 +22,29 @@ class ChatSessionManager:
         """
         Initializes a new instance of ChatSessionManager with default values.
         """
+        global _instance
+        if _instance is None:
+            _instance = self
+
         self.is_new_user: bool = True
         self.is_new_session: bool = True
         self._loader: SavedChatLoader = SavedChatLoader()
         self.session_id_list: List[str] = self._loader.session_id_list
         self._session_cache: Dict[str, ChatSession] = {}
         self.logger = LoggingManager(__name__).get_logger()
+
+    @classmethod
+    def instance(cls):
+        """
+        Returns the singleton instance of ChatSessionManager.
+
+        If no instance exists, it creates a new one.
+        """
+        global _instance
+        if _instance is None:
+            _instance = cls()
+
+        return _instance
 
     async def delete_session(self, session_id) -> None:
         """
@@ -103,7 +122,17 @@ class ChatSessionManager:
         """
         pass
 
-    async def flush(self, session_id: str) -> None:
+    async def flush_session(self, session: ChatSession) -> None:
+        """
+        Flushes the current session to persistent storage.
+
+        Args:
+            session (ChatSession): The session to flush.
+        """
+        return await self.flush_id(session.session_id)
+
+
+    async def flush_id(self, session_id: str) -> None:
         session = self._session_cache.get(session_id)
         if session is None or len(session.messages) == 0:
             self.logger.warning(f"Session {session_id} is empty or not found, skipping flush.")

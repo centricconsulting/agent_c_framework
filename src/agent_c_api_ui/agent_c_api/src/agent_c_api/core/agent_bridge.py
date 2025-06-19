@@ -240,38 +240,6 @@ class AgentBridge:
             raise
 
 
-    async def initialize_agent_parameters(self) -> None:
-        """
-        Initialize the internal agent with prompt builders, tools, and configurations.
-
-        This method creates and configures the conversational agent for the application.
-        It sets up the agent's prompt builder and initializes the appropriate agent
-        class based on the specified backend (Claude, Bedrock, or OpenAI).
-
-        Process:
-            1. Build the system prompt using configured sections
-            2. Prepare common agent parameters
-            3. Add backend-specific parameters (temperature, reasoning settings, etc.)
-            4. Initialize the appropriate agent class based on backend
-
-        Raises:
-            Exception: If an error occurs during agent initialization.
-            
-        Note:
-            Sets self.agent_runtime to the initialized agent instance, which will be
-            one of ClaudeChatAgentRuntime, ClaudeBedrockChatAgent, or GPTChatAgentRuntime.
-        """
-        prompt_builder = PromptBuilder()
-        agent_params = self.chat_session.agent_config.agent_params.model_dump(exclude_none=True)
-
-        agent_params |= {
-            "prompt_builder": prompt_builder,
-            "tool_chest": self.tool_chest,
-            "streaming_callback": self.streaming_callback_with_logging
-        }
-
-        self.logger.info(f"Agent initialized using the following parameters: {agent_params}")
-
     async def reset_streaming_state(self) -> None:
         """
         Reset streaming state to ensure clean session.
@@ -284,32 +252,6 @@ class AgentBridge:
         )
         self._stream_queue = asyncio.Queue()
 
-    async def __build_prompt_metadata(self) -> Dict[str, Any]:
-        """
-        Build metadata for prompts including user and session information.
-
-        Creates a comprehensive metadata dictionary that provides context
-        for prompt generation, including session details, user information,
-        and system configuration.
-
-        Returns:
-            Dict[str, Any]: Metadata dictionary containing:
-                - session_id: Session ID for the chat session (not UI session ID)
-                - current_user_username: Username of the current user
-                - persona_prompt: Prompt for the persona
-                - agent_config: Complete agent configuration
-                - voice_tools: Voice tools configuration
-                - timestamp: Current timestamp in ISO format
-                - env_name: Environment name (development, production, etc.)
-        """
-        return {
-            "session_id": self.chat_session.session_id,
-            "current_user_username": self.chat_session.user_id,
-            "persona_prompt": self.chat_session.agent_config.persona,
-            "agent_config": self.chat_session.agent_config,
-            "timestamp": datetime.now().isoformat(),
-            "env_name": os.getenv('ENV_NAME', DEFAULT_ENV_NAME)
-        }
 
     @staticmethod
     def _current_timestamp() -> str:
@@ -642,7 +584,7 @@ class AgentBridge:
             Exception: If session flushing fails.
         """
         self.chat_session.messages = event.messages
-        await self.session_manager.flush(self.chat_session.session_id)
+        await self.session_manager.flush_id(self.chat_session.session_id)
         
         payload = json.dumps({
             "type": "history",
@@ -974,7 +916,7 @@ class AgentBridge:
                     break
 
             await chat_task
-            await self.session_manager.flush(self.chat_session.session_id)
+            await self.session_manager.flush_id(self.chat_session.session_id)
 
         except Exception as e:
             self.logger.exception (f"Error in stream_chat: {e}", exc_info=True)

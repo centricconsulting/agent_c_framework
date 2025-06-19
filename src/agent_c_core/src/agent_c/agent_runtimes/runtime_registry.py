@@ -31,8 +31,8 @@ class RuntimeRegistry:
         return None
 
     @classmethod
-    def runtime_for_model_id(cls, loader: ModelConfigurationLoader, model_id: str) -> Optional[type[AgentRuntime]]:
-        model_config: ModelConfiguration = loader.model_id_map.get(model_id)
+    def runtime_for_model_id(cls, model_id: str) -> Optional[type[AgentRuntime]]:
+        model_config: ModelConfiguration = ModelConfigurationLoader.instance().model_id_map.get(model_id)
         if not model_config:
             return None
 
@@ -71,8 +71,8 @@ class RuntimeRegistry:
                            concurrency_limit=concurrency_limit, context=context)
 
     @classmethod
-    def instantiate_model_runtime(cls, model_loader: ModelConfigurationLoader,  model_id: str, context = None, max_retry_delay_secs: int = 300, concurrency_limit: int = 3) -> AgentRuntime | None:
-        runtime_cls = cls.runtime_for_model_id(model_loader, model_id)
+    def instantiate_model_runtime(cls, model_id: str, context = None, max_retry_delay_secs: int = 300, concurrency_limit: int = 3) -> AgentRuntime | None:
+        runtime_cls = cls.runtime_for_model_id(model_id)
         if runtime_cls is None:
             return None
 
