@@ -1,360 +1,212 @@
-# Async Observable System Documentation
+**AsyncObservableMixin**
 
-## Overview
+As part of the **agent\_c** framework, `AsyncObservableMixin` provides a lightweight, drop‑in mixin for adding both synchronous and asynchronous event handling to your classes. This document covers:
 
-The Async Observable system provides a reactive programming pattern for Pydantic models, enabling automatic responses to field changes through asynchronous callbacks. This system is particularly useful for maintaining data consistency, triggering side effects, and implementing reactive UI patterns.
+- Overview and motivations
+- Installation & import path
+- API reference
+- Usage examples
+- Batching strategies
+- Event‑driven best practices
+- Troubleshooting & tips
 
-## Core Components
+---
 
-### AsyncObservableWrapper
+## 1. Overview
 
-Located in `agent_c.util.async_observable`
+`AsyncObservableMixin` augments any class with the ability to:
 
-A utility wrapper that provides observable functionality to any object, allowing you to register callbacks that fire when specific attributes change.
+- Register synchronous callbacks (`on`/`off`) for immediate handling
+- Register asynchronous callbacks (coroutines) that can be scheduled (`trigger`) or awaited (`atrigger`)
+- Clean up dead references automatically via `weakref`
+- Log errors in async handlers without crashing the main loop
 
-```python
-from agent_c.util.async_observable import AsyncObservableWrapper, CallbackType
+### Motivations
 
-# Wrap any object to make it observable
-wrapper = AsyncObservableWrapper(your_object)
+- **Separation of concerns**: keep event logic out of business methods
+- **Flexibility**: mix into any class via multiple inheritance
+- **Async support**: handle long‑running tasks (e.g. I/O notifications) gracefully
+- **Low overhead**: minimal dependencies and memory footprint
 
-# Register callbacks for attribute changes
-async def on_change(old_value, new_value):
-    print(f"Value changed from {old_value} to {new_value}")
+---
 
-wrapper.register_callback("attribute_name", on_change)
+## 2. Installation & Import
+
+Ensure `agent_c` is on your Python path (e.g. installed via `poetry` or `pip`).
+
+```bash
+pip install agent-c
 ```
 
-### AsyncObservableModel
-
-Located in `agent_c.models.async_observable`
-
-A Pydantic BaseModel subclass that provides built-in observable functionality for model fields.
-
 ```python
-from agent_c.models.async_observable import AsyncObservableModel, AsyncObservableField
-
-class MyModel(AsyncObservableModel):
-    name: str = AsyncObservableField(default="")
-    count: int = AsyncObservableField(default=0)
+from agent_c.util.observable.async_observable_mixin import AsyncObservableMixin
 ```
 
-### AsyncObservableField
+---
 
-A Pydantic Field factory that marks fields as observable, enabling automatic callback registration and execution.
+## 3. API Reference
 
-## Key Benefits
+All examples assume `class MyClass(AsyncObservableMixin, BaseClass): ...` and that you call `super().__init__()`.
 
-### 1. **Reactive Data Consistency**
-
-Automatically maintain consistency between related data when changes occur:
+### Constructor
 
 ```python
-class AgentConfiguration(AsyncObservableModel):
-    model_id: str = AsyncObservableField(default="")
-    agent_params: dict = AsyncObservableField(default_factory=dict)
-
-    async def _on_model_id_change(self, old_value: str, new_value: str):
-        """Automatically update agent_params when model_id changes"""
-        vendor, model = parse_model_id(new_value)
-        self.agent_params = create_params_for_vendor(vendor, model)
+def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    # ... your own init logic
 ```
 
-### 2. **Decoupled Event Handling**
+- Initializes internal `Observable` and async callback registry.
 
-Separate business logic from data models while maintaining responsiveness:
+### on(event: str, callback: Callable)
+
+Register a handler for `event`:
+
+- **Sync**: any regular function — called immediately in `trigger`
+- **Async**: coroutine function — scheduled or awaited
 
 ```python
-# Register external handlers
-config.register_callback("model_id", update_ui_model_selector)
-config.register_callback("agent_params", validate_parameters)
-config.register_callback("agent_params", save_to_database)
+obj.on("data_received", sync_handler)
+obj.on("data_received", async_handler)
 ```
 
-### 3. **UI Synchronization**
+### off(event: str, callback: Callable)
 
-Keep UI components synchronized with model state changes:
+Unregister a previously registered handler:
 
 ```python
-async def sync_ui_on_model_change(old_value, new_value):
-    """Update UI when model configuration changes"""
-    await update_model_dropdown(new_value)
-    await refresh_parameter_panel()
-    await validate_model_compatibility()
-
-agent_config.register_callback("model_id", sync_ui_on_model_change)
+obj.off("data_received", sync_handler)
+obj.off("data_received", async_handler)
 ```
 
-## Usage Patterns
+### trigger(event: str, \*args, \*\*kwargs)
 
-### Basic Observable Model
+Fire all sync callbacks immediately, then schedule async callbacks if an active event loop exists.
 
 ```python
-from agent_c.models.async_observable import AsyncObservableModel, AsyncObservableField
-
-class UserProfile(AsyncObservableModel):
-    username: str = AsyncObservableField(default="")
-    email: str = AsyncObservableField(default="")
-    preferences: dict = AsyncObservableField(default_factory=dict)
-
-    async def _on_username_change(self, old_value: str, new_value: str):
-        """Built-in callback for username changes"""
-        print(f"Username changed: {old_value} -> {new_value}")
-        await self.validate_username(new_value)
+obj.trigger("finished", result)
 ```
 
-### External Callback Registration
+- If no loop is running, async callbacks are logged and skipped (to avoid deadlocks).
+
+### atrigger(event: str, \*args, \*\*kwargs) -> Awaitable
+
+Awaitable version that executes sync handlers, then `await`s all async handlers to completion:
 
 ```python
-# Create model instance
-profile = UserProfile()
-
-# Register external callbacks
-async def log_email_change(old_email: str, new_email: str):
-    logger.info(f"Email updated from {old_email} to {new_email}")
-    await send_verification_email(new_email)
-
-async def update_user_cache(old_email: str, new_email: str):
-    await cache.update_user_email(profile.username, new_email)
-
-# Register multiple callbacks for the same field
-profile.register_callback("email", log_email_change)
-profile.register_callback("email", update_user_cache)
-```
-
-### Cascading Updates
-
-```python
-class AgentConfiguration(AsyncObservableModel):
-    model_id: str = AsyncObservableField(default="")
-    vendor: str = AsyncObservableField(default="")
-    model_name: str = AsyncObservableField(default="")
-    agent_params: dict = AsyncObservableField(default_factory=dict)
-
-    async def _on_model_id_change(self, old_value: str, new_value: str):
-        """Parse model_id and update dependent fields"""
-        try:
-            vendor, model = new_value.split("/", 1)
-            self.vendor = vendor  # This will trigger _on_vendor_change
-            self.model_name = model  # This will trigger _on_model_name_change
-        except ValueError:
-            logger.warning(f"Invalid model_id format: {new_value}")
-
-    async def _on_vendor_change(self, old_value: str, new_value: str):
-        """Update agent_params when vendor changes"""
-        self.agent_params = get_default_params_for_vendor(new_value)
-
-    async def _on_model_name_change(self, old_value: str, new_value: str):
-        """Validate model name and update specific parameters"""
-        if not await validate_model_exists(self.vendor, new_value):
-            raise ValueError(f"Model {new_value} not found for vendor {self.vendor}")
-
-        # Update model-specific parameters
-        model_params = await get_model_specific_params(self.vendor, new_value)
-        self.agent_params.update(model_params)
-```
-
-## Real-World Example: Agent Configuration Management
-
-Here's how the system is actually implemented in the codebase:
-
-```python
-class BaseAgentConfiguration(AsyncObservableModel):
-    """Base configuration with common fields across all agent configuration versions"""
-    name: str = Field(..., description="Name of the agent")
-    key: str = Field(..., description="Key for the agent configuration, used for identification")
-    agent_description: Optional[str] = Field(None, description="A description of the agent's purpose and capabilities")
-    tools: List[str] = Field(default_factory=list, description="List of enabled toolset names the agent can use")
-    agent_params: Optional[CompletionParams] = AsyncObservableField(None, description="Parameters for the interaction with the agent")
-    prompt_metadata: Optional[dict[str, Any]] = Field(None, description="Metadata for the prompt")
-    persona: str = Field(..., description="Persona prompt defining the agent's behavior")
-    uid: Optional[str] = Field(None, description="Unique identifier for the configuration")
-
-    def __init__(self, **data) -> None:
-        super().__init__(**data)
-        model_id = self.agent_params.model_id
-        self._current_model_vendor: str = ModelConfigurationLoader.instance().model_id_map[model_id].vendor
-        # Register observer on the nested agent_params object
-        self.agent_params.add_observer(self.on_agent_parms_model_id_change, "model_id")
-
-    def on_agent_parms_model_id_change(self, old_value: str, new_value: str) -> None:
-        """
-        Callback when the model_id in agent_params changes.
-        Automatically updates agent_params to the correct vendor-specific type.
-        """
-        # Handle case where agent_params doesn't have a type field yet
-        if 'type' not in self.agent_params:
-            self._current_model_vendor = ModelConfigurationLoader.instance().model_id_map[new_value].vendor
-            self.agent_params = ModelConfigurationLoader.instance().default_params_for_model(new_value)
-            return
-
-        # Skip if no actual change
-        if old_value == new_value:
-            return
-
-        # Check if vendor has changed
-        new_value_vendor = ModelConfigurationLoader.instance().model_id_map[new_value].vendor
-        if self._current_model_vendor == new_value_vendor:
-            return
-
-        # Vendor changed - update to new vendor's default parameters
-        self._current_model_vendor = new_value_vendor
-        self.agent_params = ModelConfigurationLoader.instance().default_params_for_model(new_value)
-```
-
-### Key Implementation Details:
-
-1. **Nested Observable**: The `agent_params` field is marked as `AsyncObservableField`, and the callback is registered on the nested `CompletionParams` object's `model_id` field.
-
-2. **Vendor Tracking**: The system tracks the current model vendor (`_current_model_vendor`) to avoid unnecessary updates when switching between models from the same vendor.
-
-3. **ModelConfigurationLoader Integration**: Uses the existing `ModelConfigurationLoader` singleton to:
-   
-   - Map model IDs to vendor information
-   - Get default parameters for specific models
-
-4. **Smart Updates**: Only triggers parameter replacement when the vendor actually changes, preserving user customizations when switching between models from the same vendor.
-
-This implementation ensures that when the UI changes the model ID in `agent_params`, the system automatically updates the entire `agent_params` object to the correct vendor-specific type with appropriate defaults.
-
-## Advanced Features
-
-### Conditional Callbacks
-
-```python
-class ConditionalModel(AsyncObservableModel):
-    status: str = AsyncObservableField(default="inactive")
-    data: dict = AsyncObservableField(default_factory=dict)
-
-    async def _on_data_change(self, old_value: dict, new_value: dict):
-        """Only process data changes when status is active"""
-        if self.status == "active":
-            await self.process_data_change(old_value, new_value)
-```
-
-### Callback Priorities
-
-```python
-# Register callbacks with priorities (lower number = higher priority)
-model.register_callback("field", high_priority_callback, priority=1)
-model.register_callback("field", normal_callback, priority=5)
-model.register_callback("field", low_priority_callback, priority=10)
+await obj.atrigger("finished", result)
 ```
 
 ### Error Handling
 
-```python
-async def safe_callback(old_value, new_value):
-    try:
-        await risky_operation(new_value)
-    except Exception as e:
-        logger.error(f"Callback failed: {e}")
-        # Optionally revert change
-        # model.field = old_value
+Async callbacks run inside a try/except and log exceptions via `LoggingManager`:
 
-model.register_callback("field", safe_callback)
+```text
+ERROR Error in async callback for 'event_name': <exception details>
 ```
 
-## Best Practices
+---
 
-### 1. **Name Conventions**
+## 4. Usage Examples
 
-- Use `_on_<field_name>_change` for built-in model callbacks
-- Use descriptive names for external callbacks: `update_ui_on_model_change`
-
-### 2. **Error Handling**
-
-- Always handle exceptions in callbacks to prevent cascade failures
-- Log errors appropriately for debugging
-- Consider whether to revert changes on callback failures
-
-### 3. **Performance Considerations**
-
-- Avoid heavy computations in callbacks
-- Use debouncing for rapid successive changes
-- Consider async/await for I/O operations
-
-### 4. **Testing**
-
-- Mock external dependencies in callback tests
-- Test both successful and error scenarios
-- Verify callback execution order when multiple callbacks are registered
-
-## Migration Guide
-
-### From Regular Pydantic Models
+### Basic example
 
 ```python
-# Before
-class OldModel(BaseModel):
-    name: str = Field(default="")
+class Worker(AsyncObservableMixin):
+    def __init__(self, id: int):
+        super().__init__()
+        self.id = id
 
-# After  
-class NewModel(AsyncObservableModel):
-    name: str = AsyncObservableField(default="")
+    def start(self):
+        self.trigger("start", self.id)
 
-    async def _on_name_change(self, old_value: str, new_value: str):
-        # Add reactive behavior
-        pass
+    async def finish(self):
+        await self.atrigger("finish", self.id)
 ```
-
-### Adding Observability to Existing Models
 
 ```python
-# Existing model
-class ExistingModel(BaseModel):
-    field: str = Field(default="")
+async def main():
+    w = Worker(42)
 
-# Add observability
-class ObservableExistingModel(AsyncObservableModel, ExistingModel):
-    field: str = AsyncObservableField(default="")
+    # sync handler
+    w.on("start", lambda i: print(f"Worker {i} started"))
 
-    async def _on_field_change(self, old_value: str, new_value: str):
-        # New reactive behavior
-        pass
+    # async handler
+    async def notify(i):
+        await asyncio.sleep(0.1)
+        print(f"Notification: worker {i} done")
+
+    w.on("finish", notify)
+
+    w.start()             # prints immediately
+    await w.finish()      # waits 0.1s, prints notification
 ```
 
-## Troubleshooting
-
-### Common Issues
-
-1. **Callbacks not firing**: Ensure fields are marked with `AsyncObservableField`
-2. **Infinite loops**: Be careful with callbacks that modify other observed fields
-3. **Performance issues**: Avoid synchronous operations in async callbacks
-4. **Memory leaks**: Properly unregister callbacks when objects are destroyed
-
-### Debugging
+### Removing handlers
 
 ```python
-# Enable debug logging
-import logging
-logging.getLogger('agent_c.models.async_observable').setLevel(logging.DEBUG)
-
-# Add debug callback
-async def debug_callback(old_value, new_value):
-    print(f"Field changed: {old_value} -> {new_value}")
-
-model.register_callback("field", debug_callback)
+w.off("start", sync_handler)
+w.off("finish", notify)
 ```
 
-## API Reference
+---
 
-### AsyncObservableModel Methods
+## 5. Batching Strategies
 
-- `register_callback(field_name: str, callback: CallbackType, priority: int = 5)`
-- `unregister_callback(field_name: str, callback: CallbackType)`
-- `clear_callbacks(field_name: str = None)`
+To avoid handling high‑frequency events one at a time, consider batching:
 
-### AsyncObservableWrapper Methods
-
-- `register_callback(attr_name: str, callback: CallbackType)`
-- `unregister_callback(attr_name: str, callback: CallbackType)`
-- `trigger_callbacks(attr_name: str, old_value, new_value)`
-
-### CallbackType
+1. **Event buffer**: accumulate payloads in a list or queue, trigger on threshold or timer.
+2. **Throttling**: ignore events until a cooldown expires.
+3. **Debouncing**: reset a timer on each event; only trigger after a quiet period.
 
 ```python
-CallbackType = Callable[[Any, Any], Awaitable[None]]
+class BatchWorker(AsyncObservableMixin):
+    def __init__(self, batch_size=10, interval=1.0):
+        super().__init__()
+        self._buffer = []
+        self._batch_size = batch_size
+        self._interval = interval
+        self._task = None
+
+    def on_data(self, item):
+        self._buffer.append(item)
+        if len(self._buffer) >= self._batch_size:
+            self._flush()
+        elif self._task is None:
+            self._task = asyncio.get_running_loop().call_later(
+                self._interval, self._flush
+            )
+
+    def _flush(self):
+        data = self._buffer.copy()
+        self._buffer.clear()
+        if self._task:
+            self._task.cancel()
+            self._task = None
+        self.trigger("batch", data)
 ```
 
-Callbacks receive `(old_value, new_value)` and must be async functions returning None.
+---
+
+## 6. Event‑Driven Best Practices
+
+- **Keep events coarse‑grained**: too many tiny events lead to coupling and complexity.
+- **Document event contracts**: clarify payload shape and ordering guarantees.
+- **Use namespaces**: prefix event names (e.g. `file.uploaded`) to avoid collisions.
+- **Clean up**: always `off()` handlers when shutting down or when the listener’s lifecycle ends to prevent memory leaks.
+- **Error isolation**: let individual handlers fail without affecting others.  `atrigger` uses `gather(return_exceptions=True)`.
+- **Avoid blocking**: sync handlers should be lightweight; delegate heavy work to async handlers.
+- **Loop awareness**: call `atrigger` inside coroutines; `trigger` outside if you don’t need to wait.
+
+---
+
+## 7. Troubleshooting & Tips
+
+- **"Async callbacks but no running event loop" warning**: occurs when `trigger` is called outside a coroutine.  Either switch to `atrigger` within an async context or start a loop.
+- **Missing callbacks**: ensure your callback signatures match, and unregister with the same reference.
+- **Inheritance issues**: if `__init__` of a superclass doesn’t call `super()`, mixin initialization may be skipped—place `AsyncObservableMixin` early in your MRO.
+
+---
+
+> This mixin is battle‑tested in **Agent C**, our production‑ready AI agent framework. Feel free to adapt it or extend it (e.g. add priority queues, persistent event logs, etc.) to suit your needs.
+

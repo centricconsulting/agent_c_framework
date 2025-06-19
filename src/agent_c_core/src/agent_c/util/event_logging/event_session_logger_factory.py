@@ -17,17 +17,17 @@ import os
 import logging
 import warnings
 from pathlib import Path
-from typing import Optional, Callable, Dict, Any, Union, List
+from typing import Optional, Callable, Dict, Any, List
 from dataclasses import dataclass, field
 from enum import Enum
 
-from .event_session_logger import EventSessionLogger
-from .logging_utils import LoggingManager
-from .transports import (
+from agent_c.util.event_logging.event_session_logger import EventSessionLogger
+from agent_c.util.logging_utils import LoggingManager
+from agent_c.util.transports import (
     TransportInterface, CallbackTransport, LoggingTransport, NullTransport,
     FileTransport, HTTPTransport, QueueTransport, RetryTransport
 )
-from .transport_exceptions import EventSessionLoggerError
+from agent_c.util.transport_exceptions import EventSessionLoggerError
 
 
 class LoggerEnvironment(Enum):

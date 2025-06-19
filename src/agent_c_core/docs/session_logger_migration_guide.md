@@ -38,7 +38,7 @@ agent = ClaudeChatAgentRuntime(session_logger=session_logger)
 **NEW PATTERN (Recommended):**
 
 ```python
-from agent_c.util.event_session_logger_factory import create_session_logger
+from agent_c.util.event_logging.event_session_logger_factory import create_session_logger
 from agent_c.agent_runtimes.claude import ClaudeChatAgentRuntime
 
 # New gateway pattern
@@ -58,11 +58,14 @@ session_logger = SessionLogger(log_file_path="./logs/session.log")
 ```
 
 **NEW PATTERN:**
+
 ```python
-from agent_c.util.event_session_logger_factory import create_with_callback
+from agent_c.util.event_logging.event_session_logger_factory import create_with_callback
+
 
 async def my_callback(event):
     print(f"Event: {event}")
+
 
 # Clean separation: logger handles both file logging and callback
 logger = create_with_callback(
@@ -75,9 +78,10 @@ agent = ClaudeChatAgent(streaming_callback=logger)
 ### Environment-Based Configuration
 
 **NEW PATTERN:**
+
 ```python
 import os
-from agent_c.util.event_session_logger_factory import create_from_environment
+from agent_c.util.event_logging.event_session_logger_factory import create_from_environment
 
 # Set environment variables
 os.environ['AGENT_LOG_DIR'] = './logs'
@@ -138,8 +142,9 @@ else:
 ### Multiple Transport Targets
 
 **NEW CAPABILITY:**
+
 ```python
-from agent_c.util.event_session_logger_factory import create_multi_transport_logger
+from agent_c.util.event_logging.event_session_logger_factory import create_multi_transport_logger
 from agent_c.util.transports import CallbackTransport, LoggingTransport
 
 # Create multiple transports
@@ -158,7 +163,7 @@ agent = ClaudeChatAgent(streaming_callback=logger)
 ### Development vs Production
 
 ```python
-from agent_c.util.event_session_logger_factory import (
+from agent_c.util.event_logging.event_session_logger_factory import (
     create_development_logger,
     create_production_logger
 )
@@ -210,8 +215,9 @@ session_logger = SessionLogger(
 ```
 
 **NEW:** EventSessionLogger with flexible configuration
+
 ```python
-from agent_c.util.event_session_logger_factory import LoggerConfiguration, create_logger_from_config
+from agent_c.util.event_logging.event_session_logger_factory import LoggerConfiguration, create_logger_from_config
 
 config = LoggerConfiguration(
     log_base_dir="./logs",
@@ -246,8 +252,9 @@ agent = ClaudeChatAgent(streaming_callback=logger)
 ```
 
 3. **Performance Testing:**
+
 ```python
-from agent_c.util.event_session_logger_factory import create_testing_logger
+from agent_c.util.event_logging.event_session_logger_factory import create_testing_logger
 
 # Use testing logger for unit tests
 logger = create_testing_logger(transport_type=TransportType.NULL)
@@ -334,7 +341,7 @@ MigrationHelper.warn_deprecated_usage(
 ### Validation and Configuration Help
 
 ```python
-from agent_c.util.event_session_logger_factory import (
+from agent_c.util.event_logging.event_session_logger_factory import (
     validate_logger_config,
     print_logger_info
 )

@@ -4,8 +4,7 @@ from typing import Any, Generator, AsyncGenerator, Optional, Set
 from pydantic import Field
 
 from agent_c.models.base import BaseModel
-from agent_c.util.logging_utils import LoggingManager
-from agent_c.util.async_observable import AsyncObservableWrapper, CallbackType
+from agent_c.util.observable.async_observable_mixin import AsyncObservableMixin, CallbackType
 
 def AsyncObservableField(
         *args: Any,
@@ -31,15 +30,12 @@ def AsyncObservableField(
     return Field(*args, json_schema_extra=json_schema_extra, **kwargs)
 
 
-class AsyncObservableModel(BaseModel):
+class AsyncObservableModel(BaseModel, AsyncObservableMixin):
     """
     Base class for Pydantic models with observable fields.
     Now with async callback support!
 
     Attributes:
-        _batch_active (bool): Internal flag used to determine if a batch operation is active.
-        _observable (AsyncObservableWrapper): Observable wrapper with async support.
-        _observable_fields_cache (Optional[Set[str]]): Cache of observable field names.
     """
 
     def __init__(self, **data: Any) -> None:
@@ -51,100 +47,28 @@ class AsyncObservableModel(BaseModel):
         """
         super().__init__(**data)
         self._batch_active: bool = False
-        self._observable: AsyncObservableWrapper = AsyncObservableWrapper()
-        self._observable_fields_cache: Optional[Set[str]] = None
-        logging_manager = LoggingManager(__name__)
-        self._logger = logging_manager.get_logger()
-
-    def _get_observable_fields(self) -> Set[str]:
-        """Get all observable fields (cached for performance)."""
-        if self._observable_fields_cache is None:
-            self._observable_fields_cache = {
-                field_name for field_name, field_info in self.model_fields.items()
-                if field_info.json_schema_extra and field_info.json_schema_extra.get('observable', False)
-            }
-        return self._observable_fields_cache
-
-    def __is_observable_field(self, field_name: str) -> bool:
-        """
-        Check if a given field is marked as observable.
-
-        Args:
-            field_name (str): The name of the field to check.
-
-        Returns:
-            bool: True if the field is observable, False otherwise.
-        """
-        return field_name in self._get_observable_fields()
-
-    def add_observer(
-            self,
-            callback: CallbackType,
-            field_name: str = 'model'
-    ) -> None:
-        """
-        Add an observer callback for a specific field.
-        Supports both sync and async callbacks!
-
-        Args:
-            callback: The callback function to be called when the field changes.
-            field_name (str): The name of the field to observe. Defaults to 'model'.
-
-        Raises:
-            ValueError: If the specified field name is not observable.
-        """
-        if field_name != 'model' and not self.__is_observable_field(field_name):
-            raise ValueError(f"Field '{field_name}' is not an observable field.")
-
-        self._observable.on(f"{field_name}_changed", callback)
-
-    def remove_observer(
-            self,
-            callback: CallbackType,
-            field_name: str = 'model'
-    ) -> None:
-        """
-        Remove an observer callback for a specific field.
-
-        Args:
-            callback: The callback function to remove.
-            field_name (str): The name of the field to stop observing.
-        """
-        self._observable.off(f"{field_name}_changed", callback)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """
-        Override default attribute setter to trigger observable events when field values change.
+        Async version of setattr that properly awaits async callbacks.
 
-        Args:
-            name (str): The name of the attribute being set.
-            value (Any): The new value of the attribute.
+        Usage: await model.asetattr('field_name', new_value)
         """
-        # Handle internal attributes first
-        if name.startswith("_"):
-            super().__setattr__(name, value)
-            return
-
         old_value = getattr(self, name, None)
         if value == old_value:
             return
 
-        super().__setattr__(name, value)
+        # Use regular setattr to actually set the value
+        object.__setattr__(self, name, value)
 
-        # Check if we should notify (after setting the value)
-        if not hasattr(self, '_batch_active') or not hasattr(self, '_observable'):
+        # Handle notifications
+        if name.startswith("_") or self._batch_active:
             return
 
-        if self._batch_active or not self.__is_observable_field(name):
-            return
+        if name != 'model':
+            self.trigger(f"{name}_changed", old_value, value)
 
-        self._logger.debug(f"Notifying that {name} changed")
-        self._observable.trigger(f"{name}_changed", old_value, value)
-
-        self._logger.debug("Notifying that model changed")
-        self._observable.trigger("model_changed", self)
-
-        self._logger.debug(f"Notifications for {name} complete")
+        self.trigger("model_changed", self)
 
     async def asetattr(self, name: str, value: Any) -> None:
         """
@@ -160,26 +84,13 @@ class AsyncObservableModel(BaseModel):
         object.__setattr__(self, name, value)
 
         # Handle notifications
-        if name.startswith("_") or self._batch_active or not self.__is_observable_field(name):
+        if name.startswith("_") or self._batch_active:
             return
 
-        self._logger.debug(f"Notifying that {name} changed (async)")
-        await self._observable.atrigger(f"{name}_changed", old_value, value)
+        if name != 'model':
+            await self.atrigger(f"{name}_changed", old_value, value)
 
-        self._logger.debug("Notifying that model changed (async)")
-        await self._observable.atrigger("model_changed", self)
-
-    def trigger_model_changed(self) -> None:
-        """
-        Trigger a "model_changed" event to notify observers that the model has changed.
-        """
-        self._observable.trigger("model_changed", self)
-
-    async def atrigger_model_changed(self) -> None:
-        """
-        Async version: Trigger a "model_changed" event and await async observers.
-        """
-        await self._observable.atrigger("model_changed", self)
+        await self.atrigger("model_changed", self)
 
     def begin_batch(self) -> None:
         """
@@ -196,7 +107,7 @@ class AsyncObservableModel(BaseModel):
         """
         self._batch_active = False
         if trigger:
-            self._observable.trigger("model_changed", self)
+            self.trigger("model_changed", self)
 
     async def aend_batch(self, trigger: bool = True) -> None:
         """
@@ -204,7 +115,7 @@ class AsyncObservableModel(BaseModel):
         """
         self._batch_active = False
         if trigger:
-            await self._observable.atrigger("model_changed", self)
+            await self.atrigger("model_changed", self)
 
     @contextmanager
     def batch(self, trigger: bool = True) -> Generator[None, None, None]:

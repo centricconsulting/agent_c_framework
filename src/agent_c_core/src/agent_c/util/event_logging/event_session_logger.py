@@ -15,12 +15,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Optional, Dict, Union, Awaitable
 from agent_c.models.events.session_event import SessionEvent
-from .logging_utils import LoggingManager
-from .transport_exceptions import (
+from agent_c.util.logging_utils import LoggingManager
+from agent_c.util.transport_exceptions import (
     EventSessionLoggerError, LocalLoggingError, TransportError, 
     TransportConnectionError, TransportTimeoutError, SerializationError
 )
-from .transports import TransportInterface
+from agent_c.util.transports import TransportInterface
 
 
 class EventSessionLogger:

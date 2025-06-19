@@ -27,7 +27,7 @@ from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c.prompting import PromptBuilder
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 from agent_c.agent_runtimes.claude import ClaudeChatAgentRuntime, ClaudeBedrockChatAgent
-from agent_c.util.event_session_logger_factory import create_with_callback
+from agent_c.util.event_logging.event_session_logger_factory import create_with_callback
 from agent_c_tools.tools.workspace.local_storage import LocalProjectWorkspace
 from agent_c.models.context.interaction_inputs import InteractionInputs, AudioInput, TextInput, FileInput, ImageInput
 

@@ -1,10 +1,8 @@
 from pydantic import Field
-from typing import Optional, List, Any, Union, Literal
-
-from typing_inspection.typing_objects import alias
+from typing import Optional, List, Any, Union, Literal, Dict
 
 from agent_c.config.model_config_loader import ModelConfigurationLoader
-from agent_c.models.async_observable import AsyncObservableModel, AsyncObservableField
+from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.models.completion import CompletionParams
 
 
@@ -14,7 +12,7 @@ class BaseAgentConfiguration(AsyncObservableModel):
     key: str = Field(..., description="Key for the agent configuration, used for identification")
     agent_description: Optional[str] = Field(None, description="A description of the agent's purpose and capabilities")
     tools: List[str] = Field(default_factory=list, description="List of enabled toolset names the agent can use")
-    runtime_params: CompletionParams = AsyncObservableField(..., description="Parameters for the interaction with the agent")
+    runtime_params: CompletionParams = Field(..., description="Parameters for the interaction with the agent")
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -41,7 +39,7 @@ class BaseAgentConfiguration(AsyncObservableModel):
             return
 
         self._current_model_vendor = new_value_vendor
-        self.agent_params = ModelConfigurationLoader.instance().default_params_for_model(new_value)
+        self.runtime_params = ModelConfigurationLoader.instance().default_params_for_model(new_value)
 
 
 
@@ -72,6 +70,21 @@ class AgentConfigurationV2(BaseAgentConfiguration):
         data.pop('agent_params', None)  # Remove old field if present
         super().__init__(**data)
 
+class AgentConfigurationV3(BaseAgentConfiguration):
+    """Version 2 of the Agent Configuration - example with new fields"""
+    version: Literal[3] = Field(3, description="Configuration version")
+    model_id: str = Field(..., description="ID of the LLM model being used by the agent")
+    category: List[str] = Field(default_factory=list, description="A list of categories this agent belongs to from most to least general" )
+    context: Dict[str, 'ContextType'] = Field(default_factory=dict, description="A mad of context models for tools and prompts")
+    agent_instructions: str = Field(..., description="Primary agent instructions defining the agent's behavior")
+    clone_instructions: str = Field("", description="Agent instructions defining the behavior of clones of this agent")
+    compatible_model_ids: List[str] = Field(default_factory=list, description="List of compatible model IDs for this agent")
+
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        if len(self.compatible_model_ids) == 0:
+            self.compatible_model_ids = [self.runtime_params.model_id]
 
 
 # Union type for all versions

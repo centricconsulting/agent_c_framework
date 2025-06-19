@@ -658,7 +658,7 @@ session_logger = SessionLogger(log_file_path="./logs/session.log")
 agent = ClaudeChatAgent(session_logger=session_logger)
 
 # NEW PATTERN
-from agent_c.util.event_session_logger import EventSessionLogger
+from agent_c.util.event_logging.event_session_logger import EventSessionLogger
 
 logger = EventSessionLogger(log_base_dir="./logs")
 agent = ClaudeChatAgent(streaming_callback=logger)

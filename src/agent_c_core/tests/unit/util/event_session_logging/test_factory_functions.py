@@ -6,12 +6,10 @@ This script tests the comprehensive factory functions and utilities for creating
 EventSessionLogger instances with various configurations and patterns.
 """
 
-import asyncio
 import os
 import sys
 import tempfile
 import warnings
-from datetime import datetime
 from pathlib import Path
 import pytest
 
@@ -19,14 +17,13 @@ import pytest
 agent_c_core_dir = Path(__file__).parents[4]
 sys.path.insert(0, str(agent_c_core_dir / 'src'))
 
-from agent_c.util.event_session_logger_factory import (
+from agent_c.util.event_logging.event_session_logger_factory import (
     LoggerConfiguration, LoggerEnvironment, TransportType,
-    load_configuration_from_env, create_logger_from_config,
-    create_development_logger, create_testing_logger, create_production_logger,
+    load_configuration_from_env, create_development_logger, create_testing_logger, create_production_logger,
     create_migration_logger, create_monitoring_logger, create_multi_transport_logger,
     validate_logger_config, print_logger_info, create_logger_with_validation,
     create_session_logger, create_logging_only, create_with_callback, create_with_transport,
-    create_from_environment, create_backward_compatible
+    create_backward_compatible
 )
 from agent_c.util.transports import LoggingTransport, NullTransport, FileTransport
 from agent_c.util.transport_exceptions import EventSessionLoggerError

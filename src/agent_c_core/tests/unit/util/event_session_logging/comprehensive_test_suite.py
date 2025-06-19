@@ -7,36 +7,27 @@ all the comprehensive testing functionality.
 """
 
 import asyncio
-import gc
 import json
-import os
 import sys
 import tempfile
 import time
-import threading
 import psutil
 import pytest
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any
-import warnings
 
 # Add the src directory to Python path for imports
 agent_c_core_dir = Path(__file__).parents[4]
 sys.path.insert(0, str(agent_c_core_dir / 'src'))
 
-from agent_c.util.event_session_logger import EventSessionLogger
-from agent_c.util.event_session_logger_factory import (
-    create_session_logger, create_development_logger, create_production_logger,
-    create_testing_logger, LoggerConfiguration, TransportType
+from agent_c.util.event_logging.event_session_logger import EventSessionLogger
+from agent_c.util.event_logging.event_session_logger_factory import (
+    create_development_logger, create_testing_logger, LoggerConfiguration, TransportType
 )
 from agent_c.util.transports import (
-    NullTransport, LoggingTransport, FileTransport, CallbackTransport,
-    RetryTransport, TransportState
+    NullTransport, LoggingTransport, FileTransport, TransportState
 )
 from agent_c.util.transport_exceptions import (
-    EventSessionLoggerError, LocalLoggingError, TransportError
+    TransportError
 )
 from agent_c.models.events.chat import (
     InteractionEvent, CompletionEvent, MessageEvent, TextDeltaEvent,
@@ -281,7 +272,7 @@ async def test_configuration_system():
             max_retry_attempts=5
         )
 
-        from agent_c.util.event_session_logger_factory import create_logger_from_config
+        from agent_c.util.event_logging.event_session_logger_factory import create_logger_from_config
         logger = create_logger_from_config(config)
 
         assert str(logger.log_base_dir) == temp_dir, "Should use configured directory"
