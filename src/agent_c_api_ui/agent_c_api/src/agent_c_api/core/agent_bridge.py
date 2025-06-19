@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import asyncio
 import threading
 import traceback
@@ -22,7 +23,7 @@ from agent_c.models.input.image_input import ImageInput
 from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c_api.config.config_loader import MODELS_CONFIG
 from agent_c_tools.tools.workspace import LocalStorageWorkspace
-from agent_c_api.core.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 from agent_c.prompting import PromptBuilder, CoreInstructionSection
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 from agent_c.agents.claude import ClaudeChatAgent, ClaudeBedrockChatAgent
@@ -92,8 +93,19 @@ class AgentBridge:
         Raises:
             Exception: If there are errors during tool or agent initialization.
         """
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
+        self.logger = get_logger(__name__)
+        
+        # Set up agent context for all subsequent logging
+        with LoggingContext(
+            agent_id=chat_session.agent_config.key,
+            session_id=chat_session.session_id,
+            user_id=chat_session.user_id
+        ):
+            self.logger.info("AgentBridge initialization started",
+                             agent_config_key=chat_session.agent_config.key,
+                             model_name=chat_session.agent_config.agent_params.model_name)
+            
+        
         # Set up streaming_callback with logging
         self.streaming_callback_with_logging = create_with_callback(
             log_base_dir=os.getenv('AGENT_LOG_DIR', DEFAULT_LOG_DIR),
@@ -104,7 +116,9 @@ class AgentBridge:
         self.__init_events()
 
         self.chat_session = chat_session
-        self.logger.info(f"Using provided agent config : {self.chat_session.agent_config.key}...")
+        self.logger.info("Using provided agent config",
+                         agent_config_key=self.chat_session.agent_config.key)
+
 
         self.sections = kwargs.get('sections', None)  # Sections for the prompt builder, if any
 
@@ -134,6 +148,18 @@ class AgentBridge:
         self.file_handler = file_handler
         self.image_inputs: List[ImageInput] = []
         self.audio_inputs: List[AudioInput] = []
+        
+        # Log successful initialization
+        with LoggingContext(
+            agent_id=self.chat_session.agent_config.key,
+            session_id=self.chat_session.session_id,
+            user_id=self.chat_session.user_id
+        ):
+            self.logger.info("AgentBridge initialization completed",
+                             agent_config_key=self.chat_session.agent_config.key,
+                             tools_count=len(self.chat_session.agent_config.tools),
+                             workspaces_count=len(self.workspaces) if self.workspaces else 0,
+                             file_handler_enabled=self.file_handler is not None)
 
     def runtime_for_agent(self, agent_config: AgentConfiguration):
         if agent_config.key in self.runtime_cache:
@@ -161,7 +187,7 @@ class AgentBridge:
         self.exit_event = threading.Event()
         self.input_active_event = threading.Event()
         self.cancel_tts_event = threading.Event()
-        self.debug_event = LoggingManager.get_debug_event()
+        self.debug_event = threading.Event()
 
 
     def __init_workspaces(self) -> None:
@@ -178,10 +204,9 @@ class AgentBridge:
         """
         local_project = LocalProjectWorkspace()
         self.workspaces = [local_project]
-        self.logger.info(
-            f"Agent {self.chat_session.agent_config.key} initialized workspaces "
-            f"{local_project.workspace_root}"
-        )
+        self.logger.info("Agent initialized workspaces",
+                         agent_key=self.chat_session.agent_config.key,
+                         workspace_root=str(local_project.workspace_root))
         # TODO: ALLOWED / DISALLOWED WORKSPACES from agent config
         try:
             with open(LOCAL_WORKSPACES_FILE, 'r', encoding='utf-8') as json_file:
@@ -222,15 +247,18 @@ class AgentBridge:
             - Tool chest is reinitialized with the updated tool set
             - Agent is reinitialized with new tools while maintaining the session
         """
-        self.logger.info(
-            f"Requesting new tool list for agent {self.chat_session.agent_config.key} to: {new_tools}"
-        )
-        self.chat_session.agent_config.tools = new_tools
-        await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
-        self.logger.info(
-            f"Tools updated successfully. Current Active tools: "
-            f"{list(self.tool_chest.active_tools.keys())}"
-        )
+        with LoggingContext(operation="update_tools"):
+            self.logger.info("Tool update requested",
+                             agent_key=self.chat_session.agent_config.key,
+                             current_tools=list(self.tool_chest.active_tools.keys()),
+                             requested_tools=new_tools)
+            
+            self.chat_session.agent_config.tools = new_tools
+            await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
+            
+            self.logger.info("Tools updated successfully",
+                             active_tools=list(self.tool_chest.active_tools.keys()),
+                             agent_key=self.chat_session.agent_config.key)
 
     async def __init_tool_chest(self) -> None:
         """
@@ -254,11 +282,10 @@ class AgentBridge:
             Logs warnings if selected tools do not get initialized, typically due to
             misspelled tool class names in the agent configuration.
         """
-        self.logger.info(
-            f"Requesting initialization of these tools: "
-            f"{self.chat_session.agent_config.tools} for agent "
-            f"{self.chat_session.agent_config.key}"
-        )
+        start_time = time.time()
+        self.logger.info("Starting tool chest initialization",
+                         tools_requested=self.chat_session.agent_config.tools,
+                         agent_key=self.chat_session.agent_config.key)
 
         try:
             tool_opts = {
@@ -276,10 +303,12 @@ class AgentBridge:
             await self.tool_chest.init_tools(tool_opts)
             await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
             
-            self.logger.info(
-                f"Agent {self.chat_session.agent_config.key} successfully initialized "
-                f"essential tools: {list(self.tool_chest.active_tools.keys())}"
-            )
+            duration_ms = (time.time() - start_time) * 1000
+            self.logger.info("Tool chest initialization completed",
+                             duration_ms=duration_ms,
+                             agent_key=self.chat_session.agent_config.key,
+                             tools_initialized=list(self.tool_chest.active_tools.keys()),
+                             tool_count=len(self.tool_chest.active_tools))
 
             # Check for tools that were selected but not initialized
             # Usually indicates misspelling of the tool class name
@@ -290,13 +319,20 @@ class AgentBridge:
             ]
             
             if uninitialized_tools:
-                self.logger.warning(
-                    f"The following selected tools were not initialized: "
-                    f"{uninitialized_tools} for Agent {self.chat_session.agent_config.name}"
-                )
+                self.logger.warning("Selected tools were not initialized",
+                                     uninitialized_tools=uninitialized_tools,
+                                     agent_name=self.chat_session.agent_config.name,
+                                     agent_key=self.chat_session.agent_config.key)
                 
         except Exception as e:
-            self.logger.exception("Error initializing tools: %s", e, exc_info=True)
+            duration_ms = (time.time() - start_time) * 1000
+            self.logger.error("Tool chest initialization failed",
+                              duration_ms=duration_ms,
+                              error_type=type(e).__name__,
+                              error_message=str(e),
+                              agent_key=self.chat_session.agent_config.key,
+                              tools_requested=self.chat_session.agent_config.tools,
+                              exc_info=True)
             raise
 
     async def _sys_prompt_builder(self) -> PromptBuilder:
@@ -352,7 +388,11 @@ class AgentBridge:
             "streaming_callback": self.streaming_callback_with_logging
         }
 
-        self.logger.info(f"Agent initialized using the following parameters: {agent_params}")
+        self.logger.info("Agent initialized with parameters",
+                         agent_key=self.chat_session.agent_config.key,
+                         model_name=self.chat_session.agent_config.agent_params.model_name,
+                         tools_count=len(self.tool_chest.active_tools),
+                         parameter_keys=list(agent_params.keys()))
 
     async def reset_streaming_state(self) -> None:
         """
@@ -361,9 +401,9 @@ class AgentBridge:
         Creates a new asyncio Queue for streaming responses, ensuring that
         each chat interaction starts with a clean state.
         """
-        self.logger.info(
-            f"Resetting streaming state for session {self.chat_session.session_id}"
-        )
+        self.logger.info("Resetting streaming state",
+                         session_id=self.chat_session.session_id,
+                         agent_key=self.chat_session.agent_config.key)
         self._stream_queue = asyncio.Queue()
 
     async def __build_prompt_metadata(self) -> Dict[str, Any]:
@@ -876,11 +916,15 @@ class AgentBridge:
         Raises:
             Exception: Logs errors if event handlers fail, but does not re-raise.
         """
+        # Enable debug logging for event processing
         # try:
-        #     self.logger.debug(
-        #         f"Consolidated callback received event: {event.model_dump_json(exclude={'content_bytes'})}")
+        #     self.logger.debug("Consolidated callback received event",
+        #                       event_type=event.type,
+        #                       event_data=event.model_dump_json(exclude={'content_bytes'}))
         # except Exception as e:
-        #     self.logger.debug(f"Error serializing event {event.type}: {e}")
+        #     self.logger.debug("Error serializing event",
+        #                       event_type=event.type,
+        #                       error_message=str(e))
 
         # A simple dispatch dictionary that maps event types to handler methods.
         handlers = {
@@ -916,9 +960,15 @@ class AgentBridge:
 
 
             except Exception as e:
-                self.logger.error(f"Error in event handler {handler.__name__} for {event.type}: {str(e)}")
+                self.logger.error("Error in event handler",
+                                  handler_name=handler.__name__,
+                                  event_type=event.type,
+                                  error_type=type(e).__name__,
+                                  error_message=str(e),
+                                  exc_info=True)
         else:
-            self.logger.warning(f"Unhandled event type: {event.type}")
+            self.logger.warning("Unhandled event type",
+                                event_type=event.type)
 
     async def stream_chat(
         self,
@@ -953,7 +1003,24 @@ class AgentBridge:
         Raises:
             Exception: Any errors during chat processing
         """
-        await self.reset_streaming_state()
+        correlation_id = f"chat-{int(time.time())}-{self.chat_session.session_id[:8]}"
+        
+        with LoggingContext(
+            correlation_id=correlation_id,
+            operation="stream_chat",
+            agent_id=self.chat_session.agent_config.key,
+            session_id=self.chat_session.session_id,
+            user_id=self.chat_session.user_id
+        ):
+            start_time = time.time()
+            
+            self.logger.info("Chat stream started",
+                             user_message_length=len(user_message),
+                             file_count=len(file_ids) if file_ids else 0,
+                             model_name=self.chat_session.agent_config.agent_params.model_name,
+                             correlation_id=correlation_id)
+            
+            await self.reset_streaming_state()
 
         queue = asyncio.Queue()
         self._stream_queue = queue  # Make the queue available to the callback
@@ -970,7 +1037,10 @@ class AgentBridge:
                     input_types = {type(input_obj).__name__: 0 for input_obj in file_inputs}
                     for input_obj in file_inputs:
                         input_types[type(input_obj).__name__] += 1
-                    self.logger.info(f"Processing {len(file_inputs)} files: {input_types}")
+                    self.logger.info("Processing files for message",
+                                     file_count=len(file_inputs),
+                                     input_types=input_types,
+                                     correlation_id=correlation_id)
 
             prompt_metadata = await self.__build_prompt_metadata()
             # Prepare chat parameters
@@ -1046,8 +1116,11 @@ class AgentBridge:
                         yield content
                         queue.task_done()
                     except asyncio.TimeoutError:
-                        timeout_msg =f"Timeout waiting for stream content to occur in agent_bridge.py:stream_chat. Waiting for stream surpassed {timeout} seconds, terminating stream."
-                        self.logger.warning(timeout_msg)
+                        timeout_msg = f"Timeout waiting for stream content to occur in agent_bridge.py:stream_chat. Waiting for stream surpassed {timeout} seconds, terminating stream."
+                        self.logger.warning("Stream timeout occurred",
+                                             timeout_seconds=timeout,
+                                             correlation_id=correlation_id,
+                                             error_message=timeout_msg)
                         yield json.dumps({
                             "type": "error",
                             "data": timeout_msg
@@ -1057,7 +1130,11 @@ class AgentBridge:
                         error_type = type(e).__name__
                         error_traceback = traceback.format_exc()
                         cancelled_msg = f"Asyncio Cancelled error in agent_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}"
-                        self.logger.error(cancelled_msg)
+                        self.logger.error("Stream cancelled",
+                                          error_type=error_type,
+                                          error_message=str(e),
+                                          correlation_id=correlation_id,
+                                          exc_info=True)
                         yield json.dumps({
                             "type": "error",
                             "data": cancelled_msg
@@ -1067,22 +1144,38 @@ class AgentBridge:
                     error_type = type(e).__name__
                     error_traceback = traceback.format_exc()
                     unexpected_msg = f"Unexpected error in stream processing: {error_type}: {str(e)}\n{error_traceback}"
-                    self.logger.error(unexpected_msg)
+                    self.logger.error("Unexpected stream processing error",
+                                      error_type=error_type,
+                                      error_message=str(e),
+                                      correlation_id=correlation_id,
+                                      exc_info=True)
                     # Yield error message and break
                     yield json.dumps({"type": "error", "data": unexpected_msg}) + "\n"
                     break
 
             await chat_task
             await self.session_manager.flush(self.chat_session.session_id)
+            
+            duration_ms = (time.time() - start_time) * 1000
+            self.logger.info("Chat stream completed successfully",
+                             duration_ms=duration_ms,
+                             correlation_id=correlation_id)
 
         except Exception as e:
-            self.logger.exception (f"Error in stream_chat: {e}", exc_info=True)
+            duration_ms = (time.time() - start_time) * 1000
             error_type = type(e).__name__
             error_traceback = traceback.format_exc()
-            self.logger.error(f"Error in event_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}")
+            
+            self.logger.error("Chat stream failed",
+                              duration_ms=duration_ms,
+                              error_type=error_type,
+                              error_message=str(e),
+                              correlation_id=correlation_id,
+                              exc_info=True)
+            
             yield json.dumps({
                 "type": "error",
-                "data": f"Error in event_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}"
+                "data": f"Error in agent_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}"
             }) + "\n"
         finally:
             # Drain any remaining items in the queue.
@@ -1127,15 +1220,23 @@ class AgentBridge:
                 metadata = await self.file_handler.process_file(file_id, session_id)
 
             if not metadata:
-                self.logger.warning(f"Could not get metadata for file {file_id}")
+                self.logger.warning("Could not get metadata for file",
+                                     file_id=file_id,
+                                     session_id=session_id)
                 continue
 
             # Create the appropriate input object based on file type
             input_obj = self.file_handler.get_file_as_input(file_id, session_id)
             if input_obj:
-                self.logger.info(f"Created {type(input_obj).__name__} for file {metadata.original_filename}")
+                self.logger.info("Created input object for file",
+                                 input_type=type(input_obj).__name__,
+                                 filename=metadata.original_filename,
+                                 file_id=file_id)
                 input_objects.append(input_obj)
             else:
-                self.logger.warning(f"Failed to create input object for file {metadata.original_filename}")
+                self.logger.warning("Failed to create input object for file",
+                                     filename=metadata.original_filename,
+                                     file_id=file_id,
+                                     session_id=session_id)
 
         return input_objects
