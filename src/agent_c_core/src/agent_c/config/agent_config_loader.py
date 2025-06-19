@@ -133,13 +133,6 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         if 'version' not in data:
             data['version'] = 1
 
-        # Add uid if missing
-        if 'uid' not in data:
-            data['uid'] =  MnemonicSlugs.generate_id_slug(3, file_contents)
-
-        # Transform agent_params to match completion parameter models
-        self._transform_agent_params(data)
-
         # Load appropriate version based on version field
         version = data.get('version', 1)
         if version > 2:
@@ -173,34 +166,7 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         self._agent_config_cache[config.key] = config
         return config
 
-    def _transform_agent_params(self, data: dict) -> None:
-        """Transform agent_params to match completion parameter model expectations."""
-        if 'agent_params' not in data or data['agent_params'] is None:
-            return
-            
-        agent_params = data['agent_params']
-        model_id = data.get('model_id', '')
-        
-        # Add model_id from top-level model_id if not present
-        if 'model_id' not in agent_params:
-            agent_params['model_id'] = model_id
-            
-        # Determine and add type field if not present
-        if 'type' not in agent_params:
-            # Infer type based on model_id and available fields
-            if 'claude' in model_id.lower():
-                if 'budget_tokens' in agent_params or 'max_searches' in agent_params:
-                    agent_params['type'] = 'claude_reasoning'
-                else:
-                    agent_params['type'] = 'claude_non_reasoning'
-            elif 'gpt' in model_id.lower() or 'o1' in model_id.lower():
-                if 'reasoning_effort' in agent_params:
-                    agent_params['type'] = 'gpt_reasoning'
-                else:
-                    agent_params['type'] = 'gpt_non_reasoning'
-            else:
-                # Default fallback - assume Claude non-reasoning
-                agent_params['type'] = 'claude_non_reasoning'
+
 
     def _get_version(self, config: AgentConfiguration) -> int:
         """Get version from a configuration object."""
@@ -334,7 +300,7 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
                 result[agent_name] = config
             else:
                 # Force migration to latest
-                migrated = self._migrate_config(config, agent_name)
+                migrated = self._migrate_config(config)
                 if isinstance(migrated, CurrentAgentConfiguration):
                     result[agent_name] = migrated
 

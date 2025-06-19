@@ -58,13 +58,13 @@ async def update_agent_settings(request: Request, update_params: AgentUpdatePara
             if key in ["temperature", "reasoning_effort", "extended_thinking", "budget_tokens"]:
                 # Only update if value is not None
                 if value is not None:
-                    if key in agent_config.agent_params.__fields__:
+                    if key in agent_config.runtime_params.__fields__:
                         # Record the change
-                        old_value = getattr(agent_config.agent_params, key, None)
+                        old_value = getattr(agent_config.runtime_params, key, None)
 
                         # Update only attributes that changed
                         if old_value != value:
-                            setattr(agent_config.agent_params, key, value)
+                            setattr(agent_config.runtime_params, key, value)
                             changes_made[key] = {
                                 "from": safe_truncate(old_value),
                                 "to": safe_truncate(value)
@@ -100,7 +100,7 @@ async def get_agent_config(request: Request ,ui_session_id: str):
         agent_bridge = ui_session_data.agent_bridge
         config = agent_bridge.get_agent_runtime_config()
 
-        runtime_params: Dict[str, Any] = agent_bridge.chat_session.agent_config.agent_params.model_dump(exclude_none=True)
+        runtime_params: Dict[str, Any] = agent_bridge.chat_session.agent_config.runtime_params.model_dump(exclude_none=True)
         runtime_params["name"] =  runtime_params.pop("model_id")
 
 
@@ -180,23 +180,23 @@ async def debug_agent_state(request: Request, ui_session_id: str):
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found")
 
-        agent_params = session_data.agent_bridge.chat_session.agent_config.agent_params
+        runtime_params = session_data.agent_bridge.chat_session.agent_config.runtime_params
 
         # Get ReactJSAgent parameters
         agent_bridge_params = {
-            "temperature": getattr(agent_params, "temperature", None),
-            "reasoning_effort": getattr(agent_params, "reasoning_effort", None),
-            "extended_thinking": getattr(agent_params, "extended_thinking", None),
-            "budget_tokens": getattr(agent_params, "budget_tokens", None),
-            "max_tokens": getattr(agent_params, "max_tokens", None),
+            "temperature": getattr(runtime_params, "temperature", None),
+            "reasoning_effort": getattr(runtime_params, "reasoning_effort", None),
+            "extended_thinking": getattr(runtime_params, "extended_thinking", None),
+            "budget_tokens": getattr(runtime_params, "budget_tokens", None),
+            "max_tokens": getattr(runtime_params, "max_tokens", None),
         }
 
         # Get internal agent parameters
-        internal_agent_params = {}
+        internal_runtime_params = {}
         return {
             "status": "success",
             "agent_bridge_params": agent_bridge_params,
-            "internal_agent_params": internal_agent_params,
+            "internal_agent_params": internal_runtime_params,
         }
     except Exception as e:
         logger.exception(f"Error debugging session {ui_session_id} agent state: {e}", exc_info=True)

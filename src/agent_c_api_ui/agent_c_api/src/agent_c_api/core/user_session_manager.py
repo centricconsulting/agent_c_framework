@@ -238,8 +238,8 @@ class UserSessionManager:
             "agent_c_session_id": ui_session_id,
             "agent_name": agent_bridge.chat_session.agent_config.name,
             "created_at": agent_bridge.chat_session.created_at,
-            "backend": agent_bridge.chat_session.agent_config.agent_params.type,
-            "model_name": agent_bridge.chat_session.agent_config.agent_params.model_id,
+            "backend": agent_bridge.chat_session.agent_config.runtime_params.type,
+            "model_name": agent_bridge.chat_session.agent_config.runtime_params.model_id,
         }
 
         # Check session manager

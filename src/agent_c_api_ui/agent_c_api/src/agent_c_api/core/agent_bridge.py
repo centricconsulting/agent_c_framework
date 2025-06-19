@@ -115,7 +115,7 @@ class AgentBridge:
 
 
     def runtime_for_agent(self, agent_config: AgentConfiguration, context: InteractionContext):
-        model_id = agent_config.agent_params.model_id
+        model_id = agent_config.runtime_params.model_id
         if model_id in self.runtime_cache:
             return self.runtime_cache[model_id]
         else:
@@ -278,16 +278,16 @@ class AgentBridge:
 
         config = {
             'backend': "anthropic",
-            'model_name': self.chat_session.agent_config.agent_params.model_id,
+            'model_name': self.chat_session.agent_config.runtime_params.model_id,
             'initialized_tools': initialized_tools,
             'agent_name': self.chat_session.agent_config.name,
             'user_session_id': self.chat_session.session_id,
             'agent_session_id': self.chat_session.session_id,
             'output_format': "markdown",
             'created_time': self._current_timestamp(),
-            'temperature': self.chat_session.agent_config.agent_params.temperature if "temperature" in self.chat_session.agent_config.agent_params.__fields__ else None,
-            'reasoning_effort': self.chat_session.agent_config.agent_params.reasoning_effort if "reasoning_effort" in self.chat_session.agent_config.agent_params.__fields__ else None,
-            'agent_parameters': self.chat_session.agent_config.agent_params.model_dump(exclude_defaults=False)
+            'temperature': self.chat_session.agent_config.runtime_params.temperature if "temperature" in self.chat_session.agent_config.runtime_params.__fields__ else None,
+            'reasoning_effort': self.chat_session.agent_config.runtime_params.reasoning_effort if "reasoning_effort" in self.chat_session.agent_config.runtime_params.__fields__ else None,
+            'agent_parameters': self.chat_session.agent_config.runtime_params.model_dump(exclude_defaults=False)
         }
 
         return config
@@ -590,7 +590,7 @@ class AgentBridge:
             "type": "history",
             "messages": event.messages,
             "vendor": event.vendor,
-            "model_name": self.chat_session.agent_config.agent_params.model_id,
+            "model_name": self.chat_session.agent_config.runtime_params.model_id,
         }) + "\n"
         return payload
 
@@ -688,7 +688,7 @@ class AgentBridge:
             "type": "thought_delta",
             "data": event.content,
             "vendor": event.vendor,
-            "model_name": self.chat_session.agent_config.agent_params.model_id,
+            "model_name": self.chat_session.agent_config.runtime_params.model_id,
             "format": "thinking"
         }) + "\n"
         return payload
