@@ -4,6 +4,8 @@ from typing import Optional, List, Any, Union, Literal, Dict
 from agent_c.config.model_config_loader import ModelConfigurationLoader
 from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.models.completion import CompletionParams
+from agent_c.models.context.context_bag import ContextBag
+from agent_c.util.observable.list import ObservableList
 
 
 class BaseAgentConfiguration(AsyncObservableModel):
@@ -11,7 +13,7 @@ class BaseAgentConfiguration(AsyncObservableModel):
     name: str = Field(..., description="Name of the agent")
     key: str = Field(..., description="Key for the agent configuration, used for identification")
     agent_description: Optional[str] = Field(None, description="A description of the agent's purpose and capabilities")
-    tools: List[str] = Field(default_factory=list, description="List of enabled toolset names the agent can use")
+    tools: ObservableList[str] = Field(default_factory=list, description="List of enabled toolset names the agent can use")
     runtime_params: CompletionParams = Field(..., description="Parameters for the interaction with the agent")
 
     def __init__(self, **data) -> None:
@@ -75,7 +77,7 @@ class AgentConfigurationV3(BaseAgentConfiguration):
     version: Literal[3] = Field(3, description="Configuration version")
     model_id: str = Field(..., description="ID of the LLM model being used by the agent")
     category: List[str] = Field(default_factory=list, description="A list of categories this agent belongs to from most to least general" )
-    context: Dict[str, 'ContextType'] = Field(default_factory=dict, description="A mad of context models for tools and prompts")
+    context: ContextBag = Field(default_factory=dict, description="A mad of context models for tools and prompts")
     agent_instructions: str = Field(..., description="Primary agent instructions defining the agent's behavior")
     clone_instructions: str = Field("", description="Agent instructions defining the behavior of clones of this agent")
     compatible_model_ids: List[str] = Field(default_factory=list, description="List of compatible model IDs for this agent")

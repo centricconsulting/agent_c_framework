@@ -1,5 +1,5 @@
 from agent_c.util.observable.async_observable_mixin import AsyncObservableMixin, CallbackType
-from typing import Generic, TypeVar, Iterable, Optional
+from typing import Generic, TypeVar, Iterable, Optional, Any
 
 T = TypeVar('T')
 
@@ -10,9 +10,11 @@ class ObservableList(AsyncObservableMixin, list, Generic[T]):
       - `item_removed` with (item, index)
       - `item_set` with (old, new, index)
     """
-    def __init__(self, iterable: Iterable[T] = ()):
-        super().__init__()
-        list.__init__(self, iterable)
+
+    def __init__(self, items: Iterable[T] = None):
+        super(list, self).__init__()
+        super(AsyncObservableMixin, self).__init__(items or [])  # list
+
 
     def add_observers(
             self,
@@ -98,7 +100,21 @@ class ObservableList(AsyncObservableMixin, list, Generic[T]):
         super().extend(iterable)
         self.trigger('list_extended', self, start, len(self) - 1)
 
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        from pydantic_core import core_schema
+        return core_schema.no_info_before_validator_function(
+            cls._validate,
+            core_schema.list_schema()
+        )
 
+    @classmethod
+    def _validate(cls, value: Any) -> 'ObservableList':
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, list):
+            return cls(value)
+        raise ValueError(f"Cannot convert {type(value)} to ObservableList")
 
     async def aextend(self, iterable: Iterable[T]) -> None:
         start = len(self)

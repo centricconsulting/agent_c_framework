@@ -1,10 +1,9 @@
 import itertools
 import threading
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import yaml
 
-from agent_c.models.config.agent_config import CurrentAgentConfiguration
 from agent_c.toolsets.json_schema import json_schema
 from agent_c.toolsets.tool_set import Toolset
 from agent_c_tools.tools.agent_assist.base import AgentAssistToolBase

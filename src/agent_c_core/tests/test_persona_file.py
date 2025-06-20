@@ -1,6 +1,6 @@
 import unittest
 
-from agent_c.models.config.agent_config import AgentConfiguration
+from agent_c.models.completion.agent_config import AgentConfiguration
 
 
 class TestPersonaFile(unittest.TestCase):

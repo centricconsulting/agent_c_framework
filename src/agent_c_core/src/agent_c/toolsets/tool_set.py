@@ -2,20 +2,18 @@ import os
 import copy
 import yaml
 import inspect
-import markdown
 
-from typing import Union, List, Dict, Any, Optional
-
-
-from agent_c.toolsets.tool_cache import ToolCache
+from typing import Union, List, Dict, Any, Optional, Type, TYPE_CHECKING
 from agent_c.models.events import RenderMediaEvent
-from agent_c.models.context.base import BaseContext
 from agent_c.util.markdown_to_html import md_to_html
 from agent_c.util.logging_utils import LoggingManager
-from agent_c.prompting.prompt_section import PromptSection
-from agent_c.models.context.interaction_context import InteractionContext
 
-
+if TYPE_CHECKING:
+    from agent_c.toolsets.tool_chest import ToolChest
+    from agent_c.toolsets.tool_cache import ToolCache
+    from agent_c.models.context.interaction_context import InteractionContext
+    from agent_c.models.context.base import BaseContext
+    from agent_c.prompting.prompt_section import PromptSection
 
 
 class Toolset:
@@ -53,7 +51,7 @@ class Toolset:
         return cls.tool_dependencies.get(toolset_name, [])
 
     @classmethod
-    def default_context(cls) -> Optional[BaseContext]:
+    def default_context(cls) -> Optional['BaseContext']:
         """
         Returns the default context for the toolset.
 
@@ -62,6 +60,7 @@ class Toolset:
         """
         return None
 
+
     def __init__(self, **kwargs: Any) -> None:
         """
         Initializes the Toolset with the provided options.
@@ -69,21 +68,15 @@ class Toolset:
         Args:
             kwargs:
                 name (str): The name of the toolset.
-                session_manager (ChatSessionManager): Manages chat sessions.
                 tool_chest (ToolChest): Holds the active/tools available to the toolset.
-                required_tools (List[str]): A list of tools that are required to be activated.
                 tool_cache (ToolCache): Cache for tools.
                 section (PromptSection | None): Section-related information.
-                agent_can_use_tools (bool): If the agent can use toolsets (defaults to True if unset).
-                need_tool_user (bool): Defines if this toolset requires a tool-using agent (defaults to True).
                 needed_keys (List[str]): List of environment keys required for the toolset functionality.
-                streaming_callback (Callable[..., None]): A callback to be triggered after streaming events.
-                output_format (str): Format for output. Defaults to 'raw'.
                 tool_role (str): Defines the role of the tool (defaults to 'tool').
         """
         # Initialize properties
         self.name: str = kwargs.get("name")
-        self._schemas: list[Dict[str, Any]] = []
+
 
         if self.name is None:
             raise ValueError("Toolsets must have a name.")
@@ -96,26 +89,10 @@ class Toolset:
 
         self.use_prefix: bool = kwargs.get("use_prefix", True)
 
-        self.valid: bool = True  # post init will deactivate invalid tools.
+        self.valid: bool = True
 
-        self.tool_cache: ToolCache = kwargs.get("tool_cache")
-        self.section: Union[PromptSection, None] = kwargs.get('section')
-
-        # Agent capabilities and tool requirements
-        self.agent_can_use_tools: bool = kwargs.get("agent_can_use_tools", True)
-        self.need_tool_user: bool = kwargs.get("need_tool_user", True)
-
-        # Validate environment variables
-        needed_keys: List[str] = kwargs.get('needed_keys', [])
-        self.tool_valid: bool = self._validate_env_keys(needed_keys)
-
-        # If toolset requires a tool-using agent but the agent cannot use tools, invalid toolset
-        if self.need_tool_user and not self.agent_can_use_tools:
-            self.tool_valid = False
-
-        # Additional attributes
-        self.streaming_callback = kwargs.get('streaming_callback')
-        self.output_format: str = kwargs.get('output_format', 'raw')
+        self.tool_cache: 'ToolCache' = kwargs.get("tool_cache")
+        self.section: Union['PromptSection', None] = kwargs.get('section')
         self.tool_role: str = kwargs.get('tool_role', 'tool')
 
     @staticmethod
@@ -125,7 +102,7 @@ class Toolset:
 
         return tool_context.agent_runtime.count_tokens(text)
 
-    def get_dependency(self, toolset_name: str) -> Optional['Toolset']:
+    def get_dependency(self, toolset_name: str, context: 'InteractionContext') -> Optional['Toolset']:
         """
         Safely get a dependency toolset by name.
         This is a safer way to access dependencies than going through tool_chest.active_tools directly.
@@ -142,11 +119,12 @@ class Toolset:
                 # Use the toolset safely
                 pass
         """
-        if not self.tool_chest:
+        tool_chest: Optional['ToolChest'] = context.tool_chest if hasattr(context, 'tool_chest') else self.tool_chest
+        if not tool_chest:
             raise RuntimeError(f"Toolset {self.name} attempted to access dependency {toolset_name} but no tool_chest is available")
 
 
-        return self.tool_chest.available_tools.get(toolset_name)
+        return tool_chest.available_tools.get(toolset_name)
 
     @property
     def prefix(self) -> str:
@@ -190,7 +168,7 @@ class Toolset:
         return yaml.dump(data, allow_unicode=True, sort_keys=False)
 
 
-    async def _render_media_markdown(self, tool_context: InteractionContext, markdown_text: str, sent_by: str, **kwargs: Any) -> None:
+    async def _render_media_markdown(self, tool_context: 'InteractionContext', markdown_text: str, sent_by: str, **kwargs: Any) -> None:
         await self._raise_render_media(tool_context,
                 sent_by_class=self.__class__.__name__,
                 sent_by_function=sent_by,
@@ -198,7 +176,7 @@ class Toolset:
                 content=md_to_html(markdown_text),
                 **kwargs)
 
-    async def _raise_render_media(self, tool_context: InteractionContext, content_type: Optional[str] = 'text/markdown', **kwargs: Any) -> None:
+    async def _raise_render_media(self, tool_context: 'InteractionContext', content_type: Optional[str] = 'text/markdown', **kwargs: Any) -> None:
         """
         Raises a render media event.
 
@@ -249,29 +227,44 @@ class Toolset:
         """
         return {self.name: self, "schemas": self.tool_schemas, "doc": self.__doc__}
 
-    @property
-    def tool_schemas(self) -> List[Dict[str, Any]]:
+    @classmethod
+    def tool_methods(cls: Type["Toolset"]):
         """
-        Returns the tool schemas for the Toolset.
+        Returns all tool methods declared on this class.
 
-        Returns:
-            List[Dict[str, Any]]: A list of tool schemas.
+        Looks for any function in the class namespace that has a `json_schema` decorator.
         """
-        if len(self._schemas) > 0:
-            return self._schemas
+        tool_methods = []
 
-        for name in dir(self):
-            if name.startswith('_') or name == 'tool_schemas':
-                continue
-            try:
-                attr = getattr(self, name)
-                if inspect.ismethod(attr) and hasattr(attr, 'schema'):
-                    schema = copy.deepcopy(attr.schema)
-                    if self.use_prefix:
-                        schema['function']['name'] = f"{self.prefix}{schema['function']['name']}"
-                    self._schemas.append(schema)
-            except (AttributeError, RecursionError):
-                # Skip attributes that cause issues
+        # Iterate over class-level attributes
+        for name, member in cls.__dict__.items():
+            if name.startswith("_"):
                 continue
 
-        return self._schemas
+            if not (inspect.isfunction(member) or inspect.ismethod(member)):
+                continue
+
+            if hasattr(member, "schema"):
+                tool_methods.append(member)
+
+        return tool_methods
+
+    @classmethod
+    def tool_schemas(cls: Type["Toolset"], prefix: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Returns the tool schemas declared on this class.
+
+        Looks for any function in the class namespace with a `.schema` attribute,
+        copies it, applies the prefix if requested, and returns the list.
+        """
+        schemas: List[Dict[str, Any]] = []
+        for member in cls.tool_methods():
+            if prefix is not None:
+                schema = copy.deepcopy(member.schema)
+                schema["function"]["name"] = f"{prefix}_{schema['function']['name']}"
+            else:
+                schema = member.schema
+
+            schemas.append(schema)
+
+        return schemas

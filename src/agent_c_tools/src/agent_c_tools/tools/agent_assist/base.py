@@ -9,7 +9,7 @@ from agent_c.chat import DefaultChatSessionManager
 from agent_c_tools.tools.agent_assist.agent_session_cache import AgentSessionCache
 from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c.prompting.prompt_section import PromptSection
-from agent_c.models.config.agent_config import AgentConfiguration
+from agent_c.models.completion.agent_config import AgentConfiguration
 from agent_c_tools.tools.workspace.tool import WorkspaceTools
 from agent_c.config.agent_config_loader import AgentConfigLoader
 from agent_c.models.context.interaction_context import InteractionContext

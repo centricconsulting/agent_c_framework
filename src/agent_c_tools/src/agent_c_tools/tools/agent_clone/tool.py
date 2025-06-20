@@ -7,7 +7,7 @@ from agent_c.toolsets import json_schema
 from agent_c.toolsets.tool_set import Toolset
 from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c_tools.tools.agent_clone.prompt import AgentCloneSection, CloneBehaviorSection
-from agent_c.models.config.agent_config import CurrentAgentConfiguration, AgentConfiguration
+from agent_c.models.completion.agent_config import CurrentAgentConfiguration, AgentConfiguration
 from agent_c_tools.tools.agent_assist.base import AgentAssistToolBase
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 

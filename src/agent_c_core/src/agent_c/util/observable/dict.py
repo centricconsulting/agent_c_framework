@@ -1,5 +1,5 @@
 from agent_c.util.observable.async_observable_mixin import AsyncObservableMixin
-from typing import MutableMapping, TypeVar, Iterable, Tuple
+from typing import MutableMapping, TypeVar, Iterable, Tuple, Any
 
 K = TypeVar('K')
 V = TypeVar('V')
@@ -11,9 +11,26 @@ class ObservableDict(AsyncObservableMixin, dict, MutableMapping[K, V]):
       - `item_removed` with (key, old_value)
       - `item_updated` with (key, old_value, new_value)
     """
+
     def __init__(self, mapping: Iterable[Tuple[K, V]] = (), **kwargs):
         super().__init__()
         dict.__init__(self, mapping, **kwargs)
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        from pydantic_core import core_schema
+        return core_schema.no_info_before_validator_function(
+            cls._validate,
+            core_schema.dict_schema()
+        )
+
+    @classmethod
+    def _validate(cls, value: Any) -> 'ObservableDict':
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, dict):
+            return cls(value)
+        raise ValueError(f"Cannot convert {type(value)} to ObservableDict")
 
     def __setitem__(self, key: K, value: V) -> None:
         if key in self:

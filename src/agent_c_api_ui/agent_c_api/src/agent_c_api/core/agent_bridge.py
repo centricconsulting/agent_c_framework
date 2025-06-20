@@ -13,7 +13,7 @@ from agent_c.toolsets.tool_chest import ToolChest
 from agent_c_api.config.env_config import settings
 from agent_c.config import ModelConfigurationLoader
 from agent_c.chat import ChatSessionManager, ChatSession
-from agent_c.models.config.agent_config import AgentConfiguration
+from agent_c.models.completion.agent_config import AgentConfiguration
 from agent_c_tools.tools.workspace.base import BaseWorkspace
 from agent_c.agent_runtimes.gpt import GPTChatAgentRuntime, AzureGPTChatAgent
 from agent_c.models.events import SessionEvent, TextDeltaEvent, HistoryEvent

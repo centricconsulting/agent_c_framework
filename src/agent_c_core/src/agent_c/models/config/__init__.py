@@ -1,5 +1,5 @@
 from agent_c.models.config.model_config import ModelConfigurationFile, VendorConfiguration, ModelConfiguration, ModelConfigurationWithVendor
-from agent_c.models.config.agent_config import CurrentAgentConfiguration, BaseAgentConfiguration, AgentConfiguration
+from agent_c.models.completion.agent_config import CurrentAgentConfiguration, BaseAgentConfiguration, AgentConfiguration
 
 __all__ = [
     "ModelConfigurationFile",

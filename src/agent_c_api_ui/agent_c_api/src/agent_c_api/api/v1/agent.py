@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from agent_c_api.core.agent_bridge import AgentBridge
 from agent_c_api.models.user_session import UserSession
-from agent_c.models.config.agent_config import AgentConfiguration
+from agent_c.models.completion.agent_config import AgentConfiguration
 from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c_api.api.v1.llm_models.agent_params import AgentUpdateParams
 from agent_c_api.api.v1.llm_models.tool_model import ToolUpdateRequest

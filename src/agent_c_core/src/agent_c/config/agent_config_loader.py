@@ -7,14 +7,13 @@ from typing import Dict, Any, Optional, List, TypeVar
 from agent_c.config import ModelConfigurationLoader
 from agent_c.config.config_loader import ConfigLoader
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames, to_snake_case
-from agent_c.models.config.agent_config import (
+from agent_c.models.completion.agent_config import (
     AgentConfigurationV1,
     AgentConfigurationV2,
     AgentConfiguration,  # Union type
     CurrentAgentConfiguration,  # Latest version alias
     current_agent_configuration_version # integer for latest version
 )
-from agent_c.util import MnemonicSlugs
 from agent_c.util.logging_utils import LoggingManager
 
 # Type variable for configuration versions

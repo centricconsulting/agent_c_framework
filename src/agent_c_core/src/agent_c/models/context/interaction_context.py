@@ -3,6 +3,7 @@ import threading
 from pydantic import Field
 from typing import List, Optional, Dict, Any, Callable, Awaitable
 
+from agent_c.models.context.context_bag import ContextBag
 from agent_c.models.events import BaseEvent
 from agent_c.models.context.base import BaseContext
 from agent_c.models.context.interaction_inputs import InteractionInputs
@@ -30,7 +31,7 @@ class InteractionContext(BaseContext):
         description="A callback function that is called when a streaming event occurs. This is used to handle streaming events from the agent."
     )
 
-    sub_contexts: Dict[str, BaseContext] = Field(default_factory=dict, description="A dictionary of context models to provide data for tools / prompts."
+    sub_contexts: ContextBag = Field(default_factory=dict, description="A dictionary of context models to provide data for tools / prompts."
                                                                                    "Used to pass additional data to tools and prompts during the interaction. "
                                                                                    "Key is the context model type, value is the context model.")
 

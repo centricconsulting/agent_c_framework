@@ -1,41 +1,12 @@
 from contextlib import contextmanager, asynccontextmanager
-from typing import Any, Generator, AsyncGenerator, Optional, Set
-
-from pydantic import Field
+from typing import Any, Generator, AsyncGenerator
 
 from agent_c.models.base import BaseModel
-from agent_c.util.observable.async_observable_mixin import AsyncObservableMixin, CallbackType
-
-def AsyncObservableField(
-        *args: Any,
-        observable: bool = True,
-        **kwargs: Any
-) -> Any:
-    """
-    Helper function to create a field with optional observability.
-
-    Args:
-        *args: Positional arguments forwarded to the `Field` function.
-        observable (bool): Flag to denote if the field should be observable. Defaults to True.
-        **kwargs: Additional keyword arguments forwarded to the `Field` function.
-
-    Returns:
-        A Pydantic `Field` with optional observability.
-    """
-    json_schema_extra = kwargs.pop('json_schema_extra', {})
-
-    if observable:
-        json_schema_extra['observable'] = True
-
-    return Field(*args, json_schema_extra=json_schema_extra, **kwargs)
-
+from agent_c.util.observable.async_observable_mixin import AsyncObservableMixin
 
 class AsyncObservableModel(BaseModel, AsyncObservableMixin):
     """
     Base class for Pydantic models with observable fields.
-    Now with async callback support!
-
-    Attributes:
     """
 
     def __init__(self, **data: Any) -> None:

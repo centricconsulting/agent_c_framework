@@ -5,13 +5,12 @@ from fastapi_cache.decorator import cache
 
 from agent_c.config import ModelConfigurationLoader
 from agent_c.toolsets.tool_set import Toolset
-from agent_c.models.config.agent_config import AgentConfiguration
+from agent_c.models.completion.agent_config import AgentConfiguration
 from agent_c.config.agent_config_loader import AgentConfigLoader
 from agent_c_api.api.dependencies import get_agent_config_loader, get_model_config_loader
 
 from agent_c_api.api.v2.models.config_models import (
-    ModelInfo, ToolInfo, ModelParameter,
-    ModelsResponse, AgentConfigsResponse, ToolsResponse, SystemConfigResponse
+    ModelInfo, ToolInfo, ModelsResponse, AgentConfigsResponse, ToolsResponse, SystemConfigResponse
 )
 from agent_c_api.core.util.logging_utils import LoggingManager
 
