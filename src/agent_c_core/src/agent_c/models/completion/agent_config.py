@@ -68,7 +68,7 @@ class AgentConfigurationV2(BaseAgentConfiguration):
         if 'model_id' not in data['runtime_params']:
             data['runtime_params']['model_id'] = data['model_id']
         if 'type' not in data['runtime_params']:
-            data['runtime_params'] = ModelConfigurationLoader.instance().default_params_for_model(data['agent_params']['model_id'])
+            data['runtime_params'] = ModelConfigurationLoader.instance().default_params_for_model(data['runtime_params']['model_id'])
         data.pop('agent_params', None)  # Remove old field if present
         super().__init__(**data)
 

@@ -70,7 +70,7 @@ class ToolChest:
     def _update_toolset_metadata(self):
         self._tool_name_to_instance_map = {}
         for toolset in self.__toolset_instances.values():
-            for schema in toolset.tool_schemas:
+            for schema in toolset.tool_schemas(toolset.prefix):
                 self._tool_name_to_instance_map[schema['function']['name']] = toolset
 
     async def initialize_toolsets(self, toolset_name_or_names: Union[str, List[str]], tool_opts: Optional[Dict[str, any]] = None) -> bool:

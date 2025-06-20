@@ -135,7 +135,7 @@ class Toolset:
             str: The prefix for the toolset.
         """
         if self.use_prefix:
-            return f"{self.name}{Toolset.tool_sep}"
+            return f"{self.name}"
 
         return ""
 
@@ -261,7 +261,7 @@ class Toolset:
         for member in cls.tool_methods():
             if prefix is not None:
                 schema = copy.deepcopy(member.schema)
-                schema["function"]["name"] = f"{prefix}_{schema['function']['name']}"
+                schema["function"]["name"] = f"{prefix}{Toolset.tool_sep}{schema['function']['name']}"
             else:
                 schema = member.schema
 
