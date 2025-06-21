@@ -2,7 +2,7 @@ from typing import Optional, List
 from fastapi import Depends
 from fastapi_cache.decorator import cache
 
-from agent_c.models.chat_history.user import ChatUser
+from agent_c.models.chat.user import ChatUser
 from agent_c_api.core.repositories import get_user_repository, UserRepository
 from agent_c_api.core.services.user_service import UserService as CoreUserService
 

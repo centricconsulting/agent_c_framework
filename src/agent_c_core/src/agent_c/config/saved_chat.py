@@ -4,12 +4,13 @@ Loader class for model configuration data.
 This module provides a loader class to handle loading, parsing, and saving
 of model configurations from JSON files.
 """
-import datetime
 import json
+import datetime
+
 from pathlib import Path
 from typing import Optional, List
 
-from agent_c.models.chat_history import ChatSession
+from agent_c.models.chat import ChatSession
 from agent_c.config.config_loader import ConfigLoader
 
 _singleton_instance = None

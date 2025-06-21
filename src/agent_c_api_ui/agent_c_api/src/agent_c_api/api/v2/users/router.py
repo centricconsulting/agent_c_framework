@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Path, Request
 from typing import Optional, Dict, Any
 
-from agent_c.models.chat_history.user import ChatUser
+from agent_c.models.chat.user import ChatUser
 from .services import UserService
 
 # Create router with prefix and tags

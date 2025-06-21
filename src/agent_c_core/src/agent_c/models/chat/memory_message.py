@@ -5,7 +5,7 @@ from pydantic import Field, field_validator
 from typing import Optional, Dict, Any, Union, List
 
 from agent_c.models.base import BaseModel
-from agent_c.models.chat_history.content import ContentTypeUnion, TextContent
+from agent_c.models.chat.content import ContentTypeUnion, TextContent
 from agent_c.util import TokenCounter
 
 class MemoryMessage(BaseModel):

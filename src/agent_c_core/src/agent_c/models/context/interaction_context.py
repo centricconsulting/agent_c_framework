@@ -7,7 +7,7 @@ from agent_c.models.context.context_bag import ContextBag
 from agent_c.models.events import BaseEvent
 from agent_c.models.context.base import BaseContext
 from agent_c.models.context.interaction_inputs import InteractionInputs
-from agent_c.models.chat_history.chat_session import ChatSession, MnemonicSlugs
+from agent_c.models.chat.chat_session import ChatSession, MnemonicSlugs
 
 class InteractionContext(BaseContext):
     """

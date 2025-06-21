@@ -1,5 +1,5 @@
 from agent_c.chat.session_manager import ChatSessionManager
-from agent_c.models.chat_history.chat_session import ChatSession # noqa
+from agent_c.models.chat.chat_session import ChatSession # noqa
 
 DefaultChatSessionManager = ChatSessionManager
 

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 import structlog
-from agent_c.models.chat_history.user import ChatUser
+from agent_c.models.chat.user import ChatUser
 from redis import asyncio as aioredis
 
 

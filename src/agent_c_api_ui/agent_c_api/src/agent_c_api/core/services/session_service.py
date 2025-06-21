@@ -2,7 +2,7 @@ import time
 
 from typing import Dict, List, Any, Optional
 
-from agent_c.models.chat_history.chat_session import ChatSession
+from agent_c.models.chat.chat_session import ChatSession
 from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c_api.core.repositories.session_repository import SessionRepository
 

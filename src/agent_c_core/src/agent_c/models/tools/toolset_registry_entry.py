@@ -59,7 +59,7 @@ class ToolsetRegistryEntry(BaseModel):
 
 
     @classmethod
-    def from_toolset(cls, toolset: Type['Toolset']) -> 'ToolsetRegistryEntry':
+    def from_toolset(cls, toolset) -> 'ToolsetRegistryEntry':
         """
         Create a ToolsetRegistryEntry from a Toolset instance.
 
@@ -72,23 +72,21 @@ class ToolsetRegistryEntry(BaseModel):
         from agent_c.toolsets.tool_set import Toolset
         toolset_class_name: str = toolset.__name__
         key = to_snake_case(toolset_class_name.removesuffix('Tools'))
-        name = key.title().replace("_", " ")
-
-        required_tools = getattr(toolset, 'registered_tools', [])
         prefixed = getattr(toolset, 'force_prefix', True)
         prefix = getattr(toolset, 'prefix', key)
+        toolset_name = getattr(toolset, 'name', key.title().replace("_", " "))
 
 
 
         return cls(
             toolset_class_name=toolset_class_name,
-            toolset_name=name,
+            toolset_name=toolset_name,
             key=key,
             toolset_class=toolset,
-            required_tools=required_tools,
+            required_tools=getattr(toolset, 'required_tools', []),
             prefixed=prefixed,
             prefix=prefix,
-            json_schema=toolset.json_schema,
+            json_schemas=toolset.tool_schemas(),
             agent_instructions=toolset.agent_instructions,
             user_description=toolset.user_description,
             multi_user=toolset.multi_user

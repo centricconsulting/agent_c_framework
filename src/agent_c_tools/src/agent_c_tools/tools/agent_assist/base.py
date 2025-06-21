@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, cast, Tuple
 
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
-from agent_c.models.chat_history.chat_session import ChatSession
+from agent_c.models.chat.chat_session import ChatSession
 from agent_c.models.context import InteractionInputs
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.toolsets.tool_set import Toolset

@@ -21,7 +21,12 @@ dependencies = [
     "mcp>=1.6.0",
     "structlog>=25.3.0",
     "Pygments>=2.19.1",
-    "pymdown-extensions>=10.15"
+    "pymdown-extensions>=10.15",
+    "uszipcode>=1.0.1",
+    "pgeocode>=0.5.0",
+    "timezonefinder>=6.5.9",
+    "pandas==2.2.3",
+
 ]
 requires-python = ">=3.10"
 authors = [

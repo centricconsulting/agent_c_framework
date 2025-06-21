@@ -4,7 +4,7 @@ from idlelib.window import add_windows_to_menu
 import yaml
 
 from typing import Optional, Dict, List
-from agent_c.models.chat_history import ChatSession
+from agent_c.models.chat import ChatSession
 from agent_c.config.saved_chat import SavedChatLoader
 from agent_c.util.logging_utils import LoggingManager
 

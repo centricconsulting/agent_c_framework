@@ -1,5 +1,5 @@
 from typing import Optional
-from agent_c.models.chat_history.user import ChatUser
+from agent_c.models.chat.user import ChatUser
 from ..repositories.user_repository import UserRepository
 
 

@@ -4,5 +4,5 @@ from agent_c.models.input import BaseInput, FileInput, TextInput, AudioInput, Im
 from agent_c.models.events import BaseEvent, SessionEvent, RenderMediaEvent
 from agent_c.models.completion import CommonCompletionParams, CompletionParams, ClaudeCommonParams, GPTCommonParams
 from agent_c.models.config import ModelConfiguration, ModelConfigurationWithVendor, ModelConfigurationFile, AgentConfiguration, CurrentAgentConfiguration, BaseAgentConfiguration, VendorConfiguration
-from agent_c.models.chat_history import *
+from agent_c.models.chat import *
 
