@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 from pydantic import Field
 
 from agent_c.models.observable import ObservableModel
