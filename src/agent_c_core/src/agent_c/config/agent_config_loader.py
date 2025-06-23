@@ -210,7 +210,7 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
             # Migrate v2 to v3
             config = AgentConfigurationV3(version=3, name=config.name, key=config.key,
                                           agent_description=config.agent_description,
-                                          tools=config.tools, runtime_params=config.agent_params,
+                                          tools=config.tools, runtime_params=config.runtime_params,
                                           agent_instructions=config.persona, clone_instructions=config.persona,
                                           category=config.category, compatible_model_ids=[config.model_id])
 

@@ -1,9 +1,9 @@
 import os
-import logging
 from pathlib import Path
 
+from agent_c.util.logging_utils import LoggingManager
 from agent_c_tools.tools.workspace.local_storage import LocalStorageWorkspace
-
+from agent_c.util import locate_project_root_folder
 
 class LocalProjectWorkspace(LocalStorageWorkspace):
     """
@@ -14,11 +14,10 @@ class LocalProjectWorkspace(LocalStorageWorkspace):
 
     The description can be overridden via PROJECT_WORKSPACE_DESCRIPTION environment variable.
     """
-    def __init__(self, name="project", default_description="A workspace holding the `Agent C` source code in Python."):
-        self.logger = logging.getLogger("agent_c_tools.tools.workspaces.local_project_workspace")
+    def __init__(self, name="project", description="A workspace holding the `Agent C` source code in Python."):
+        self.logger = LoggingManager(self.__name__).get_logger()
         self.logger.info("Initializing LocalProjectWorkspace")
         workspace_path = self._determine_workspace_path()
-        description = os.environ.get("PROJECT_WORKSPACE_DESCRIPTION", default_description)
         super().__init__(
             name=name,
             workspace_path=workspace_path,
@@ -36,4 +35,4 @@ class LocalProjectWorkspace(LocalStorageWorkspace):
             return str(app_workspace_path.absolute())
 
         self.logger.info(f"Using current working directory as the project workspace: {os.getcwd()}")
-        return os.getcwd()
+        return locate_project_root_folder()

@@ -9,9 +9,20 @@ from agent_c.toolsets.tool_set import Toolset
 from agent_c.models.context.base import BaseContext
 from agent_c.toolsets.json_schema import json_schema
 from agent_c_tools.tools.workspace.base import BaseWorkspace
+from agent_c_tools.tools.workspace.local_storage import LocalStorageWorkspace
+from agent_c_tools.tools.workspace.blob_storage import BlobStorageWorkspace
+from agent_c_tools.tools.workspace.local_project import LocalProjectWorkspace
 from agent_c_tools.tools.workspace.prompt import WorkspaceSection
 from agent_c_tools.tools.workspace.util import ReplaceStringsHelper
 from agent_c_tools.tools.workspace.context import WorkspaceToolsContext
+from agent_c_tools.tools.workspace.config import WorkspaceToolsConfig, S3StorageWorkspaceParams
+
+ws_type_map = {
+    's3_storage': S3StorageWorkspaceParams,
+    'local_storage': LocalStorageWorkspace,
+    'local_project': LocalProjectWorkspace,
+    "azure_blob": BlobStorageWorkspace
+}
 
 class WorkspaceTools(Toolset):
     """
@@ -20,6 +31,8 @@ class WorkspaceTools(Toolset):
 
     Uses UNC-style paths (//WORKSPACE/path) to reference files and directories.
     """
+    config_type = 'workspace_tools'
+    context_type = 'workspace_tools'
 
     UNC_PATH_PATTERN = r'^//([^/]+)(?:/(.*))?$'
 
@@ -29,6 +42,21 @@ class WorkspaceTools(Toolset):
         self.section = WorkspaceSection(tool=self)
 
         self.replace_helper = ReplaceStringsHelper()
+
+    def create_system_workspaces(self):
+        from agent_c.config.system_config_loader import SystemConfigurationLoader
+        config: WorkspaceToolsConfig = SystemConfigurationLoader.instance().config.tools.werkspace_tools
+        if not config:
+            return
+        for workspace_params in config.workspaces:
+            workspace_type = workspace_params.workspace_type
+            workspace_class = ws_type_map[workspace_type]
+            if not workspace_class:
+                self.logger.warning(f"Workspace type '{workspace_type}' is not registered. Skipping.")
+                continue
+
+            workspace = workspace_class(**workspace_params.model_dump(exclude='workspace_type'))
+            self.add_workspace(workspace)
 
     @classmethod
     def default_context(cls) -> Optional[BaseContext]:

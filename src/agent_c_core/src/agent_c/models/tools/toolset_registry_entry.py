@@ -69,14 +69,14 @@ class ToolsetRegistryEntry(BaseModel):
         Returns:
             ToolsetRegistryEntry: The corresponding registry entry.
         """
-        from agent_c.toolsets.tool_set import Toolset
+        if not isinstance(toolset, type):
+            toolset = toolset.__class__
+
         toolset_class_name: str = toolset.__name__
         key = to_snake_case(toolset_class_name.removesuffix('Tools'))
         prefixed = getattr(toolset, 'force_prefix', True)
         prefix = getattr(toolset, 'prefix', key)
         toolset_name = getattr(toolset, 'name', key.title().replace("_", " "))
-
-
 
         return cls(
             toolset_class_name=toolset_class_name,
@@ -89,7 +89,10 @@ class ToolsetRegistryEntry(BaseModel):
             json_schemas=toolset.tool_schemas(),
             agent_instructions=toolset.agent_instructions,
             user_description=toolset.user_description,
-            multi_user=toolset.multi_user
+            multi_user=getattr(toolset, 'multi_user', False),
+            context_type=getattr(toolset, 'context_type', None),
+            config_type=getattr(toolset, 'config_type', None),
+            prompt_class=getattr(toolset, 'prompt_class', None)
         )
 
 

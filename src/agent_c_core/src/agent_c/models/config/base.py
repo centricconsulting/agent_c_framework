@@ -25,3 +25,27 @@ class BaseConfig(ObservableModel):
         super().__init_subclass__(**kwargs)
         from agent_c.util.registries.config_registry import ConfigRegistry
         ConfigRegistry.register(cls)
+
+class BaseRuntimeConfig(BaseConfig):
+    """
+    Base class for runtime configurations.
+    """
+    category: str = Field(CONFIG_RUNTIME, description="The high level category of the config, used for grouping.")
+
+class BaseToolsetConfig(BaseConfig):
+    """
+    Base class for toolset configurations.
+    """
+    category: str = Field(CONFIG_TOOLSETS, description="The high level category of the config, used for grouping.")
+
+class  BaseCoreConfig(BaseConfig):
+    """
+    Base class for core configurations.
+    """
+    category: str = Field(CONFIG_CORE, description="The high level category of the config, used for grouping.")
+
+class  BaseApiConfig(BaseConfig):
+    """
+    Base class for API configurations.
+    """
+    category: str = Field(CONFIG_API, description="The high level category of the config, used for grouping.")

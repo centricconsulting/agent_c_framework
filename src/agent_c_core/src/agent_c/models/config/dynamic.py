@@ -24,3 +24,47 @@ class DynamicConfig(BaseConfig):
 
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
+
+class DynamicRuntimeConfig(DynamicConfig):
+    """
+    Dynamic configuration for runtime parameters.
+    This allows for flexible addition of runtime-specific fields.
+    """
+    category: str = "runtime"
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        ConfigRegistry.register(self.__class__, config_type=self.config_type)
+
+class DynamicToolsetConfig(DynamicConfig):
+    """
+    Dynamic configuration for toolsets.
+    This allows for flexible addition of toolset-specific fields.
+    """
+    category: str = "toolsets"
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        ConfigRegistry.register(self.__class__, config_type=self.config_type)
+
+class DynamicCoreConfig(DynamicConfig):
+    """
+    Dynamic configuration for core settings.
+    This allows for flexible addition of core-specific fields.
+    """
+    category: str = "core"
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        ConfigRegistry.register(self.__class__, config_type=self.config_type)
+
+class DynamicApiConfig(DynamicConfig):
+    """
+    Dynamic configuration for API settings.
+    This allows for flexible addition of API-specific fields.
+    """
+    category: str = "api"
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        ConfigRegistry.register(self.__class__, config_type=self.config_type)
