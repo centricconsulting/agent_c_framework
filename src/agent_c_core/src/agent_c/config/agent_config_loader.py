@@ -10,6 +10,7 @@ from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames, 
 from agent_c.models.completion.agent_config import (
     AgentConfigurationV1,
     AgentConfigurationV2,
+    AgentConfigurationV3,
     AgentConfiguration,  # Union type
     CurrentAgentConfiguration,  # Latest version alias
     current_agent_configuration_version # integer for latest version
@@ -145,23 +146,23 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
 
         # Load appropriate version based on version field
         version = data.get('version', 1)
-        if version > 2:
+        if version > 3:
             self.logger.warning(f"Unsupported agent configuration version {version} in {agent_config_path}.")
             return None
 
         try:
             if version == 1:
                 config = AgentConfigurationV1(**data)
-            else:
+            elif version == 2:
                 config = AgentConfigurationV2(**data)
+            else:
+                config = AgentConfigurationV3(**data)
         except Exception as e:
             self.logger.exception(f"Failed to load agent configuration from {agent_config_path}: {e}", exc_info=True)
             return None
 
         # Track original version
-        original_version = self._get_version(config)
-
-
+        original_version = version
         config = self._migrate_config(config)
 
         # Log migration if it occurred
@@ -184,6 +185,8 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
             return 1
         elif isinstance(config, AgentConfigurationV2):
             return 2
+        elif isinstance(config, AgentConfigurationV3):
+            return 3
         else:
             # Fallback for future versions
             return getattr(config, 'version', 1)
@@ -200,9 +203,16 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         if isinstance(config, AgentConfigurationV1):
             config = AgentConfigurationV2(version=2,  name=config.name, key=to_snake_case(config.name),
                                           model_id=config.model_id, agent_description=config.agent_description,
-                                          tools=config.tools, agent_params=config.agent_params,
+                                          tools=config.tools, runtime_params=config.runtime_params,
                                           prompt_metadata=config.prompt_metadata, persona=config.persona,
                                           uid=config.uid, category=["domo","outdated"],)
+        elif isinstance(config, AgentConfigurationV2):
+            # Migrate v2 to v3
+            config = AgentConfigurationV3(version=3, name=config.name, key=config.key,
+                                          agent_description=config.agent_description,
+                                          tools=config.tools, runtime_params=config.agent_params,
+                                          agent_instructions=config.persona, clone_instructions=config.persona,
+                                          category=config.category, compatible_model_ids=[config.model_id])
 
         return config
 

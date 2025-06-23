@@ -96,8 +96,8 @@ class AgentConfigurationV3(BaseAgentConfiguration):
 
 
 # Union type for all versions
-current_agent_configuration_version: int = 2
-AgentConfiguration = Union[AgentConfigurationV1, AgentConfigurationV2]
+current_agent_configuration_version: int = 3
+AgentConfiguration = Union[AgentConfigurationV1, AgentConfigurationV2, AgentConfigurationV3]
 
 # Current version alias for convenience
-CurrentAgentConfiguration = AgentConfigurationV2
+CurrentAgentConfiguration = AgentConfigurationV3

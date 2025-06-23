@@ -42,7 +42,7 @@ class SectionsList:
 
         # Wrap the validator (deserialize) AND attach a serializer
         return core_schema.with_info_after_validator_function(
-            func=deserialize_sections,
+            deserialize_sections,
             schema=list_of_str_schema,
             # this schema is used when doing .model_dump_json() but not when doing .model_dump()
             serialization=core_schema.to_jsonable_schema(
