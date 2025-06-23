@@ -31,6 +31,17 @@ class SavedChatLoader(ConfigLoader):
             _singleton_instance = self
 
     @classmethod
+    def mock(cls, mock_instance):
+        """
+        Mock the SavedChatLoader instance for testing purposes.
+
+        Args:
+            mock_instance: The mock instance to use for testing
+        """
+        global _singleton_instance
+        _singleton_instance = mock_instance
+
+    @classmethod
     def instance(cls) -> 'SavedChatLoader':
         """
         Returns the singleton instance of SavedChatLoader.

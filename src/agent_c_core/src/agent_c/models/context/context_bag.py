@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from agent_c.models.context.base import BaseContext
 from agent_c.util import to_snake_case
 from agent_c.util.observable import ObservableDict
-from agent_c.util.registries.context_registry import ContextRegistry
+
 
 class ContextBag(ObservableDict):
     """
@@ -30,6 +30,7 @@ class ContextBag(ObservableDict):
                             raise ValueError(f"Non-BaseContext models must have 'context_type' field. Got {type(value)}")
                     result[key] = value
                 elif isinstance(value, dict):
+                    from agent_c.util.registries.context_registry import ContextRegistry
                     result[key] = ContextRegistry.create(value)
                 else:
                     raise ValueError(f"Context value must be BaseModel instance or dict, got {type(value)}")

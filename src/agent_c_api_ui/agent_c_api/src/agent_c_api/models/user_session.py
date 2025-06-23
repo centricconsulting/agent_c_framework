@@ -3,11 +3,12 @@ import threading
 
 from pydantic import Field
 from typing import Optional
-
-from agent_c.models import ChatSession
 from agent_c.models.base import BaseModel
-from agent_c_api.core.agent_bridge import AgentBridge
 from agent_c.models.completion.agent_config import AgentConfiguration
+from agent_c.models.chat import ChatSession
+
+from agent_c_api.core.agent_bridge import AgentBridge
+
 
 class UserSession(BaseModel):
     chat_session: ChatSession = Field(..., description="The chat session associated with the user session.")

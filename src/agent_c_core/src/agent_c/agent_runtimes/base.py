@@ -10,6 +10,8 @@ from agent_c.prompting.prompt_builder import PromptBuilder
 from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.models.events.chat import ThoughtDeltaEvent, HistoryDeltaEvent, SystemPromptEvent, UserRequestEvent
 from agent_c.models.events import ToolCallEvent, InteractionEvent, TextDeltaEvent, HistoryEvent, CompletionEvent, ToolCallDeltaEvent, SystemMessageEvent, SessionEvent
+from agent_c.models.config.base import BaseConfig
+from agent_c.models.completion.open_ai_auth_info import OpenAiAuthInfo
 
 
 class AgentRuntime:

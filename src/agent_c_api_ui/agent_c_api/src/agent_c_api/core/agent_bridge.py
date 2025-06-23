@@ -6,30 +6,32 @@ import traceback
 from typing import Any, Dict, List, Union, Optional, AsyncGenerator
 from datetime import datetime, timezone
 
+from agent_c_api.core.util.logging_utils import LoggingManager
+from agent_c.models.events import SessionEvent, TextDeltaEvent, HistoryEvent
+from agent_c.models.context.interaction_inputs import InteractionInputs, AudioInput, TextInput, FileInput, ImageInput
 from agent_c.agent_runtimes.base import AgentRuntime
+from agent_c.agent_runtimes.gpt import GPTChatAgentRuntime, AzureGPTChatAgent
+from agent_c.agent_runtimes.claude import ClaudeChatAgentRuntime, ClaudeBedrockChatAgent
+from agent_c.config import ModelConfigurationLoader
+from agent_c.models.completion.agent_config import AgentConfiguration
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
 from agent_c.models.events.chat import ThoughtDeltaEvent
 from agent_c.toolsets.tool_chest import ToolChest
 from agent_c_api.config.env_config import settings
-from agent_c.config import ModelConfigurationLoader
-from agent_c.chat import ChatSessionManager, ChatSession
-from agent_c.models.completion.agent_config import AgentConfiguration
-from agent_c_tools.tools.workspace.base import BaseWorkspace
-from agent_c.agent_runtimes.gpt import GPTChatAgentRuntime, AzureGPTChatAgent
-from agent_c.models.events import SessionEvent, TextDeltaEvent, HistoryEvent
-
 from agent_c.models.context.interaction_context import InteractionContext
+from agent_c.chat import ChatSessionManager, ChatSession
+from agent_c_tools.tools.workspace.base import BaseWorkspace
 
 from agent_c_api.core.file_handler import FileHandler
 from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c_tools.tools.workspace import LocalStorageWorkspace
-from agent_c_api.core.util.logging_utils import LoggingManager
+
 from agent_c.prompting import PromptBuilder
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
-from agent_c.agent_runtimes.claude import ClaudeChatAgentRuntime, ClaudeBedrockChatAgent
+
 from agent_c.util.event_logging.event_session_logger_factory import create_with_callback
 from agent_c_tools.tools.workspace.local_storage import LocalProjectWorkspace
-from agent_c.models.context.interaction_inputs import InteractionInputs, AudioInput, TextInput, FileInput, ImageInput
+
 
 # Constants
 DEFAULT_BACKEND = 'claude'

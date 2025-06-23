@@ -25,7 +25,7 @@ dependencies = [
     "uszipcode>=1.0.1",
     "pgeocode>=0.5.0",
     "timezonefinder>=6.5.9",
-    "pandas==2.2.3",
+
 
 ]
 requires-python = ">=3.10"

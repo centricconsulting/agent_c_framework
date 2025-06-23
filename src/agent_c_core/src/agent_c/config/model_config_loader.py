@@ -41,6 +41,17 @@ class ModelConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         self.load_from_json()
 
     @classmethod
+    def mock(cls, mock_instance):
+        """
+        Mock the ModelConfigurationLoader instance for testing purposes.
+
+        Args:
+            mock_instance: The mock instance to use for testing
+        """
+        global _singleton_instance
+        _singleton_instance = mock_instance
+
+    @classmethod
     def instance(cls) -> 'ModelConfigurationLoader':
         """
         Get the singleton instance of ModelConfigurationLoader.

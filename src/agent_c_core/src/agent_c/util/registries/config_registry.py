@@ -1,4 +1,4 @@
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, Dict, Type, TypeVar, List
 from pydantic import BaseModel, ValidationError
 from agent_c.util.string import to_snake_case
 
@@ -31,6 +31,18 @@ class ConfigRegistry:
 
         cls._registry[type_name] = config_class
         return config_class
+
+    @classmethod
+    def get_category(cls, config_type: str) -> str:
+        """Get the category of a registered config type"""
+        if config_type not in cls._registry:
+            raise ValueError(f"Unknown config type: {config_type}. Registered types: {list(cls._registry.keys())}")
+        return cls._registry[config_type].model_fields['category'].default
+
+    @classmethod
+    def get_models_in_category(cls, category: str) -> List[Type[BaseModel]]:
+        """Get all registered config models in a specific category"""
+        return [model for name, model in cls._registry.items() if getattr(model, 'category', 'misc') == category]
 
     @classmethod
     def register_with_config_type(cls, config_type: str):

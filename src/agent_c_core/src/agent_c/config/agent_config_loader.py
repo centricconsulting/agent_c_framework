@@ -67,6 +67,17 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         return self.model_config_loader.get_cached_config()
 
     @classmethod
+    def mock(cls, mock_instance):
+        """
+        Mock the AgentConfigLoader instance for testing purposes.
+
+        Args:
+            mock_instance: The mock instance to use for testing
+        """
+        global _singleton_instance
+        _singleton_instance = mock_instance
+
+    @classmethod
     def instance(cls) -> 'AgentConfigLoader':
         """
         Get the singleton instance of AgentConfigLoader.

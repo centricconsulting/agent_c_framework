@@ -1,20 +1,17 @@
 from typing import Any, Dict
-from agent_c.models.context import BaseContext
+
+from agent_c.models.config.base import BaseConfig
+from agent_c.util.registries.config_registry import ConfigRegistry
 
 
-
-class DynamicContext(BaseContext):
+class DynamicConfig(BaseConfig):
     def __init__(self, **data: Any) -> None:
-        if 'context_type' not in data:
-            raise ValueError("DynamicContext must have 'context_type' field")
-        context_type = data.pop('context_type')
+        if 'config_type' not in data:
+            raise ValueError("DynamicConfig must have 'config_type' field")
+        config_type = data.pop('config_type')
         self._dynamic_fields: Dict[str, Any] = {**data}
-
-        super().__init__(context_type=context_type)
-
-        from agent_c.util.registries.context_registry import ContextRegistry
-        ContextRegistry.register(self.__class__, context_type=context_type)
-
+        super().__init__(config_type=config_type)
+        ConfigRegistry.register(self.__class__, config_type=config_type)
 
     def __getattr__(self, name: str) -> Any:
         """Allow obj.key syntax for read-only dictionary access"""

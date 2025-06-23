@@ -2,7 +2,7 @@ import pgeocode
 
 from typing import Optional
 from pydantic import Field
-from uszipcode import SearchEngine
+# from uszipcode import SearchEngine
 from timezonefinder import TimezoneFinder
 
 from agent_c.models.base import BaseModel
@@ -35,16 +35,19 @@ class ChatUserLocation(BaseModel):
 
     @classmethod
     def from_zipcode(cls, zipcode: str) -> 'ChatUserLocation':
-        search = SearchEngine()
-        result = search.by_zipcode(zipcode)
+        return cls(postal_code=zipcode)
+        # usezipcode has issues and needs fixed before it can be used reliably
+        #
+        # search = SearchEngine()
+        # result = search.by_zipcode(zipcode)
+        #
+        # if result.zipcode:
+        #     return cls(
+        #         postal_code=result.zipcode,
+        #         city=result.major_city,
+        #         country="United States",
+        #         region=result.state,
+        #         timezone=result.timezone
+        #     )
+        # else:
 
-        if result.zipcode:
-            return cls(
-                postal_code=result.zipcode,
-                city=result.major_city,
-                country="United States",
-                region=result.state,
-                timezone=result.timezone
-            )
-        else:
-            return cls(postal_code=zipcode)

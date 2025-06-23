@@ -11,9 +11,10 @@ from typing import Optional, List, Dict
 
 import yaml
 
-from agent_c.models.chat.user import ChatUser
-from agent_c.config.config_loader import ConfigLoader
 from agent_c.util import MnemonicSlugs
+from agent_c.config.config_loader import ConfigLoader
+
+from agent_c.models.chat.user import ChatUser
 
 _singleton_instance = None
 
@@ -44,6 +45,17 @@ class UserLoader(ConfigLoader):
             default_user = ChatUser(user_id="agent_c_user", user_name="Agent C User")
             self.save_user(default_user)
             self.logger.info("Default user created: agent_c_user")
+
+    @classmethod
+    def mock(cls, mock_instance):
+        """
+        Mock the UserLoader instance for testing purposes.
+
+        Args:
+            mock_instance: The mock instance to use for testing
+        """
+        global _singleton_instance
+        _singleton_instance = mock_instance
 
     @classmethod
     def instance(cls) -> 'UserLoader':

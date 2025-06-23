@@ -605,3 +605,6 @@ class CacheNames:
     JSON_PARSING = "json_parsing"
     AGENT_CONFIGS = "agent_configs"
     MODEL_CONFIGS = "model_configs"
+    YAML_PARSING = "yaml_parsing"
+    CONFIG_FILES = "config_files"
+    PROMPT_FILEs = "prompt_files"

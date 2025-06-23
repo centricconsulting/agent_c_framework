@@ -3,12 +3,10 @@ import datetime
 from pydantic import Field
 from typing import Optional, Dict, Any, List
 
-from agent_c.config.user_loader import UserLoader
-from agent_c.models import ChatUser
+from agent_c.util.slugs import MnemonicSlugs
 from agent_c.models.base import BaseModel
 from agent_c.models.context.context_bag import ContextBag
-from agent_c.util.slugs import MnemonicSlugs
-
+from agent_c.models.chat.user import ChatUser
 
 
 class ChatSession(BaseModel):
@@ -46,6 +44,18 @@ class ChatSession(BaseModel):
     context: ContextBag = Field(default_factory=dict,
                                 description="A dictionary of context models to provide data for tools / prompts.")
 
+    def model_dump_serializable(self, exclude: Optional[List[str]] = None, **kwargs) -> Dict[str, Any]:
+        """
+        Dumps the model to a dictionary, excluding None values and certain fields.
+        """
+        if exclude is None:
+            exclude = ['user']
+        else:
+            exclude.append('user')
+
+        data = super().model_dump(exclude=set(exclude), **kwargs)
+        data['user'] = self.user.user_id
+
     @staticmethod
     def __new_session_id(**data) -> str:
         session_id = data.get('session_id')
@@ -53,6 +63,7 @@ class ChatSession(BaseModel):
             return session_id
 
         if isinstance(data['user'], str):
+            from agent_c.chat import UserLoader
             data['user'] = UserLoader.instance().load_user_id(data['user'])
 
         if 'parent_session_id' in data:
