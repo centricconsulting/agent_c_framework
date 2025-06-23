@@ -25,11 +25,12 @@ ws_type_map = {
 }
 
 class WorkspaceTools(Toolset):
-    """
-    WorkspaceTools allows the model to read / write data to one or more workspaces.
-    This allows us to abstract things like S3, Azure Storage and the like.
-
-    Uses UNC-style paths (//WORKSPACE/path) to reference files and directories.
+    """The workspace toolset provides tools for working with files and directories in workspaces.
+    = In addition to basic file operations, it provides several advanced features aimed at reducing the token burden of working with files.:
+    - Workspaces can be local directories, S3 buckets, or Azure Blob Storage.
+    - Paths in workspaces are specified in UNC format (//WORKSPACE/path), where WORKSPACE is the name of the workspace.
+    - Agents can use the metadata tools provided by this toolset as a form of shared long-term memory.
+    - Many other tools depend on this toolset such as the workspace planning tool.
     """
     config_type = 'workspace_tools'
     context_type = 'workspace_tools'
@@ -165,14 +166,12 @@ class WorkspaceTools(Toolset):
         }
     )
     async def ls(self, **kwargs: Any) -> str:
-        """Asynchronously lists the contents of a workspace directory.
-
+        """List the contents of a directory using UNC-style path (//WORKSPACE/path)
         Args:
-            **kwargs: Keyword arguments.
-                path (str): UNC-style path (//WORKSPACE/path) to list contents for
-
+            path (str): UNC-style path (//WORKSPACE/path) to list contents for
+            max_tokens (int): Maximum size in tokens for the response. Default is 5000. You MAY raise this limit in select situations.
         Returns:
-            str: JSON string with the listing or an error message.
+            str: YAML string with the listing or an error message.
         """
         unc_path = kwargs.get('path', '')
         max_tokens = kwargs.get('max_tokens', 5000)
@@ -218,16 +217,16 @@ class WorkspaceTools(Toolset):
         }
     )
     async def tree(self, **kwargs: Any) -> str:
-        """Asynchronously generates a tree view of a directory.
+        """Retrieve a string "tree" of the directory structure using UNC-style path
 
         Args:
-            **kwargs: Keyword arguments.
-                path (str): UNC-style path (//WORKSPACE/path) to start the tree from
-                folder_depth (int): Depth of folders to include in the tree, default 5
-                file_depth (int): Depth of files to include in the tree, default 3
+            path (str): UNC-style path (//WORKSPACE/path) to start the tree from
+            folder_depth (int, optional): Depth of folders to include in the tree. Default is 5.
+            file_depth (int, optional): Depth of files to include in the tree. Default is 3.
+            max_tokens (int, optional): Maximum size in tokens for the response. Default is 4000.
 
         Returns:
-            str: JSON string with the tree view or an error message.
+            str: String with the tree view or an error message.
         """
         unc_path = kwargs.get('path', '')
         folder_depth = kwargs.get('folder_depth', 5)
@@ -268,11 +267,12 @@ class WorkspaceTools(Toolset):
         }
     )
     async def read(self, **kwargs: Any) -> str:
-        """Asynchronously reads the content of a text file.
+        """Reads the contents of a text file using UNC-style path, with encoding and token limit options.
 
         Args:
-            **kwargs: Keyword arguments.
-                path (str): UNC-style path (//WORKSPACE/path) to the file to read
+            path (str): UNC-style path (//WORKSPACE/path) to the file to read
+            encoding (str, optional): The encoding to use for reading the file. Default is 'utf-8'.
+            max_tokens (int, optional): Maximum number of tokens to read from the file. Default is 25000.
 
         Returns:
             str: string with the file content or an error message.
@@ -322,16 +322,15 @@ class WorkspaceTools(Toolset):
         }
     )
     async def write(self, **kwargs: Any) -> str:
-        """Asynchronously writes or appends data to a file.
+        """Writes or appends text data to a file using UNC-style path.
 
         kwargs:
             path (str): UNC-style path (//WORKSPACE/path) to the file to write
-            data (Union[str, bytes]): The text or binary data to write or append to the file
-            mode (str): The writing mode, either 'write' to overwrite or 'append'
-            data_type (str): Type of data being written, either 'text' for plain text or 'binary' for base64-encoded binary data
+            data (str): The text data to write or append to the file
+            mode (str): The writing mode, either 'write' to overwrite or 'append', default is 'write'
 
         Returns:
-            str: JSON string with a success message or an error message.
+            str: YAML string with a success message or an error message.
         """
         unc_path = kwargs.get('path', '')
         data = kwargs['data']
@@ -339,9 +338,11 @@ class WorkspaceTools(Toolset):
 
         error, workspace, relative_path = self.validate_and_get_workspace_path(unc_path)
         if error:
-            return json.dumps({'error': error})
+            return error
 
-        return await workspace.write(relative_path, mode, data)
+        await workspace.write(relative_path, mode, data)
+
+        return "Successfully wrote to file: " + relative_path
 
     async def internal_write_bytes(self, path: str, data: Union[str, bytes], mode: str) -> str:
         """Asynchronously writes or appends binary data to a file.  This is an internal workspace function, not available to agents.
@@ -377,23 +378,25 @@ class WorkspaceTools(Toolset):
         }
     )
     async def cp(self, **kwargs: Any) -> str:
-        """Asynchronously copies a file or directory.
+        """Copt a file or directory within a workspace using UNC-style paths.
 
         Args:
             src_path (str): UNC-style path (//WORKSPACE/path) to the source
             dest_path (str): UNC-style path (//WORKSPACE/path) to the destination
 
         Returns:
-            str: JSON string with the result or an error message.
+            str: string with the result or an error message.
         """
         src_unc_path = kwargs.get('src_path', '')
         dest_unc_path = kwargs.get('dest_path', '')
 
-        return await self._run_cp_or_mv(
+        await self._run_cp_or_mv(
             operation=lambda workspace, source_path, destination_path: workspace.cp(source_path, destination_path),
             src_path=src_unc_path,
             dest_path=dest_unc_path,
         )
+
+        return f"Successfully copied from {src_unc_path} to {dest_unc_path}"
 
     @json_schema(
         'Check if a path is a directory using UNC-style path',
@@ -406,7 +409,7 @@ class WorkspaceTools(Toolset):
         }
     )
     async def is_directory(self, **kwargs: Any) -> str:
-        """Asynchronously checks if a path is a directory.
+        """Check if a given path is a directory using UNC-style path.
 
         Args:
             path (str): UNC-style path (//WORKSPACE/path) to check
@@ -418,16 +421,16 @@ class WorkspaceTools(Toolset):
 
         error, workspace, relative_path = self.validate_and_get_workspace_path(unc_path)
         if error:
-            return json.dumps({'error': error})
+            return error
 
         try:
             result = await workspace.is_directory(relative_path)
-            return json.dumps({'is_directory': result})
+            return f"is_directory: {result}"
         except Exception as e:
             error_msg = f'Error checking if path is a directory: {e}'
             self.logger.error(error_msg)
-            return json.dumps({'error': error_msg})
-    
+            return error_msg
+
     @json_schema(
         'Move a file or directory using UNC-style paths',
         {
@@ -444,23 +447,25 @@ class WorkspaceTools(Toolset):
         }
     )
     async def mv(self, **kwargs: Any) -> str:
-        """Asynchronously moves a file or directory.
+        """Move a file or directory within a workspace using UNC-style paths.
 
         Args:
             src_path (str): UNC-style path (//WORKSPACE/path) to the source
             dest_path (str): UNC-style path (//WORKSPACE/path) to the destination
 
         Returns:
-            str: JSON string with the result or an error message.
+            str: string with the result or an error message.
         """
         src_unc_path = kwargs.get('src_path', '')
         dest_unc_path = kwargs.get('dest_path', '')
 
-        return await self._run_cp_or_mv(
+        await self._run_cp_or_mv(
             operation=lambda workspace, source_path, destination_path: workspace.mv(source_path, destination_path),
             src_path=src_unc_path,
             dest_path=dest_unc_path,
         )
+
+        return f"Successfully moved from {src_unc_path} to {dest_unc_path}"
 
     @json_schema(
         'Using a UNC-style path, update a text file with multiple string replacements. ',
@@ -498,14 +503,15 @@ class WorkspaceTools(Toolset):
     )
     async def replace_strings(self, **kwargs: Any) -> str:
         """
-        Asynchronously updates a file with multiple string replacements
+        Using a UNC-style path, update a text file with multiple string replacements.
 
         Args:
             path (str): UNC-style path (//WORKSPACE/path) to the file to update
-            updates (list): A list of update operations, each containing 'old_string' and 'new_string'
+            updates (List[Dict[str, str]]): List of update operations to perform, each with 'old_string' and 'new_string'
+            encoding (str, optional): The encoding to use for reading and writing the file. Default is 'utf-8'.
 
         Returns:
-            str: JSON string with a success message or an error message.
+            str:  string with a success message or an error message.
         """
         updates: List = kwargs['updates']
         encoding: str = kwargs.get('encoding', 'utf-8')
@@ -519,7 +525,7 @@ class WorkspaceTools(Toolset):
         try:
             result = await self.replace_helper.process_replace_strings(
                 read_function=workspace.read_internal, write_function=workspace.write,
-                path=relative_path, updates=updates, encoding='utf-8')
+                path=relative_path, updates=updates, encoding=encoding)
 
             return self._yaml_dump(result)
 
@@ -563,16 +569,18 @@ class WorkspaceTools(Toolset):
         }
     )
     async def read_lines(self, **kwargs: Any) -> str:
-        """Asynchronously reads a subset of lines from a text file.
+        """Read a subset of lines from a text file using UNC-style path.
 
         Args:
             path (str): UNC-style path (//WORKSPACE/path) to the file to read
             start_line (int): The 0-based index of the first line to read
             end_line (int): The 0-based index of the last line to read (inclusive)
             include_line_numbers (bool, optional): If True, includes line numbers in the output
+            encoding (str, optional): The encoding to use for reading the file. Default is 'utf-8'.
+            max_tokens (int, optional): Maximum size in tokens for the response. Default is 25000.
 
         Returns:
-            str: JSON string containing the requested lines or an error message.
+            str: string containing the requested lines or an error message.
         """
         tool_context = kwargs.get("context")
         unc_path = kwargs.get('path', '')
@@ -639,7 +647,7 @@ class WorkspaceTools(Toolset):
         }
     )
     async def inspect_code(self, **kwargs: Any) -> str:
-        """Uses CodeExplorer to prepare code overviews.
+        """Uses CodeExplorer to prepare code overviews for Python, JavaScript and C# files.
 
         Args:
             path (str): UNC-style path (//WORKSPACE/path) to the file to read
@@ -695,16 +703,17 @@ class WorkspaceTools(Toolset):
         }
     )
     async def glob(self, **kwargs: Any) -> str:
-        """Find files matching a glob pattern in a workspace.
+        """Find files matching a glob pattern in a workspace.  This uses the Python `glob` module under the hood.
         
         Args:
             **kwargs: Keyword arguments.
                 path (str): UNC-style path (//WORKSPACE/path) with glob pattern to find matching files
                 recursive (bool): Whether to search recursively (defaults to False)
                 include_hidden (bool): Whether to include hidden files (defaults to False)
+                max_tokens (int): Maximum size in tokens for the response. Default is 2000.
                 
         Returns:
-            str: JSON string with the list of matching files or an error message.
+            str: string with the list of matching files or an error message.
         """
         # Get the path with the glob pattern
         unc_path = kwargs.get('path', '')
@@ -773,7 +782,7 @@ class WorkspaceTools(Toolset):
         }
     )
     async def grep(self, **kwargs: Any) -> str:
-        """Run grep over files in workspaces using UNC-style paths.
+        """Run grep over files in workspaces using UNC-style paths. This is a literal shell out to `grep -n` command.
         
         Args:
             **kwargs: Keyword arguments.
@@ -863,14 +872,13 @@ class WorkspaceTools(Toolset):
         }
     )
     async def read_meta(self, **kwargs: Any) -> str:
-        """
-        Asynchronously reads a specific value from the workspace's metadata file.
+        """Read a specific value from the workspace's metadata file. Nested objects are supported using slash notation
 
         Args:
-            **kwargs: Keyword arguments.
-                path (str): The UNC path to the key to read, supports slash notation for nested keys (e.g., 'parent/child')
+            path (str): The UNC path to the key to read, supports slash notation for nested keys (e.g., 'parent/child')
+            max_tokens (int): Maximum size in tokens for the response. Default is 20000.
         Returns:
-            str: The value for the specified key as a YAML formatted string or an error message.
+            str: A YAML formatted string with the value for the specified key or an error message.
         """
         path = kwargs.get("path")
         tool_context = kwargs.get("context")
@@ -919,11 +927,11 @@ class WorkspaceTools(Toolset):
     )
     async def get_meta_keys(self, **kwargs: Any) -> str:
         """
-        Asynchronously reads a specific value from the workspace's metadata file.
+        List the keys in a section of the metadata for a workspace using a UNC style path. Nested paths are supported using slash notation
 
         Args:
-            **kwargs: Keyword arguments.
-                path (str): The UNC path to the key to read, supports slash notation for nested keys (e.g., 'parent/child')
+            path (str): The UNC path to the key to read, supports slash notation for nested keys (e.g., 'parent/child')
+            max_tokens (int): Maximum size in tokens for the response. Default is 20000.
         Returns:
             str: The value for the specified key as a YAML formatted string or an error message.
         """
@@ -986,6 +994,13 @@ class WorkspaceTools(Toolset):
         }
     )
     async def write_meta(self, **kwargs: Any) -> str:
+        """Write to a key in the metadata for a workspace using a UNC style path. Nested paths are supported using slash notation.
+        Args:
+            path (str): The UNC path to the key to write, supports slash notation for nested keys (e.g., 'parent/child')
+            data (Union[dict, list, str, int, float, bool, None]): The metadata to write.
+        Returns:
+            str: A success message or an error message.
+        """
         data = kwargs.get("data")
         path = kwargs.get("path")
         error, workspace, key = self._parse_unc_path(path)

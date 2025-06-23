@@ -3,14 +3,15 @@ from typing import Dict, Any, List, Type, Optional
 from pydantic import Field
 from agent_c.models.base import BaseModel
 from agent_c.util import to_snake_case
-
+from agent_c.toolsets.tool_set import Toolset
+from agent_c.prompting.prompt_section import PromptSection
 
 class ToolsetRegistryEntry(BaseModel):
     toolset_name: str = Field(...,
                               description="The human readable name of the toolset this tool belongs to")
     toolset_class_name: str = Field(...,
                                     description="The class name of the toolset this entry represents")
-    toolset_class: Type['Toolset'] = Field(...,
+    toolset_class: Type[Toolset] = Field(...,
                                            description="The class of the toolset this entry represents")
 
     key: str = Field(...,
@@ -30,7 +31,7 @@ class ToolsetRegistryEntry(BaseModel):
     multi_user: bool = Field(False,
                              description="If true, this tool is designed be safely used by multiple users simultaneously")
 
-    prompt_class: Type['PromptSection'] = Field(...,
+    prompt_class: Optional[type] = Field(...,
                                                 description="The class of the prompt section used for this toolset")
     context_type: Optional[str] = Field(...,
                                         description="The context type this toolset uses for user configuration. Used to look up the correct context class in the registry")
@@ -69,14 +70,17 @@ class ToolsetRegistryEntry(BaseModel):
         Returns:
             ToolsetRegistryEntry: The corresponding registry entry.
         """
+        from agent_c.toolsets.tool_set import Toolset
         if not isinstance(toolset, type):
             toolset = toolset.__class__
 
         toolset_class_name: str = toolset.__name__
         key = to_snake_case(toolset_class_name.removesuffix('Tools'))
         prefixed = getattr(toolset, 'force_prefix', True)
-        prefix = getattr(toolset, 'prefix', key)
+        prefix = getattr(toolset, 'tool_prefix', key)
         toolset_name = getattr(toolset, 'name', key.title().replace("_", " "))
+        agent_instructions = getattr(toolset, 'agent_instructions', toolset.__doc__)
+        user_description = getattr(toolset, 'user_description', toolset.__doc__)
 
         return cls(
             toolset_class_name=toolset_class_name,
@@ -87,8 +91,8 @@ class ToolsetRegistryEntry(BaseModel):
             prefixed=prefixed,
             prefix=prefix,
             json_schemas=toolset.tool_schemas(),
-            agent_instructions=toolset.agent_instructions,
-            user_description=toolset.user_description,
+            agent_instructions=agent_instructions,
+            user_description=user_description,
             multi_user=getattr(toolset, 'multi_user', False),
             context_type=getattr(toolset, 'context_type', None),
             config_type=getattr(toolset, 'config_type', None),

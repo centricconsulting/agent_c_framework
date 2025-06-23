@@ -20,6 +20,8 @@ from agent_c.toolsets.tool_chest import ToolChest
 from agent_c_api.config.env_config import settings
 from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.chat import ChatSessionManager, ChatSession
+from agent_c.toolsets.tool_set import Toolset
+from agent_c.util.registries.toolset_registry import ToolsetRegistry
 from agent_c_tools.tools.workspace.base import BaseWorkspace
 
 from agent_c_api.core.file_handler import FileHandler

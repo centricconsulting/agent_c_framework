@@ -37,6 +37,9 @@ class Toolset:
             if required_tools:
                 cls.tool_dependencies[tool_cls.__name__] = required_tools
 
+        from agent_c.util.registries.toolset_registry import ToolsetRegistry
+        ToolsetRegistry.register(tool_cls)
+
     @classmethod
     def get_required_tools(cls, toolset_name: str) -> List[str]:
         """
