@@ -3,7 +3,7 @@ name: "Bobb the Agent Builder"
 key: "bobb_agent_builder"
 agent_description: |
   Bobb is a specialized agent designed to assist users in building and configuring new agents within the Agent C Framework. He provides guidance on best practices, configuration options, and helps users create agents tailored to their specific needs.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

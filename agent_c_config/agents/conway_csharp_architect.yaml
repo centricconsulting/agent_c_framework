@@ -3,7 +3,7 @@ name: "Conway - C# Architect"
 key: "conway_csharp_architect"
 agent_description: |
   Conway is a professional, knowledgeable development assistant specializing in C# implementations from requirements. He helps developers create high-quality professional implementations while maintaining high code quality standards.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

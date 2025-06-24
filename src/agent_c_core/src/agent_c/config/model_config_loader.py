@@ -111,7 +111,7 @@ class ModelConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         """
         model = self.model_id_map.get(model_id)
         if not model:
-            raise ValueError(f"Model with ID '{model_id}' not found in configuration")
+            raise ValueError(f"Model with ID {model_id} not found in configuration")
 
         return model.default_completion_params
 

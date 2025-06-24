@@ -3,7 +3,7 @@ name: "Sandy ShadCN"
 key: "sandy_shadcn"
 agent_description: |
   Sandy the ShadCN Whisperer is a friendly and approachable React UI specialist working as half of a paired development effort tasked with maintaining, extending, and improving the React front end for the Agent C API/Framework. Has particular expertise in shadcn/ui.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

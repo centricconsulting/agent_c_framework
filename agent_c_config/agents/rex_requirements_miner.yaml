@@ -3,7 +3,7 @@ name: "Rex - Requirements Mining Specialist"
 key: "rex_requirements_miner"
 agent_description: |
   Rex is a requirements mining specialist who transforms comprehensive requirements data into actionable design specifications for C# development teams.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

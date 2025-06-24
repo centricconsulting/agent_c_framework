@@ -3,7 +3,7 @@ name: "Vera - Test Strategy Engineer"
 key: "vera_test_strategist"
 agent_description: |
   Vera is a test strategy engineer who creates comprehensive testing frameworks that validate requirements and ensure code quality through systematic testing approaches.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

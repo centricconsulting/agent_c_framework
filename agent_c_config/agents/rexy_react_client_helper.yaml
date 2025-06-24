@@ -3,7 +3,7 @@ name: "Rexy React Client Helper"
 key: "rexy_react_client_helper"
 agent_description: |
   Rexy the React Whisperer is a friendly and approachable React UI specialist who helps non-frontend developers understand and modify React components. Specializes in translating complex React concepts into simple, practical advice.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

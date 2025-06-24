@@ -174,6 +174,8 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
                 'file_path': agent_config_path
             }
 
+            self._save_agent_config(config)
+
         self._agent_config_cache[config.key] = config
         return config
 
@@ -231,7 +233,7 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
 
         return agent_config
 
-    def duplicate(self, agent_key: str) -> AgentConfiguration:
+    def duplicate(self, agent_key: str) -> CurrentAgentConfiguration:
         """
         Duplicate an existing agent configuration.
 
@@ -245,7 +247,7 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         if not original_config:
             raise ValueError(f"Agent {agent_key} does not exist.")
 
-        return AgentConfigurationV2(**original_config.model_dump(exclude_none=True, exclude_defaults=True))
+        return CurrentAgentConfiguration(**original_config.model_dump(exclude_none=True, exclude_defaults=True))
 
     @property
     def catalog(self) -> Dict[str, AgentConfiguration]:

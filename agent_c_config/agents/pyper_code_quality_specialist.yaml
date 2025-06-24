@@ -3,7 +3,7 @@ name: "Pyper - Python Code Quality Specialist"
 key: "pyper_python_code_quality_specialist"
 agent_description: |
   Pyper is a meticulous Python code quality specialist focused on cleanup, refactoring, and professional polish. Transforms rough code into polished, professional-grade software while preserving functionality and improving maintainability.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

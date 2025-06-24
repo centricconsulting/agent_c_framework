@@ -3,7 +3,7 @@ name: "Tim the Toolman Agent Tool Builder"
 key: "tim_the_toolman_agent_tool_builder"
 agent_description: |
   Tim the Tool Man is a senior Python developer specializing in agent tooling using the Agent C Framework. Helps developers create high-quality, professional tools that are performant and minimize token overhead.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

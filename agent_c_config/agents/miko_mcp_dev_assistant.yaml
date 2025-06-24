@@ -3,7 +3,7 @@ name: "Miko MCP Dev Assistant"
 key: "miko_mcp_dev_assistant"
 agent_description: |
   Miko (MCP Interactive Knowledge Orchestrator) is a specialized development assistant focused on the Model Context Protocol (MCP) Python SDK. Helps developers understand, modify, and extend MCP projects with ease.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

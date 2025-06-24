@@ -2,7 +2,7 @@ import re
 import json
 
 from ts_tool import api
-from typing import Any, List, Tuple, Optional, Callable, Awaitable, Union
+from typing import Any, List, Tuple, Optional, Callable, Awaitable, Union, Dict
 
 from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.toolsets.tool_set import Toolset
@@ -15,7 +15,7 @@ from agent_c_tools.tools.workspace.local_project import LocalProjectWorkspace
 from agent_c_tools.tools.workspace.prompt import WorkspaceSection
 from agent_c_tools.tools.workspace.util import ReplaceStringsHelper
 from agent_c_tools.tools.workspace.context import WorkspaceToolsContext
-from agent_c_tools.tools.workspace.config import WorkspaceToolsConfig, S3StorageWorkspaceParams
+from agent_c_tools.tools.workspace.config import WorkspaceToolsConfig, S3StorageWorkspaceParams, WorkspaceParamsBase
 
 ws_type_map = {
     's3_storage': S3StorageWorkspaceParams,
@@ -39,12 +39,21 @@ class WorkspaceTools(Toolset):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs, name="workspace")
-        self.workspaces: List[BaseWorkspace] = kwargs.get('workspaces', [])
+        self._system_workspaces: Dict[str, BaseWorkspace] = {}
+        self._user_workspaces: Dict[str, Dict[str, BaseWorkspace]] = {}
         self.section = WorkspaceSection(tool=self)
 
         self.replace_helper = ReplaceStringsHelper()
+        self._create_system_workspaces(kwargs.get('workspaces', []))
 
-    def create_system_workspaces(self):
+    def _create_system_workspaces(self, workspaces: Optional[List[BaseWorkspace]] = None) -> None:
+        """Create system workspaces from the provided list or configuration."""
+        for workspace in workspaces:
+            self.add_system_workspace(workspace)
+
+        self._create_system_workspaces_from_config()
+
+    def _create_system_workspaces_from_config(self) -> None:
         from agent_c.config.system_config_loader import SystemConfigurationLoader
         config: WorkspaceToolsConfig = SystemConfigurationLoader.instance().config.tools.werkspace_tools
         if not config:
@@ -56,23 +65,76 @@ class WorkspaceTools(Toolset):
                 self.logger.warning(f"Workspace type '{workspace_type}' is not registered. Skipping.")
                 continue
 
-            workspace = workspace_class(**workspace_params.model_dump(exclude='workspace_type'))
-            self.add_workspace(workspace)
+            workspace = workspace_class(**workspace_params.model_dump(exclude=set('workspace_type')))
+            self.add_system_workspace(workspace)
 
     @classmethod
     def default_context(cls) -> Optional[BaseContext]:
         """Return the default context for this toolset."""
         return WorkspaceToolsContext()
 
-    def add_workspace(self, workspace: BaseWorkspace) -> None:
+    def add_system_workspace(self, workspace: BaseWorkspace) -> None:
         """Add a workspace to the list of workspaces."""
-        self.workspaces.append(workspace)
+        self._system_workspaces[workspace.name] = workspace
 
-    def find_workspace_by_name(self, name):
+    def add_user_workspace(self, context: InteractionContext, workspace: BaseWorkspace) -> None:
+        """Add a workspace to the list of workspaces for a user."""
+        self._user_workspaces[context.chat_session.user.user_id][workspace.name.lower()] = workspace
+
+    def find_user_workspace_by_name(self, name: str, context: InteractionContext) -> Optional[BaseWorkspace]:
+        """Find a user workspace by its name."""
+        norm_name = name.lower()
+        user_id = context.chat_session.user.user_id
+
+        if user_id not in self._user_workspaces or norm_name not in self._user_workspaces[user_id]:
+            self._create_user_workspace(context, name)
+
+        return self._user_workspaces[user_id].get(norm_name)
+
+    def _create_user_workspace(self, context: InteractionContext, workspace_name: str) -> Optional[BaseWorkspace]:
+        """Create a new user workspace with the given name."""
+        norm_name = workspace_name.lower()
+        if context.chat_session.user.user_id not in self._user_workspaces:
+            self._user_workspaces[context.chat_session.user.user_id] = {}
+
+        if norm_name in self._user_workspaces[context.chat_session.user.user_id]:
+            return self._user_workspaces[context.chat_session.user.user_id][norm_name]
+
+        config: WorkspaceToolsConfig = context.chat_session.user.config.get('workspace_tools')
+        if config is None or len(config.workspaces) == 0:
+            return None
+
+        workspace_params: WorkspaceParamsBase = next(workspace for workspace in config.workspaces if workspace.name.lower() == norm_name)
+        if not workspace_params:
+            return None
+
+        workspace_type = workspace_params.workspace_type
+        workspace_class = ws_type_map[workspace_type]
+        if not workspace_class:
+            self.logger.warning(f"Workspace type '{workspace_type}' is not registered. Skipping.")
+            return None
+
+        workspace = workspace_class(**workspace_params.model_dump(exclude=set('workspace_type')))
+        self._user_workspaces[context.chat_session.user.user_id][workspace.name.lower()] = workspace
+        return workspace
+
+    def find_system_workspace_by_name(self, name: str) -> Optional[BaseWorkspace]:
+        """Find a system workspace by its name."""
+        norm_name = name.lower()
+        return self._system_workspaces.get(norm_name)
+
+
+    def find_workspace_by_name(self, name: str, context: Optional[InteractionContext] = None) -> Optional[BaseWorkspace]:
         """Find a workspace by its name."""
         try:
-            norm_name = name.lower()
-            return next(workspace for workspace in self.workspaces if workspace.name == norm_name)
+            workspace: Optional[BaseWorkspace] = None
+            if context:
+                workspace = self.find_user_workspace_by_name(name, context)
+
+            if workspace is None:
+                workspace = self.find_system_workspace_by_name(name)
+
+            return workspace
         except StopIteration:
             # Handle the case where no workspace with the given name is found
             self.logger.warning(f"No workspace found with the name: {name}")
@@ -904,6 +966,13 @@ class WorkspaceTools(Toolset):
                             f"You can use `get_meta_keys` to list keys in this section in order to be more precise.")
 
                 return response
+
+            elif isinstance(value, str):
+                token_count = self._count_tokens(value, tool_context)
+                if token_count > max_tokens:
+                    return (f"ERROR: Key content exceeds max_tokens limit of {max_tokens}. "
+                            f"Content token count: {token_count}. "
+                            f"You can use `get_meta_keys` to list keys in this section in order to be more precise.")
 
             return str(value)
         except Exception as e:

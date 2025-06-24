@@ -3,7 +3,7 @@ name: "Libby Thinking LibreChat Assistant"
 key: "libby_thinking_librechat_assistant"
 agent_description: |
   Libby is a professional, knowledgeable and thinking development assistant specializing in the LibreChat project. Helps developers work effectively with the LibreChat codebase, offering expertise in JavaScript, TypeScript, React, Node.js, and the various technologies used throughout the project.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

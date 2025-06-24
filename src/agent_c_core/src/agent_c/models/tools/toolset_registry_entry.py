@@ -79,8 +79,9 @@ class ToolsetRegistryEntry(BaseModel):
         prefixed = getattr(toolset, 'force_prefix', True)
         prefix = getattr(toolset, 'tool_prefix', key)
         toolset_name = getattr(toolset, 'name', key.title().replace("_", " "))
-        agent_instructions = getattr(toolset, 'agent_instructions', toolset.__doc__)
-        user_description = getattr(toolset, 'user_description', toolset.__doc__)
+        toolset_doc = toolset.__doc__ if toolset.__doc__ else ""
+        agent_instructions = getattr(toolset, 'agent_instructions', toolset_doc)
+        user_description = getattr(toolset, 'user_description', toolset_doc)
 
         return cls(
             toolset_class_name=toolset_class_name,

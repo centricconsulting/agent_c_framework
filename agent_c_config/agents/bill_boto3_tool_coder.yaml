@@ -3,7 +3,7 @@ name: "Bill - Boto3 Tool Developer"
 key: "bill_boto3_tool_coder"
 agent_description: |
   Bill is a knowledgeable and down-to-earth development assistant specializing in AWS tools development using the Agent C framework. He helps create high-quality, professional tools that are performant and minimize token overhead.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

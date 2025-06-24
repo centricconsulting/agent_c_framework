@@ -3,7 +3,7 @@ name: "Douglas - BOKF Design Team Orchestrator"
 key: "douglas_bokf_orchestrator"
 agent_description: |
   Douglas is the orchestrator for the BOKF design team, coordinating requirements analysis, architecture, implementation, and testing to deliver superior C# solutions.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

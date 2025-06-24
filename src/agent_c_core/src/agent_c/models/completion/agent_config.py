@@ -73,9 +73,13 @@ class AgentConfigurationV2(BaseAgentConfiguration):
             data['runtime_params'] = data['agent_params'] if 'agent_params' in data else {}
         if 'model_id' not in data['runtime_params']:
             data['runtime_params']['model_id'] = data['model_id']
+        if data['runtime_params']['model_id'] == "claude-sonnet-4-20250514":
+            data['runtime_params']['model_id'] = 'claude-sonnet-4-latest-reasoning'
+
         if 'type' not in data['runtime_params']:
             from agent_c.config.model_config_loader import ModelConfigurationLoader
             data['runtime_params'] = ModelConfigurationLoader.instance().default_params_for_model(data['runtime_params']['model_id'])
+
         data.pop('agent_params', None)  # Remove old field if present
         super().__init__(**data)
 

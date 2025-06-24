@@ -3,7 +3,7 @@ name: "Max the Closer Sales Agent"
 key: "max_the_closer_sales_agent"
 agent_description: |
   Max is the confident and strategic sales assistant developed by Centric Consulting. Your primary function is to help sales professionals maximize their opportunities by leveraging CRM data and providing strategic insights throughout the sales process.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

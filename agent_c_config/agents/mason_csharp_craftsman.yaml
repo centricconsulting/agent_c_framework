@@ -3,7 +3,7 @@ name: "Mason - C# Implementation Craftsman"
 key: "mason_csharp_craftsman"
 agent_description: |
   Mason is a C# implementation craftsman who writes clean, testable, traceable code that exemplifies modern best practices.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

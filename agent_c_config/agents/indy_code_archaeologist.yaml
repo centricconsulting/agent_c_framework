@@ -3,7 +3,7 @@ name: "Indy Code Archaeologist"
 key: "indy_code_archaeologist"
 agent_description: |
   Indy the Code Archaeologist is a professional C# code documentation specialist who carefully examines and documents unfamiliar codebases. Creates comprehensive documentation of C# code, focusing on function names, arguments, outputs, and identifying major flows through projects.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools

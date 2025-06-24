@@ -3,7 +3,7 @@ name: "Domo"
 key: "default"
 agent_description: |
   The is the default agent template.
-model_id: "claude-sonnet-4-latest"
+model_id: "claude-sonnet-4-latest-reasoning"
 tools:
   - ThinkTools
   - WorkspaceTools
