@@ -7,18 +7,18 @@ dependencies = [
     "pandas==2.2.3", # googletrends, dynamics (overlap agent_c_core)
     "mermaid-py==0.8.0", # mermaid
     "feedparser==6.0.11", # rss
-    "readability-lxml==0.8.4.1", # web
-    "markdownify==1.1.0", # web
-    "selenium==4.33.0", # web, dynamics
+    "readability-lxml==0.8.1", # web
+    "markdownify==0.13.1", # web
+    "selenium==4.25.0", # web, dynamics
     "httpx>=0.27", # weather, web
-    "duckduckgo_search==8.0.4", # web_search-duckduckgo
+    "duckduckgo_search==7.5.5", # web_search-duckduckgo
     "google-search-results==2.4.2", # web_search-google_serp
     "pytrends==4.9.2", # web_search-google_trends
     "requests==2.32.3", # web_search-hacker_news, Youtube_Comments/Search
     "newsapi-python==0.2.7", # web_search-news_api
-    "beautifulsoup4==4.13.4", # web_search-seeking_alpha
-    "aiohttp==3.12.13", # web_search-seeking_alpha
-    "tavily-python==0.7.6", # web_search-tavily
+    "beautifulsoup4==4.12.3", # web_search-seeking_alpha
+    "aiohttp==3.10.10", # web_search-seeking_alpha
+    "tavily-python==0.5.0", # web_search-tavily
     "wikipedia==1.4.0", # web_search-wikipedia
     "lxml_html_clean",
     "aiobotocore>=2.21.1",
@@ -43,6 +43,20 @@ dependencies = [
     "pdfplumber==0.11.7",
     "matplotlib==3.10.3",    # data_vis
     "seaborn==0.13.2",      # data_vis
+    "docker==7.1.0", # code_interpreter,
+    #"ydata_profiling==4.16.1", # dataframe
+    "scikit-learn==1.5.2",  # dataframe
+    "google-api-python-client==2.149.0",     # Core Google API client
+    "google-auth-httplib2==0.2.0",        # Auth library for HTTP/2
+    "google-auth-oauthlib==1.2.1",        # OAuth 2.0 library
+    "google-auth==2.35.0",                # Google authentication library
+    "python-dateutil>=2.8.2",            # For handling GMAIL dates and times
+    "email-validator==2.2.0",           # For validating email addresses
+    "simple_salesforce==1.12.6", # salesforce
+    "linkedin-api==2.0.3", # linked_in
+    "requests==2.32.3", # youtube
+    "youtube_transcript_api==1.0.3", # YouTube_Transcript
+    "huggingface_hub==0.33.0"
 ]
 
 requires-python = ">=3.10"

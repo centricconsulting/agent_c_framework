@@ -21,7 +21,6 @@ COPY docs /app/docs
 
 # Copy in the personas - right now we mount in docker-compose
 COPY agent_c_config /app/agent_c_config
-COPY personas /app/personas
 
 # Upgrade pip
 RUN pip install --no-cache-dir --upgrade pip

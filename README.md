@@ -199,9 +199,9 @@ Follow the [Get Started With Claude](https://docs.anthropic.com/en/docs/get-star
 
 ## Running Agent C
 
-### Recommended: Web Interface (Docker)
+### Casual: Docker mode
 
-The recommended way to run Agent C is through the Web UI using Docker:
+The simple way to run Agent C is through the Web UI using Docker. You will have fewer options for creating local workspaces in this mode.
 
 ```bash
 # On Windows
@@ -225,7 +225,7 @@ When you first run Agent C, it will create a configuration file (similar to `.en
 ```
 
 
-### Alternative: Command Line Interface
+### Professional: Native
 
 For development or to allow for mapping of ANY folder as a workspace (Docker makes that hard to do on the fly) you may run the API and React frontend directly on your machine with:
 
