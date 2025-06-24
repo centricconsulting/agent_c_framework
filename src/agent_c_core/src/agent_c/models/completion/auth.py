@@ -6,6 +6,7 @@ from agent_c.models.completion.azure_auth_info import AzureAuthInfo
 from agent_c.models.completion.open_ai_auth_info import OpenAiAuthInfo
 from agent_c.models.completion.bedrock_auth_info import BedrockAuthInfo
 from agent_c.models.completion.gemini_auth_info import GeminiAuthInfo
+from agent_c.models.completion.claude import C
 
 
 class APIkeyAuthInfo(BaseModel):

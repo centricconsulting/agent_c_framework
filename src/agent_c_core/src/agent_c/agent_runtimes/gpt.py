@@ -1,8 +1,7 @@
 import os
+from pydantic import Field
+
 import openai
-import threading
-
-
 
 
 from collections import defaultdict
@@ -11,13 +10,12 @@ from tiktoken import Encoding, encoding_for_model
 from typing import Any, Dict, List, Union, Optional, Tuple
 
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
-from agent_c.chat.session_manager import ChatSessionManager
+from agent_c.models.completion.azure_auth_info import AzureAuthInfo
 from agent_c.models.completion.gpt import GPTCompletionParams
+from agent_c.models.completion.open_ai_auth_info import OpenAiAuthInfo
+from agent_c.models.config import BaseRuntimeConfig
 from agent_c.models.context.interaction_context import InteractionContext
-from agent_c.models.input import FileInput
-from agent_c.models.input.audio_input import AudioInput
 from agent_c.models.events.chat import ReceivedAudioDeltaEvent
-from agent_c.models.input.image_input import ImageInput
 from agent_c.util.token_counter import TokenCounter
 from agent_c.agent_runtimes.base import AgentRuntime
 from agent_c.util.logging_utils import LoggingManager
@@ -35,6 +33,13 @@ class TikTokenTokenCounter(TokenCounter):
     def count_tokens(self, text: str) -> int:
         return len(self.encoder.encode(text))
 
+class OpenAIConfig(BaseRuntimeConfig):
+    auth: Optional[OpenAiAuthInfo] = Field(None,
+                                           description="OpenAI authentication information, including API) key and organization ID.")
+
+class AzureOpenAIConfig(BaseRuntimeConfig):
+    auth: Optional[AzureAuthInfo] = Field(None,
+                                           description="Azure OpenAI authentication information, including API key, endpoint, and deployment name.")
 
 class GPTChatAgentRuntime(AgentRuntime):
     def __init__(self, max_retry_delay_secs: int = 300, concurrency_limit: int = 3,  context = None, client = None) -> None:

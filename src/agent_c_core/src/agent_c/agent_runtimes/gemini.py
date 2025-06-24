@@ -1,7 +1,15 @@
 import os
-from openai import AsyncOpenAI, api_key
+from pydantic import Field
+
+from openai import AsyncOpenAI
 from agent_c.agent_runtimes.gpt import GPTChatAgentRuntime
+from agent_c.models.completion.gemini_auth_info import GeminiAuthInfo
+from agent_c.models.config import BaseRuntimeConfig
 from agent_c.util.logging_utils import LoggingManager
+
+class GeminiConfig(BaseRuntimeConfig):
+    auth: GeminiAuthInfo = Field(None,
+                                 description="Authentication information for Gemini API, including API key and base URL.")
 
 
 class GeminiChatAgent(GPTChatAgentRuntime):

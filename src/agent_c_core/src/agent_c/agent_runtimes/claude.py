@@ -10,6 +10,9 @@ from anthropic import AsyncAnthropic, APITimeoutError, Anthropic, RateLimitError
 from anthropic.types import MessageParam
 
 from agent_c.agent_runtimes.base import AgentRuntime
+from agent_c.models.completion.auth import APIkeyAuthInfo
+from agent_c.models.completion.bedrock_auth_info import BedrockAuthInfo
+from agent_c.models.config import BaseRuntimeConfig
 from agent_c.util.logging_utils import LoggingManager
 from agent_c.util.token_counter import TokenCounter
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
@@ -36,6 +39,13 @@ class ClaudeTokenCounter(TokenCounter):
         )
 
         return response.input_tokens
+
+class ClaudeConfig(BaseRuntimeConfig):
+    auth: Optional[APIkeyAuthInfo] = None
+
+class BedrockClaudeConfig(BaseRuntimeConfig):
+    auth: Optional[BedrockAuthInfo]
+
 
 class ClaudeChatAgentRuntime(AgentRuntime):
     CLAUDE_MAX_TOKENS: int = 64000
