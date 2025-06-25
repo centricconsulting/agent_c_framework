@@ -8,11 +8,12 @@ from agent_c.models.config import BaseRuntimeConfig
 from agent_c.util.logging_utils import LoggingManager
 
 class GeminiConfig(BaseRuntimeConfig):
-    auth: GeminiAuthInfo = Field(None,
+    auth: GeminiAuthInfo = Field(default_factory=lambda: GeminiAuthInfo(api_key=os.environ.get("GEMINI_API_KEY", None)),
                                  description="Authentication information for Gemini API, including API key and base URL.")
 
 
 class GeminiChatAgent(GPTChatAgentRuntime):
+    config_type: str = "gemini"
     DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
     @classmethod

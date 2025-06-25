@@ -44,6 +44,16 @@ class ChatSession(BaseModel):
     context: ContextBag = Field(default_factory=dict,
                                 description="A dictionary of context models to provide data for tools / prompts.")
 
+    @property
+    def user_id(self) -> str:
+        """
+        Returns the user ID associated with this session.
+
+        Returns:
+            str: The user ID of the session's user.
+        """
+        return self.user.user_id
+
     def model_dump_serializable(self, exclude: Optional[List[str]] = None, **kwargs) -> Dict[str, Any]:
         """
         Dumps the model to a dictionary, excluding None values and certain fields.
@@ -55,16 +65,13 @@ class ChatSession(BaseModel):
 
         data = super().model_dump(exclude=set(exclude), **kwargs)
         data['user'] = self.user.user_id
+        return data
 
     @staticmethod
     def __new_session_id(**data) -> str:
         session_id = data.get('session_id')
         if session_id:
             return session_id
-
-        if isinstance(data['user'], str):
-            from agent_c.chat import UserLoader
-            data['user'] = UserLoader.instance().load_user_id(data['user'])
 
         if 'parent_session_id' in data:
             session_id = f"{data['parent_session_id']}-{MnemonicSlugs.generate_slug(2)}"
@@ -149,6 +156,10 @@ class ChatSession(BaseModel):
         Args:
             **data: Arbitrary keyword arguments to initialize the session.
         """
+        if isinstance(data['user'], str):
+            from agent_c.config.user_loader import UserLoader
+            data['user'] = UserLoader.instance().load_user_id(data['user'])
+
         if 'session_id' not in data:
             data['session_id'] = self.__new_session_id(**data)
 

@@ -11,7 +11,7 @@ CONFIG_API = "api"
 CONFIG_MISC = "misc"
 
 class BaseConfig(ObservableModel):
-    config_type: str = Field(..., description="The type of the config. Defaults to the snake case class name without config")
+    config_type: str = Field(None, description="The type of the config. Defaults to the snake case class name without config")
     category: str = Field(CONFIG_MISC, description="The high level category of the config, used for grouping.")
 
     def __init__(self, **data: Any) -> None:

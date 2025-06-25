@@ -104,7 +104,7 @@ class UserSessionManager:
             else:
                 # This is a legit new session creation
                 agent_config = self.agent_config_loader.duplicate(agent_key)
-                chat_session = ChatSession(session_id=ui_session_id, agent_config=agent_config, user_id=user_id)
+                chat_session = ChatSession(session_id=ui_session_id, agent_config=agent_config, user=user_id)
                 await self.chat_session_manager.new_session(chat_session)
 
             agent_bridge = AgentBridge(chat_session, self.chat_session_manager)

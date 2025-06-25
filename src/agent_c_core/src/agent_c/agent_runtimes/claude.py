@@ -8,6 +8,7 @@ from enum import Enum, auto
 from typing import Any, List, Union, Dict, Tuple, Optional
 from anthropic import AsyncAnthropic, APITimeoutError, Anthropic, RateLimitError, AsyncAnthropicBedrock
 from anthropic.types import MessageParam
+from pydantic import Field
 
 from agent_c.agent_runtimes.base import AgentRuntime
 from agent_c.models.completion.auth import APIkeyAuthInfo
@@ -41,14 +42,17 @@ class ClaudeTokenCounter(TokenCounter):
         return response.input_tokens
 
 class ClaudeConfig(BaseRuntimeConfig):
-    auth: Optional[APIkeyAuthInfo] = None
+    auth: Optional[APIkeyAuthInfo] = Field(default_factory=lambda: APIkeyAuthInfo(api_key=os.environ.get("ANTHROPIC_API_KEY")),
+                                            description="Authentication information for the Claude API, including API key and auth token.")
 
 class BedrockClaudeConfig(BaseRuntimeConfig):
-    auth: Optional[BedrockAuthInfo]
+    auth: Optional[BedrockAuthInfo] = Field(default_factory=lambda: BedrockAuthInfo(),
+                                            description="Authentication information for the Claude API on AWS Bedrock, including region and credentials.")
 
 
 class ClaudeChatAgentRuntime(AgentRuntime):
     CLAUDE_MAX_TOKENS: int = 64000
+    config_type: str = "claude"
 
     def __init__(self, max_retry_delay_secs: int = 300, concurrency_limit: int = 3,
                  context = None, client: Optional[Union[AsyncAnthropic, AsyncAnthropicBedrock]] = None) -> None:
@@ -616,6 +620,7 @@ class ClaudeChatAgentRuntime(AgentRuntime):
 
 
 class ClaudeBedrockChatAgent(ClaudeChatAgentRuntime):
+    config_type: str = "bedrock_claude"
     @classmethod
     def client(cls, **opts):
         return AsyncAnthropicBedrock(**opts)

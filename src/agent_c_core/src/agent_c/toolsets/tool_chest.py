@@ -39,7 +39,7 @@ class ToolChest:
         """
         Initializes the ToolChest with toolset instances, toolset classes, and a logger.
         """
-        self.logger = LoggingManager(__name__).get_logger()
+        self.logger = LoggingManager(self.__class__.__name__).get_logger()
 
         if tool_cache is None:
             self.logger.warning("No tool_cache provided, using default ToolCache which stores in agent_c_config/tool_cache.")

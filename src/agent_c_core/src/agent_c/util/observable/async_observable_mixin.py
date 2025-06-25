@@ -69,7 +69,7 @@ class AsyncObservableMixin:
             for cb in async_cbs:
                 loop.create_task(self._safe_async_call(cb, event, self, *args, **kwargs))
         except RuntimeError:
-            logger = LoggingManager(__name__).get_logger()
+            logger = LoggingManager(self.__class__.__name__).get_logger()
             logger.warning(
                 f"Async callbacks for '{event}' but no running event loop; "
                 "they won’t be executed."

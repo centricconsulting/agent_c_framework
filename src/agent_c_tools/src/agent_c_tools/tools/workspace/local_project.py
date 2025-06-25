@@ -15,7 +15,7 @@ class LocalProjectWorkspace(LocalStorageWorkspace):
     The description can be overridden via PROJECT_WORKSPACE_DESCRIPTION environment variable.
     """
     def __init__(self, name="project", description="A workspace holding the `Agent C` source code in Python."):
-        self.logger = LoggingManager(self.__name__).get_logger()
+        self.logger = LoggingManager(self.__class__.__name__).get_logger()
         self.logger.info("Initializing LocalProjectWorkspace")
         workspace_path = self._determine_workspace_path()
         super().__init__(

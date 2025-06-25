@@ -1,5 +1,5 @@
 from pydantic import Field
-from typing import Literal, Annotated, Union
+from typing import Literal, Annotated, Union, Optional
 
 from agent_c.models.base import BaseModel
 from agent_c.models.completion.azure_auth_info import AzureAuthInfo
@@ -17,7 +17,7 @@ OpenAiAuthInfoFull = Annotated[
 
 class APIkeyAuthInfo(BaseModel):
     type: Literal['api_key'] = Field('api_key', description="The type of the auth info")
-    api_key: str = Field(..., description="The API key to use for the interaction")
+    api_key: Optional[str] = Field(None, description="The API key to use for the interaction")
 
 class ClaudeAuthInfo(APIkeyAuthInfo):
     type: Literal['claude'] = Field('claude', description="The type of the auth info")

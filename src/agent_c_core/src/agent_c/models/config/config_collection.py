@@ -53,12 +53,13 @@ class ConfigCollection(ObservableDict):
         elif isinstance(key, object):
             key = to_snake_case(key.__class__.__name__)
         if isinstance(value, dict):
-            value = ConfigRegistry.create(value)
+            value = ConfigRegistry.create(value, key)
         elif isinstance(value, BaseModel):
             # Verify it has config_type field if it's not a BaseConfig
             if not isinstance(value, BaseConfig):
                 if not hasattr(value, 'config_type'):
                     raise ValueError(f"Non-BaseConfig models must have 'config_type' field. Got {type(value)}")
+
         else:
             raise ValueError(f"Config value must be BaseModel instance or dict, got {type(value)}")
         super().__setitem__(key, value)

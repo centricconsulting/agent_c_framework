@@ -4,6 +4,8 @@ import yaml
 from pathlib import Path
 from typing import Dict, Any, Optional, List, TypeVar
 
+from yaml import FullLoader
+
 from agent_c.config import ModelConfigurationLoader
 from agent_c.config.config_loader import ConfigLoader
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames, to_snake_case
@@ -124,7 +126,7 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         agent_config_path = os.path.join(self.agent_config_folder, f"{agent_config.key}.yaml")
 
         with open(agent_config_path, 'w', encoding='utf-8') as file:
-            yaml_content = agent_config.to_yaml()
+            yaml_content = yaml.dump(agent_config.model_dump(exclude_none=True), allow_unicode=True, default_flow_style=False, sort_keys=False)
             file.write(yaml_content)
 
     def load_agent_config_file(self, agent_config_path) -> Optional[AgentConfiguration]:
@@ -133,7 +135,7 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
                 with open(agent_config_path, 'r', encoding='utf-8') as file:
                     file_contents = file.read()
 
-                data = yaml.safe_load(file_contents)
+                data = yaml.load(file_contents, FullLoader)
             except Exception as e:
                 self.logger.exception(f"Failed to read agent configuration file {agent_config_path}: {e}", exc_info=True)
                 return None
@@ -247,7 +249,9 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         if not original_config:
             raise ValueError(f"Agent {agent_key} does not exist.")
 
-        return CurrentAgentConfiguration(**original_config.model_dump(exclude_none=True, exclude_defaults=True))
+        return CurrentAgentConfiguration(**original_config.model_dump(exclude_none=False,
+                                                                      exclude_defaults=False,
+                                                                      exclude_unset=False,))
 
     @property
     def catalog(self) -> Dict[str, AgentConfiguration]:

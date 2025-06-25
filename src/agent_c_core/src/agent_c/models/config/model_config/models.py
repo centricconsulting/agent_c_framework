@@ -143,6 +143,7 @@ class ModelConfigurationWithVendor(ModelConfiguration):
     """
     vendor: str = Field(..., description="Vendor providing the model")
     backend: Optional[str] = Field(None, description="Backend service or API for the model")
+    label: str = Field(..., description="Label for the model, used in UI and API calls")
 
     def __init__(self, **data: Any) -> None:
         """
@@ -151,6 +152,8 @@ class ModelConfigurationWithVendor(ModelConfiguration):
         Args:
             **data: Additional data to initialize the model configuration
         """
+        if 'label' not in data:
+            data['label'] = data.get('ui_name')
         super().__init__(**data)
 
         if self.backend is None:

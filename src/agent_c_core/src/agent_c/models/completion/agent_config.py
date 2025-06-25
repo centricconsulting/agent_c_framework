@@ -20,7 +20,7 @@ class BaseAgentConfiguration(AsyncObservableModel):
                                        description="List of enabled toolset names the agent can use")
     runtime_params: CompletionParams = Field(...,
                                              description="Parameters for the interaction with the agent")
-    sections: SectionsList = Field(default_factory=SectionsList,
+    sections: List[str] = Field(default_factory=list,
                                    description="List of prompt sections that define the agent's behavior and capabilities")
 
     def __init__(self, **data) -> None:

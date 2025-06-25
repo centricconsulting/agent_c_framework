@@ -92,7 +92,7 @@ class AgentBridge:
         Raises:
             Exception: If there are errors during tool or agent initialization.
         """
-        self.logger = LoggingManager(__name__).get_logger()
+        self.logger = LoggingManager(self.__class__.__name__).get_logger()
         InteractionContext.model_rebuild()
         self.chat_session = chat_session
         self.session_manager = session_manager

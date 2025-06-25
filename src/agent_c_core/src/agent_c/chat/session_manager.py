@@ -31,7 +31,7 @@ class ChatSessionManager:
         self._loader: SavedChatLoader = SavedChatLoader()
         self.session_id_list: List[str] = self._loader.session_id_list
         self._session_cache: Dict[str, ChatSession] = {}
-        self.logger = LoggingManager(__name__).get_logger()
+        self.logger = LoggingManager(self.__class__.__name__).get_logger()
 
     @classmethod
     def instance(cls):

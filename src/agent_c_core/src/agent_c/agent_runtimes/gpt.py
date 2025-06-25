@@ -34,14 +34,15 @@ class TikTokenTokenCounter(TokenCounter):
         return len(self.encoder.encode(text))
 
 class OpenAIConfig(BaseRuntimeConfig):
-    auth: Optional[OpenAiAuthInfo] = Field(None,
+    auth: Optional[OpenAiAuthInfo] = Field(default_factory= lambda: OpenAiAuthInfo(api_key=os.environ.get("OPENAI_API_KEY")),
                                            description="OpenAI authentication information, including API) key and organization ID.")
 
 class AzureOpenAIConfig(BaseRuntimeConfig):
-    auth: Optional[AzureAuthInfo] = Field(None,
+    auth: Optional[AzureAuthInfo] = Field(default_factory=lambda: AzureAuthInfo(),
                                            description="Azure OpenAI authentication information, including API key, endpoint, and deployment name.")
 
 class GPTChatAgentRuntime(AgentRuntime):
+    config_type: str = "open_ai"
     def __init__(self, max_retry_delay_secs: int = 300, concurrency_limit: int = 3,  context = None, client = None) -> None:
 
         super().__init__(TikTokenTokenCounter(), max_retry_delay_secs=max_retry_delay_secs,
@@ -389,6 +390,7 @@ class AzureGPTChatAgent(GPTChatAgentRuntime):
     Azure-specific implementation of the GPTChatAgentRuntime.
     Inherits from GPTChatAgentRuntime and overrides the client initialization.
     """
+    config_type: str = "azure_open_ai"
     @classmethod
     def client(cls, **opts):
         return AsyncAzureOpenAI(**opts)

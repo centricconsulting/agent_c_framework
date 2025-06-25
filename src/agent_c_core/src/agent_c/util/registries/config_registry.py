@@ -1,4 +1,4 @@
-from typing import Any, Dict, Type, TypeVar, List
+from typing import Any, Dict, Type, TypeVar, List, Optional
 from pydantic import BaseModel, ValidationError
 from agent_c.util.string import to_snake_case
 
@@ -23,7 +23,7 @@ class ConfigRegistry:
                     type_name = field.default
                 else:
                     # Fall back to computed name
-                    type_name = to_snake_case(config_class.__name__.removesuffix('Config'))
+                    type_name = to_snake_case(config_class.__name__.removesuffix('Config')).replace("_a_i", "_ai")
             else:
                 raise ValidationError(
                     f"Config class {config_class.__name__} must have 'config_type' field or be registered with explicit config_type"
@@ -40,9 +40,17 @@ class ConfigRegistry:
         return cls._registry[config_type].model_fields['category'].default
 
     @classmethod
-    def get_models_in_category(cls, category: str) -> List[Type[BaseModel]]:
+    def get_models_in_category(cls, category: str) -> Dict[str, Type[BaseModel]]:
         """Get all registered config models in a specific category"""
-        return [model for name, model in cls._registry.items() if getattr(model, 'category', 'misc') == category]
+
+        return  { name: model for name, model in cls._registry.items() if model.model_fields['category'].default == category }
+
+    @classmethod
+    def get_default_models_in_category(cls, category: str) -> Dict[str, BaseModel]:
+        """Get all registered config models in a specific category"""
+        base_models: List[str] = ['dynamic', 'base_core', 'base_runtime', 'base_toolset', 'base_api',
+                                  'dynamic_toolset', 'dynamic_runtime', 'dynamic_api', 'dynamic_core']
+        return {name: model(config_type=name) for name, model in cls._registry.items() if model.model_fields['category'].default == category and name not in base_models}
 
     @classmethod
     def register_with_config_type(cls, config_type: str):
@@ -61,12 +69,15 @@ class ConfigRegistry:
         return cls._registry[config_type]
 
     @classmethod
-    def create(cls, data: Dict[str, Any]) -> BaseModel:
+    def create(cls, data: Dict[str, Any], config_type: Optional[str] = None) -> BaseModel:
         """Create a config instance from data dictionary"""
-        if 'config_type' not in data:
-            raise ValueError("Config data must include 'config_type' field")
+        if config_type is None:
+            config_type = data.get('config_type', None)
 
-        config_type = data['config_type']
+        if config_type is None:
+            raise ValueError("Config data must include 'config_type'")
+
+        data['config_type'] = config_type
         config_class = cls.get(config_type)
         return config_class(**data)
 

@@ -10,6 +10,8 @@ import threading
 
 from pathlib import Path
 from typing import Union, Dict, Any, Optional, List
+
+from agent_c.models import BaseConfig
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames
 
 from agent_c.config.config_loader import ConfigLoader
@@ -56,11 +58,11 @@ class SystemConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         from agent_c.models.config.base import CONFIG_RUNTIME, CONFIG_TOOLSETS, CONFIG_CORE, CONFIG_API, CONFIG_MISC
 
         return SystemConfigFile(
-            runtimes=[config_cls() for config_cls in ConfigRegistry.get_models_in_category(CONFIG_RUNTIME)],
-            core=[config_cls() for config_cls in ConfigRegistry.get_models_in_category(CONFIG_CORE)],
-            tools=[config_cls() for config_cls in ConfigRegistry.get_models_in_category(CONFIG_TOOLSETS)],
-            api=[config_cls() for config_cls in ConfigRegistry.get_models_in_category(CONFIG_API)],
-            misc=[config_cls() for config_cls in ConfigRegistry.get_models_in_category(CONFIG_MISC)]
+            runtimes=ConfigRegistry.get_default_models_in_category(CONFIG_RUNTIME),
+            core=ConfigRegistry.get_default_models_in_category(CONFIG_CORE),
+            tools=ConfigRegistry.get_default_models_in_category(CONFIG_TOOLSETS),
+            api=ConfigRegistry.get_default_models_in_category(CONFIG_API),
+            misc=ConfigRegistry.get_default_models_in_category(CONFIG_MISC)
         )
 
 
@@ -126,11 +128,12 @@ class SystemConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         
         if not path.exists():
             from agent_c.util.logging_utils import LoggingManager
-            logger = LoggingManager(self.__name__).get_logger()
+            logger = LoggingManager(self.__class__. __name__).get_logger()
             logger.warning(f"Configuration file not found at {path}. Attempting to load default configuration.")
             self._ensure_default_config_file_exists()
             path = self.default_config_file_path
-            raise FileNotFoundError(f"Configuration file not found: {path}")
+            if not path.exists():
+                raise FileNotFoundError(f"Configuration file not found: {path}")
         
         # Use cached loading with file modification time checking
         with self._file_lock:
@@ -175,7 +178,7 @@ class SystemConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         path.parent.mkdir(parents=True, exist_ok=True)
         
         with open(path, 'w', encoding='utf-8') as f:
-            yaml.dump(config.model_dump(mode='json'), f, allow_unicode=True, default_flow_style=False)
+            yaml.dump(config.model_dump_yaml(), f, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
     
     def validate_file(self, yaml_path: Optional[Union[str, Path]] = None) -> bool:

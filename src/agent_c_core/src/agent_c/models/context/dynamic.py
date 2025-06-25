@@ -4,26 +4,23 @@ from agent_c.models.context import BaseContext
 
 
 class DynamicContext(BaseContext):
+    _dynamic_fields: Dict[str, Any]
     def __init__(self, **data: Any) -> None:
-        if 'context_type' not in data:
-            raise ValueError("DynamicContext must have 'context_type' field")
-        context_type = data.pop('context_type')
-        self._dynamic_fields: Dict[str, Any] = {**data}
+        context_type = data.pop('config_type', None)
+        if context_type is None:
+            raise ValueError("DynamicConfig must have 'config_type'")
 
-        super().__init__(context_type=context_type)
+        object.__setattr__(self, '_dynamic_fields', data)
+        super().__init__(config_type=context_type)
 
         from agent_c.util.registries.context_registry import ContextRegistry
         ContextRegistry.register(self.__class__, context_type=context_type)
 
-
     def __getattr__(self, name: str) -> Any:
-        """Allow obj.key syntax for read-only dictionary access"""
-        try:
-            return super().__getattr__(name)
-        except AttributeError:
-            # If parent classes don't have the attribute, try dictionary lookup
-            if name in self._dynamic_fields:
-                return self._dynamic_fields[name]
-
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+        # only called if `name` wasn't found normally
+        dynamic = object.__getattribute__(self, '_dynamic_fields')
+        if name in dynamic:
+            return dynamic[name]
+        # fall back to normal behavior:
+        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
 
