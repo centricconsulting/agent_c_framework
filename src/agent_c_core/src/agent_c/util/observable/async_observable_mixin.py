@@ -19,6 +19,7 @@ class AsyncObservableMixin:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._batch_active = False
         self._observable = Observable()
         self._async_callbacks: dict[str, set[ref]] = {}
 

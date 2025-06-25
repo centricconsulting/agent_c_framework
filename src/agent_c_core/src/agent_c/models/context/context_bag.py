@@ -24,14 +24,10 @@ class ContextBag(ObservableDict):
             result = {}
             for key, value in v.items():
                 if isinstance(value, BaseModel):
-                    # Verify it has context_type field if it's not a BaseContext
-                    if not isinstance(value, BaseContext):
-                        if not hasattr(value, 'context_type'):
-                            raise ValueError(f"Non-BaseContext models must have 'context_type' field. Got {type(value)}")
                     result[key] = value
                 elif isinstance(value, dict):
                     from agent_c.util.registries.context_registry import ContextRegistry
-                    result[key] = ContextRegistry.create(value)
+                    result[key] = ContextRegistry.create(value, key)
                 else:
                     raise ValueError(f"Context value must be BaseModel instance or dict, got {type(value)}")
             return cls(result)
@@ -56,7 +52,8 @@ class ContextBag(ObservableDict):
             key = to_snake_case(key.__class__.__name__)
 
         if isinstance(value, dict):
-            value = ContextRegistry.create(value)
+            from agent_c.util.registries.context_registry import ContextRegistry
+            value = ContextRegistry.create(value, key)
         elif isinstance(value, BaseModel):
             # Verify it has context_type field if it's not a BaseContext
             if not isinstance(value, BaseContext):

@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from newsapi.const import categories
 from pydantic import Field
@@ -21,6 +21,28 @@ class SystemConfigFile(ObservableModel):
 
     misc: ConfigCollection = Field(default_factory=ConfigCollection,
                                   description="Miscellaneous configuration that does not fit into other categories")
+
+    def __init__(self, **data: Any) -> None:
+        """
+        Initializes the SystemConfigFile with the provided data.
+
+        Args:
+            **data: Additional keyword arguments to initialize the model.
+        """
+        for cat in ['core', 'tools', 'api', 'misc', 'runtimes']:
+            if cat not in data:
+                data[cat] = ConfigCollection()
+            elif isinstance(data[cat], ConfigCollection):
+                # If it's already a ConfigCollection, no need to convert
+                continue
+            elif isinstance(data[cat], dict):
+                # Convert dict to ConfigCollection
+                data[cat] = ConfigCollection(data[cat])
+            else:
+                raise ValueError(f"Invalid type for {cat}: {type(data[cat])}. Expected dict or ConfigCollection.")
+
+        super().__init__(**data)
+
 
     def model_dump_yaml(self) -> Dict[str, Any]:
         """
@@ -45,6 +67,6 @@ class SystemConfigFile(ObservableModel):
                 result[name] = {}
                 col = categories[name]
                 for config in col.values():
-                    result[name][config.config_type] = config.model_dump(exclude=['category'])
+                    result[name][config.config_type] = config.model_dump(exclude=['category', 'config_type'])
 
         return result

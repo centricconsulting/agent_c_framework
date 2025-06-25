@@ -16,11 +16,21 @@ class DynamicContext(BaseContext):
         from agent_c.util.registries.context_registry import ContextRegistry
         ContextRegistry.register(self.__class__, context_type=context_type)
 
-    def __getattr__(self, name: str) -> Any:
-        # only called if `name` wasn't found normally
-        dynamic = object.__getattribute__(self, '_dynamic_fields')
-        if name in dynamic:
-            return dynamic[name]
-        # fall back to normal behavior:
-        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+    # def __getattr__(self, name: str) -> Any:
+    #     # only called if `name` wasn't found normally
+    #     dynamic = object.__getattribute__(self, '_dynamic_fields')
+    #     if name in dynamic:
+    #         return dynamic[name]
+    #     # fall back to normal behavior:
+    #     raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
 
+    def __getattribute__(self, name: str) -> Any:
+        try:
+            # first try normal lookup (methods, attributes, etc)
+            return super().__getattribute__(name)
+        except AttributeError:
+            # then fall back to dict lookup
+            dynamic = object.__getattribute__(self, '_dynamic_fields')
+            if name in dynamic:
+                return dynamic[name]
+            raise AttributeError(f"{type(self).__name__!r} object has no attribute or key {name!r}")

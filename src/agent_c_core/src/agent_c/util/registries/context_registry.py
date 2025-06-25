@@ -1,4 +1,4 @@
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, Dict, Type, TypeVar, Optional
 from pydantic import BaseModel, ValidationError
 
 from agent_c.util.string import to_snake_case
@@ -50,12 +50,14 @@ class ContextRegistry:
         return cls._registry[context_type]
 
     @classmethod
-    def create(cls, data: Dict[str, Any]) -> BaseModel:
+    def create(cls, data: Dict[str, Any], context_type: Optional[str] = None) -> BaseModel:
         """Create a context instance from data dictionary"""
-        if 'context_type' not in data:
+        if context_type is None:
+            context_type = data.get('context_type')
+        if context_type is None:
             raise ValueError("Context data must include 'context_type' field")
 
-        context_type = data['context_type']
+        data['context_type'] = context_type
         context_class = cls.get(context_type)
         return context_class(**data)
 

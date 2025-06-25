@@ -1,3 +1,5 @@
+from typing import Optional, Dict
+
 from pydantic import BaseModel
 
 from agent_c.models.config.base import BaseConfig
@@ -11,8 +13,10 @@ class ConfigCollection(ObservableDict):
     that config models not known to core cane be instantiated correctly.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, starting_data: Optional[Dict]=None):
+        super().__init__()
+        for k, v in (starting_data or {}).items():
+            self[k] = v
 
     @classmethod
     def __get_validators__(cls):
@@ -30,7 +34,7 @@ class ConfigCollection(ObservableDict):
                             raise ValueError(f"Non-BaseConfig models must have 'config_type' field. Got {type(value)}")
                     result[key] = value
                 elif isinstance(value, dict):
-                    result[key] = ConfigRegistry.create(value)
+                    result[key] = ConfigRegistry.create(value, key)
                 else:
                     raise ValueError(f"Config value must be BaseModel instance or dict, got {type(value)}")
             return cls(result)
@@ -50,16 +54,18 @@ class ConfigCollection(ObservableDict):
         # if it's an instance of ANY object use the snake case of the class name of that object as the key,
         if isinstance(key, type):
             key = to_snake_case(key.__name__)
-        elif isinstance(key, object):
+        elif not isinstance(key, str):
             key = to_snake_case(key.__class__.__name__)
+
         if isinstance(value, dict):
+            value['config_type'] = key
             value = ConfigRegistry.create(value, key)
         elif isinstance(value, BaseModel):
             # Verify it has config_type field if it's not a BaseConfig
             if not isinstance(value, BaseConfig):
                 if not hasattr(value, 'config_type'):
                     raise ValueError(f"Non-BaseConfig models must have 'config_type' field. Got {type(value)}")
-
+            value.config_type = key  # Ensure config_type is set
         else:
             raise ValueError(f"Config value must be BaseModel instance or dict, got {type(value)}")
         super().__setitem__(key, value)

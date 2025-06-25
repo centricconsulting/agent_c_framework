@@ -55,7 +55,8 @@ class WorkspaceTools(Toolset):
 
     def _create_system_workspaces_from_config(self) -> None:
         from agent_c.config.system_config_loader import SystemConfigurationLoader
-        config: WorkspaceToolsConfig = SystemConfigurationLoader.instance().config.tools.werkspace_tools
+        sys_config = SystemConfigurationLoader.instance().config
+        config: WorkspaceToolsConfig = sys_config.tools['workspace_tools']
         if not config:
             return
         for workspace_params in config.workspaces:
