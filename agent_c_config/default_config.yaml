@@ -1,0 +1,39 @@
+version: 1
+runtimes:
+  open_ai:
+    auth:
+      type: open_ai
+      api_key: null
+      organization: null
+      project: null
+      base_url: null
+  azure_open_ai:
+    auth:
+      type: azure
+      endpoint: null
+      api_key: null
+      api_version: 2024-08-01-preview
+  gemini:
+    auth:
+      type: gemini
+      api_key: null
+      organization: null
+      project: null
+      base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+  claude:
+    auth:
+      type: api_key
+      api_key: null
+  bedrock_claude:
+    auth:
+      type: bedrock
+      aws_access_key: null
+      aws_secret_key: null
+      aws_region: null
+      aws_session_token: null
+tools:
+  workspace_tools:
+    path_to_grep: grep
+    workspaces: []
+  dall_e_tools:
+    default_save_folder: null

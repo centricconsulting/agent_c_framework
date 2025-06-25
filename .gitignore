@@ -1,6 +1,7 @@
 agent_c_config/saved_sessions
 agent_c_config/tool_cache
 agent_c_config/server_workspaces.yaml
+agent_c_config/agent_c_config.yaml
 agent_c_logs/*
 
 # Byte-compiled / optimized / DLL files
