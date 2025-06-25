@@ -1,6 +1,5 @@
 import os
 import asyncio
-import logging
 import threading
 import traceback
 
@@ -11,7 +10,7 @@ from agent_c.config.agent_config_loader import AgentConfigLoader
 from agent_c.models.agent_config import AgentConfiguration
 from agent_c.chat.session_manager import ChatSessionManager, ChatSession
 from agent_c_api.core.agent_bridge import AgentBridge
-from agent_c_api.core.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 
 
 class UItoAgentBridgeManager:
@@ -33,9 +32,7 @@ class UItoAgentBridgeManager:
     # ESSENTIAL_TOOLS = ['WorkspaceTools', 'ThinkTools', 'RandomNumberTools', 'MarkdownToHtmlReportTools']
 
     def __init__(self):
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
-        # self.debug_event = LoggingManager.get_debug_event()
+        self.logger = get_logger(__name__)
 
         self.ui_sessions: Dict[str, Dict[str, Any]] = {}
         self._locks: Dict[str, asyncio.Lock] = {}
@@ -85,7 +82,9 @@ class UItoAgentBridgeManager:
         # If updating existing session, use that ID, otherwise generate new one - this will transfer chat history
         ui_session_id = existing_ui_session_id if existing_ui_session_id else MnemonicSlugs.generate_slug(3)
         if agent_key not in self.agent_config_loader.catalog:
-            self.logger.warning(f"Agent key '{agent_key}' not found in catalog. Using default agent configuration.")
+            self.logger.warning("Agent key not found in catalog, using default",
+                                agent_key=agent_key,
+                                available_keys=list(self.agent_config_loader.catalog.keys()))
             agent_key = "default"
 
         # Create lock if it doesn't exist
@@ -98,55 +97,85 @@ class UItoAgentBridgeManager:
             existing_agent_bridge: Optional[AgentBridge] = None
             existing_session = self.ui_sessions.get(ui_session_id, None)
             chat_session: Optional[ChatSession] = None
-            if existing_session is not None:
-                existing_agent_bridge = existing_session["agent_bridge"]
-                existing_agent_config: AgentConfiguration = existing_session["agent_config"]
-                chat_session = existing_session["chat_session"]
+            
+            with LoggingContext(session_id=ui_session_id, user_id=user_id, operation="create_session"):
+                self.logger.info("Session creation started",
+                                 ui_session_id=ui_session_id,
+                                 agent_key=agent_key,
+                                 llm_model=llm_model,
+                                 backend=backend,
+                                 is_existing_session=existing_ui_session_id is not None)
+                if existing_session is not None:
+                    existing_agent_bridge = existing_session["agent_bridge"]
+                    existing_agent_config: AgentConfiguration = existing_session["agent_config"]
+                    chat_session = existing_session["chat_session"]
+                    
+                    self.logger.info("Updating existing session",
+                                     existing_agent_key=existing_agent_config.key,
+                                     requested_agent_key=agent_key)
 
-                if existing_agent_config.key == agent_key or agent_key == "default":
-                    agent_config = existing_agent_config
-                else:
-                    agent_config = self.agent_config_loader.duplicate(agent_key)
-                    chat_session.agent_config = agent_config
-                    chat_session.touch()
-            else:
-                if ui_session_id in self.chat_session_manager.session_id_list:
-                    # If session already exists in chat session manager, load it
-                    chat_session = await self.chat_session_manager.get_session(ui_session_id)
-                    if chat_session.agent_config.key == agent_key or agent_key == "default":
-                        agent_config = chat_session.agent_config
+                    if existing_agent_config.key == agent_key or agent_key == "default":
+                        agent_config = existing_agent_config
                     else:
                         agent_config = self.agent_config_loader.duplicate(agent_key)
                         chat_session.agent_config = agent_config
                         chat_session.touch()
+                        self.logger.info("Agent configuration updated for existing session",
+                                         new_agent_key=agent_config.key)
                 else:
-                    agent_config = self.agent_config_loader.duplicate(agent_key)
-                    chat_session = ChatSession(session_id=ui_session_id, agent_config=agent_config, user_id=user_id)
-                    await self.chat_session_manager.new_session(chat_session)
+                    if ui_session_id in self.chat_session_manager.session_id_list:
+                        # If session already exists in chat session manager, load it
+                        self.logger.info("Loading existing chat session from manager",
+                                         session_id=ui_session_id)
+                        chat_session = await self.chat_session_manager.get_session(ui_session_id)
+                        if chat_session.agent_config.key == agent_key or agent_key == "default":
+                            agent_config = chat_session.agent_config
+                        else:
+                            agent_config = self.agent_config_loader.duplicate(agent_key)
+                            chat_session.agent_config = agent_config
+                            chat_session.touch()
+                            self.logger.info("Agent configuration updated for loaded session",
+                                             new_agent_key=agent_config.key)
+                    else:
+                        self.logger.info("Creating new chat session",
+                                         session_id=ui_session_id,
+                                         agent_key=agent_key)
+                        agent_config = self.agent_config_loader.duplicate(agent_key)
+                        chat_session = ChatSession(session_id=ui_session_id, agent_config=agent_config, user_id=user_id)
+                        await self.chat_session_manager.new_session(chat_session)
 
-            agent_bridge = AgentBridge(chat_session, self.chat_session_manager, **kwargs)
+                agent_bridge = AgentBridge(chat_session, self.chat_session_manager, **kwargs)
 
-            # Now initialize the agent. This fully initializes the agent and its tools as well - with a passed in session manager
-            await agent_bridge.initialize()
+                # Now initialize the agent. This fully initializes the agent and its tools as well - with a passed in session manager
+                self.logger.info("Initializing agent bridge",
+                                 agent_key=agent_config.key,
+                                 model_name=agent_config.agent_params.model_name,
+                                 tools_count=len(agent_config.tools))
+                await agent_bridge.initialize()
 
-            # Create a cancellation event for this session
-            cancel_event = threading.Event()
-            self._cancel_events[ui_session_id] = cancel_event
-            
-            # Update sessions dictionary
-            self.ui_sessions[ui_session_id] = {
-                "agent_bridge": agent_bridge,
-                "llm_model": llm_model,
-                "created_at": agent_bridge._current_timestamp(),
-                "agent_name": f"Agent_{ui_session_id}",
-                "agent_c_session_id": agent_bridge.chat_session.session_id,
-                "cancel_event": cancel_event,
-                "agent_config": agent_config,
-                "chat_session": chat_session
-            }
+                # Create a cancellation event for this session
+                cancel_event = threading.Event()
+                self._cancel_events[ui_session_id] = cancel_event
+                
+                # Update sessions dictionary
+                self.ui_sessions[ui_session_id] = {
+                    "agent_bridge": agent_bridge,
+                    "llm_model": llm_model,
+                    "created_at": agent_bridge._current_timestamp(),
+                    "agent_name": f"Agent_{ui_session_id}",
+                    "agent_c_session_id": agent_bridge.chat_session.session_id,
+                    "cancel_event": cancel_event,
+                    "agent_config": agent_config,
+                    "chat_session": chat_session
+                }
 
-            self.logger.info(f"Session {ui_session_id} created with agent: {agent_bridge}")
-            return ui_session_id
+                self.logger.info("Session created successfully",
+                                 ui_session_id=ui_session_id,
+                                 agent_key=agent_config.key,
+                                 agent_c_session_id=agent_bridge.chat_session.session_id,
+                                 model_name=agent_config.agent_params.model_name,
+                                 tools_count=len(agent_config.tools))
+                return ui_session_id
 
     async def cleanup_session(self, ui_session_id: str):
         """
@@ -161,19 +190,31 @@ class UItoAgentBridgeManager:
         Note:
             This method is safe to call multiple times on the same session ID
         """
-        if ui_session_id in self.ui_sessions:
-            try:
-                # Clean up the cancel event
-                if ui_session_id in self._cancel_events:
-                    del self._cancel_events[ui_session_id]
+        with LoggingContext(session_id=ui_session_id, operation="cleanup_session"):
+            if ui_session_id in self.ui_sessions:
+                try:
+                    self.logger.info("Cleaning up session", ui_session_id=ui_session_id)
+                    
+                    # Clean up the cancel event
+                    if ui_session_id in self._cancel_events:
+                        del self._cancel_events[ui_session_id]
 
-                # Remove session data and lock
-                del self.ui_sessions[ui_session_id]
-                if ui_session_id in self._locks:
-                    del self._locks[ui_session_id]
+                    # Remove session data and lock
+                    del self.ui_sessions[ui_session_id]
+                    if ui_session_id in self._locks:
+                        del self._locks[ui_session_id]
+                    
+                    self.logger.info("Session cleanup completed", ui_session_id=ui_session_id)
 
-            except Exception as e:
-                self.logger.error(f"Error cleaning up session {ui_session_id}: {e}")
+                except Exception as e:
+                    self.logger.error("Error cleaning up session",
+                                      ui_session_id=ui_session_id,
+                                      error_type=type(e).__name__,
+                                      error_message=str(e),
+                                      exc_info=True)
+            else:
+                self.logger.warning("Attempted to cleanup non-existent session",
+                                     ui_session_id=ui_session_id)
 
     async def stream_response(
             self,
@@ -197,27 +238,43 @@ class UItoAgentBridgeManager:
             ValueError: If the session ID is invalid
             Exception: If streaming fails
         """
-        session_data = await self.get_session_data(ui_session_id)
-        if not session_data:
-            raise ValueError(f"Invalid session ID: {ui_session_id}")
+        with LoggingContext(session_id=ui_session_id, operation="stream_response"):
+            session_data = await self.get_session_data(ui_session_id)
+            if not session_data:
+                self.logger.error("Invalid session ID for streaming", ui_session_id=ui_session_id)
+                raise ValueError(f"Invalid session ID: {ui_session_id}")
 
-        agent_bridge: AgentBridge = session_data["agent_bridge"]
+            agent_bridge: AgentBridge = session_data["agent_bridge"]
+            
+            self.logger.info("Starting stream response",
+                             ui_session_id=ui_session_id,
+                             user_message_length=len(user_message),
+                             file_count=len(file_ids) if file_ids else 0,
+                             agent_key=session_data.get("agent_config", {}).key if session_data.get("agent_config") else "unknown")
 
-        try:
-            # Get the cancel event for this session
-            cancel_event = self._cancel_events.get(ui_session_id)
+            try:
+                # Get the cancel event for this session
+                cancel_event = self._cancel_events.get(ui_session_id)
 
-            if file_ids is None or agent_bridge.file_handler is None:
-                file_ids = []
+                if file_ids is None or agent_bridge.file_handler is None:
+                    file_ids = []
 
-            async for chunk in agent_bridge.stream_chat(user_message, cancel_event, file_ids=file_ids):
-                yield chunk
+                async for chunk in agent_bridge.stream_chat(user_message, cancel_event, file_ids=file_ids):
+                    yield chunk
+                    
+                self.logger.info("Stream response completed successfully",
+                                 ui_session_id=ui_session_id)
 
-        except Exception as e:
-            self.logger.error(f"Error in stream_response: {e}")
-            error_type = type(e).__name__
-            error_traceback = traceback.format_exc()
-            self.logger.error(f"Error in agent_manager.py:stream_response - {error_type}: {str(e)}\n{error_traceback}")
+            except Exception as e:
+                error_type = type(e).__name__
+                error_traceback = traceback.format_exc()
+                self.logger.error("Error in stream response",
+                                  ui_session_id=ui_session_id,
+                                  error_type=error_type,
+                                  error_message=str(e),
+                                  exc_info=True)
+                # Re-raise the exception to maintain the original behavior
+                raise
 
     def cancel_interaction(self, ui_session_id: str) -> bool:
         """
@@ -229,18 +286,24 @@ class UItoAgentBridgeManager:
         Returns:
             bool: True if cancellation was triggered, False if session not found
         """
-        if ui_session_id not in self._cancel_events:
-            self.logger.warning(f"No cancel event found for session: {ui_session_id}")
-            return False
+        with LoggingContext(session_id=ui_session_id, operation="cancel_interaction"):
+            if ui_session_id not in self._cancel_events:
+                self.logger.warning("No cancel event found for session",
+                                     ui_session_id=ui_session_id,
+                                     available_sessions=list(self._cancel_events.keys()))
+                return False
+                
+            # Set the event to signal cancellation
+            self.logger.info("Cancelling interaction for session",
+                             ui_session_id=ui_session_id)
+            self._cancel_events[ui_session_id].set()
             
-        # Set the event to signal cancellation
-        self.logger.info(f"Cancelling interaction for session: {ui_session_id}")
-        self._cancel_events[ui_session_id].set()
-        
-        # Reset the event for future use
-        self._cancel_events[ui_session_id] = threading.Event()
-        
-        return True
+            # Reset the event for future use
+            self._cancel_events[ui_session_id] = threading.Event()
+            
+            self.logger.info("Interaction cancellation completed",
+                             ui_session_id=ui_session_id)
+            return True
         
     async def debug_session(self, ui_session_id: str):
         """
@@ -255,22 +318,33 @@ class UItoAgentBridgeManager:
         Raises:
             ValueError: If the session ID is invalid
         """
-        session_data = await self.get_session_data(ui_session_id)
-        if not session_data:
-            raise ValueError(f"Invalid session ID: {ui_session_id}")
+        with LoggingContext(session_id=ui_session_id, operation="debug_session"):
+            self.logger.info("Generating debug session report", ui_session_id=ui_session_id)
+            
+            session_data = await self.get_session_data(ui_session_id)
+            if not session_data:
+                self.logger.error("Invalid session ID for debug", ui_session_id=ui_session_id)
+                raise ValueError(f"Invalid session ID: {ui_session_id}")
 
-        agent_bridge = session_data.get("agent_bridge")
-        if not agent_bridge:
-            return {"error": "No agent bridge found in session data"}
+            agent_bridge = session_data.get("agent_bridge")
+            if not agent_bridge:
+                self.logger.warning("No agent bridge found in session data",
+                                     ui_session_id=ui_session_id,
+                                     session_data_keys=list(session_data.keys()))
+                return {"error": "No agent bridge found in session data"}
 
-        diagnostic = {
-            "session_id": ui_session_id,
-            "agent_c_session_id": getattr(agent_bridge, "session_id", "unknown"),
-            "agent_name": agent_bridge.agent_name,
-            "created_at": session_data.get("created_at", "unknown"),
-            "backend": agent_bridge.backend,
-            "model_name": agent_bridge.model_name,
-        }
+            diagnostic = {
+                "session_id": ui_session_id,
+                "agent_c_session_id": getattr(agent_bridge, "session_id", "unknown"),
+                "agent_name": getattr(agent_bridge, "agent_name", "unknown"),
+                "created_at": session_data.get("created_at", "unknown"),
+                "backend": getattr(agent_bridge, "backend", "unknown"),
+                "model_name": getattr(agent_bridge, "model_name", "unknown"),
+            }
+            
+            self.logger.info("Debug session diagnostic generated",
+                             ui_session_id=ui_session_id,
+                             diagnostic_keys=list(diagnostic.keys()))
 
         # Check session manager
         session_manager = getattr(agent_bridge, "session_manager", None)
@@ -330,4 +404,4 @@ class UItoAgentBridgeManager:
         else:
             diagnostic["tool_chest"] = {"exists": False}
 
-        return diagnostic
+            return diagnostic

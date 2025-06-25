@@ -1,4 +1,6 @@
 import time
+from importlib import reload
+
 import uvicorn
 import os
 from dotenv import load_dotenv
@@ -6,7 +8,6 @@ from agent_c.util.structured_logging import get_logger, LoggingContext
 from agent_c_api.api import router
 from agent_c_api.config.env_config import settings
 from agent_c_api.core.setup import create_application
-from fastapi import FastAPI
 
 load_dotenv(override=True)
 
@@ -23,7 +24,7 @@ logger = get_logger(__name__)
 # Note: External logger configuration is handled by the core's structured logging infrastructure
 
 # Create and configure the FastAPI application
-with LoggingContext(operation="app_initialization", component="main"):
+with LoggingContext(operation="app_initialization"):
     logger.info("Creating API application",
                 host=settings.HOST,
                 port=settings.PORT,
@@ -36,24 +37,23 @@ with LoggingContext(operation="app_initialization", component="main"):
 
     _timing["app_creation_end"] = time.time()
     app_creation_duration = _timing["app_creation_end"] - _timing["app_creation_start"]
-    
+
     logger.info("API application created successfully",
-                routes_registered=len(app.routes),
-                creation_duration_ms=round(app_creation_duration * 1000, 2),
-                api_versions=["v1", "v2"],
-                directory_structure_routing=True)
+                    routes_registered=len(app.routes),
+                    creation_duration_ms=round(app_creation_duration * 1000, 2),
+                    api_versions=["v1", "v2"],
+                    directory_structure_routing=True)
 
 def run():
     """Entrypoint for the API"""
-    with LoggingContext(operation="server_startup", component="uvicorn"):
-        # Get log level from environment or default to INFO
-        log_level = os.getenv('LOG_LEVEL', 'INFO').lower()
-        
-        logger.info("Starting Agent C API server",
-                    host=settings.HOST,
-                    port=settings.PORT,
-                    reload_enabled=settings.RELOAD,
-                    log_level=log_level)
+    # Get log level from environment or default to INFO
+    log_level = os.getenv('LOG_LEVEL', 'INFO').lower()
+    with LoggingContext(operation="server_startup", component="uvicorn",
+                        host=settings.HOST,port=settings.PORT,
+                        reload_enabled=settings.RELOAD,
+                        log_level=log_level):
+
+        logger.info("Starting Agent C API server")
         
         startup_time = time.time()
         
@@ -78,9 +78,7 @@ def run():
         except Exception as e:
             logger.error("Server startup failed",
                          error_type=type(e).__name__,
-                         error_message=str(e),
-                         host=settings.HOST,
-                         port=settings.PORT)
+                         error_message=str(e))
             raise
         finally:
             shutdown_time = time.time()

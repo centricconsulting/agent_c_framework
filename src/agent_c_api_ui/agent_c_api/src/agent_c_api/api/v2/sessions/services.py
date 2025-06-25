@@ -218,14 +218,14 @@ class SessionService:
             SessionDetail: Session details if found, None otherwise
         """
         with LoggingContext(operation="get_session", session_id=session_id):
-            self.logger.info("Session details requested", session_id=session_id)
+            self.logger.info("Session details requested")
 
         #return await self.session_repository.get_session(session_id)
 
         # Get session data using the manager's method
         session_data = await self.agent_manager.get_session_data(session_id)
         if not session_data:
-            self.logger.warning("Session not found", session_id=session_id)
+            self.logger.warning("Session not found")
             return None
             
         # Extract agent_c_session_id
@@ -236,7 +236,6 @@ class SessionService:
         
         # Construct and return the SessionDetail response
         self.logger.info("Session details retrieved successfully",
-                         session_id=session_id,
                          model_id=session_data.get("model_name", ""),
                          tools_count=len(tools))
         
@@ -274,7 +273,6 @@ class SessionService:
         """
         with LoggingContext(operation="update_session", session_id=session_id):
             self.logger.info("Session update started",
-                             session_id=session_id,
                              update_fields=list(update_data.model_dump(exclude_unset=True).keys()))
         
         try:
@@ -335,15 +333,13 @@ class SessionService:
             )
             
             # Return updated session details
-            self.logger.info("Session update completed successfully",
-                             session_id=session_id)
+            self.logger.info("Session update completed successfully")
             return updated_session
             
         except HTTPException:
             raise
         except Exception as e:
             self.logger.error("Session update failed",
-                              session_id=session_id,
                               error_type=type(e).__name__,
                               error_message=str(e),
                               exc_info=True)
@@ -359,21 +355,20 @@ class SessionService:
             bool: True if successful, False if session not found
         """
         with LoggingContext(operation="delete_session", session_id=session_id):
-            self.logger.info("Session deletion started", session_id=session_id)
+            self.logger.info("Session deletion started")
         
         # Delete from Redis first
         if not await self.session_repository.delete_session(session_id):
-            self.logger.warning("Session not found for deletion", session_id=session_id)
+            self.logger.warning("Session not found for deletion")
             return False
             
         # Then clean up in agent manager
         try:
             await self.agent_manager.cleanup_session(session_id)
-            self.logger.info("Session deletion completed successfully", session_id=session_id)
+            self.logger.info("Session deletion completed successfully")
             return True
         except Exception as e:
             self.logger.error("Session deletion failed",
-                              session_id=session_id,
                               error_type=type(e).__name__,
                               error_message=str(e),
                               exc_info=True)
@@ -389,30 +384,30 @@ class SessionService:
             AgentConfig: Agent configuration if found, None otherwise
         """
         with LoggingContext(operation="get_agent_config", session_id=session_id):
-            self.logger.info("Agent configuration requested", session_id=session_id)
+            self.logger.info("Agent configuration requested")
         
         # Get session from Redis
         session = await self.session_repository.get_session(session_id)
         if not session:
-            self.logger.warning("Session not found for agent config", session_id=session_id)
+            self.logger.warning("Session not found for agent config")
             return None
             
         # Get agent data from manager
         session_data = await self.agent_manager.get_session_data(session_id)
         if not session_data:
-            self.logger.warning("Session data not found in agent manager", session_id=session_id)
+            self.logger.warning("Session data not found in agent manager")
             return None
             
         # Get the agent bridge directly from session data
         agent_bridge = session_data.get("agent_bridge")
         if not agent_bridge:
-            self.logger.warning("Agent bridge not found in session data", session_id=session_id)
+            self.logger.warning("Agent bridge not found in session data")
             return None
             
         # Get agent configuration using the agent's method
         agent_config = agent_bridge.get_agent_runtime_config()
         if not agent_config:
-            self.logger.warning("Agent runtime config not available", session_id=session_id)
+            self.logger.warning("Agent runtime config not available")
             return None
             
         # Extract model parameters from agent_parameters
@@ -420,7 +415,6 @@ class SessionService:
             
         # Convert to AgentConfig model
         self.logger.info("Agent configuration retrieved successfully",
-                         session_id=session_id,
                          model_name=agent_config.get("model_name", ""),
                          tools_count=len(agent_config.get("initialized_tools", [])))
         
@@ -449,25 +443,24 @@ class SessionService:
         with LoggingContext(operation="update_agent_config", session_id=session_id):
             updates = update_data.model_dump(exclude_unset=True, exclude_none=True)
             self.logger.info("Agent configuration update started",
-                             session_id=session_id,
                              update_fields=list(updates.keys()))
         
         # Get session from Redis
         session = await self.session_repository.get_session(session_id)
         if not session:
-            self.logger.warning("Session not found for agent config update", session_id=session_id)
+            self.logger.warning("Session not found for agent config update")
             return None
             
         # Get agent data from manager
         session_data = await self.agent_manager.get_session_data(session_id)
         if not session_data:
-            self.logger.warning("Session data not found in agent manager", session_id=session_id)
+            self.logger.warning("Session data not found in agent manager")
             return None
             
         # Get the agent directly from session data
         agent_bridge = session_data.get("agent_bridge")
         if not agent_bridge:
-            self.logger.warning("Agent bridge not found for config update", session_id=session_id)
+            self.logger.warning("Agent bridge not found for config update")
             return None
             
         # Create a dictionary with only the fields that were provided in the update_data
@@ -522,11 +515,10 @@ class SessionService:
         # Get updated agent configuration
         updated_config = await self.get_agent_config(session_id)
         if not updated_config:
-            self.logger.warning("Could not retrieve updated agent config", session_id=session_id)
+            self.logger.warning("Could not retrieve updated agent config")
             return None
         
         self.logger.info("Agent configuration update completed successfully",
-                         session_id=session_id,
                          changes_applied_count=len(changes_applied),
                          changes_skipped_count=len(changes_skipped),
                          agent_reinitialized=needs_agent_reinitialization)

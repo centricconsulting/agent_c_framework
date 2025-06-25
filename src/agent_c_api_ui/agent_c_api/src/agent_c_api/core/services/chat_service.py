@@ -1,7 +1,7 @@
 import time
 from typing import Dict, List, Any, Optional, Union, Sequence
 
-import structlog
+from agent_c.util.structured_logging import get_logger, LoggingContext
 from agent_c.models.events.chat import MessageEvent, InteractionEvent
 from agent_c.models.events.tool_calls import ToolCallEvent
 from agent_c.models.common_chat.models import CommonChatMessage
@@ -20,14 +20,14 @@ class ChatService:
             chat_repository (ChatRepository): Chat repository instance
         """
         self.chat_repository = chat_repository
-        self.logger = structlog.get_logger(__name__)
+        self.logger = get_logger(__name__)
         self.session_id = chat_repository.session_id
         
-        self.logger.info(
-            "chat_service_initialized",
-            session_id=self.session_id,
-            repository_type=type(chat_repository).__name__
-        )
+        with LoggingContext(session_id=self.session_id):
+            self.logger.info(
+                "chat_service_initialized",
+                repository_type=type(chat_repository).__name__
+            )
     
     async def add_message(self, message: Union[MessageEvent, CommonChatMessage, Dict[str, Any]]) -> None:
         """
@@ -38,40 +38,38 @@ class ChatService:
         """
         start_time = time.time()
         
-        try:
-            # Log message context
-            message_type = type(message).__name__
-            message_id = getattr(message, 'id', None) if hasattr(message, 'id') else message.get('id', 'unknown') if isinstance(message, dict) else 'unknown'
-            
-            self.logger.info(
-                "chat_message_adding",
-                session_id=self.session_id,
-                message_id=message_id,
-                message_type=message_type
-            )
-            
-            await self.chat_repository.add_message(message)
-            
-            duration = time.time() - start_time
-            self.logger.info(
-                "chat_message_added",
-                session_id=self.session_id,
-                message_id=message_id,
-                message_type=message_type,
-                duration_ms=round(duration * 1000, 2)
-            )
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "chat_message_add_failed",
-                session_id=self.session_id,
-                message_id=message_id if 'message_id' in locals() else 'unknown',
-                message_type=message_type if 'message_type' in locals() else 'unknown',
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+        with LoggingContext(session_id=self.session_id, operation="add_message"):
+            try:
+                # Log message context
+                message_type = type(message).__name__
+                message_id = getattr(message, 'id', None) if hasattr(message, 'id') else message.get('id', 'unknown') if isinstance(message, dict) else 'unknown'
+                
+                self.logger.info(
+                    "chat_message_adding",
+                    message_id=message_id,
+                    message_type=message_type
+                )
+                
+                await self.chat_repository.add_message(message)
+                
+                duration = time.time() - start_time
+                self.logger.info(
+                    "chat_message_added",
+                    message_id=message_id,
+                    message_type=message_type,
+                    duration_ms=round(duration * 1000, 2)
+                )
+                
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "chat_message_add_failed",
+                    message_id=message_id if 'message_id' in locals() else 'unknown',
+                    message_type=message_type if 'message_type' in locals() else 'unknown',
+                    error=str(e),
+                    duration_ms=round(duration * 1000, 2)
+                )
+                raise
         
     async def add_common_chat_message(self, message: CommonChatMessage) -> None:
         """
@@ -130,45 +128,43 @@ class ChatService:
         """
         start_time = time.time()
         
-        try:
-            self.logger.info(
-                "chat_messages_retrieving",
-                session_id=self.session_id,
-                start=start,
-                end=end,
-                count=count,
-                format=format
-            )
-            
-            messages = await self.chat_repository.get_messages(start, end, count, format)
-            
-            duration = time.time() - start_time
-            self.logger.info(
-                "chat_messages_retrieved",
-                session_id=self.session_id,
-                start=start,
-                end=end,
-                count=count,
-                format=format,
-                retrieved_count=len(messages),
-                duration_ms=round(duration * 1000, 2)
-            )
-            
-            return messages
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "chat_messages_retrieval_failed",
-                session_id=self.session_id,
-                start=start,
-                end=end,
-                count=count,
-                format=format,
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+        with LoggingContext(session_id=self.session_id, operation="get_messages"):
+            try:
+                self.logger.info(
+                    "chat_messages_retrieving",
+                    start=start,
+                    end=end,
+                    count=count,
+                    format=format
+                )
+                
+                messages = await self.chat_repository.get_messages(start, end, count, format)
+                
+                duration = time.time() - start_time
+                self.logger.info(
+                    "chat_messages_retrieved",
+                    start=start,
+                    end=end,
+                    count=count,
+                    format=format,
+                    retrieved_count=len(messages),
+                    duration_ms=round(duration * 1000, 2)
+                )
+                
+                return messages
+                
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "chat_messages_retrieval_failed",
+                    start=start,
+                    end=end,
+                    count=count,
+                    format=format,
+                    error=str(e),
+                    duration_ms=round(duration * 1000, 2)
+                )
+                raise
         
     async def get_common_chat_messages(self, start: str = "-", end: str = "+", count: int = 100) -> List[CommonChatMessage]:
         """
@@ -589,41 +585,39 @@ class ChatService:
         """
         start_time = time.time()
         
-        try:
-            self.logger.info(
-                "interaction_adding",
-                session_id=self.session_id,
-                interaction_id=interaction_id,
-                messages_count=len(messages),
-                tool_calls_count=len(tool_calls) if tool_calls else 0
-            )
-            
-            result_interaction_id = await self.chat_repository.add_interaction(messages, tool_calls, interaction_id)
-            
-            duration = time.time() - start_time
-            self.logger.info(
-                "interaction_added",
-                session_id=self.session_id,
-                interaction_id=result_interaction_id,
-                messages_count=len(messages),
-                tool_calls_count=len(tool_calls) if tool_calls else 0,
-                duration_ms=round(duration * 1000, 2)
-            )
-            
-            return result_interaction_id
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "interaction_add_failed",
-                session_id=self.session_id,
-                interaction_id=interaction_id,
-                messages_count=len(messages),
-                tool_calls_count=len(tool_calls) if tool_calls else 0,
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+        with LoggingContext(session_id=self.session_id, operation="add_interaction"):
+            try:
+                self.logger.info(
+                    "interaction_adding",
+                    interaction_id=interaction_id,
+                    messages_count=len(messages),
+                    tool_calls_count=len(tool_calls) if tool_calls else 0
+                )
+                
+                result_interaction_id = await self.chat_repository.add_interaction(messages, tool_calls, interaction_id)
+                
+                duration = time.time() - start_time
+                self.logger.info(
+                    "interaction_added",
+                    interaction_id=result_interaction_id,
+                    messages_count=len(messages),
+                    tool_calls_count=len(tool_calls) if tool_calls else 0,
+                    duration_ms=round(duration * 1000, 2)
+                )
+                
+                return result_interaction_id
+                
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "interaction_add_failed",
+                    interaction_id=interaction_id,
+                    messages_count=len(messages),
+                    tool_calls_count=len(tool_calls) if tool_calls else 0,
+                    error=str(e),
+                    duration_ms=round(duration * 1000, 2)
+                )
+                raise
     
     async def get_interactions(self) -> List[str]:
         """

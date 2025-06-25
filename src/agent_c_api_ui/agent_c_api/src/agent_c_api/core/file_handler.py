@@ -1,6 +1,4 @@
-import logging
 import mimetypes
-import os
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -15,7 +13,7 @@ from markitdown import MarkItDown
 from agent_c.models.input.file_input import FileInput
 from agent_c.models.input.image_input import ImageInput
 from agent_c.models.input.audio_input import AudioInput
-from agent_c_api.core.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 
 # Optional document processing libraries
 try:
@@ -77,8 +75,7 @@ class FileHandler:
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
         self.retention_days = retention_days
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
+        self.logger = get_logger(__name__)
 
         # Cache of session files for quick lookup
         self.session_files: Dict[str, List[FileMetadata]] = {}
@@ -130,11 +127,18 @@ class FileHandler:
                 self.session_files[session_id] = []
             self.session_files[session_id].append(metadata)
 
-            self.logger.info(f"Saved file {original_filename} for session {session_id}")
+            self.logger.info("File saved successfully", 
+                           filename=original_filename, 
+                           session_id=session_id, 
+                           file_size=file_path.stat().st_size)
             return metadata
 
         except Exception as e:
-            self.logger.error(f"Error saving file: {str(e)}")
+            self.logger.error("File save failed", 
+                            filename=original_filename, 
+                            session_id=session_id, 
+                            error=str(e), 
+                            exc_info=True)
             if file_path.exists():
                 file_path.unlink()
             raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
@@ -158,55 +162,68 @@ class FileHandler:
         if metadata.processed:
             return metadata
 
-        try:
-            # Check for supported document types to use MarkItDown
-            office_doc_types = [
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # docx
-                "application/msword",  # doc
-                "application/vnd.openxmlformats-officedocument.presentationml.presentation",  # pptx
-                "application/vnd.ms-powerpoint",  # ppt
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # xlsx
-                "application/vnd.ms-excel",  # xls
-                "text/html",  # html
-                "application/pdf"  # pdf
-            ]
+        with LoggingContext(operation="file_processing", file_id=file_id, session_id=session_id):
+            try:
+                # Check for supported document types to use MarkItDown
+                office_doc_types = [
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # docx
+                    "application/msword",  # doc
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation",  # pptx
+                    "application/vnd.ms-powerpoint",  # ppt
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # xlsx
+                    "application/vnd.ms-excel",  # xls
+                    "text/html",  # html
+                    "application/pdf"  # pdf
+                ]
 
-            # Use MarkItDown for office documents
-            if metadata.mime_type in office_doc_types:
-                try:
-                    md = MarkItDown()
-                    result = md.convert(metadata.filename)
-                    metadata.extracted_text = result.text_content
-                    self.logger.info(f"Successfully processed {metadata.original_filename} using MarkItDown")
-                except Exception as e:
-                    self.logger.error(f"Error using MarkItDown to process {metadata.original_filename}: {str(e)}")
-                    metadata.processing_error = f"[Error processing {metadata.original_filename}: {str(e)}]"
-                    metadata.processed = False
-                    metadata.processing_status = "failed"
-                    metadata.extracted_text = None
+                # Use MarkItDown for office documents
+                if metadata.mime_type in office_doc_types:
+                    try:
+                        md = MarkItDown()
+                        result = md.convert(metadata.filename)
+                        metadata.extracted_text = result.text_content
+                        self.logger.info("Document processed successfully with MarkItDown", 
+                                       filename=metadata.original_filename, 
+                                       mime_type=metadata.mime_type,
+                                       text_length=len(result.text_content) if result.text_content else 0)
+                    except Exception as e:
+                        self.logger.error("MarkItDown processing failed", 
+                                        filename=metadata.original_filename, 
+                                        mime_type=metadata.mime_type,
+                                        error=str(e))
+                        metadata.processing_error = f"[Error processing {metadata.original_filename}: {str(e)}]"
+                        metadata.processed = False
+                        metadata.processing_status = "failed"
+                        metadata.extracted_text = None
 
-            # Handle text files (keeping the existing logic)
-            elif metadata.mime_type.startswith("text/"):
-                try:
-                    with open(metadata.filename, 'r', encoding='utf-8') as f:
-                        metadata.extracted_text = f.read()
-                except UnicodeDecodeError:
-                    with open(metadata.filename, 'r', encoding='latin-1') as f:
-                        metadata.extracted_text = f.read()
+                # Handle text files (keeping the existing logic)
+                elif metadata.mime_type.startswith("text/"):
+                    try:
+                        with open(metadata.filename, 'r', encoding='utf-8') as f:
+                            metadata.extracted_text = f.read()
+                    except UnicodeDecodeError:
+                        with open(metadata.filename, 'r', encoding='latin-1') as f:
+                            metadata.extracted_text = f.read()
 
-            metadata.processing_status = "completed"
-            metadata.processed = True
-            self.logger.info(f"Processed file {metadata.original_filename}")
-            return metadata
+                metadata.processing_status = "completed"
+                metadata.processed = True
+                self.logger.info("File processing completed", 
+                               filename=metadata.original_filename, 
+                               mime_type=metadata.mime_type,
+                               has_extracted_text=bool(metadata.extracted_text))
+                return metadata
 
-        except Exception as e:
-            self.logger.error(f"Error processing file: {str(e)}")
-            metadata.processing_error = f"[Error processing {metadata.original_filename}: {str(e)}]"
-            metadata.processed = False
-            metadata.processing_status = "failed"
-            metadata.extracted_text = None
+            except Exception as e:
+                self.logger.error("File processing failed", 
+                                filename=metadata.original_filename, 
+                                error=str(e), 
+                                exc_info=True)
+                metadata.processing_error = f"[Error processing {metadata.original_filename}: {str(e)}]"
+                metadata.processed = False
+                metadata.processing_status = "failed"
+                metadata.extracted_text = None
 
-            return metadata
+                return metadata
 
     def get_file_metadata(self, file_id: str, session_id: str) -> Optional[FileMetadata]:
         """
@@ -261,7 +278,9 @@ class FileHandler:
         """
         metadata = self.get_file_metadata(file_id, session_id)
         if not metadata:
-            self.logger.warning(f"No metadata found for file {file_id}")
+            self.logger.warning("File metadata not found", 
+                              file_id=file_id, 
+                              session_id=session_id)
             return None
 
         file_path = metadata.filename
@@ -269,17 +288,23 @@ class FileHandler:
         try:
             if metadata.mime_type.startswith("image/"):
                 # For images, create an ImageInput object
-                self.logger.info(f"Creating ImageInput for {metadata.original_filename}")
+                self.logger.info("Creating ImageInput", 
+                               filename=metadata.original_filename, 
+                               mime_type=metadata.mime_type)
                 return ImageInput.from_file(file_path)
 
             elif metadata.mime_type.startswith("audio/"):
                 # For audio files, create an AudioInput object
-                self.logger.info(f"Creating AudioInput for {metadata.original_filename}")
+                self.logger.info("Creating AudioInput", 
+                               filename=metadata.original_filename, 
+                               mime_type=metadata.mime_type)
                 return AudioInput.from_file(file_path)
 
             else:
                 # For all other files, create a FileInput object
-                self.logger.info(f"Creating FileInput for {metadata.original_filename}")
+                self.logger.info("Creating FileInput", 
+                               filename=metadata.original_filename, 
+                               mime_type=metadata.mime_type)
                 file_input = FileInput.from_file(file_path)
 
                 # Attach the extracted text if available
@@ -297,13 +322,18 @@ class FileHandler:
                         url=getattr(file_input, 'url', None)
                     )
 
-                    self.logger.info(f"Attached extracted text ({len(metadata.extracted_text)} chars) to FileInput")
+                    self.logger.info("Extracted text attached to FileInput", 
+                                   filename=metadata.original_filename,
+                                   text_length=len(metadata.extracted_text))
                     return doc_input
 
                 return file_input
 
         except Exception as e:
-            self.logger.error(f"Error creating input object for {metadata.original_filename}: {str(e)}", exc_info=True)
+            self.logger.error("Failed to create input object", 
+                            filename=metadata.original_filename, 
+                            error=str(e), 
+                            exc_info=True)
             return None
 
     def cleanup_session(self, session_id: str) -> int:
@@ -322,14 +352,20 @@ class FileHandler:
         count = 0
         session_dir = self.base_dir / session_id
 
-        try:
-            if session_dir.exists():
-                shutil.rmtree(session_dir)
-                count = len(self.session_files[session_id])
-                del self.session_files[session_id]
-                self.logger.info(f"Deleted {count} files for session {session_id}")
-        except Exception as e:
-            self.logger.error(f"Error cleaning up session: {str(e)}")
+        with LoggingContext(operation="session_cleanup", session_id=session_id):
+            try:
+                if session_dir.exists():
+                    shutil.rmtree(session_dir)
+                    count = len(self.session_files[session_id])
+                    del self.session_files[session_id]
+                    self.logger.info("Session files deleted successfully", 
+                                   session_id=session_id, 
+                                   files_deleted=count)
+            except Exception as e:
+                self.logger.error("Session cleanup failed", 
+                                session_id=session_id, 
+                                error=str(e), 
+                                exc_info=True)
 
         return count
 
@@ -362,7 +398,10 @@ class FileHandler:
                         path.unlink()
                         count += 1
                 except Exception as e:
-                    self.logger.error(f"Error deleting expired file: {str(e)}")
+                    self.logger.error("Failed to delete expired file", 
+                                    filename=metadata.filename, 
+                                    session_id=session_id, 
+                                    error=str(e))
 
             # Update metadata cache
             if not keep_files:
@@ -372,13 +411,19 @@ class FileHandler:
                     if session_dir.exists():
                         shutil.rmtree(session_dir)
                 except Exception as e:
-                    self.logger.error(f"Error removing session directory: {str(e)}")
+                    self.logger.error("Failed to remove session directory", 
+                                    session_id=session_id, 
+                                    directory=str(session_dir), 
+                                    error=str(e))
 
                 del self.session_files[session_id]
             else:
                 self.session_files[session_id] = keep_files
 
-        if count > 0:
-            self.logger.info(f"Cleaned up {count} expired files")
+        with LoggingContext(operation="expired_files_cleanup"):
+            if count > 0:
+                self.logger.info("Expired files cleanup completed", 
+                               files_deleted=count, 
+                               retention_days=self.retention_days)
 
         return count

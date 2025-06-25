@@ -1,7 +1,10 @@
 import time
 from typing import Dict, List, Any, Optional, Union
 
-import structlog
+from selenium.webdriver.common.devtools.v85.overlay import set_show_viewport_size_on_resize
+
+from agent_c.util.event_session_logger_factory import LoggerConfiguration
+from agent_c.util.structured_logging import get_logger, LoggingContext
 from agent_c.models.chat_history.chat_session import ChatSession
 from agent_c.models.chat_history.chat_memory import ChatMemory
 from ..repositories.session_repository import SessionRepository
@@ -20,7 +23,7 @@ class SessionService:
             session_repository (SessionRepository): Session repository instance
         """
         self.session_repository = session_repository
-        self.logger = structlog.get_logger(__name__)
+        self.logger = get_logger(__name__)
         
         self.logger.info(
             "session_service_initialized",
@@ -38,39 +41,27 @@ class SessionService:
             ChatSession: The created session with updated fields
         """
         start_time = time.time()
-        
-        try:
-            session_id = getattr(session, 'session_id', 'unknown')
-            user_id = getattr(session, 'user_id', 'unknown')
-            
-            self.logger.info(
-                "session_creating",
-                session_id=session_id,
-                user_id=user_id
-            )
-            
-            created_session = await self.session_repository.add_session(session)
-            
-            duration = time.time() - start_time
-            self.logger.info(
-                "session_created",
-                session_id=getattr(created_session, 'session_id', session_id),
-                user_id=getattr(created_session, 'user_id', user_id),
-                duration_ms=round(duration * 1000, 2)
-            )
-            
-            return created_session
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "session_creation_failed",
-                session_id=session_id if 'session_id' in locals() else 'unknown',
-                user_id=user_id if 'user_id' in locals() else 'unknown',
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+        session_id = getattr(session, 'session_id', 'unknown')
+        user_id = getattr(session, 'user_id', 'unknown')
+        duration = time.time() - start_time
+
+        with LoggingContext(session_id=session_id,user_id=user_id,
+                            duration_ms=round(duration * 1000, 2)):
+            try:
+                self.logger.info("session_creating")
+
+                created_session = await self.session_repository.add_session(session)
+
+
+                self.logger.info("session_created")
+
+                return created_session
+
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "session_creation_failed",error=str(e))
+                raise
     
     async def get_session(self, session_id: str) -> Optional[ChatSession]:
         """
@@ -83,43 +74,36 @@ class SessionService:
             Optional[ChatSession]: The session if found, None otherwise
         """
         start_time = time.time()
-        
-        try:
-            self.logger.info(
-                "session_retrieving",
-                session_id=session_id
-            )
-            
-            session = await self.session_repository.get_session(session_id)
-            
-            duration = time.time() - start_time
-            if session:
-                self.logger.info(
-                    "session_retrieved",
-                    session_id=session_id,
-                    found=True,
-                    user_id=getattr(session, 'user_id', 'unknown'),
-                    duration_ms=round(duration * 1000, 2)
+        duration = time.time() - start_time
+
+        with LoggingContext(session_id=session_id,
+                            duration_ms=round(duration * 1000, 2)):
+            try:
+                self.logger.info("session_retrieving")
+
+                session = await self.session_repository.get_session(session_id)
+
+                if session:
+                    self.logger.info(
+                        "session_retrieved",
+                        found=True,
+                        user_id=getattr(session, 'user_id', 'unknown'),
+                    )
+                else:
+                    self.logger.info(
+                        "session_not_found",
+                        found=False,
+                    )
+
+                return session
+
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "session_retrieval_failed",
+                    error=str(e),
                 )
-            else:
-                self.logger.info(
-                    "session_not_found",
-                    session_id=session_id,
-                    found=False,
-                    duration_ms=round(duration * 1000, 2)
-                )
-            
-            return session
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "session_retrieval_failed",
-                session_id=session_id,
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+                raise
     
     async def update_session(self, session: ChatSession) -> ChatSession:
         """
@@ -132,39 +116,29 @@ class SessionService:
             ChatSession: The updated session
         """
         start_time = time.time()
-        
-        try:
-            session_id = getattr(session, 'session_id', 'unknown')
-            user_id = getattr(session, 'user_id', 'unknown')
-            
-            self.logger.info(
-                "session_updating",
-                session_id=session_id,
-                user_id=user_id
-            )
-            
-            updated_session = await self.session_repository.add_session(session)
-            
-            duration = time.time() - start_time
-            self.logger.info(
-                "session_updated",
-                session_id=getattr(updated_session, 'session_id', session_id),
-                user_id=getattr(updated_session, 'user_id', user_id),
-                duration_ms=round(duration * 1000, 2)
-            )
-            
-            return updated_session
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "session_update_failed",
-                session_id=session_id if 'session_id' in locals() else 'unknown',
-                user_id=user_id if 'user_id' in locals() else 'unknown',
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+        session_id = getattr(session, 'session_id', 'unknown')
+        user_id = getattr(session, 'user_id', 'unknown')
+        duration = time.time() - start_time
+
+        with LoggingContext(session_id=session_id,user_id=user_id,
+                            duration_ms=round(duration * 1000, 2)):
+            try:
+                self.logger.info("session_updating")
+
+                updated_session = await self.session_repository.add_session(session)
+                self.logger.info("session_updated")
+
+                return updated_session
+
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "session_update_failed",
+                    session_id=session_id if 'session_id' in locals() else 'unknown',
+                    user_id=user_id if 'user_id' in locals() else 'unknown',
+                    error=str(e),
+                )
+                raise
     
     async def delete_session(self, session_id: str) -> bool:
         """
@@ -177,43 +151,35 @@ class SessionService:
             bool: True if deleted, False otherwise
         """
         start_time = time.time()
-        
-        try:
-            self.logger.info(
-                "session_deleting",
-                session_id=session_id
-            )
-            
-            success = await self.session_repository.delete_session(session_id)
-            
-            duration = time.time() - start_time
-            if success:
-                self.logger.info(
-                    "session_deleted",
-                    session_id=session_id,
-                    success=True,
-                    duration_ms=round(duration * 1000, 2)
+        duration = time.time() - start_time
+        with LoggingContext(session_id=session_id,duration_ms=round(duration * 1000, 2)):
+            try:
+                self.logger.info("session_deleting")
+
+                success = await self.session_repository.delete_session(session_id)
+
+
+                if success:
+                    self.logger.info(
+                        "session_deleted",
+                         success=True,
+                    )
+                else:
+                    self.logger.warning(
+                        "session_deletion_failed",
+                        success=False,
+                        reason="session_not_found_or_already_deleted",
+                    )
+
+                return success
+
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "session_deletion_error",
+                    error=str(e),
                 )
-            else:
-                self.logger.warning(
-                    "session_deletion_failed",
-                    session_id=session_id,
-                    success=False,
-                    reason="session_not_found_or_already_deleted",
-                    duration_ms=round(duration * 1000, 2)
-                )
-            
-            return success
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "session_deletion_error",
-                session_id=session_id,
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+                raise
     
     async def get_user_sessions(self, user_id: str) -> List[str]:
         """
@@ -226,34 +192,29 @@ class SessionService:
             List[str]: List of session IDs
         """
         start_time = time.time()
-        
-        try:
-            self.logger.info(
-                "user_sessions_retrieving",
-                user_id=user_id
-            )
-            
-            sessions = await self.session_repository.get_user_sessions(user_id)
-            
-            duration = time.time() - start_time
-            self.logger.info(
-                "user_sessions_retrieved",
-                user_id=user_id,
-                sessions_count=len(sessions),
-                duration_ms=round(duration * 1000, 2)
-            )
-            
-            return sessions
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "user_sessions_retrieval_failed",
-                user_id=user_id,
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+        duration = time.time() - start_time
+        with LoggingContext(user_id=user_id,duration_ms=round(duration * 1000, 2)):
+            try:
+                self.logger.info("user_sessions_retrieving")
+
+                sessions = await self.session_repository.get_user_sessions(user_id)
+
+
+                self.logger.info(
+                    "user_sessions_retrieved",
+                    sessions_count=len(sessions),
+                )
+
+                return sessions
+
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "user_sessions_retrieval_failed",
+                    error=str(e),
+                    duration_ms=round(duration * 1000, 2)
+                )
+                raise
     
     async def get_all_sessions(self) -> List[str]:
         """
@@ -301,49 +262,41 @@ class SessionService:
             bool: True if added, False otherwise
         """
         start_time = time.time()
-        
-        try:
-            message_id = message.get('id', 'unknown')
-            
-            self.logger.info(
-                "session_message_adding",
-                session_id=session_id,
-                message_id=message_id
-            )
-            
-            success = await self.session_repository.add_message_to_session(session_id, message)
-            
-            duration = time.time() - start_time
-            if success:
-                self.logger.info(
-                    "session_message_added",
-                    session_id=session_id,
-                    message_id=message_id,
-                    success=True,
+        message_id = message.get('id', 'unknown')
+        duration = time.time() - start_time
+        with LoggingContext(session_id=session_id,message_id=message_id,
+                            duration_ms=round(duration * 1000, 2)):
+            try:
+
+
+                self.logger.info("session_message_adding")
+
+                success = await self.session_repository.add_message_to_session(session_id, message)
+
+
+                if success:
+                    self.logger.info(
+                        "session_message_added",
+                        success=True,
+                    )
+                else:
+                    self.logger.warning(
+                        "session_message_add_failed",
+                        success=False,
+                        reason="session_not_found_or_memory_issue",
+                    )
+
+                return success
+
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "session_message_add_error",
+                    message_id=message_id if 'message_id' in locals() else 'unknown',
+                    error=str(e),
                     duration_ms=round(duration * 1000, 2)
                 )
-            else:
-                self.logger.warning(
-                    "session_message_add_failed",
-                    session_id=session_id,
-                    message_id=message_id,
-                    success=False,
-                    reason="session_not_found_or_memory_issue",
-                    duration_ms=round(duration * 1000, 2)
-                )
-            
-            return success
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "session_message_add_error",
-                session_id=session_id,
-                message_id=message_id if 'message_id' in locals() else 'unknown',
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+                raise
     
     async def create_new_memory(self, session_id: str, name: Optional[str] = None,
                              description: Optional[str] = None) -> Optional[int]:
@@ -359,47 +312,39 @@ class SessionService:
             Optional[int]: Index of the new memory or None if session doesn't exist
         """
         start_time = time.time()
-        
-        try:
-            self.logger.info(
-                "session_memory_creating",
-                session_id=session_id,
-                memory_name=name,
-                has_description=description is not None
-            )
-            
-            memory_index = await self.session_repository.create_new_memory(session_id, name, description)
-            
-            duration = time.time() - start_time
-            if memory_index is not None:
+        with LoggingContext(session_id=session_id,memory_name=name):
+            try:
                 self.logger.info(
-                    "session_memory_created",
-                    session_id=session_id,
-                    memory_index=memory_index,
-                    memory_name=name,
+                    "session_memory_creating",
+                    has_description=description is not None
+                )
+
+                memory_index = await self.session_repository.create_new_memory(session_id, name, description)
+
+                duration = time.time() - start_time
+                if memory_index is not None:
+                    self.logger.info(
+                        "session_memory_created",
+                        memory_index=memory_index,
+                        duration_ms=round(duration * 1000, 2)
+                    )
+                else:
+                    self.logger.warning(
+                        "session_memory_creation_failed",
+                        reason="session_not_found",
+                        duration_ms=round(duration * 1000, 2)
+                    )
+
+                return memory_index
+
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "session_memory_creation_error",
+                    error=str(e),
                     duration_ms=round(duration * 1000, 2)
                 )
-            else:
-                self.logger.warning(
-                    "session_memory_creation_failed",
-                    session_id=session_id,
-                    memory_name=name,
-                    reason="session_not_found",
-                    duration_ms=round(duration * 1000, 2)
-                )
-            
-            return memory_index
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "session_memory_creation_error",
-                session_id=session_id,
-                memory_name=name,
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+                raise
     
     async def switch_active_memory(self, session_id: str, memory_index: int) -> bool:
         """
@@ -413,44 +358,40 @@ class SessionService:
             bool: True if switched, False if memory doesn't exist
         """
         start_time = time.time()
-        
-        try:
-            self.logger.info(
-                "session_memory_switching",
-                session_id=session_id,
-                target_memory_index=memory_index
-            )
-            
-            success = await self.session_repository.switch_active_memory(session_id, memory_index)
-            
-            duration = time.time() - start_time
-            if success:
+        with LoggingContext(session_id=session_id, target_memory_index=memory_index):
+            try:
                 self.logger.info(
-                    "session_memory_switched",
+                    "session_memory_switching",
                     session_id=session_id,
-                    active_memory_index=memory_index,
-                    success=True,
+                    target_memory_index=memory_index
+                )
+
+                success = await self.session_repository.switch_active_memory(session_id, memory_index)
+
+                duration = time.time() - start_time
+
+                if success:
+                    self.logger.info(
+                        "session_memory_switched",
+                        active_memory_index=memory_index,
+                        success=True,
+                        duration_ms=round(duration * 1000, 2)
+                    )
+                else:
+                    self.logger.warning(
+                        "session_memory_switch_failed",
+                        success=False,
+                        reason="memory_index_not_found",
+                        duration_ms=round(duration * 1000, 2)
+                    )
+
+                return success
+
+            except Exception as e:
+                duration = time.time() - start_time
+                self.logger.error(
+                    "session_memory_switch_error",
+                    error=str(e),
                     duration_ms=round(duration * 1000, 2)
                 )
-            else:
-                self.logger.warning(
-                    "session_memory_switch_failed",
-                    session_id=session_id,
-                    target_memory_index=memory_index,
-                    success=False,
-                    reason="memory_index_not_found",
-                    duration_ms=round(duration * 1000, 2)
-                )
-            
-            return success
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            self.logger.error(
-                "session_memory_switch_error",
-                session_id=session_id,
-                target_memory_index=memory_index,
-                error=str(e),
-                duration_ms=round(duration * 1000, 2)
-            )
-            raise
+                raise
