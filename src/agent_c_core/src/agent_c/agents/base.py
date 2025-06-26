@@ -15,7 +15,7 @@ from agent_c.models.events import ToolCallEvent, InteractionEvent, TextDeltaEven
 from agent_c.prompting.prompt_builder import PromptBuilder
 from agent_c.toolsets.tool_chest import ToolChest
 from agent_c.util.slugs import MnemonicSlugs
-from agent_c.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 from agent_c.util.token_counter import TokenCounter
 
 
@@ -68,8 +68,7 @@ class BaseAgent:
         self.token_counter: TokenCounter = kwargs.get("token_counter", TokenCounter())
         self.root_message_role: str = kwargs.get("root_message_role", os.environ.get("ROOT_MESSAGE_ROLE", "system"))
 
-        logging_manager = LoggingManager(self.__class__.__name__)
-        self.logger = logging_manager.get_logger()
+        self.logger = get_logger(__name__)
 
         # Handle deprecated session_logger parameter
         if "session_logger" in kwargs:
@@ -175,7 +174,7 @@ class BaseAgent:
                 await streaming_callback(event)
             except Exception as e:
                 self.logger.exception(
-                    f"Streaming callback error for event: {e}. Event Type: {getattr(event, 'type', 'unknown')}")
+                    "Streaming callback error for event", error=str(e), event_type=getattr(event, 'type', 'unknown'))
                 # Log internal error as system event
                 await self._raise_system_event(
                     f"Streaming callback error: {str(e)}",
@@ -204,8 +203,8 @@ class BaseAgent:
             )
         except Exception as e:
             # Fallback to standard logging if event raising fails
-            self.logger.exception(f"Failed to log internal error as event: {e}")
-            self.logger.error(f"Original error - {error_type}: {error_message}")
+            self.logger.exception("Failed to log internal error as event", error=str(e))
+            self.logger.error("Original error", error_type=error_type, error_message=str(error_message))
 
     async def _raise_system_event(self, content: str, severity: str = "error", **data):
         """

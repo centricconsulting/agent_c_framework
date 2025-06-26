@@ -1,16 +1,10 @@
 import asyncio
 import copy
 import json
-import logging
 from typing import Type, List, Union, Dict, Any, Tuple, Optional
-
-from fastapi_pagination.utils import await_if_async
-from pyarrow.ipc import new_stream
-
-from agent_c.prompting.basic_sections.tool_guidelines import EndToolGuideLinesSection, BeginToolGuideLinesSection
 from agent_c.prompting.prompt_section import PromptSection
 from agent_c.toolsets.tool_set import Toolset
-from agent_c.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 
 
 class ToolChest:
@@ -68,8 +62,7 @@ class ToolChest:
         self.__tool_opts = {}
         
         # Initialize metadata tracking
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
+        self.logger = get_logger(__name__)
         self._active_tool_schemas: List[dict] = []
         self._tool_name_to_instance_map: Dict[str, Toolset] = {}
         
@@ -127,92 +120,93 @@ class ToolChest:
         newly_instantiated = []
         
         success = True
-        for name in toolset_names:
-            # Skip if already active
-            if name in self.__active_toolset_instances:
-                continue
-            
-            # Check for circular dependencies
-            if name in activation_stack:
-                self.logger.warning(f"Circular dependency detected when activating {name}")
-                success = False
-                continue
-            
-            activation_stack.append(name)
-                
-            # Check if we've already instantiated this toolset
-            if name in self.__toolset_instances:
-                # Simply mark as active
-                if not init_only:
-                    self.__active_toolset_instances[name] = self.__toolset_instances[name]
-                    self.logger.info(f"Marked existing toolset {name} as active")
-            else:
-                # Find the class for this toolset
-                toolset_class = next((cls for cls in self.__available_toolset_classes 
-                                      if cls.__name__ == name), None)
-                
-                if not toolset_class:
-                    self.logger.warning(f"Toolset class {name} not found in available toolsets")
-                    success = False
-                    activation_stack.remove(name)
+        with LoggingContext(operation="toolset_activation"):
+            for name in toolset_names:
+                # Skip if already active
+                if name in self.__active_toolset_instances:
                     continue
                 
-                required_tools = Toolset.get_required_tools(name)
-                
-                # Log dependencies for debugging
-                if required_tools:
-                    self.logger.info(f"Toolset {name} requires: {', '.join(required_tools)}")
-                    
-                    # Recursively activate required tools
-                    required_success = await self.activate_toolset(required_tools, tool_opts, init_only)
-                    if not required_success:
-                        self.logger.warning(f"Failed to activate required tools for {name}")
-                        success = False
-                        activation_stack.remove(name)
-                        continue
-                    
-                    # Verify all required tools are actually active now
-                    missing_tools = [tool for tool in required_tools if tool not in self.__active_toolset_instances]
-                    if missing_tools:
-                        self.logger.warning(f"Required tools {missing_tools} for {name} not active despite activation attempt")
-                        success = False
-                        activation_stack.remove(name)
-                        continue
-                
-                # Prepare tool_opts with current tool_chest
-                local_tool_opts = self.__tool_opts
-                if tool_opts is not None:
-                    local_tool_opts.update(tool_opts)
-                
-                # Always ensure tool_chest is set to self
-                local_tool_opts['tool_chest'] = self
-                
-                # Pass tool_cache if we have it
-                if hasattr(self, 'tool_cache') and self.tool_cache is not None:
-                    local_tool_opts['tool_cache'] = self.tool_cache
-
-                # Create instance
-                try:
-                    # Store for use in other methods
-                    self.__tool_opts = local_tool_opts
-                    
-                    # Create the toolset instance
-                    toolset_obj = toolset_class(**local_tool_opts)
-                    
-                    # Add to instances and active instances
-                    self.__toolset_instances[name] = toolset_obj
-                    if not init_only:
-                        self.__active_toolset_instances[name] = toolset_obj
-                    
-                    # Track for post_init later
-                    newly_instantiated.append(name)
-                    
-                    self.logger.info(f"Created toolset instance {name}")
-                except Exception as e:
-                    self.logger.exception(f"Error creating toolset {name}: {str(e)}", stacklevel=2)
+                # Check for circular dependencies
+                if name in activation_stack:
+                    self.logger.warning("Circular dependency detected when activating toolset", toolset_name=name)
                     success = False
-            
-            activation_stack.remove(name)
+                    continue
+                
+                activation_stack.append(name)
+                    
+                # Check if we've already instantiated this toolset
+                if name in self.__toolset_instances:
+                    # Simply mark as active
+                    if not init_only:
+                        self.__active_toolset_instances[name] = self.__toolset_instances[name]
+                        self.logger.info("Marked existing toolset as active", toolset_name=name, action="reactivate")
+                else:
+                    # Find the class for this toolset
+                    toolset_class = next((cls for cls in self.__available_toolset_classes 
+                                          if cls.__name__ == name), None)
+                    
+                    if not toolset_class:
+                        self.logger.warning("Toolset class not found in available toolsets", toolset_name=name, available_toolsets=[cls.__name__ for cls in self.__available_toolset_classes])
+                        success = False
+                        activation_stack.remove(name)
+                        continue
+                    
+                    required_tools = Toolset.get_required_tools(name)
+                    
+                    # Log dependencies for debugging
+                    if required_tools:
+                        self.logger.info("Toolset requires dependencies", toolset_name=name, required_tools=required_tools)
+                        
+                        # Recursively activate required tools
+                        required_success = await self.activate_toolset(required_tools, tool_opts, init_only)
+                        if not required_success:
+                            self.logger.warning("Failed to activate required tools for toolset", toolset_name=name, required_tools=required_tools)
+                            success = False
+                            activation_stack.remove(name)
+                            continue
+                        
+                        # Verify all required tools are actually active now
+                        missing_tools = [tool for tool in required_tools if tool not in self.__active_toolset_instances]
+                        if missing_tools:
+                            self.logger.warning("Required tools not active despite activation attempt", toolset_name=name, missing_tools=missing_tools, required_tools=required_tools)
+                            success = False
+                            activation_stack.remove(name)
+                            continue
+                    
+                    # Prepare tool_opts with current tool_chest
+                    local_tool_opts = self.__tool_opts
+                    if tool_opts is not None:
+                        local_tool_opts.update(tool_opts)
+                    
+                    # Always ensure tool_chest is set to self
+                    local_tool_opts['tool_chest'] = self
+                    
+                    # Pass tool_cache if we have it
+                    if hasattr(self, 'tool_cache') and self.tool_cache is not None:
+                        local_tool_opts['tool_cache'] = self.tool_cache
+
+                    # Create instance
+                    try:
+                        # Store for use in other methods
+                        self.__tool_opts = local_tool_opts
+                        
+                        # Create the toolset instance
+                        toolset_obj = toolset_class(**local_tool_opts)
+                        
+                        # Add to instances and active instances
+                        self.__toolset_instances[name] = toolset_obj
+                        if not init_only:
+                            self.__active_toolset_instances[name] = toolset_obj
+                        
+                        # Track for post_init later
+                        newly_instantiated.append(name)
+                        
+                        self.logger.info("Created toolset instance", toolset_name=name, action="create")
+                    except Exception as e:
+                        self.logger.exception("Error creating toolset", toolset_name=name, error=str(e))
+                        success = False
+                
+                activation_stack.remove(name)
         
         # Update metadata for active toolsets - do this before post_init to ensure
         # active_tools is properly populated for any toolset that needs to access it
@@ -226,9 +220,9 @@ class ToolChest:
                 toolset_obj = self.__active_toolset_instances.get(name)
                 if toolset_obj:
                     await toolset_obj.post_init()
-                    self.logger.info(f"Completed post_init for toolset {name}")
+                    self.logger.info("Completed post_init for toolset", toolset_name=name, action="post_init")
             except Exception as e:
-                self.logger.warning(f"Error in post_init for toolset {name}: {str(e)}")
+                self.logger.warning("Error in post_init for toolset", toolset_name=name, error=str(e), action="post_init")
                 success = False
                 # Don't remove from active instances as it may still be partially functional
         
@@ -248,21 +242,22 @@ class ToolChest:
         toolset_names = [toolset_name_or_names] if isinstance(toolset_name_or_names, str) else toolset_name_or_names
         
         success = True
+
         for name in toolset_names:
-            # Skip if essential
+        # Skip if essential
             if name in self.__essential_toolsets:
-                self.logger.warning(f"Cannot deactivate essential toolset {name}")
+                self.logger.warning("Cannot deactivate essential toolset", toolset_name=name, reason="essential_toolset")
                 success = False
                 continue
-                
+
             # Skip if not active
             if name not in self.__active_toolset_instances:
                 continue
-                
+
             # Remove from active toolsets
             del self.__active_toolset_instances[name]
-            self.logger.info(f"Deactivated toolset {name}")
-        
+            self.logger.info("Deactivated toolset", toolset_name=name, action="deactivate")
+
         # Update metadata for active toolsets
         self._update_toolset_metadata()
         return success
@@ -426,82 +421,83 @@ class ToolChest:
         Returns:
             List[dict]: Tool call results formatted according to the agent type.
         """
-        async def make_call(tool_call: dict) -> Tuple[dict, dict]:
-            # Common logic for executing a tool call
-            # TODO: refactor this to common model and push the format back down
-            if format_type == "claude":
-                fn = tool_call['name']
-                args = tool_call['input']
-                ai_call = copy.deepcopy(tool_call)
-            else:  # gpt
-                fn = tool_call['name']
-                # Handle the case where the test provides Claude format but expects GPT processing
-                if 'arguments' in tool_call:
-                    args = json.loads(tool_call['arguments'])
-                elif 'input' in tool_call:
-                    # Fallback to 'input' if 'arguments' is not available
+        with LoggingContext(operation="tool_execution", tool_count=len(tool_calls)):
+            async def make_call(tool_call: dict) -> Tuple[dict, dict]:
+                # Common logic for executing a tool call
+                # TODO: refactor this to common model and push the format back down
+                if format_type == "claude":
+                    fn = tool_call['name']
                     args = tool_call['input']
-                    # Add 'arguments' field to the tool_call for compatibility
-                    tool_call['arguments'] = json.dumps(args)
-                ai_call = {
-                    "id": tool_call['id'],
-                    "function": {"name": fn, "arguments": tool_call['arguments']},
-                    'type': 'function'
-                }
-                
-            try:
-
-                full_args = copy.deepcopy(args)
-                full_args['tool_context'] = tool_context
-                function_response = await self._execute_tool_call(fn, full_args)
-                
-                if format_type == "claude":
-                    call_resp = {
-                        "type": "tool_result", 
-                        "tool_use_id": tool_call['id'],
-                        "content": function_response
-                    }
+                    ai_call = copy.deepcopy(tool_call)
                 else:  # gpt
-                    call_resp = {
-                        "role": "tool", 
-                        "tool_call_id": tool_call['id'], 
-                        "name": fn,
-                        "content": function_response
-                    }
-            except Exception as e:
-                if format_type == "claude":
-                    call_resp = {
-                        "type": "tool_result", 
-                        "tool_use_id": tool_call['id'],
-                        "content": f"Exception: {e}"
-                    }
-                else:  # gpt
-                    call_resp = {
-                        "role": "tool", 
-                        "tool_call_id": tool_call['id'], 
-                        "name": fn,
-                        "content": f"Exception: {e}"
+                    fn = tool_call['name']
+                    # Handle the case where the test provides Claude format but expects GPT processing
+                    if 'arguments' in tool_call:
+                        args = json.loads(tool_call['arguments'])
+                    elif 'input' in tool_call:
+                        # Fallback to 'input' if 'arguments' is not available
+                        args = tool_call['input']
+                        # Add 'arguments' field to the tool_call for compatibility
+                        tool_call['arguments'] = json.dumps(args)
+                    ai_call = {
+                        "id": tool_call['id'],
+                        "function": {"name": fn, "arguments": tool_call['arguments']},
+                        'type': 'function'
                     }
                     
-            return ai_call, call_resp
+                try:
 
-        # Schedule all the calls concurrently
-        tasks = [make_call(tool_call) for tool_call in tool_calls]
-        completed_calls = await asyncio.gather(*tasks)
+                    full_args = copy.deepcopy(args)
+                    full_args['tool_context'] = tool_context
+                    function_response = await self._execute_tool_call(fn, full_args)
+                    
+                    if format_type == "claude":
+                        call_resp = {
+                            "type": "tool_result", 
+                            "tool_use_id": tool_call['id'],
+                            "content": function_response
+                        }
+                    else:  # gpt
+                        call_resp = {
+                            "role": "tool", 
+                            "tool_call_id": tool_call['id'], 
+                            "name": fn,
+                            "content": function_response
+                        }
+                except Exception as e:
+                    if format_type == "claude":
+                        call_resp = {
+                            "type": "tool_result", 
+                            "tool_use_id": tool_call['id'],
+                            "content": f"Exception: {e}"
+                        }
+                    else:  # gpt
+                        call_resp = {
+                            "role": "tool", 
+                            "tool_call_id": tool_call['id'], 
+                            "name": fn,
+                            "content": f"Exception: {e}"
+                        }
+                        
+                return ai_call, call_resp
 
-        # Unpack the resulting ai_calls and resp_calls
-        ai_calls, results = zip(*completed_calls)
-        
-        # Format the final result based on agent type
-        if format_type == "claude":
-            return [
-                {'role': 'assistant', 'content': list(ai_calls)},
-                {'role': 'user', 'content': list(results)}
-            ]
-        else:  # gpt
-            return [
-                {'role': 'assistant', 'tool_calls': list(ai_calls), 'content': ''}
-            ] + list(results)
+            # Schedule all the calls concurrently
+            tasks = [make_call(tool_call) for tool_call in tool_calls]
+            completed_calls = await asyncio.gather(*tasks)
+
+            # Unpack the resulting ai_calls and resp_calls
+            ai_calls, results = zip(*completed_calls)
+            
+            # Format the final result based on agent type
+            if format_type == "claude":
+                return [
+                    {'role': 'assistant', 'content': list(ai_calls)},
+                    {'role': 'user', 'content': list(results)}
+                ]
+            else:  # gpt
+                return [
+                    {'role': 'assistant', 'tool_calls': list(ai_calls), 'content': ''}
+                ] + list(results)
             
     async def _execute_tool_call(self, function_id: str, function_args: Dict) -> Any:
         """
@@ -521,7 +517,7 @@ class ToolChest:
         try:
             return await src_obj.call(function_id, function_args)
         except Exception as e:
-            self.logger.exception(f"Failed calling {function_id} on {src_obj.name}. {e}", stacklevel=3)
+            self.logger.exception("Failed calling function on toolset", function_id=function_id, toolset_name=src_obj.name, error=str(e))
             return f"Important! Tell the user an error occurred calling {function_id} on {src_obj.name}. {e}"
 
     def get_inference_data(self, toolset_names: List[str], tool_format: str = "claude") -> Dict[str, Any]:
@@ -545,7 +541,7 @@ class ToolChest:
             if name in self.__toolset_instances:
                 valid_toolsets.append(self.__toolset_instances[name])
             else:
-                self.logger.warning(f"Requested toolset '{name}' not found in available toolsets")
+                self.logger.warning("Requested toolset not found in available toolsets", toolset_name=name, available_toolsets=list(self.__toolset_instances.keys()))
         
         if not valid_toolsets:
             return {"tools": [], "sections": []}

@@ -5,7 +5,6 @@ import threading
 
 import openai
 import tiktoken
-import logging
 from collections import defaultdict
 from openai import AsyncOpenAI, AsyncStream, AsyncAzureOpenAI
 from tiktoken import Encoding, encoding_for_model
@@ -19,7 +18,7 @@ from agent_c.models.events.chat import ReceivedAudioDeltaEvent
 from agent_c.models.input.image_input import ImageInput
 from agent_c.util.token_counter import TokenCounter
 from agent_c.agents.base import BaseAgent
-from agent_c.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 
 
 class TikTokenTokenCounter(TokenCounter):
@@ -51,14 +50,13 @@ class GPTChatAgent(BaseAgent):
         self.schemas: Union[None, List[Dict[str, Any]]] = None
 
         # Initialize logger
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
+        self.logger = get_logger(__name__)
 
         # Initialize the client based on environment or provided client
         if kwargs.get("client", None) is None:
             self.client = self.__class__.client()
         else:
-            self.logger.debug("Initializing with provided client.")
+            self.logger.debug("Initializing with provided client")
             self.client = kwargs.get("client")
 
         self.encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
@@ -273,7 +271,7 @@ class GPTChatAgent(BaseAgent):
                     opts['completion_opts']['messages'] = messages.copy()
 
                 except openai.BadRequestError as e:
-                    self.logger.error(f"Invalid request occurred: {e}")
+                    self.logger.error("Invalid request occurred", error=str(e))
                     await self._raise_system_event(f"Invalid request error: {e}", **callback_opts)
                     await self._raise_completion_end(opts["completion_opts"], stop_reason="exception", **callback_opts)
                     await self._raise_interaction_end(id=interaction_id, **callback_opts)
@@ -287,7 +285,7 @@ class GPTChatAgent(BaseAgent):
                         raise
 
                 except Exception as e:
-                    self.logger.error(f"Error occurred during chat completion: {e}")
+                    self.logger.error("Error occurred during chat completion", error=str(e))
                     await self._raise_system_event(f"Exception in chat completion: {e}", **callback_opts)
                     await self._raise_completion_end(opts["completion_opts"], stop_reason="exception", **callback_opts)
                     await self._raise_interaction_end(id=interaction_id, **callback_opts)
@@ -346,7 +344,7 @@ class GPTChatAgent(BaseAgent):
                         return messages, state
 
             except Exception as e:
-                self.logger.error(f"Error during stream processing: {e}")
+                self.logger.error("Error during stream processing", error=str(e))
                 raise
 
         # Ensure we handle any pending updates before returning
@@ -442,7 +440,7 @@ class GPTChatAgent(BaseAgent):
         try:
             await self._raise_text_delta(content, **callback_opts)
         except Exception as e:
-            self.logger.error(f"Error raising text_delta event: {e}")
+            self.logger.error("Error raising text_delta event", error=str(e))
 
     async def _handle_audio_delta(self, audio_delta, state, callback_opts):
         """
@@ -473,7 +471,7 @@ class GPTChatAgent(BaseAgent):
         if not tool_calls:
             return
 
-        self.logger.debug(f"Processing {len(tool_calls)} tool call(s)")
+        self.logger.debug("Processing tool calls", tool_count=len(tool_calls))
 
         # Start tool call event
         await self._raise_tool_call_start(tool_calls, vendor="open_ai", **callback_opts)
@@ -488,7 +486,7 @@ class GPTChatAgent(BaseAgent):
                 messages.extend(result_messages)
                 await self._raise_history_event(messages, **callback_opts)
         except Exception as e:
-            self.logger.error(f"Failed calling tool sets: {e}")
+            self.logger.error("Failed calling tool sets", error=str(e))
             await self._raise_tool_call_end(tool_calls, [], vendor="open_ai", **callback_opts)
             await self._raise_system_event(f"An error occurred while processing tool calls: {e}", **callback_opts)
 

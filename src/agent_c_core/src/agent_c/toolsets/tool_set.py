@@ -9,7 +9,7 @@ from typing import Union, List, Dict, Any, Optional
 
 from agent_c.toolsets.tool_cache import ToolCache
 from agent_c.models.context.base import BaseContext
-from agent_c.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 from agent_c.prompting.prompt_section import PromptSection
 from agent_c.models.events import RenderMediaEvent, MessageEvent, TextDeltaEvent
 
@@ -83,8 +83,7 @@ class Toolset:
         if self.name is None:
             raise ValueError("Toolsets must have a name.")
 
-        logging_manager = LoggingManager(self.__class__.__name__)
-        self.logger = logging_manager.get_logger()
+        self.logger = get_logger(__name__)
 
         # Store tool_chest first since it's critical for dependencies
         self.tool_chest: 'ToolChest' = kwargs.get("tool_chest")

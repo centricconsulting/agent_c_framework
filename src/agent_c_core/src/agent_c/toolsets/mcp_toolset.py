@@ -4,15 +4,14 @@ This module provides the MCPToolset class which represents tools from an MCP ser
 as a standard Agent C toolset.
 """
 import copy
-import inspect
-import json
-import logging
-from functools import partial
+
 from typing import Any, Callable, Dict, List, Optional, Type, Union
+
+from grpc import server
 
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.toolsets.mcp_server import MCPServer
-from agent_c.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 
 
 class MCPToolset(Toolset):
@@ -33,8 +32,7 @@ class MCPToolset(Toolset):
         super().__init__(name=name, use_prefix=False, **kwargs)
         self.openai_schemas = []
         self.server = server
-        logging_manager = LoggingManager(f"agent_c.mcp_toolset.{server.server_id}")
-        self.logger = logging_manager.get_logger()
+        self.logger = get_logger(__name__)
 
         
         # Create dynamic methods for MCP tools
@@ -46,18 +44,20 @@ class MCPToolset(Toolset):
         This method creates a Python method for each tool in the MCP server,
         with appropriate docstrings and type hints to work with Agent C.
         """
-
-
-        for tool_name, tool_info in self.server.tools.items():
-            # Create a method that will call the MCP tool
-            method = self._create_tool_method(tool_name, tool_info)
-            
-            # Add the method to the class instance
-            method_name = f"{tool_name.replace('-', '_')}"
-            setattr(self, method_name, method)
-            schema = copy.deepcopy(method.schema)
-            self.openai_schemas.append(schema)
-            self.logger.info(f"Created method {method_name} for MCP tool {tool_name}")
+        with LoggingContext(operation="mcp_tool_registration", server_id=self.server.server_id):
+            for tool_name, tool_info in self.server.tools.items():
+                # Create a method that will call the MCP tool
+                method = self._create_tool_method(tool_name, tool_info)
+                
+                # Add the method to the class instance
+                method_name = f"{tool_name.replace('-', '_')}"
+                setattr(self, method_name, method)
+                schema = copy.deepcopy(method.schema)
+                self.openai_schemas.append(schema)
+                self.logger.info("Created method for MCP tool", 
+                                method_name=method_name, 
+                                mcp_tool_name=tool_name, 
+                )
     
     def _create_tool_method(self, tool_name: str, tool_info: Dict[str, Any]) -> Callable:
         """Create a method that calls an MCP tool.
@@ -104,18 +104,21 @@ class MCPToolset(Toolset):
             # Remove any kwargs that are not part of the MCP tool's expected parameters
             # This is to accommodate Agent C's method calling convention
             filtered_kwargs = {k: v for k, v in kwargs.items() if k in param_names}
-            
-            # Log the tool call
-            self.logger.info(f"Calling MCP tool '{tool_name}' with arguments: {filtered_kwargs}")
-            
-            # Call the MCP tool through the server
-            try:
-                result = await self.server.call_tool(tool_name, filtered_kwargs)
-                self.logger.debug(f"Result from MCP tool '{tool_name}': {result}")
-                return result
-            except Exception as e:
-                self.logger.error(f"Error calling MCP tool '{tool_name}': {e}")
-                raise RuntimeError(f"Failed to execute MCP tool '{tool_name}': {e}")
+            with LoggingContext(mcp_tool_name=tool_name,server_id=self.server_id):
+                # Log the tool call
+                self.logger.info("Calling MCP tool",
+                                arguments=filtered_kwargs)
+
+                # Call the MCP tool through the server
+                try:
+                    result = await self.server.call_tool(tool_name, filtered_kwargs)
+                    self.logger.debug("Result from MCP tool",
+                                     result_type=type(result).__name__)
+                    return result
+                except Exception as e:
+                    self.logger.error("Error calling MCP tool",
+                                     error=str(e))
+                    raise RuntimeError(f"Failed to execute MCP tool '{tool_name}': {e}")
         
         # Set docstring and metadata for proper display in schemas
         mcp_tool_method.__doc__ = full_docstring
