@@ -58,11 +58,11 @@ class SystemConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         from agent_c.models.config.base import CONFIG_RUNTIME, CONFIG_TOOLSETS, CONFIG_CORE, CONFIG_API, CONFIG_MISC
 
         return SystemConfigFile(
-            runtimes=ConfigRegistry.get_default_models_in_category(CONFIG_RUNTIME),
-            core=ConfigRegistry.get_default_models_in_category(CONFIG_CORE),
-            tools=ConfigRegistry.get_default_models_in_category(CONFIG_TOOLSETS),
-            api=ConfigRegistry.get_default_models_in_category(CONFIG_API),
-            misc=ConfigRegistry.get_default_models_in_category(CONFIG_MISC)
+            runtimes=ConfigRegistry.get_default_configs_in_category(CONFIG_RUNTIME),
+            core=ConfigRegistry.get_default_configs_in_category(CONFIG_CORE),
+            tools=ConfigRegistry.get_default_configs_in_category(CONFIG_TOOLSETS),
+            api=ConfigRegistry.get_default_configs_in_category(CONFIG_API),
+            misc=ConfigRegistry.get_default_configs_in_category(CONFIG_MISC)
         )
 
 

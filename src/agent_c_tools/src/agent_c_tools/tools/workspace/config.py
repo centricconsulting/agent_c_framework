@@ -63,10 +63,14 @@ WorkspaceParams = Annotated[
     Field(discriminator='workspace_type')
 ]
 
-class WorkspaceToolsConfig(BaseToolsetConfig):
-    path_to_grep: str = Field('grep',
-                              description="Path to the grep executable if not on the path, used for searching files in the workspace.")
+class WorkspaceToolsUserConfig(BaseToolsetConfig):
+    """Configuration for the workspace tools."""
     workspaces: List[WorkspaceParams] = Field(default_factory=list,
                                               description="List of workspaces available for the agent to use. "
                                                           "Each workspace is defined by its type and parameters.")
+
+
+class WorkspaceToolsConfig(WorkspaceToolsUserConfig):
+    path_to_grep: str = Field('grep',
+                              description="Path to the grep executable if not on the path, used for searching files in the workspace.")
 

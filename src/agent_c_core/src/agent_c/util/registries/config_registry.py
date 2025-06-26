@@ -40,13 +40,13 @@ class ConfigRegistry:
         return cls._registry[config_type].model_fields['category'].default
 
     @classmethod
-    def get_models_in_category(cls, category: str) -> Dict[str, Type[BaseModel]]:
+    def get_config_classes_in_category(cls, category: str) -> Dict[str, Type[BaseModel]]:
         """Get all registered config models in a specific category"""
 
         return  { name: model for name, model in cls._registry.items() if model.model_fields['category'].default == category }
 
     @classmethod
-    def get_default_models_in_category(cls, category: str) -> Dict[str, BaseModel]:
+    def get_default_configs_in_category(cls, category: str) -> Dict[str, BaseModel]:
         """Get all registered config models in a specific category"""
         base_models: List[str] = ['dynamic', 'base_core', 'base_runtime', 'base_toolset', 'base_api',
                                   'dynamic_toolset', 'dynamic_runtime', 'dynamic_api', 'dynamic_core']

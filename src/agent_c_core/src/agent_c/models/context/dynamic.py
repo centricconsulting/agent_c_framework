@@ -8,7 +8,7 @@ class DynamicContext(BaseContext):
     def __init__(self, **data: Any) -> None:
         context_type = data.pop('config_type', None)
         if context_type is None:
-            raise ValueError("DynamicConfig must have 'config_type'")
+            raise ValueError("BaseDynamicConfig must have 'config_type'")
 
         object.__setattr__(self, '_dynamic_fields', data)
         super().__init__(config_type=context_type)
