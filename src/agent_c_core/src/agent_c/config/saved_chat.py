@@ -11,6 +11,7 @@ from typing import Optional, List
 
 from agent_c.models.chat_history import ChatSession
 from agent_c.config.config_loader import ConfigLoader
+from agent_c.util.structured_logging import LoggingContext
 
 class SavedChatLoader(ConfigLoader):
     """
@@ -55,7 +56,9 @@ class SavedChatLoader(ConfigLoader):
         session_file = self.save_file_folder.joinpath(f"{session_id}.json")
 
         if not session_file.exists():
-            self.logger.warning(f"Session file not found: {session_file}")
+            with LoggingContext(session_id=session_id, operation="load_session",
+                                file_path=str(session_file)):
+                self.logger.warning("Session file not found")
             raise FileNotFoundError(f"Session file not found: {session_file}")
 
         with open(session_file, 'r', encoding='utf-8') as f:
@@ -101,4 +104,6 @@ class SavedChatLoader(ConfigLoader):
         deleted_folder = self.save_file_folder.joinpath("deleted")
         deleted_folder.mkdir(parents=True, exist_ok=True)
         session_file.rename(deleted_folder.joinpath(session_file.name))
-        self.logger.info(f"Deleted session file: {session_file}")
+        with LoggingContext(session_id=session_id, operation="delete_session",
+                            file_path=str(session_file)):
+            self.logger.info("Session file deleted successfully")

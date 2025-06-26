@@ -16,7 +16,7 @@ from agent_c.models.agent_config import (
     current_agent_configuration_version # integer for latest version
 )
 from agent_c.util import MnemonicSlugs
-from agent_c.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 
 # Type variable for configuration versions
 T = TypeVar('T', bound=AgentConfiguration)
@@ -44,8 +44,7 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
             config_path: Path to configuration directory
         """
         super().__init__(config_path)
-        logging_manager = LoggingManager(__name__)
-        self.logger = logging_manager.get_logger()
+        self.logger = get_logger(__name__)
 
         # Get model configs from singleton if not provided
         if model_configs is None:
@@ -104,7 +103,8 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
 
                 data = yaml.safe_load(file_contents)
             except Exception as e:
-                self.logger.exception(f"Failed to read agent configuration file {agent_config_path}: {e}", exc_info=True)
+                with LoggingContext(config_path=agent_config_path, operation="read_config",error=str(e)):
+                    self.logger.exception("Failed to read agent configuration file")
                 return None
         else:
             raise FileNotFoundError(f"Agent configuration file {agent_config_path} not found.")
@@ -123,7 +123,8 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         # Load appropriate version based on version field
         version = data.get('version', 1)
         if version > 2:
-            self.logger.warning(f"Unsupported agent configuration version {version} in {agent_config_path}.")
+            with LoggingContext(config_version=version, config_path=agent_config_path):
+                self.logger.warning("Unsupported agent configuration version")
             return None
 
         try:
@@ -132,7 +133,9 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
             else:
                 config = AgentConfigurationV2(**data)
         except Exception as e:
-            self.logger.error(f"Failed to load agent configuration from {agent_config_path}: {e}", exc_info=True)
+            with LoggingContext(config_path=agent_config_path, operation="load_config",
+                                error=str(e)):
+                self.logger.error("Failed to load agent configuration")
             return None
 
         # Track original version

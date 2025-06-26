@@ -1,7 +1,5 @@
 import os
 from typing import Optional
-
-from agent_c.util.logging_utils import LoggingManager
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames
 
 
@@ -13,7 +11,7 @@ class ConfigLoader(metaclass=SingletonCacheMeta):
         Args:
             config_path: Optional default path to configuration file
         """
-        self.logger = LoggingManager(__name__).get_logger()
+
         
         # Handle config path resolution with caching
         if config_path is not None:
