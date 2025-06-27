@@ -421,7 +421,7 @@ class ToolChest:
         Returns:
             List[dict]: Tool call results formatted according to the agent type.
         """
-        with LoggingContext(operation="tool_execution", tool_count=len(tool_calls)):
+        with LoggingContext(operation="tool_execution"):
             async def make_call(tool_call: dict) -> Tuple[dict, dict]:
                 # Common logic for executing a tool call
                 # TODO: refactor this to common model and push the format back down
