@@ -93,7 +93,7 @@ class DynamicPersonaSection(PromptSection):
 
     @property_bag_item
     async def rendered_persona_prompt(self, context: InteractionContext, property_bag: Dict[str, Any]) -> str:
-        base_prompt = context.chat_session.agent_config.persona
+        base_prompt = context.chat_session.agent_config.agent_instructions
         try:
             ws_name = property_bag.get('primary_workspace',  self._extract_workspace_name(base_prompt))
             if ws_name:

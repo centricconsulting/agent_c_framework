@@ -115,7 +115,7 @@ class AgentRuntime:
         await self._raise_event(context, HistoryDeltaEvent(messages=messages,
                                                            role=context.runtime_role,
                                                            session_id=context.chat_session.user_session_id,
-                                                           vendor=self.tool_format))
+                                                           vendor=self.tool_format()))
 
     async def _raise_completion_start(self, context: InteractionContext, comp_options):
         """
@@ -145,7 +145,7 @@ class AgentRuntime:
         await self._raise_event(context, ToolCallEvent(active=True,
                                                        tool_calls=tool_calls,
                                                        session_id=context.chat_session.user_session_id,
-                                                       vendor=self.tool_format))
+                                                       vendor=self.tool_format()))
 
     async def _raise_system_prompt(self, context: InteractionContext, prompt: str):
         await self._raise_event(context, SystemPromptEvent(content=prompt))
@@ -173,17 +173,17 @@ class AgentRuntime:
 
     async def _raise_text_delta(self, context: InteractionContext, content: str):
         await self._raise_event(context, TextDeltaEvent(content=content,
-                                                        vendor=self.tool_format,
+                                                        vendor=self.tool_format(),
                                                         role=context.runtime_role))
 
     async def _raise_thought_delta(self, context: InteractionContext, content: str):
             await self._raise_event(context, ThoughtDeltaEvent(content=content,
-                                                               vendor=self.tool_format,
+                                                               vendor=self.tool_format(),
                                                                role=context.runtime_role))
 
     async def _raise_history_event(self, context: InteractionContext, messages: List[dict[str, Any]]):
         await self._raise_event(context, HistoryEvent(messages=messages,
-                                                      vendor=self.tool_format))
+                                                      vendor=self.tool_format()))
 
     async def _exponential_backoff(self, delay: int) -> None:
         """

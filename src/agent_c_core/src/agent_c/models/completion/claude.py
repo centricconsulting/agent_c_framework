@@ -32,7 +32,8 @@ class ClaudeNonReasoningParams(ClaudeCommonParams):
             extra_excludes = []
 
         opts = super().as_completion_params(extra_excludes + ['type', 'allow_betas', 'allow_server_tools', 'max_searches'])
-        opts['model'] = self.model_id
+        from agent_c.config import ModelConfigurationLoader
+        opts['model'] = ModelConfigurationLoader.instance().model_id_map[self.model_id].model_name
         return opts
 
 class ClaudeReasoningParams(ClaudeCommonParams):
@@ -54,7 +55,8 @@ class ClaudeReasoningParams(ClaudeCommonParams):
             extra_excludes = []
 
         opts = super().as_completion_params(extra_excludes + ['type', 'allow_betas', 'allow_server_tools', 'budget_tokens'])
-        opts['model'] = self.model_id
+        from agent_c.config import ModelConfigurationLoader
+        opts['model'] = ModelConfigurationLoader.instance().model_id_map[self.model_id].model_name
         return opts
 
 

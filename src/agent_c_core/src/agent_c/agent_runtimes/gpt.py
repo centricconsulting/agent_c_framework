@@ -420,7 +420,7 @@ class GPTChatAgentRuntime(AgentRuntime):
             await self._raise_system_event(context,f"An error occurred while processing tool calls: {e}")
 
     async def __tool_calls_to_messages(self, tool_calls, context: InteractionContext) -> List[Dict[str, Any]]:
-        return await context.tool_chest.call_tools(tool_calls, context, self.tool_format)
+        return await context.tool_chest.call_tools(tool_calls, context, self.tool_format())
 
 class AzureGPTChatAgent(GPTChatAgentRuntime):
     """
