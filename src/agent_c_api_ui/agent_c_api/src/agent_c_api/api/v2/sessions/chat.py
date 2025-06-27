@@ -1,12 +1,8 @@
 from typing import List, Optional, AsyncGenerator, Dict, Any, Union, Sequence
-from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Path, Body, status
 from fastapi.responses import StreamingResponse, JSONResponse
 import json
-import asyncio
-import structlog
-from fastapi_cache.decorator import cache
-
+from agent_c.util.structured_logging import get_logger, LoggingContext
 from agent_c.models.events.chat import MessageEvent, InteractionEvent
 from agent_c.models.events.tool_calls import ToolCallEvent
 from agent_c_api.api.dependencies import get_agent_manager, get_redis_client
@@ -42,7 +38,7 @@ from agent_c_api.api.v2.models.chat_models import (
 from agent_c_api.api.v2.sessions.services import SessionService
 
 router = APIRouter(tags=["sessions"])
-logger = structlog.get_logger(__name__)
+logger = get_logger(__name__)
 
 
 class ChatService:
@@ -57,7 +53,7 @@ class ChatService:
         """  # Use Any instead of UItoAgentBridgeManager type
         self.agent_manager = agent_manager
         self.redis_client = redis_client
-        self.logger = structlog.get_logger(__name__)
+        self.logger = get_logger(__name__)
 
     async def send_message(
         self, 
@@ -111,19 +107,26 @@ class ChatService:
             self.logger.error("empty_message_content")
             raise HTTPException(status_code=400, detail="Message must contain text content")
             
-        try:
-            # Stream the response from the agent manager
-            # The events are already JSON-encoded strings from the agent,
-            # so we just pass them through directly
-            async for event_json in self.agent_manager.stream_response(
-                session_id,
-                user_message=text_content,
-                file_ids=file_ids
-            ):
-                # Just yield the JSON event string directly
-                yield event_json
-        except Exception as e:
-            self.logger.error("stream_response_error", session_id=session_id, error=str(e))
+        with LoggingContext(
+            session_id=session_id,
+            operation="send_message",
+            message_role=message.role,
+            content_length=len(text_content),
+            file_count=len(file_ids) if file_ids else 0):
+            try:
+                self.logger.info("streaming_agent_response")
+                # Stream the response from the agent manager
+                # The events are already JSON-encoded strings from the agent,
+                # so we just pass them through directly
+                async for event_json in self.agent_manager.stream_response(
+                    session_id,
+                    user_message=text_content,
+                    file_ids=file_ids
+                ):
+                    # Just yield the JSON event string directly
+                    yield event_json
+            except Exception as e:
+                self.logger.error("stream_response_error", error=str(e))
             raise HTTPException(
                 status_code=500, 
                 detail=f"Error streaming response: {str(e)}"
@@ -152,14 +155,16 @@ class ChatService:
             self.logger.error("cancel_session_not_found", session_id=session_id)
             raise HTTPException(status_code=404, detail="Session not found")
         
-        # Attempt to cancel the interaction
-        success = self.agent_manager.cancel_interaction(session_id)
-        
-        self.logger.info(
-            "interaction_cancellation", 
-            session_id=session_id, 
-            success=success
-        )
+        with LoggingContext(
+            session_id=session_id,
+            operation="cancel_interaction"):
+            # Attempt to cancel the interaction
+            success = self.agent_manager.cancel_interaction(session_id)
+            
+            self.logger.info(
+                "interaction_cancellation", 
+                success=success
+            )
         
         return success
 

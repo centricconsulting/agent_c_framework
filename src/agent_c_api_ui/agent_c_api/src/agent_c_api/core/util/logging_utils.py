@@ -1,17 +1,48 @@
 # agent_c_api/core/util/logging_utils.py
+# 
+# ⚠️  DEPRECATED MODULE ⚠️
+# 
+# This module is deprecated in favor of agent_c.util.structured_logging.
+# It now provides a compatibility wrapper for gradual migration.
+# 
+# MIGRATION GUIDE:
+# 
+# Old pattern:
+#   from agent_c_api.core.util.logging_utils import LoggingManager
+#   logging_manager = LoggingManager(__name__)
+#   logger = logging_manager.get_logger()
+# 
+# New pattern:
+#   from agent_c.util.structured_logging import get_logger, LoggingContext
+#   logger = get_logger(__name__)
+#   # Use LoggingContext for contextual logging where appropriate
+# 
+# Benefits of structured logging:
+# - Better performance and reduced memory usage
+# - Support for structured key-value logging
+# - Built-in context management
+# - More flexible configuration options
+#
+
 import logging
 import os
 import sys
 from typing import Optional, Dict, Any
 import threading
-#
-# import platform
-# if platform.system() == 'Windows':
-#     import colorama
-#     colorama.init()
+import warnings
+
+from agent_c.util.structured_logging import get_logger
 
 # Global event for debug mode
 _debug_event = threading.Event()
+
+# Issue deprecation warning
+warnings.warn(
+    "agent_c_api.core.util.logging_utils is deprecated. "
+    "Use agent_c.util.structured_logging instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 
 # ANSI color codes for terminal output
@@ -66,99 +97,36 @@ class ColoredFormatter(logging.Formatter):
 
 class LoggingManager:
     """
-    Centralized logging manager for the application that ensures consistent
-    logging configuration across all modules.
-
-    This class provides a unified approach to logging by:
-    1. Creating loggers with consistent formatting
-    2. Supporting different log levels based on environment
-    3. Managing debug mode through a shared event
-    4. Supporting both file and console logging
-
-    Attributes:
-        logger_name (str): Name of the logger to create/retrieve
-        _logger (logging.Logger): The configured logger instance
+    DEPRECATED: Compatibility wrapper for LoggingManager.
+    
+    This class is deprecated in favor of agent_c.util.structured_logging.
+    It now delegates to the structured logging system while maintaining
+    backward compatibility.
+    
+    New code should use:
+        from agent_c.util.structured_logging import get_logger
+        logger = get_logger(__name__)
     """
-
-    # Class variables for shared configuration
-    # LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG').upper() # This is where we can change debug log levels.
-    FILE_LOG_ENABLED = os.getenv('FILE_LOG_ENABLED', 'true').lower() == 'true'
-    LOG_FILE = os.getenv('LOG_FILE', 'logs\\agent_c_api.log')
-
-    # Track created loggers to avoid duplicate handlers
-    _loggers: Dict[str, logging.Logger] = {}
 
     def __init__(self, logger_name: str):
         """
         Initialize the logging manager for a specific module.
-
+        
         Args:
             logger_name (str): Name of the logger, typically __name__ from the calling module
         """
+        warnings.warn(
+            f"LoggingManager is deprecated. Use get_logger('{logger_name}') instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.logger_name = logger_name
-        self._logger = self._get_or_create_logger()
-
-    def _get_or_create_logger(self) -> logging.Logger:
-        """
-        Get an existing logger or create a new one with the proper configuration.
-
-        Returns:
-            logging.Logger: Configured logger instance
-        """
-        # Return existing logger if already created
-        if self.logger_name in LoggingManager._loggers:
-            return LoggingManager._loggers[self.logger_name]
-
-        # Create new logger
-        logger = logging.getLogger(self.logger_name)
-
-        # Set log level
-        try:
-            logger.setLevel(getattr(logging, self.LOG_LEVEL))
-        except AttributeError:
-            logger.setLevel(logging.INFO)
-            print(f"Invalid LOG_LEVEL '{self.LOG_LEVEL}', defaulting to INFO")
-
-        # IMPORTANT: Remove existing handlers to prevent duplicates
-        if logger.handlers:
-            logger.handlers.clear()
-
-        # Also disable propagation to prevent duplicate logs from parent loggers
-        logger.propagate = False
-
-
-        # Only add handlers if none exist to prevent duplicates
-        if not logger.handlers:
-            # Console handler
-            console_handler = logging.StreamHandler(sys.stdout)
-            # console_handler.setFormatter(logging.Formatter(self.LOG_FORMAT))
-            console_handler.setFormatter(ColoredFormatter(self.LOG_FORMAT))
-            logger.addHandler(console_handler)
-
-            # File handler (optional)
-            if self.FILE_LOG_ENABLED:
-                try:
-                    # Create directory if it doesn't exist
-                    log_dir = os.path.dirname(self.LOG_FILE)
-                    if log_dir:  # Only try to create directory if there is one specified
-                        os.makedirs(log_dir, exist_ok=True)
-
-                    file_handler = logging.FileHandler(self.LOG_FILE, encoding='utf-8')
-                    file_handler.setFormatter(logging.Formatter(self.LOG_FORMAT))
-                    logger.addHandler(file_handler)
-                except (IOError, PermissionError) as e:
-                    print(f"Could not create log file {self.LOG_FILE}: {e}")
-
-        # Store logger for reuse
-        LoggingManager._loggers[self.logger_name] = logger
-        return logger
-
+        self._logger = get_logger(logger_name)
+    
     def get_logger(self) -> logging.Logger:
         """
         Get the configured logger instance.
-
+        
         Returns:
             logging.Logger: The configured logger
         """
@@ -167,49 +135,38 @@ class LoggingManager:
     @classmethod
     def configure_root_logger(cls) -> None:
         """
-        Configure the root logger with consistent formatting.
-        This should be called once at application startup.
+        DEPRECATED: Configure the root logger with consistent formatting.
+        
+        The structured logging system handles logger configuration automatically.
+        This method is retained for backward compatibility but does nothing.
         """
-        root_logger = logging.getLogger()
-
-        # Set the root logger level
-        try:
-            root_logger.setLevel(getattr(logging, cls.LOG_LEVEL))
-        except AttributeError:
-            root_logger.setLevel(logging.INFO)
-
-        # Only add handlers if none exist
-        if not root_logger.handlers:
-            # Console handler
-            console_handler = logging.StreamHandler(sys.stdout)
-            # console_handler.setFormatter(logging.Formatter(cls.LOG_FORMAT))
-            console_handler.setFormatter(ColoredFormatter(cls.LOG_FORMAT))
-            root_logger.addHandler(console_handler)
-
-            # File handler (optional)
-            if cls.FILE_LOG_ENABLED:
-                try:
-                    # Create directory if it doesn't exist
-                    log_dir = os.path.dirname(cls.LOG_FILE)
-                    if log_dir:  # Only try to create directory if there is one specified
-                        os.makedirs(log_dir, exist_ok=True)
-
-                    file_handler = logging.FileHandler(cls.LOG_FILE, encoding='utf-8')
-                    file_handler.setFormatter(logging.Formatter(cls.LOG_FORMAT))
-                    root_logger.addHandler(file_handler)
-                except (IOError, PermissionError) as e:
-                    print(f"Could not create log file {cls.LOG_FILE}: {e}")
+        warnings.warn(
+            "LoggingManager.configure_root_logger() is deprecated. "
+            "The structured logging system handles configuration automatically.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        # No-op for compatibility
 
     @classmethod
     def configure_external_loggers(cls, logger_levels=None):
         """
-        Configure external library loggers to appropriate levels.
-
+        DEPRECATED: Configure external library loggers to appropriate levels.
+        
+        This functionality should be handled through the structured logging configuration.
+        This method is retained for backward compatibility but functionality is limited.
+        
         Args:
             logger_levels (dict, optional): Dictionary mapping logger names to their desired levels.
-                Example: {"httpx": "WARNING", "uvicorn.access": "ERROR"}
         """
-        # Default configuration for common noisy loggers
+        warnings.warn(
+            "LoggingManager.configure_external_loggers() is deprecated. "
+            "Configure external loggers through the structured logging system.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
+        # Maintain minimal functionality for compatibility
         default_levels = {
             "httpx": "WARNING",
             "urllib3": "WARNING",
@@ -219,17 +176,11 @@ class LoggingManager:
             "python_multipart": "WARNING",
             "anthropic": "WARNING",
             "openai": "WARNING",
-            "readability": "WARNING",
-            "selenium": "WARNING",
-            "mysql": "WARNING",
-            # Add others as needed
         }
-
-        # Update with any custom settings
+        
         if logger_levels:
             default_levels.update(logger_levels)
-
-        # Apply the configuration
+        
         for logger_name, level in default_levels.items():
             try:
                 level_value = getattr(logging, level.upper())

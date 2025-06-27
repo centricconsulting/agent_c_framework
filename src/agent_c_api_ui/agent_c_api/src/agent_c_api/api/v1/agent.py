@@ -8,10 +8,9 @@ from agent_c_api.api.dependencies import get_agent_manager
 from agent_c_api.api.v1.llm_models.agent_params import AgentUpdateParams
 from agent_c_api.api.v1.llm_models.tool_model import ToolUpdateRequest
 from agent_c_api.core.agent_bridge import AgentBridge
-from agent_c_api.core.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 
-logging_manager = LoggingManager(__name__)
-logger = logging_manager.get_logger()
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -32,11 +31,15 @@ async def update_agent_settings(
     agent_bridge: AgentBridge = ui_session_data["agent_bridge"]
 
     if not agent_bridge:
-        logger.warning(f"No agent bridge found for session {update_params.ui_session_id}")
+        logger.warning("No agent bridge found for session", 
+                      ui_session_id=update_params.ui_session_id)
         return {"error": "No agent bridge found to update"}
 
-    logger.debug(f"Pydantic model received: {update_params}")
-    logger.debug(f"Model dump: {update_params.model_dump(exclude_unset=False)}")
+    with LoggingContext(ui_session_id=update_params.ui_session_id):
+        logger.debug("Pydantic model received", 
+                    model_data=str(update_params))
+        logger.debug("Model dump", 
+                    model_dump=update_params.model_dump(exclude_unset=False))
 
     # Helper function for safe string conversion and truncation
     def safe_truncate(val, length=10):
@@ -48,7 +51,9 @@ async def update_agent_settings(
     try:
         # Only process parameters that were actually provided in the form
         updates = update_params.model_dump(exclude_unset=True)
-        logger.debug(f"Updates received: {updates}")
+        with LoggingContext(ui_session_id=update_params.ui_session_id,
+                            updates=updates):
+            logger.debug("Updates received")
 
         # Update each parameter that exists in the update payload
         changes_made = {}
@@ -57,7 +62,10 @@ async def update_agent_settings(
         if "persona_name" in updates:
             agent_key = updates["persona_name"]
             agent_config: AgentConfiguration = agent_manager.agent_config_loader.duplicate(agent_key)
-            logger.info(f"Updating agent config for session {update_params.ui_session_id} with key: {agent_key} from{agent_bridge.chat_session.agent_config.key}")
+            with LoggingContext(ui_session_id=update_params.ui_session_id,
+                                new_agent_key=agent_key,
+                                previous_agent_key=agent_bridge.chat_session.agent_config.key):
+                logger.info("Updating agent config for session")
             agent_bridge.chat_session.agent_config = agent_config
             await agent_bridge.update_tools(agent_config.tools)
             ui_session_data["active_tools"] = agent_config.tools
@@ -82,13 +90,21 @@ async def update_agent_settings(
                                 "to": safe_truncate(value)
                             }
                             needs_agent_reinitialization = True
-                        logger.debug(f"Updated {key}: {safe_truncate(old_value)} -> {safe_truncate(value)}")
+                        with LoggingContext(ui_session_id=update_params.ui_session_id,
+                                            parameter=key,
+                                            old_value=safe_truncate(old_value),
+                                            new_value=safe_truncate(value)
+                                            ):
+                            logger.debug("Parameter updated")
 
 
 
-        logger.info(f"Settings updated for session {update_params.ui_session_id}: {changes_made}")
-        # logger.info(f"Skipped null values: {[k for k, v in updates.items() if v is None]}")
-        logger.info(f"Failed updates: {failed_updates}")
+        with LoggingContext(ui_session_id=update_params.ui_session_id,
+                            changes_made=changes_made,
+                            failed_updates=failed_updates):
+            logger.info("Settings updated for session", 
+                       skipped_null_values=[k for k, v in updates.items() if v is None],
+            )
 
         return {
             "status": "success",
@@ -98,7 +114,10 @@ async def update_agent_settings(
             "failed_updates": failed_updates
         }
     except Exception as e:
-        logger.exception(f"Error updating settings for session {update_params.ui_session_id}: {str(e)}", exc_info=True)
+        with LoggingContext(ui_session_id=update_params.ui_session_id,
+                            error=str(e),
+                            exc_info=True):
+            logger.exception("Error updating settings for session")
         return {"error": f"Failed to update settings: {str(e)}"}
 
 
@@ -131,7 +150,10 @@ async def get_agent_config(ui_session_id: str, agent_manager=Depends(get_agent_m
             "status": "success"
         }
     except Exception as e:
-        logger.exception(f"Session {ui_session_id} - Error getting agent config: {e}", exc_info=True)
+        with LoggingContext(ui_session_id=ui_session_id,
+                            error=str(e),
+                            exc_info=True):
+            logger.exception("Error getting agent config")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -163,7 +185,9 @@ async def update_agent_tools(
             "agent_c_session_id": ui_session_data.get('agent_c_session_id', "Unknown")
         }
     except Exception as e:
-        logger.error(f"Error updating tools: {str(e)}")
+        logger.error("Error updating tools", 
+                    error=str(e), 
+                    exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -176,14 +200,18 @@ async def get_agent_tools(ui_session_id: str, agent_manager=Depends(get_agent_ma
 
         agent_bridge: AgentBridge = session_data["agent_bridge"]
         config = agent_bridge.get_agent_runtime_config()
-        logger.info(f"Session {ui_session_id} requested tools config: {config['initialized_tools']}")
+        with LoggingContext(ui_session_id=ui_session_id):
+            logger.info("Session requested tools config", 
+                       initialized_tools=config['initialized_tools'])
 
         return {
             "initialized_tools": config["initialized_tools"],
             "status": "success"
         }
     except Exception as e:
-        logger.error(f"Error getting agent tools: {e}")
+        logger.error("Error getting agent tools", 
+                    error=str(e), 
+                    exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -227,7 +255,10 @@ async def debug_agent_state(ui_session_id: str, agent_manager=Depends(get_agent_
             "internal_agent_params": internal_agent_params,
         }
     except Exception as e:
-        logger.error(f"Error debugging agent state: {e}")
+        with LoggingContext(ui_session_id=ui_session_id,
+                            error=str(e),
+                            exc_info=True):
+            logger.error("Error debugging agent state")
         raise HTTPException(status_code=500, detail=str(e))
 
 # http://localhost:8000/api/v1/chat_session_debug/2971f215-a631-4177-852e-c3595b6d256a

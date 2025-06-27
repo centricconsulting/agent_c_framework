@@ -1,5 +1,4 @@
 # src/agent_c_api/api/v2/debug/debug.py
-import structlog
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,8 +11,6 @@ from ...dependencies import get_agent_manager
 from ..models.debug_models import SessionDebugInfo, AgentDebugInfo
 from ..models.response_models import APIResponse, APIStatus
 
-# Configure structured logging
-logger = structlog.get_logger()
 
 # Create a router with a debug prefix
 router = APIRouter(

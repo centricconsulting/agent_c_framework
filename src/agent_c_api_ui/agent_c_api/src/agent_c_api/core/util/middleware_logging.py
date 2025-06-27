@@ -6,10 +6,9 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from agent_c_api.core.util.logging_utils import LoggingManager
+from agent_c.util.structured_logging import get_logger, LoggingContext
 
-logging_manager = LoggingManager(__name__)
-logger = logging_manager.get_logger()
+logger = get_logger(__name__)
 
 
 class APILoggingMiddleware(BaseHTTPMiddleware):
@@ -43,7 +42,9 @@ class APILoggingMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.log_request_body = log_request_body
         self.log_response_body = log_response_body
-        logger.info(f"API Logging Middleware initialized with log_request_body={log_request_body}")
+        logger.info("API Logging Middleware initialized", 
+                    log_request_body=log_request_body, 
+                    log_response_body=log_response_body)
 
     async def dispatch(
             self, request: Request, call_next: Callable
@@ -61,11 +62,13 @@ class APILoggingMiddleware(BaseHTTPMiddleware):
         # Generate unique ID for this request
         request_id = str(uuid.uuid4())[:8]  # Use a shorter ID for readability
 
-        # Log the request
+        # Log the request with structured context
         start_time = time.time()
-        logger.info(
-            f"[{request_id}] Request started: {request.method} {request.url.path}"
-        )
+
+        logger.info("Request started",
+                   method=request.method,
+                   path=str(request.url.path),
+                   url=str(request.url))
 
         # Optional: Log request headers (but exclude sensitive ones)
         if logger.level <= 10:  # DEBUG level
@@ -74,7 +77,8 @@ class APILoggingMiddleware(BaseHTTPMiddleware):
                 headers["authorization"] = "[REDACTED]"
             if "cookie" in headers:
                 headers["cookie"] = "[REDACTED]"
-            logger.debug(f"[{request_id}] Request headers: {headers}")
+
+                logger.debug("Request headers", headers=headers,request_id=request_id)
 
         # Optional: Log request body
         if self.log_request_body:
@@ -88,9 +92,17 @@ class APILoggingMiddleware(BaseHTTPMiddleware):
                     # Truncate long bodies
                     if len(body_text) > 500:
                         body_text = body_text[:500] + "... [truncated]"
-                    logger.debug(f"[{request_id}] Request body: {body_text}")
+
+                        logger.debug("Request body",
+                                     request_id=request_id,
+                                    body=body_text, 
+                                    body_size=len(body),
+                                    truncated=len(body_text) != len(body.decode("utf-8")))
                 except UnicodeDecodeError:
-                    logger.debug(f"[{request_id}] Request body: [binary data, {len(body)} bytes]")
+
+                        logger.debug("Request body (binary)", 
+                                    body_type="binary", 
+                                    body_size=len(body))
 
                 # Recreate the request since we've consumed the body
                 async def receive():
@@ -99,7 +111,11 @@ class APILoggingMiddleware(BaseHTTPMiddleware):
                 request = Request(request.scope, receive, request._send)
 
             except Exception as e:
-                logger.warning(f"[{request_id}] Could not log request body: {str(e)}")
+
+                logger.warning("Could not log request body",
+                                request_id=request_id,
+                                error=str(e),
+                                exc_info=True)
 
         # Process the request
         try:
@@ -108,31 +124,33 @@ class APILoggingMiddleware(BaseHTTPMiddleware):
             # Calculate and log processing time
             process_time = time.time() - start_time
 
-            # Choose log level based on status code
+            # Choose log level based on status code with structured logging
+
+            common_fields = {
+                "method": request.method,
+                "path": str(request.url.path),
+                "status_code": response.status_code,
+                "process_time_seconds": round(process_time, 3)
+            }
+
             if response.status_code < 400:
-                logger.info(
-                    f"[{request_id}] Request completed: {request.method} {request.url.path} "
-                    f"- Status: {response.status_code} - Time: {process_time:.3f}s"
-                )
+                logger.info("Request completed successfully", **common_fields)
             elif response.status_code < 500:
-                logger.warning(
-                    f"[{request_id}] Client error: {request.method} {request.url.path} "
-                    f"- Status: {response.status_code} - Time: {process_time:.3f}s"
-                )
+                logger.warning("Client error occurred", **common_fields)
             else:
-                logger.error(
-                    f"[{request_id}] Server error: {request.method} {request.url.path} "
-                    f"- Status: {response.status_code} - Time: {process_time:.3f}s"
-                )
+                logger.error("Server error occurred", **common_fields)
 
             return response
 
         except Exception as e:
-            # Log unhandled exceptions
+            # Log unhandled exceptions with structured data
             process_time = time.time() - start_time
-            logger.error(
-                f"[{request_id}] Request failed: {request.method} {request.url.path} "
-                f"- Error: {str(e)} - Time: {process_time:.3f}s",
-                exc_info=True
-            )
+
+            logger.error("Request failed with unhandled exception",
+                        request_id=request_id,
+                       method=request.method,
+                       path=str(request.url.path),
+                       error=str(e),
+                       process_time_seconds=round(process_time, 3),
+                       exc_info=True)
             raise
