@@ -69,6 +69,18 @@ class WorkspaceTools(Toolset):
             workspace = workspace_class(**workspace_params.model_dump(exclude=set('workspace_type')))
             self.add_system_workspace(workspace)
 
+    def workspace_list(self, context: Optional[InteractionContext] = None) -> List[BaseWorkspace]:
+        """Return a list of all available workspaces."""
+        workspaces = list(self._system_workspaces.values())
+        if context:
+            user_id = context.chat_session.user.user_id
+            user_workspaces = self._user_workspaces.get(user_id, {}).values()
+            workspaces.extend(user_workspaces)
+        return  workspaces
+
+    def workspace_names(self, context: Optional[InteractionContext] = None) -> List[str]:
+        return [workspace.name for workspace in self.workspace_list(context)]
+
     @classmethod
     def default_context(cls) -> Optional[BaseContext]:
         """Return the default context for this toolset."""
