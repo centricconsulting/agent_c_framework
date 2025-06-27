@@ -1,5 +1,7 @@
+import json
+
 from pydantic import Field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 
 from agent_c.models.events.session_event import SessionEvent
 
@@ -29,48 +31,59 @@ class InteractionEvent(SessionEvent):
     Sent to notify the UI that an interaction has been initiated or completed.
     While an interaction is running, the UI should not allow input from the user.
     """
-    def __init__(self, **data):
-        super().__init__(type = "interaction", **data)
-
     started: bool = Field(..., description="If False, the interaction has been completed. And the UI should allow input from the use")
+    id: str = Field(..., description="The ID of the interaction")
+
+class InteractionStartEvent(SessionEvent):
+    """
+    Sent to notify the UI that an interaction has been initiated.
+    While an interaction is running, the UI should not allow input from the user.
+    """
+    id: str = Field(..., description="The ID of the interaction")
+
+class InteractionEndEvent(SessionEvent):
+    """
+    Sent to notify the UI that an interaction has been stopped.
+    While an interaction is running, the UI should not allow input from the user.
+    """
     id: str = Field(..., description="The ID of the interaction")
 
 class CompletionEvent(SessionEvent):
     """
     Sent to notify the UI that the completion call
     """
-    def __init__(self, **data):
-        super().__init__(type = "completion", **data)
-
     running: bool = Field(..., description="If True, the completion will run immediately after the event goes out.")
     completion_options: dict = Field(..., description="The completion options used, in vendor format")
     stop_reason: Optional[str] = Field(None, description="The reason the completion was stopped")
     input_tokens: Optional[int] = Field(0, description="The number of tokens in the input")
     output_tokens: Optional[int] = Field(0, description="The number of tokens in the output")
 
-class MessageEvent(SessionEvent):
-    """
-    Sent to notify the UI to display an entire message.
-    """
-    def __init__(self, **data):
-        super().__init__(type = "message", **data)
-
+class SessionContentEvent(SessionEvent):
     content: str = Field(..., description="The content of the message")
     format: str = Field("markdown", description="The format of the content, default is markdown")
 
-class SystemMessageEvent(SessionEvent):
+    def model_dump_client_json(self) -> str:
+        """
+        Dumps the model to JSON, ensuring that the content is properly escaped.
+        """
+        data = self.model_dump(exclude_none=True, exclude_unset=True, exclude={"content"})
+        data['data'] = self.content
+        return json.dumps(data, ensure_ascii=False) + "\n"
+
+
+class MessageEvent(SessionContentEvent):
+    pass
+
+
+
+class SystemMessageEvent(SessionContentEvent):
     """
     Sent to notify the UI to display an entire message.
     """
-    def __init__(self, **data):
-        super().__init__(type = "system_message", **data)
-
-    content: str = Field(..., description="The content of the message")
-    format: str = Field("markdown", description="The format of the content, default is markdown")
     severity: str = Field("error", description="The severity of the message, default is error, can be 'info', 'warning', or 'error'")
 
 
-class TextDeltaEvent(SessionEvent):
+class TextDeltaEvent(SessionContentEvent):
     """
     Sent to notify the UI that a chunk of content text has been received.
     - Clients should handle this event by appending the content to the current message,
@@ -78,24 +91,17 @@ class TextDeltaEvent(SessionEvent):
     - If there isn't a message for the role in the current interaction,
       a new message should be created.
     """
-    def __init__(self, **data):
-        if data.get('type', None) == None:
-            data['type'] = "text_delta"
-
-        super().__init__( **data)
-
-    content: str = Field(..., description="A chunk of content text.")
-    format: str = Field("raw", description="The format of the content, default is raw")
     vendor: str = Field(..., description="The vendor of the completion API")
 
 class ThoughtDeltaEvent(TextDeltaEvent):
+    format: str = Field("thinking", description="The format of the content, default is thinking")
     def __init__(self, **data):
-        super().__init__(type = "thought_delta", **data)
+        super().__init__(**data)
         self.role = self.role + " (thought)"
 
 class CompleteThoughtEvent(TextDeltaEvent):
     def __init__(self, **data):
-        super().__init__(type = "complete_thought", **data)
+        super().__init__(**data)
         self.role = self.role + " (thought)"
 
 class ReceivedAudioDeltaEvent(SessionEvent):
@@ -106,8 +112,6 @@ class ReceivedAudioDeltaEvent(SessionEvent):
     - If there isn't a message for the role in the current interaction,
       a new message should be created.
     """
-    def __init__(self, **data):
-        super().__init__(type = "audio_delta", **data)
     id: Optional[str] = Field(None, description="The audio ID the audio delta is part of")
     content: str = Field(..., description="A base64s encoded chunk of audio data")
     content_type: str = Field("audio/L16", description="The type of audio data")
@@ -116,9 +120,6 @@ class HistoryEvent(SessionEvent):
     """
     Sent to notify the UI that the message history has been updated.
     """
-    def __init__(self, **data):
-        super().__init__(type = "history", **data)
-
     messages: List[dict] = Field(..., description="The list of messages in the current chat history")
     vendor: str = Field(..., description="The vendor of the completion API")
 
@@ -126,8 +127,5 @@ class HistoryDeltaEvent(SessionEvent):
     """
     Sent to notify the UI that messages have been added to the history.
     """
-    def __init__(self, **data):
-        super().__init__(type = "history_delta", **data)
-
     messages: List[dict] = Field(..., description="The list of messages that have been added to the history")
     vendor: str = Field(..., description="The vendor of the completion API")

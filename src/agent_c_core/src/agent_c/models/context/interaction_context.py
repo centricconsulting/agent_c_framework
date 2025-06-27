@@ -50,7 +50,7 @@ class InteractionContext(BaseContext):
 
     @property
     def model_id(self):
-        return self.chat_session.agent_config.model_id
+        return self.chat_session.agent_config.runtime_params.model_id
 
     def __init__(self, **data) -> None:
         if 'interaction_id' not in data:

@@ -50,18 +50,12 @@ async def chat_endpoint(
 
     async def event_stream():
         """Inner generator for streaming response chunks"""
-        # logger.debug(f"Starting event stream for session: {ui_session_id}")
         try:
-            # try to force through browser buffering
-            # yield " " * 2048 + "\n"
             async for token in session_manager.stream_response(
                     ui_session_id,
                     file_ids=file_id_list,
                     user_message=message,
             ):
-                # Each token is a piece of the assistant's reply
-                if not token.endswith('\n'):
-                    token += '\n'
                 yield token
         except Exception as e:
             logger.exception(f"Error in stream_response: {e}", exc_info=True)

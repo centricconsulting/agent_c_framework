@@ -8,7 +8,7 @@ from agent_c.util.token_counter import TokenCounter
 from agent_c.util.logging_utils import LoggingManager
 from agent_c.prompting.prompt_builder import PromptBuilder
 from agent_c.models.context.interaction_context import InteractionContext
-from agent_c.models.events.chat import ThoughtDeltaEvent, HistoryDeltaEvent, SystemPromptEvent, UserRequestEvent
+from agent_c.models.events.chat import ThoughtDeltaEvent, HistoryDeltaEvent, SystemPromptEvent, UserRequestEvent, InteractionStartEvent, InteractionEndEvent
 from agent_c.models.events import ToolCallEvent, InteractionEvent, TextDeltaEvent, HistoryEvent, CompletionEvent, ToolCallDeltaEvent, SystemMessageEvent, SessionEvent
 from agent_c.models.config.base import BaseConfig
 from agent_c.models.completion.open_ai_auth_info import OpenAiAuthInfo
@@ -89,8 +89,8 @@ class AgentRuntime:
         """
 
         try:
-            # TODO: Try asyncio tasks to allow for fire and forget
             event.session_id = context.chat_session.user_session_id
+            event.model_name = context.model_id
             task = asyncio.create_task(context.streaming_callback(event))
             self.background_tasks.add(task)
             task.add_done_callback(lambda t: self.background_tasks.discard(t))
@@ -163,13 +163,11 @@ class AgentRuntime:
                                                        vendor=self.vendor))
 
     async def _raise_interaction_start(self, context: InteractionContext):
-        await self._raise_event(context, InteractionEvent(started=True,
-                                                          id=context.interaction_id))
+        await self._raise_event(context, InteractionStartEvent(id=context.interaction_id))
         return context.interaction_id
 
     async def _raise_interaction_end(self, context: InteractionContext):
-        await self._raise_event(context, InteractionEvent(started=False,
-                                                           id=context.interaction_id))
+        await self._raise_event(context, InteractionEndEvent(id=context.interaction_id))
 
     async def _raise_text_delta(self, context: InteractionContext, content: str):
         await self._raise_event(context, TextDeltaEvent(content=content,

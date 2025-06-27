@@ -712,6 +712,7 @@ class AgentBridge:
             "model_name": self.chat_session.agent_config.runtime_params.model_id,
             "format": "thinking"
         }) + "\n"
+
         return payload
 
     async def initialize(self) -> None:
@@ -726,6 +727,25 @@ class AgentBridge:
         """
         await self.__init_tool_chest()
 
+    async def _handle_interaction_end(self, event: SessionEvent) -> None:
+        """
+        Handle interaction end events.
+
+        Processes the end of an interaction, signaling that the session
+        is complete and no further input is expected from the user.
+
+        Args:
+            event: Session event containing interaction end information.
+
+        Returns:
+            str: JSON-formatted interaction end payload.
+        """
+        await self._forward_event(event)
+        await self._stream_queue.put(None)
+
+
+    async def _forward_event(self, event: SessionEvent) -> None:
+       await self._stream_queue.put(event.model_dump_client_json())
 
     async def consolidated_streaming_callback(self, event: SessionEvent) -> None:
         """
@@ -767,7 +787,7 @@ class AgentBridge:
             "audio_delta": self._handle_audio_delta,
             "completion": self._handle_completion,
             "interaction": self._handle_interaction,
-            "thought_delta": self._handle_thought_delta,
+            "thought_delta": self._forward_event,
             "tool_call_delta": self._handle_tool_call_delta,
             "tool_select_delta": self._handle_tool_select_delta,
             "message": self._handle_message,
@@ -776,6 +796,8 @@ class AgentBridge:
             "complete_thought": self._ignore_event,
             "system_prompt": self._ignore_event,
             "user_request": self._ignore_event,
+            "interaction_start": self._forward_event,
+            "interaction_end": self._handle_interaction_end,
         }
 
         handler = handlers.get(event.type, self._warn_event)
@@ -784,12 +806,6 @@ class AgentBridge:
                 payload = await handler(event)
                 if payload is not None:
                     await self._stream_queue.put(payload)
-
-                    # If this is the end-of-stream event, push final payload and then a termination marker.
-                    if event.type == "interaction" and not event.started:
-                        await self._stream_queue.put(payload)
-                        await self._stream_queue.put(None)
-
 
             except Exception as e:
                 self.logger.exception(f"Error in event handler {handler.__name__} for {event.type}: {str(e)}", exc_info=True)
