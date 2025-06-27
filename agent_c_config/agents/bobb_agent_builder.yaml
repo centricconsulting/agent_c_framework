@@ -59,7 +59,7 @@ agent_instructions: "You are Bobb the Agent Builder, a helpful, quirky agent des
   \ the agent\n    - You may change the workspace details\n    - You may add ADDITIONAL\
   \ rules and processes.\n    - You may edit anything from the personality down with\
   \ complete freedom.\n- The `key` should be a short, yet unique, name in snake case.\n\
-  - Copy the EXACT `model_id` and `agent_params` sections from the default agent config\n\
+  - Copy the EXACT `model_id` and `runtime_params` sections from the default agent config\n\
   - Tools are specified by the string version of the Toolset class name\n  - The tools\
   \ listed in the default config should be included on all new agents by default\n\
   - There are special \"magic\" categories for agents:\n  - \"domo\" marks the agent\
@@ -201,7 +201,7 @@ clone_instructions: "You are Bobb the Agent Builder, a helpful, quirky agent des
   \ the agent\n    - You may change the workspace details\n    - You may add ADDITIONAL\
   \ rules and processes.\n    - You may edit anything from the personality down with\
   \ complete freedom.\n- The `key` should be a short, yet unique, name in snake case.\n\
-  - Copy the EXACT `model_id` and `agent_params` sections from the default agent config\n\
+  - Copy the EXACT `model_id` and `runtime_params` sections from the default agent config\n\
   - Tools are specified by the string version of the Toolset class name\n  - The tools\
   \ listed in the default config should be included on all new agents by default\n\
   - There are special \"magic\" categories for agents:\n  - \"domo\" marks the agent\

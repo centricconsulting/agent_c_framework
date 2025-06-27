@@ -1,14 +1,13 @@
-import uuid
 import datetime
 
-from pydantic import Field, field_validator
-from typing import Optional, Dict, Any, Union, List
+from pydantic import Field, BeforeValidator
+from typing import Optional, Dict, Any, List, Annotated
 
+from agent_c.util import MnemonicSlugs
 from agent_c.models.base import BaseModel
 from agent_c.models.chat.chat_user_location import ChatUserLocation
-from agent_c.models.config.config_collection import ConfigCollection
-from agent_c.models.context.context_bag import ContextBag
-from agent_c.util import MnemonicSlugs
+from agent_c.models.config.user_config import UserConfig
+from agent_c.models.context.context_bag import ContextBag, ContextBagField
 
 
 class ChatUser(BaseModel):
@@ -58,24 +57,51 @@ class ChatUser(BaseModel):
     default_location: ChatUserLocation = Field(default_factory=ChatUserLocation,
                                                description="The default location of the user, used for "
                                                            "context in interactions and Open AI search tools. ")
-    context: ContextBag = Field(default_factory=dict,
+    context: ContextBagField = Field(default_factory=ContextBag,
                                 description="A dictionary of context models to provide data for tools / prompts. ")
-    config: ConfigCollection = Field(default_factory=dict,
-                                     description="A collection of configuration settings for the user, used for "
-                                                 "providing configuration to tools and runtimes")
+    config: UserConfig = Field(default_factory=UserConfig,
+                               description="A collection of configuration settings for the user, used for "
+                                           "providing configuration to tools and runtimes")
 
     roles: List[str] = Field(default_factory=list,
                              description="A list of roles associated with the user, used for authorization and "
                                          "personalization in interactions. ")
 
     groups: List[str] = Field(default_factory=list,
-                             description="A list of groups associated with the user, used for authorization and "
-                                         "personalization in interactions. ")
+                              description="A list of groups associated with the user, used for authorization and "
+                                          "personalization in interactions. ")
+
     metadata: Dict[str, Any] = Field(default_factory=dict,
-                                        description="A dictionary of metadata associated with the user, used for "
-                                                    "personalization in interactions and agent memory. ")
+                                     description="A dictionary of metadata associated with the user, used for "
+                                                 "personalization in interactions and agent memory. ")
 
     def __init__(self, **data: Any) -> None:
         if 'user_id' not in data or not data['user_id']:
             data['user_id'] = MnemonicSlugs.generate_id_slug(2, data['user_name'] if 'user_name' in data else 'agent_c_user')
+
+        if isinstance(data['context'], dict):
+            data['context'] = ContextBag(data['context'])
+
+        if isinstance(data['default_location'], dict):
+            data['default_location'] = ChatUserLocation(**data['default_location'])
+
+        if isinstance(data['config'], dict):
+            data['config'] = UserConfig(**data['config'])
+
+
         super().__init__(**data)
+
+
+def ensure_chat_user(v: Any) -> ChatUser:
+    """Ensure the value is a ContextBag."""
+    if isinstance(v, ChatUser) or v is None:
+        return v
+    elif isinstance(v, dict):
+        return ChatUser(**v)
+    elif isinstance(v, str):
+        from agent_c.config.user_loader import UserLoader
+        return UserLoader.instance().load_user_id(v)
+    else:
+        raise ValueError(f"Expected dict or ConfigCollection, got {type(v)}")
+
+ChatUserField = Annotated[ChatUser, BeforeValidator(ensure_chat_user)]

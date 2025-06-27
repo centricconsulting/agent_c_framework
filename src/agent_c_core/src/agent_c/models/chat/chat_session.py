@@ -3,10 +3,11 @@ import datetime
 from pydantic import Field
 from typing import Optional, Dict, Any, List
 
+from agent_c.models.context import ContextBagField
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.models.base import BaseModel
 from agent_c.models.context.context_bag import ContextBag
-from agent_c.models.chat.user import ChatUser
+from agent_c.models.chat.user import ChatUser, ChatUserField
 
 
 class ChatSession(BaseModel):
@@ -33,16 +34,16 @@ class ChatSession(BaseModel):
     created_at: Optional[str] = Field(default_factory=lambda: datetime.datetime.now().isoformat())
     updated_at: Optional[str] = Field(default_factory=lambda: datetime.datetime.now().isoformat())
     deleted_at: Optional[str] = Field(None)
-    user: ChatUser = Field(...,
-                           description="The user associated with the session")
+    user: ChatUserField = Field(...,
+                                 description="The user associated with the session")
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict,
                                                description="Metadata associated with the session")
     messages: List[dict[str, Any]] = Field(default_factory=list,
                                            description="List of messages in the session")
     agent_config: Optional['AgentConfiguration'] = Field(None,
                                                          description="Configuration for the agent associated with the session")
-    context: ContextBag = Field(default_factory=dict,
-                                description="A dictionary of context models to provide data for tools / prompts.")
+    context: ContextBagField = Field(default_factory=ContextBag,
+                                     description="A dictionary of context models to provide data for tools / prompts.")
 
     @property
     def user_id(self) -> str:
@@ -159,6 +160,15 @@ class ChatSession(BaseModel):
         if isinstance(data['user'], str):
             from agent_c.config.user_loader import UserLoader
             data['user'] = UserLoader.instance().load_user_id(data['user'])
+        if 'context' not in data:
+            data['context'] = ContextBag()
+        elif isinstance(data.get('context', {}), dict):
+            data['context'] = ContextBag(data['context'])
+
+        if 'agent_config' in data:
+            if isinstance(data.get('agent_config', {}), dict):
+                from agent_c.models.completion.agent_config import CurrentAgentConfiguration
+                data['agent_config'] = CurrentAgentConfiguration.model_validate(**data['agent_config'])
 
         if 'session_id' not in data:
             data['session_id'] = self.__new_session_id(**data)

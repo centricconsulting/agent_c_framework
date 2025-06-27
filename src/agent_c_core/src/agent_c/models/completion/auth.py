@@ -21,6 +21,7 @@ class APIkeyAuthInfo(BaseModel):
 
 class ClaudeAuthInfo(APIkeyAuthInfo):
     type: Literal['claude'] = Field('claude', description="The type of the auth info")
+    auth_token: Optional[str] = Field(None, description="The auth token to use for the interaction")
 
 
 AuthInfo = Annotated[

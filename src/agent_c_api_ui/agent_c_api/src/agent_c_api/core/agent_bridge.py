@@ -123,7 +123,7 @@ class AgentBridge:
         if model_id in self.runtime_cache:
             return self.runtime_cache[model_id]
         else:
-            self.runtime_cache[model_id] = RuntimeRegistry.instantiate_model_runtime(self.model_config_loader, model_id, context)
+            self.runtime_cache[model_id] = RuntimeRegistry.instantiate_model_runtime(model_id, context)
             return self.runtime_cache[model_id]
 
 

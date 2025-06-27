@@ -71,6 +71,6 @@ class ObservableDict(AsyncObservableMixin, dict, MutableMapping[K, V]):
 
     def __getattr__(self, name: str) -> Any:
         try:
-            return self[name]
+            return self.__getitem__(name)
         except KeyError:
             raise AttributeError(f"{type(self).__name__!r} object has no attribute or key {name!r}")

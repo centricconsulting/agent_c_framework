@@ -36,7 +36,7 @@ class AgentAssistToolBase(Toolset):
 
 
     def runtime_for_agent(self, agent_config: AgentConfiguration, context: InteractionContext):
-        model_id = agent_config.agent_params.model_id
+        model_id = agent_config.runtime_params.model_id
         if model_id in self.runtime_cache:
             return self.runtime_cache[model_id]
         else:

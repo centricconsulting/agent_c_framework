@@ -10,6 +10,7 @@ from tiktoken import Encoding, encoding_for_model
 from typing import Any, Dict, List, Union, Optional, Tuple
 
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
+from agent_c.config import SystemConfigurationLoader
 from agent_c.models.completion.azure_auth_info import AzureAuthInfo
 from agent_c.models.completion.gpt import GPTCompletionParams
 from agent_c.models.completion.open_ai_auth_info import OpenAiAuthInfo
@@ -37,9 +38,20 @@ class OpenAIConfig(BaseRuntimeConfig):
     auth: Optional[OpenAiAuthInfo] = Field(default_factory= lambda: OpenAiAuthInfo(api_key=os.environ.get("OPENAI_API_KEY")),
                                            description="OpenAI authentication information, including API) key and organization ID.")
 
+class OpenAIUserConfig(BaseRuntimeConfig):
+    auth: Optional[OpenAiAuthInfo] = Field(default_factory=lambda: OpenAiAuthInfo(),
+                                           description="OpenAI authentication information, including API) key and organization ID.")
+
 class AzureOpenAIConfig(BaseRuntimeConfig):
+    auth: Optional[AzureAuthInfo] = Field(default_factory=lambda: AzureAuthInfo(endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+                                                                                api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+                                                                                api_version=os.environ.get("AZURE_OPENAI_API_VERSION")),
+                                          description="Azure OpenAI authentication information, including API key, endpoint, and deployment name.")
+
+class AzureOpenAIUserConfig(BaseRuntimeConfig):
     auth: Optional[AzureAuthInfo] = Field(default_factory=lambda: AzureAuthInfo(),
-                                           description="Azure OpenAI authentication information, including API key, endpoint, and deployment name.")
+                                          description="Azure OpenAI authentication information, including API key, endpoint, and deployment name.")
+
 
 class GPTChatAgentRuntime(AgentRuntime):
     config_type: str = "open_ai"
@@ -51,18 +63,43 @@ class GPTChatAgentRuntime(AgentRuntime):
         self.client = client or self.client(context)
 
     @classmethod
-    def client(cls, context = None) -> Optional[AsyncOpenAI]:
-        if context and hasattr(context, 'chat_session'):
-            auth = context.chat_session.agent_config.agent_params.auth
-            api_key = auth.api_key if hasattr(auth, 'api_key') else os.environ.get("OPENAI_API_KEY")
-        else:
-            api_key = os.environ.get("OPENAI_API_KEY")
+    def _get_auth_from_context(cls, context = None) -> Tuple[Optional[str],  bool]:
+        api_key: Optional[str] = None
+        is_user_key: bool = True
+        if context is not None:
+            if hasattr(context, 'chat_session'):
+                if context.chat_session.agent_config.runtime_params.auth is not None:
+                    api_key = context.chat_session.agent_config.runtime_params.auth.api_key
+                if not api_key:
+                    api_key = context.chat_session.user.config.runtimes.open_ai.auth.api_key
+            elif hasattr(context, 'config'):
+                api_key = context.config.runtimes.open_ai.auth.api_key
 
+        if not api_key:
+            is_user_key = False
+            api_key = SystemConfigurationLoader.instance().config.runtimes.claude.auth.api_key
+
+
+        return api_key, is_user_key
+
+
+    @classmethod
+    def client(cls, context: Optional[InteractionContext] = None) -> Optional[AsyncOpenAI]:
+        api_key, is_user_key = cls._get_auth_from_context(context)
         if not api_key:
             logger.warning("Waring an attempt was made to create an OpenAI API client without an API key.  Set OPENAI_API_KEY to use this runtime ")
             return None
 
         return AsyncOpenAI(api_key=api_key)
+
+    @classmethod
+    def can_create(cls, context: Optional[InteractionContext] = None) -> bool:
+        """
+        Determines if the OpenAI client can be created based on the presence of an API key.
+        """
+        key, is_user_key = cls._get_auth_from_context(context)
+        return key is not None
+
 
     @property
     def tool_format(self) -> str:
@@ -119,7 +156,7 @@ class GPTChatAgentRuntime(AgentRuntime):
         """
         Set up the interaction parameters for the OpenAI API request.
        """
-        params: GPTCompletionParams = context.chat_session.agent_config.agent_params
+        params: GPTCompletionParams = context.chat_session.agent_config.runtime_params
         completion_opts = params.as_completion_params()
         completion_opts['stream'] = True  # Enable streaming responses
         completion_opts['stream_options'] = {"include_usage": True}

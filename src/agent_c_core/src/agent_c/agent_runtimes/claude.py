@@ -1,7 +1,6 @@
+import os
 import copy
 import base64
-import os
-
 import httpcore
 
 from enum import Enum, auto
@@ -11,7 +10,8 @@ from anthropic.types import MessageParam
 from pydantic import Field
 
 from agent_c.agent_runtimes.base import AgentRuntime
-from agent_c.models.completion.auth import APIkeyAuthInfo
+from agent_c.config import SystemConfigurationLoader
+from agent_c.models.completion import ClaudeAuthInfo
 from agent_c.models.completion.bedrock_auth_info import BedrockAuthInfo
 from agent_c.models.config import BaseRuntimeConfig
 from agent_c.util.logging_utils import LoggingManager
@@ -42,7 +42,11 @@ class ClaudeTokenCounter(TokenCounter):
         return response.input_tokens
 
 class ClaudeConfig(BaseRuntimeConfig):
-    auth: Optional[APIkeyAuthInfo] = Field(default_factory=lambda: APIkeyAuthInfo(api_key=os.environ.get("ANTHROPIC_API_KEY")),
+    auth: Optional[ClaudeAuthInfo] = Field(default_factory=lambda: ClaudeAuthInfo(api_key=os.environ.get("ANTHROPIC_API_KEY")),
+                                            description="Authentication information for the Claude API, including API key and auth token.")
+
+class ClaudeUserConfig(BaseRuntimeConfig):
+    auth: Optional[ClaudeAuthInfo] = Field(default_factory=lambda: ClaudeAuthInfo(),
                                             description="Authentication information for the Claude API, including API key and auth token.")
 
 class BedrockClaudeConfig(BaseRuntimeConfig):
@@ -67,14 +71,34 @@ class ClaudeChatAgentRuntime(AgentRuntime):
         self.client: Union[AsyncAnthropic, AsyncAnthropicBedrock] = client or self.__class__.client(context)
 
     @classmethod
-    def client(cls, context = None):
-        if context and hasattr(context, 'chat_session'):
-            auth = context.chat_session.agent_config.agent_params.auth
-            api_key = auth.api_key if hasattr(auth, 'api_key') else os.environ.get("ANTHROPIC_API_KEY")
-            auth_token = auth.token if hasattr(auth, 'token') else os.environ.get('ANTHROPIC_AUTH_TOKEN')
-        else:
-            api_key = os.environ.get("ANTHROPIC_API_KEY")
-            auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
+    def _get_auth_from_context(cls, context = None) -> Tuple[Optional[str], Optional[str]]:
+        api_key: Optional[str] = None
+        auth_token: Optional[str] = None
+
+        if context is not None:
+            if hasattr(context, 'chat_session'):
+                # If we have a chat session, get the auth info from there
+                if context.chat_session.agent_config.runtime_params.auth is not None:
+                    api_key = context.chat_session.agent_config.runtime_params.auth.api_key
+                    auth_token = context.chat_session.agent_config.runtime_params.auth.token
+                if not api_key and not auth_token:
+                    api_key = context.chat_session.user.config.runtimes.claude.auth.api_key
+                    auth_token = context.chat_session.user.config.runtimes.claude.auth.auth_token
+            elif hasattr(context, 'config'):
+                # If we have a config, get the auth info from there
+                api_key = context.config.runtimes.claude.auth.api_key
+                auth_token = context.config.runtimes.claude.auth.auth_token
+        if not api_key and not auth_token:
+            con = SystemConfigurationLoader.instance().config
+            col = con.runtimes
+            api_key = col.claude.auth.api_key
+            auth_token = SystemConfigurationLoader.instance().config.runtimes.claude.auth.auth_token
+
+        return api_key, auth_token
+
+    @classmethod
+    def client(cls, context: InteractionContext = None):
+        api_key, auth_token = cls._get_auth_from_context(context)
 
         if not api_key and not auth_token:
             logger.warning("Waring an attempt was made to create an Anthropic API client without an API key or auth token.  Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN to use this runtime ")
@@ -87,20 +111,11 @@ class ClaudeChatAgentRuntime(AgentRuntime):
 
     @classmethod
     def can_create(cls, context = None) -> bool:
-        server_key = os.environ.get("ANTHROPIC_API_KEY")
-        server_auth_token = os.environ.get('ANTHROPIC_AUTH_TOKEN')
-        if context and hasattr(context, 'chat_session'):
-            context_key = context.chat_session.agent_config.agent_params.auth.api_key if context else None
-            context_auth_token = context.chat_session.agent_config.agent_params.auth.api_key if context  else None
-        else:
-            context_key = None
-            context_auth_token = None
-
-        if not server_key and not context_key and not server_auth_token and not context_auth_token:
+        api_key, auth_token = cls._get_auth_from_context(context)
+        if not api_key and not auth_token:
             return False
 
         return True
-
 
     @property
     def tool_format(self) -> str:
@@ -111,75 +126,75 @@ class ClaudeChatAgentRuntime(AgentRuntime):
         return text.replace("\\n", "\n").replace('\\"', '"').replace("\\\\", "\\")
 
     def _correct_max_tokens_in_context(self, context: InteractionContext):
-        agent_params: ClaudeCompletionParams = context.chat_session.agent_config.agent_params
+        runtime_params: ClaudeCompletionParams = context.chat_session.agent_config.runtime_params
 
-        if self.__is_claude_4(agent_params):
-            if agent_params == self.CLAUDE_MAX_TOKENS:
-                if self.__is_sonnet(agent_params):
-                    agent_params.max_tokens = 64000
+        if self.__is_claude_4(runtime_params):
+            if runtime_params == self.CLAUDE_MAX_TOKENS:
+                if self.__is_sonnet(runtime_params):
+                    runtime_params.max_tokens = 64000
                 else:
-                    agent_params.max_tokens = 32000
-        elif agent_params.allow_betas and agent_params.max_tokens == self.CLAUDE_MAX_TOKENS:
-            agent_params.max_tokens = 128000
+                    runtime_params.max_tokens = 32000
+        elif runtime_params.allow_betas and runtime_params.max_tokens == self.CLAUDE_MAX_TOKENS:
+            runtime_params.max_tokens = 128000
 
     @staticmethod
-    def __is_claude_4(agent_params: ClaudeCompletionParams) -> bool:
+    def __is_claude_4(runtime_params: ClaudeCompletionParams) -> bool:
         """
         Check if the agent parameters indicate a Claude 4 model.
         """
-        return '-4-' in agent_params.model_id
+        return '-4-' in runtime_params.model_id
 
     @staticmethod
-    def __is_claude_3_7(agent_params: ClaudeCompletionParams) -> bool:
+    def __is_claude_3_7(runtime_params: ClaudeCompletionParams) -> bool:
         """
         Check if the agent parameters indicate a Claude 3 model.
         """
-        return '-3-7' in agent_params.model_id
+        return '-3-7' in runtime_params.model_id
 
     @staticmethod
-    def __is_sonnet(agent_params: ClaudeCompletionParams) -> bool:
+    def __is_sonnet(runtime_params: ClaudeCompletionParams) -> bool:
         """
         Check if the agent parameters indicate a Sonnet model.
         """
-        return 'sonnet' in agent_params.model_id
+        return 'sonnet' in runtime_params.model_id
 
     @staticmethod
-    def __is_opus(agent_params: ClaudeCompletionParams) -> bool:
+    def __is_opus(runtime_params: ClaudeCompletionParams) -> bool:
         """
         Check if the agent parameters indicate an Opus model.
         """
-        return 'opus' in agent_params.model_id
+        return 'opus' in runtime_params.model_id
 
     async def __build_completion_options(self, context: InteractionContext) -> Dict[str, Any]:
         # Make sure we have the correct max tokens set in the context,
         # the UI might have set it to and old default value.
         self._correct_max_tokens_in_context(context)
 
-        agent_params: ClaudeCompletionParams = context.chat_session.agent_config.agent_params
-        allow_server_tools: bool = agent_params.allow_server_tools
-        allow_betas: bool = agent_params.allow_betas
+        runtime_params: ClaudeCompletionParams = context.chat_session.agent_config.runtime_params
+        allow_server_tools: bool = runtime_params.allow_server_tools
+        allow_betas: bool = runtime_params.allow_betas
 
         try:
-            completion_opts = agent_params.as_completion_params()
+            completion_opts = runtime_params.as_completion_params()
         except Exception as e:
             self.logger.exception(f"Error building completion options: {e}", exc_info=True)
             raise e
 
         if allow_server_tools:
-            if agent_params.max_searches > 0:
-                context.external_tool_schemas.append({"type": "web_search_20250305", "name": "web_search", "max_uses": agent_params.max_searches})
+            if runtime_params.max_searches > 0:
+                context.external_tool_schemas.append({"type": "web_search_20250305", "name": "web_search", "max_uses": runtime_params.max_searches})
 
         if allow_betas:
             if allow_server_tools:
                 context.external_tool_schemas.append({"type": "code_execution_20250522","name": "code_execution"})
 
-            if self.__is_claude_4(agent_params):
+            if self.__is_claude_4(runtime_params):
                 completion_opts['betas'] = ['interleaved-thinking-2025-05-14', "files-api-2025-04-14"] # , "code-execution-2025-05-22"]
             else:
                 completion_opts['betas'] = ["token-efficient-tools-2025-02-19", "output-128k-2025-02-19", "files-api-2025-04-14"] # , "code-execution-2025-05-22"]
 
-        if agent_params.budget_tokens > 0:
-            completion_opts['thinking'] = {"budget_tokens": agent_params.budget_tokens, "type": "enabled"}
+        if runtime_params.budget_tokens > 0:
+            completion_opts['thinking'] = {"budget_tokens": runtime_params.budget_tokens, "type": "enabled"}
 
         completion_opts["metadata"] = {'user_id': context.chat_session.user_id}
 
@@ -575,7 +590,7 @@ class ClaudeChatAgentRuntime(AgentRuntime):
 
             for idx, file in enumerate( context.inputs.files):
                 extracted_text = None
-                if context.chat_session.agent_config.agent_params.allow_betas:
+                if context.chat_session.agent_config.runtime_params.allow_betas:
                     try:
                         file_upload = await self.client.beta.files.upload(file=(file.file_name, base64.b64decode(file.content), file.content_type))
                         contents.append({"type": "document", "source": {"type": "file","file_id": file_upload.id}})
@@ -632,7 +647,7 @@ class ClaudeBedrockChatAgent(ClaudeChatAgentRuntime):
     @classmethod
     def can_create(cls, context: Optional[InteractionContext]) -> bool:
         server_key = os.environ.get("ANTHROPIC_API_KEY")
-        context_key = context.chat_session.agent_config.agent_params.auth.api_key if context else None
+        context_key = context.chat_session.agent_config.runtime_params.auth.api_key if context else None
 
         if not server_key and not context_key:
             return False

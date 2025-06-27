@@ -62,7 +62,7 @@ class ContextRegistry:
         return context_class(**data)
 
     @classmethod
-    def is_registered(cls, context_type: str) -> bool:
+    def is_context_registered(cls, context_type: str) -> bool:
         """Check if a context_type is registered"""
         return context_type in cls._registry
 

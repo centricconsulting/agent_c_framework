@@ -3,6 +3,7 @@ from typing import Optional, List, Any, Union, Literal
 
 from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.models.completion import CompletionParams
+from agent_c.models.context import ContextBagField
 from agent_c.models.context.context_bag import ContextBag
 from agent_c.util.observable.list import ObservableList
 from agent_c.models.context.section_list import SectionsList
@@ -16,7 +17,7 @@ class BaseAgentConfiguration(AsyncObservableModel):
                      description="Key for the agent configuration, used for identification")
     agent_description: Optional[str] = Field(None,
                                              description="A description of the agent's purpose and capabilities")
-    tools: ObservableList[str] = Field(default_factory=list,
+    tools: ObservableList[str] = Field(default_factory=ObservableList,
                                        description="List of enabled toolset names the agent can use")
     runtime_params: CompletionParams = Field(...,
                                              description="Parameters for the interaction with the agent")
@@ -85,13 +86,20 @@ class AgentConfigurationV2(BaseAgentConfiguration):
 
 class AgentConfigurationV3(BaseAgentConfiguration):
     """Version 2 of the Agent Configuration - example with new fields"""
-    version: Literal[3] = Field(3, description="Configuration version")
-    category: List[str] = Field(default_factory=list, description="A list of categories this agent belongs to from most to least general" )
-    context: ContextBag = Field(default_factory=dict, description="A mad of context models for tools and prompts")
-    agent_instructions: str = Field(..., description="Primary agent instructions defining the agent's behavior")
-    clone_instructions: str = Field("", description="Agent instructions defining the behavior of clones of this agent")
-    compatible_model_ids: List[str] = Field(default_factory=list, description="List of compatible model IDs for this agent")
-
+    version: Literal[3] = Field(3,
+                                description="Configuration version")
+    category: List[str] = Field(default_factory=list,
+                                description="A list of categories this agent belongs to from most to least general" )
+    context: ContextBagField = Field(default_factory=ContextBag,
+                                     description="Context models for tools and prompts")
+    agent_instructions: str = Field(...,
+                                    description="Primary agent instructions defining the agent's behavior")
+    clone_instructions: str = Field("",
+                                    description="Agent instructions defining the behavior of clones of this agent")
+    compatible_model_ids: List[str] = Field(default_factory=list,
+                                            description="List of compatible model IDs for this agent")
+    agent_team_members: List[str] = Field(default_factory=list,
+                                          description="List of agent IDs to make available as team members for this agent. ")
 
     def __init__(self, **data) -> None:
         super().__init__(**data)

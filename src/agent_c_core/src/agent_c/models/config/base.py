@@ -38,6 +38,14 @@ class BaseConfig(ObservableModel):
             from agent_c.util.registries.config_registry import ConfigRegistry
             ConfigRegistry.register(cls)
 
+    @classmethod
+    def is_user_level(cls) -> bool:
+        """
+        Check if the config is user-level.
+        User-level configs are those that are not part of the core system and can be modified by users.
+        """
+        return cls.__name__.endswith("UserConfig") or getattr(cls, 'user_level', False)
+
     @staticmethod
     def _is_auto_registerable(cls) -> bool:
         auto_register = getattr(cls, 'auto_register', True)

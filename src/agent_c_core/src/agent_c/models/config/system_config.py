@@ -1,47 +1,39 @@
-from typing import Dict, Any, Optional
-
-from newsapi.const import categories
+from typing import Dict, Any
 from pydantic import Field
 
 from agent_c.models import ObservableModel
-from agent_c.models.config.config_collection import ConfigCollection
+from agent_c.models.config.config_collection import ConfigCollection, ConfigCollectionField, ensure_config_collection
 
 
 class SystemConfigFile(ObservableModel):
     version: int = Field(1,
                          description="The version of the system config file format")
-    runtimes: ConfigCollection = Field(default_factory=ConfigCollection,
-                                       description="Configuration for the various agent runtime APIs from the vendors")
-    core: ConfigCollection = Field(default_factory=ConfigCollection,
-                                   description="Configuration for Agent C core")
-    tools: ConfigCollection = Field(default_factory=ConfigCollection,
-                                       description="Configuration for the toolsets that require keys and other configuration")
-    api: ConfigCollection = Field(default_factory=ConfigCollection,
-                                  description="Configuration for the API FastAPI endpoints and other API related settings")
+    runtimes: ConfigCollectionField = Field(default_factory=ConfigCollection,
+                                            description="Configuration for the various agent runtime APIs from the vendors")
+    core: ConfigCollectionField = Field(default_factory=ConfigCollection,
+                                        description="Configuration for Agent C core")
+    tools: ConfigCollectionField = Field(default_factory=ConfigCollection,
+                                         description="Configuration for the toolsets that require keys and other configuration")
+    api: ConfigCollectionField = Field(default_factory=ConfigCollection,
+                                       description="Configuration for the API FastAPI endpoints and other API related settings")
 
-    misc: ConfigCollection = Field(default_factory=ConfigCollection,
-                                  description="Miscellaneous configuration that does not fit into other categories")
+    misc: ConfigCollectionField = Field(default_factory=ConfigCollection,
+                                        description="Miscellaneous configuration that does not fit into other categories")
 
-    def __init__(self, **data: Any) -> None:
+    def __init__(self, **data) -> None:
         """
         Initializes the SystemConfigFile with the provided data.
 
         Args:
-            **data: Additional keyword arguments to initialize the model.
+            **data: Keyword arguments to initialize the model.
         """
-        for cat in ['core', 'tools', 'api', 'misc', 'runtimes']:
-            if cat not in data:
-                data[cat] = ConfigCollection()
-            elif isinstance(data[cat], ConfigCollection):
-                # If it's already a ConfigCollection, no need to convert
-                continue
-            elif isinstance(data[cat], dict):
-                # Convert dict to ConfigCollection
-                data[cat] = ConfigCollection(data[cat])
-            else:
-                raise ValueError(f"Invalid type for {cat}: {type(data[cat])}. Expected dict or ConfigCollection.")
-
         super().__init__(**data)
+
+        if isinstance(self.runtimes, dict) and not isinstance(self.runtimes, ConfigCollection):
+            foo = ConfigCollection(self.runtimes)
+            self.runtimes = ensure_config_collection(self.runtimes)
+            self.runtimes= foo
+
 
 
     def model_dump_yaml(self) -> Dict[str, Any]:
