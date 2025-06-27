@@ -78,7 +78,7 @@ class InteractionContext(BaseContext):
         """
         Returns the tool schemas for the interaction.
         """
-        return self.tool_chest.get_tool_schemas(self.chat_session.agent_config.tools, self.agent_runtime.vendor)
+        return self.tool_chest.get_tool_schemas(self.chat_session.agent_config.tools, self.agent_runtime.vendor())
 
     @property
     def tool_schemas(self) -> List[Dict[str, Any]]:

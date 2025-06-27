@@ -377,7 +377,7 @@ class ToolChest:
         schemas = []
         for name in toolset_names:
             if name in self.__toolset_instances:
-                schemas.extend(self.__toolset_instances[name].tool_schemas)
+                schemas.extend(self.__toolset_instances[name].tool_schemas(self.__toolset_instances[name].prefix))
             else:
                 self.logger.warning(f"toolchest._open_ai_tool_schemas Requested toolset '{name}' not found in available toolsets")
 

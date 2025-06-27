@@ -101,8 +101,8 @@ class GPTChatAgentRuntime(AgentRuntime):
         return key is not None
 
 
-    @property
-    def tool_format(self) -> str:
+    @classmethod
+    def tool_format(cls) -> str:
         """
         Returns the tool format for the agent.
         """

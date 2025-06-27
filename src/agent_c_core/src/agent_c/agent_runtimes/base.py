@@ -52,13 +52,13 @@ class AgentRuntime:
     def can_create(cls, context=None) -> bool:
         raise NotImplementedError
 
-    @property
-    def tool_format(self) -> str:
+    @classmethod
+    def tool_format(cls) -> str:
         raise NotImplementedError
 
-    @property
-    def vendor(self) -> str:
-        return self.tool_format
+    @classmethod
+    def vendor(cls) -> str:
+        return cls.tool_format()
 
     def count_tokens(self, text: str) -> int:
         return self.token_counter.count_tokens(text)

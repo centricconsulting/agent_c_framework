@@ -120,11 +120,14 @@ class AgentBridge:
 
     def runtime_for_agent(self, agent_config: AgentConfiguration, context: InteractionContext):
         model_id = agent_config.runtime_params.model_id
-        if model_id in self.runtime_cache:
-            return self.runtime_cache[model_id]
+        vendor: str = RuntimeRegistry.runtime_for_model_id(model_id).vendor()
+        key: str = f"{vendor}:{context.chat_session.user_id}"
+        if key in self.runtime_cache:
+            return self.runtime_cache[key]
         else:
-            self.runtime_cache[model_id] = RuntimeRegistry.instantiate_model_runtime(model_id, context)
-            return self.runtime_cache[model_id]
+            runtime = RuntimeRegistry.instantiate_model_runtime(model_id, context)
+            self.runtime_cache[model_id] = runtime
+            return runtime
 
 
     def __init_workspaces(self) -> None:
@@ -884,14 +887,15 @@ class AgentBridge:
                 try:
                     try:
                         timeout = getattr(settings, "CALLBACK_TIMEOUT")  # Get timeout from settings with fallback
-                        #content = await asyncio.wait_for(queue.get(), timeout=timeout)
-                        content = await queue.get()
-                        if content is None:
-                            self.logger.info("Received stream termination signal")
-                            break
-                        # self.logger.info(f"Yielding chunk: {content.replace("\n","")}")
-                        yield content
-                        queue.task_done()
+                        while not queue.empty():
+                            content = await queue.get()
+                            if content is None:
+                                self.logger.info("Received stream termination signal")
+                                break
+                            # self.logger.info(f"Yielding chunk: {content.replace("\n","")}")
+                            yield content
+                            queue.task_done()
+                        await asyncio.sleep(0.01)
                     except asyncio.TimeoutError:
                         timeout_msg =f"Timeout waiting for stream content to occur in agent_bridge.py:stream_chat. Waiting for stream surpassed {timeout} seconds, terminating stream."
                         self.logger.warning(timeout_msg)

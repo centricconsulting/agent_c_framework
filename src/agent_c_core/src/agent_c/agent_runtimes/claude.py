@@ -117,8 +117,8 @@ class ClaudeChatAgentRuntime(AgentRuntime):
 
         return True
 
-    @property
-    def tool_format(self) -> str:
+    @classmethod
+    def tool_format(cls) -> str:
         return "claude"
 
     @staticmethod
