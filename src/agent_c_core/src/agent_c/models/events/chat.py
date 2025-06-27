@@ -13,6 +13,7 @@ class SystemPromptEvent(SessionEvent):
     content: str = Field(..., description="The content of the system prompt")
     format: str = Field("markdown", description="The format of the content, default is markdown")
 
+
 class UserRequestEvent(SessionEvent):
     """
     Sent to notify the UI that a user request has been initiated.

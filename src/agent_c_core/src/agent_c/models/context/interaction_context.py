@@ -3,6 +3,7 @@ import threading
 from pydantic import Field
 from typing import List, Optional, Dict, Any, Callable, Awaitable
 
+from agent_c.config import ModelConfigurationLoader
 from agent_c.models.events import BaseEvent
 from agent_c.models.context.base import BaseContext
 from agent_c.models.context.context_bag import ContextBag
@@ -46,6 +47,10 @@ class InteractionContext(BaseContext):
                                                                                     "This is used to link interactions together in a hierarchy.")
 
     runtime_role: Optional[str] = Field("assistant", description="The role the runtime should used for events in the interaction. ")
+
+    @property
+    def model_id(self):
+        return self.chat_session.agent_config.model_id
 
     def __init__(self, **data) -> None:
         if 'interaction_id' not in data:

@@ -387,6 +387,20 @@ class AgentBridge:
         """
         return None
 
+
+    async def _warn_event(self, event: SessionEvent) -> None:
+        """
+        Warn about new events we don't handler
+
+        Args:
+            event: Session event to warn about.
+
+        Returns:
+            None: No payload is generated for ignored events.
+        """
+        self.logger.warning(f"Unhandled event type: {event.type} with content: {event.content}")
+        return None
+
     async def _handle_tool_select_delta(self, event: SessionEvent) -> str:
         """
         Handle tool selection events from the agent.
@@ -743,11 +757,6 @@ class AgentBridge:
         Raises:
             Exception: Logs errors if event handlers fail, but does not re-raise.
         """
-        # try:
-        #     self.logger.debug(
-        #         f"Consolidated callback received event: {event.model_dump_json(exclude={'content_bytes'})}")
-        # except Exception as e:
-        #     self.logger.debug(f"Error serializing event {event.type}: {e}")
 
         # A simple dispatch dictionary that maps event types to handler methods.
         handlers = {
@@ -769,11 +778,11 @@ class AgentBridge:
             "user_request": self._ignore_event,
         }
 
-        handler = handlers.get(event.type)
+        handler = handlers.get(event.type, self._warn_event)
         if handler:
             try:
                 payload = await handler(event)
-                if payload is not None and hasattr(self, "_stream_queue"):
+                if payload is not None:
                     await self._stream_queue.put(payload)
 
                     # If this is the end-of-stream event, push final payload and then a termination marker.
@@ -783,9 +792,8 @@ class AgentBridge:
 
 
             except Exception as e:
-                self.logger.error(f"Error in event handler {handler.__name__} for {event.type}: {str(e)}")
-        else:
-            self.logger.warning(f"Unhandled event type: {event.type}")
+                self.logger.exception(f"Error in event handler {handler.__name__} for {event.type}: {str(e)}", exc_info=True)
+
 
     async def stream_chat(
         self,
@@ -882,38 +890,39 @@ class AgentBridge:
 
             # Start the chat task
             chat_task = asyncio.create_task(agent_runtime.chat(context))
-
-            while True:
+            interaction_active = True
+            while interaction_active:
                 try:
-                    try:
-                        timeout = getattr(settings, "CALLBACK_TIMEOUT")  # Get timeout from settings with fallback
-                        while not queue.empty():
-                            content = await queue.get()
-                            if content is None:
-                                self.logger.info("Received stream termination signal")
-                                break
-                            # self.logger.info(f"Yielding chunk: {content.replace("\n","")}")
-                            yield content
-                            queue.task_done()
-                        await asyncio.sleep(0.01)
-                    except asyncio.TimeoutError:
-                        timeout_msg =f"Timeout waiting for stream content to occur in agent_bridge.py:stream_chat. Waiting for stream surpassed {timeout} seconds, terminating stream."
-                        self.logger.warning(timeout_msg)
-                        yield json.dumps({
-                            "type": "error",
-                            "data": timeout_msg
-                        }) + "\n"
-                        break
-                    except asyncio.CancelledError as e:
-                        error_type = type(e).__name__
-                        error_traceback = traceback.format_exc()
-                        cancelled_msg = f"Asyncio Cancelled error in agent_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}"
-                        self.logger.error(cancelled_msg)
-                        yield json.dumps({
-                            "type": "error",
-                            "data": cancelled_msg
-                        }) + "\n"
-                        break
+                    timeout = getattr(settings, "CALLBACK_TIMEOUT")  # Get timeout from settings with fallback
+                    while not queue.empty():
+                        content = await queue.get()
+                        if content is None:
+                            self.logger.info("Received stream termination signal")
+                            interaction_active = False
+                            break
+
+                        yield content
+
+                        queue.task_done()
+                    await asyncio.sleep(0.01)
+                except asyncio.TimeoutError:
+                    timeout_msg =f"Timeout waiting for stream content to occur in agent_bridge.py:stream_chat. Waiting for stream surpassed {timeout} seconds, terminating stream."
+                    self.logger.warning(timeout_msg)
+                    yield json.dumps({
+                        "type": "error",
+                        "data": timeout_msg
+                    }) + "\n"
+                    break
+                except asyncio.CancelledError as e:
+                    error_type = type(e).__name__
+                    error_traceback = traceback.format_exc()
+                    cancelled_msg = f"Asyncio Cancelled error in agent_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}"
+                    self.logger.error(cancelled_msg)
+                    yield json.dumps({
+                        "type": "error",
+                        "data": cancelled_msg
+                    }) + "\n"
+                    break
                 except Exception as e:
                     error_type = type(e).__name__
                     error_traceback = traceback.format_exc()

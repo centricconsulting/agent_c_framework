@@ -11,7 +11,6 @@ import threading
 from pathlib import Path
 from typing import Union, Dict, Any, Optional, List
 
-from agent_c.models import BaseConfig
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames
 
 from agent_c.config.config_loader import ConfigLoader

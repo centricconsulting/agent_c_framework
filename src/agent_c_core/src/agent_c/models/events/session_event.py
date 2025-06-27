@@ -11,3 +11,4 @@ class SessionEvent(BaseEvent):
     """
     session_id: Optional[str] = Field(None, description="The type of the event")
     role: Optional[str] = Field(None, description="The role that triggered this event event")
+    model_name: Optional[str] = Field(None, description="The name of the model that triggered this event")
