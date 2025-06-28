@@ -4,7 +4,7 @@ from pydantic import Field
 from agent_c.models.base import BaseModel
 from agent_c.util import to_snake_case
 from agent_c.toolsets.tool_set import Toolset
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 
 class ToolsetRegistryEntry(BaseModel):
     toolset_name: str = Field(...,
@@ -12,31 +12,30 @@ class ToolsetRegistryEntry(BaseModel):
     toolset_class_name: str = Field(...,
                                     description="The class name of the toolset this entry represents")
     toolset_class: Type[Toolset] = Field(...,
-                                           description="The class of the toolset this entry represents")
-
+                                          description="The class of the toolset this entry represents")
     key: str = Field(...,
-                        description="A unique key for this toolset, typically the toolset name in snake_case format")
+                      description="A unique key for this toolset, typically the toolset name in snake_case format")
     prefixed: bool = Field(True,
                            description="If true, the tool name will be prefixed with the prefix which defines the toolset name in snake_case format")
     prefix: str = Field(...,
                         description="The prefix used for this toolset, typically the short name.  Used to provide grouping")
-    required_tools: List[str] = Field(default_factory=list,
-                                      description="List of required tools for this tool to function")
+    required_toolsets: List[str] = Field(default_factory=list,
+                                         description="List of required tools for this toolsets to function")
     json_schemas: List[Dict[str, Any]] = Field(default_factory=list,
                                                 description="JSON schema for the tool's input parameters, if applicable")
-    agent_instructions: str = Field(...,
+    agent_instructions: str = Field("",
                                     description="The help text shown when this tool is equipped by an agent")
-    user_description: str = Field(...,
+    user_description: str = Field("",
                                   description="A human readable description of the tool's purpose and usage")
     multi_user: bool = Field(False,
                              description="If true, this tool is designed be safely used by multiple users simultaneously")
 
-    prompt_class: Optional[type] = Field(...,
-                                                description="The class of the prompt section used for this toolset")
-    context_type: Optional[str] = Field(...,
-                                        description="The context type this toolset uses for user configuration. Used to look up the correct context class in the registry")
-    config_type: Optional[str] = Field(...,
-                                        description="The config type this toolset uses for server configuration. Used to look up the correct config class in the registry")
+    prompt_section_types: List[str] = Field(default_factory=list,
+                                            description="The type of the prompt sections used for this toolset")
+    context_types: List[str] = Field(default_factory=list,
+                                     description="The context type this toolset uses for user configuration. Used to look up the correct context class in the registry")
+    config_types: List[str] = Field(default_factory=list,
+                                    description="The config type this toolset uses for server configuration. Used to look up the correct config class in the registry")
 
     @property
     def has_config(self) -> bool:
@@ -46,7 +45,7 @@ class ToolsetRegistryEntry(BaseModel):
         Returns:
             bool: True if config_type is set, False otherwise.
         """
-        return self.config_type is not None
+        return len(self.config_types) > 0
 
     @property
     def has_context(self) -> bool:
@@ -56,8 +55,17 @@ class ToolsetRegistryEntry(BaseModel):
         Returns:
             bool: True if context_type is set, False otherwise.
         """
-        return self.context_type is not None
+        return len(self.context_types) > 0
 
+    @property
+    def has_prompt_sections(self) -> bool:
+        """
+        Check if this toolset has a context type defined.
+
+        Returns:
+            bool: True if context_type is set, False otherwise.
+        """
+        return len(self.prompt_section_types) > 0
 
     @classmethod
     def from_toolset(cls, toolset) -> 'ToolsetRegistryEntry':
@@ -78,9 +86,8 @@ class ToolsetRegistryEntry(BaseModel):
         key = to_snake_case(toolset_class_name.removesuffix('Tools'))
         prefixed = getattr(toolset, 'force_prefix', True)
         prefix = getattr(toolset, 'tool_prefix', key)
-        toolset_name = getattr(toolset, 'name', key.title().replace("_", " "))
+        toolset_name = getattr(toolset, 'toolset_name', key.title().replace("_", " "))
         toolset_doc = toolset.__doc__ if toolset.__doc__ else ""
-        agent_instructions = getattr(toolset, 'agent_instructions', toolset_doc)
         user_description = getattr(toolset, 'user_description', toolset_doc)
 
         return cls(
@@ -88,16 +95,15 @@ class ToolsetRegistryEntry(BaseModel):
             toolset_name=toolset_name,
             key=key,
             toolset_class=toolset,
-            required_tools=getattr(toolset, 'required_tools', []),
+            required_toolsets=getattr(toolset, 'required_toolsets', []),
             prefixed=prefixed,
             prefix=prefix,
             json_schemas=toolset.tool_schemas(),
-            agent_instructions=agent_instructions,
             user_description=user_description,
             multi_user=getattr(toolset, 'multi_user', False),
-            context_type=getattr(toolset, 'context_type', None),
-            config_type=getattr(toolset, 'config_type', None),
-            prompt_class=getattr(toolset, 'prompt_class', None)
+            context_types=getattr(toolset, 'context_types', []),
+            config_types=getattr(toolset, 'config_types', []),
+            prompt_section_types=getattr(toolset, 'prompt_section_types', [])
         )
 
 

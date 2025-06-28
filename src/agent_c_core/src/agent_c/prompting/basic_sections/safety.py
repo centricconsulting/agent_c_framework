@@ -1,8 +1,8 @@
 from typing import Any
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 
 
-class SafetySection(PromptSection):
+class SafetySection(OldPromptSection):
     """
     The SafetySection class represents important safety-related instructions that the chat agent must follow.
 
@@ -36,5 +36,5 @@ class SafetySection(PromptSection):
         # Use the provided template or the default one
         data['template'] = data.get('template', TEMPLATE)
 
-        # Initialize the base PromptSection with required attributes
+        # Initialize the base OldPromptSection with required attributes
         super().__init__(required=True, name="Safety Instructions", render_section_header=True, **data)

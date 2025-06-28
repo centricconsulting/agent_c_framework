@@ -1,7 +1,7 @@
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 
 
-class BeginToolGuideLinesSection(PromptSection):
+class BeginToolGuideLinesSection(OldPromptSection):
     """
     Represents the beginning section for tool guidelines in the agent prompt.
 
@@ -23,7 +23,7 @@ class BeginToolGuideLinesSection(PromptSection):
         super().__init__(required=True, template="<tool_guidelines>\n", name="tool_guidelines", render_section_header=False)
 
 
-class EndToolGuideLinesSection(PromptSection):
+class EndToolGuideLinesSection(OldPromptSection):
     """
     Represents the ending section for tool guidelines in the agent prompt.
 

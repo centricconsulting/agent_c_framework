@@ -2,10 +2,10 @@ import platform
 import logging
 import datetime
 from typing import Any
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 
 
-class CoreInstructionSection(PromptSection):
+class CoreInstructionSection(OldPromptSection):
     """
     Represents a core instruction prompt section providing the chat agent with predefined guidelines.
 
@@ -48,7 +48,7 @@ class CoreInstructionSection(PromptSection):
         # Use the provided template or the default
         data['template'] = data.get('template', TEMPLATE)
 
-        # Initialize the base PromptSection with specified attributes
+        # Initialize the base OldPromptSection with specified attributes
         super().__init__(required=True, name="Core Instructions", render_section_header=False, **data)
 
     @property_bag_item
@@ -73,7 +73,7 @@ class CoreInstructionSection(PromptSection):
             return 'SYSTEM ERROR'
 
 
-class EndOperatingGuideLinesSection(PromptSection):
+class EndOperatingGuideLinesSection(OldPromptSection):
     """
     Represents the end of the operating guidelines section in the chat prompt.
 

@@ -1,6 +1,6 @@
 import datetime
 
-from pydantic import Field, BeforeValidator
+from pydantic import Field, BeforeValidator, model_validator
 from typing import Optional, Dict, Any, List, Annotated
 
 from agent_c.util import MnemonicSlugs
@@ -36,10 +36,11 @@ class ChatUser(BaseModel):
     context :ContextBag
         A dictionary of context models to provide data for tools / prompts.
     """
-    version: int = Field(1, description="The version of the user model. This is used to track changes in the user model.")
-    user_id: str = Field(None,
-                         description="The ID of the user, in slug format. This is the core ID for the user. "
-                                     "If not provided, it will be generated based on the user name.")
+    version: int = Field(1,
+                         description="The version of the user model. This is used to track changes in the user model.")
+    user_id: Optional[str] = Field(None,
+                                          description="The ID of the user, in slug format. This is the core ID for the user. "
+                                                       "If not provided, it will be generated based on the user name.")
     user_name: str = Field("agent_c_user",
                            description="The user name associated with the user from the application auth")
     email: Optional[str] = Field(None,
@@ -51,9 +52,12 @@ class ChatUser(BaseModel):
     last_name: Optional[str] = Field("User",
                                     description="The last name of the user, used for personalization "
                                                 "in interactions. ")
-    created_at: str = Field(default_factory=lambda: datetime.datetime.now().isoformat())
-    updated_at: Optional[str] = None
-    deleted_at: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.datetime.now().isoformat(),
+                            description="The timestamp when the user was created, used for tracking changes. ")
+    updated_at: Optional[str] = Field(None,
+                                      description="The timestamp when the user was last updated, used for tracking changes. ")
+    deleted_at: Optional[str] = Field(None,
+                                       description="The timestamp when the user was deleted, used for tracking changes. ")
     default_location: ChatUserLocation = Field(default_factory=ChatUserLocation,
                                                description="The default location of the user, used for "
                                                            "context in interactions and Open AI search tools. ")
@@ -75,21 +79,14 @@ class ChatUser(BaseModel):
                                      description="A dictionary of metadata associated with the user, used for "
                                                  "personalization in interactions and agent memory. ")
 
-    def __init__(self, **data: Any) -> None:
-        if 'user_id' not in data or not data['user_id']:
-            data['user_id'] = MnemonicSlugs.generate_id_slug(2, data['user_name'] if 'user_name' in data else 'agent_c_user')
+    @model_validator(mode='after')
+    def post_init(self):
+        if not self.user_id:
+            self.user_id = MnemonicSlugs.generate_id_slug(2, self.user_name)
+        return self
 
-        if isinstance(data['context'], dict):
-            data['context'] = ContextBag(data['context'])
-
-        if isinstance(data['default_location'], dict):
-            data['default_location'] = ChatUserLocation(**data['default_location'])
-
-        if isinstance(data['config'], dict):
-            data['config'] = UserConfig(**data['config'])
-
-
-        super().__init__(**data)
+    def is_new_user(self) -> bool:
+        return self.user_name == self.model_fields['user_name'].default
 
 
 def ensure_chat_user(v: Any) -> ChatUser:

@@ -32,8 +32,10 @@ class WorkspaceTools(Toolset):
     - Agents can use the metadata tools provided by this toolset as a form of shared long-term memory.
     - Many other tools depend on this toolset such as the workspace planning tool.
     """
-    config_type = 'workspace_tools'
-    context_type = 'workspace_tools'
+    config_types = ['workspace_tools', 'workspace_tools_user']
+    context_types = ['workspace_tools']
+    prompt_section_types = ['workspace_tools']
+
 
     UNC_PATH_PATTERN = r'^//([^/]+)(?:/(.*))?$'
 

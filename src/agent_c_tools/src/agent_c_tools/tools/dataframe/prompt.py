@@ -1,9 +1,9 @@
 from typing import Any
 
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 
 
-class DataframeToolsSection(PromptSection):
+class DataframeToolsSection(OldPromptSection):
     def __init__(self, **data: Any):
         TEMPLATE = ("# Introduction "
                     "- The datatools family of toolsets allows you to work with Excel and CSV files via Pandas Dataframes. "

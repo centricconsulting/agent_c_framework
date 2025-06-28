@@ -5,13 +5,13 @@ import datetime
 
 from typing import Any, Union, Optional, Dict
 
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 from agent_c.chat.session_manager import ChatSessionManager
 
 
 # TODO: Move the voice-related functionality somewhere else
 
-class EnvironmentInfoSection(PromptSection):
+class EnvironmentInfoSection(OldPromptSection):
     """
     This class represents a section that provides runtime environment information to the agent,
     including the current timestamp, environment name, session info, and voice mode settings.
@@ -21,7 +21,7 @@ class EnvironmentInfoSection(PromptSection):
         env_rules (Optional[Dict[str, str]]): Rules dictating agent behavior based on the environment.
 
     Args:
-        **data (Any): Additional keyword arguments passed to the PromptSection during initialization.
+        **data (Any): Additional keyword arguments passed to the OldPromptSection during initialization.
     """
     session_manager: ChatSessionManager
     env_rules: Optional[Dict[str, str]] = None

@@ -1,8 +1,8 @@
 from typing import Any, Optional
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 
 
-class BrowserPlaywrightSection(PromptSection):
+class BrowserPlaywrightSection(OldPromptSection):
     """Prompt section for the Browser Playwright tool."""
 
     def __init__(self, **data: Any):

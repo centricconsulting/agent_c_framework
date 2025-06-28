@@ -1,9 +1,9 @@
 from csv import DictReader
 from typing import Any, Optional, Dict, List
 
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 
-class CloneBehaviorSection(PromptSection):
+class CloneBehaviorSection(OldPromptSection):
     def __init__(self, **data: Any):
         TEMPLATE = """**Important**: Clone mode has been activated.\n\n# Clone Operating Context
 
@@ -19,7 +19,7 @@ class CloneBehaviorSection(PromptSection):
                 """
         super().__init__(template=TEMPLATE, required=True, name="CLONE MODE ACTIVE", render_section_header=True, **data)
 
-class AgentCloneSection(PromptSection):
+class AgentCloneSection(OldPromptSection):
     tool: Any
 
     def __init__(self, **data: Any):

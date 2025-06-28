@@ -1,9 +1,9 @@
 from typing import Any
 
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 
 
-class MermaidChatSection(PromptSection):
+class MermaidChatSection(OldPromptSection):
     def __init__(self, **data: Any):
         TEMPLATE = ("The mermaid_chart toolset allows you to generate 'Mermaid.js' charts\n"
                     "- Use the mermaid_chart-render_graph tool to generate an CVG for a graph definition in Markdown format\n"

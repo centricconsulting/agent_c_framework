@@ -1,5 +1,4 @@
-from typing import Any
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from agent_c.util.string import to_snake_case
 from agent_c.models.base import BaseModel
@@ -11,16 +10,13 @@ class BaseEvent(BaseModel):
     Attributes:
         type (str): The type identifier for the event. Defaults to the snake_case
             version of the class name if not provided.
-
-    Args:
-        **data: Arbitrary keyword arguments that will be used to initialize the model.
-            If 'type' is not provided in the data, it will be automatically set to
-            the snake_case version of the class name, without "event".
     """
-    type: str = Field(..., description="The type of the event. Defaults to the snake case class name without event" )
+    type: str = Field(None,
+                      description="The type of the event. Defaults to the snake case class name without the word event" )
 
-    def __init__(self, **data: Any) -> None:
-        if 'type' not in data:
-            data['type'] = to_snake_case(self.__class__.__name__.removesuffix('Event'))
+    @model_validator(mode='after')
+    def post_init(self):
+        if not self.type:
+            self.type = to_snake_case(self.__class__.__name__.removesuffix('Event'))
 
-        super().__init__(**data)
+        return self

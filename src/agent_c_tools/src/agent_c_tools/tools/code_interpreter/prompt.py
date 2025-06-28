@@ -1,9 +1,9 @@
 from typing import Any
 
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 
 
-class CodeInterpreterToolsSection(PromptSection):
+class CodeInterpreterToolsSection(OldPromptSection):
     def __init__(self, **data: Any):
         TEMPLATE = ("""
         You are interacting with a Python code interpreter hosted in a Docker container. The interpreter supports the following capabilities:

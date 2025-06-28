@@ -1,7 +1,6 @@
-from typing import Any
-from pydantic import Field
+from pydantic import Field, model_validator
 
-from agent_c.models.observable import ObservableModel
+from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.util.string import to_snake_case
 
 CONFIG_RUNTIME = "runtimes"
@@ -21,15 +20,17 @@ def do_not_register_config(class_name: str) -> None:
 
 
 
-class BaseConfig(ObservableModel):
+class BaseConfig(AsyncObservableModel):
     config_type: str = Field(None, description="The type of the config. Defaults to the snake case class name without config")
     category: str = Field(CONFIG_MISC, description="The high level category of the config, used for grouping.")
 
-    def __init__(self, **data: Any) -> None:
-        if 'config_type' not in data:
-            data['config_type'] = to_snake_case(self.__class__.__name__.removesuffix('Config'))
+    @model_validator(mode='after')
+    def ensure_config_type(self):
+        self._init_observable()
+        if not self.config_type:
+            self.config_type = to_snake_case(self.__class__.__name__.removesuffix('Config'))
 
-        super().__init__(**data)
+        return self
 
     def __init_subclass__(cls, **kwargs):
         """Automatically register subclasses"""

@@ -10,7 +10,7 @@ from tiktoken import Encoding, encoding_for_model
 from typing import Any, Dict, List, Union, Optional, Tuple
 
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
-from agent_c.config import SystemConfigurationLoader
+from agent_c.config.system_config_loader import SystemConfigurationLoader
 from agent_c.models.completion.azure_auth_info import AzureAuthInfo
 from agent_c.models.completion.gpt import GPTCompletionParams
 from agent_c.models.completion.open_ai_auth_info import OpenAiAuthInfo

@@ -1,11 +1,11 @@
 from typing import Dict, Any
-from pydantic import Field, field_validator
+from pydantic import Field
 
-from agent_c.models import ObservableModel
+from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.models.config.config_collection import UserConfigCollection, UserConfigCollectionField
 
 
-class UserConfig(ObservableModel):
+class UserConfig(AsyncObservableModel):
     version: int = Field(1,
                          description="The version of the system config file format")
     runtimes: UserConfigCollectionField = Field(default_factory=UserConfigCollection,
@@ -14,30 +14,6 @@ class UserConfig(ObservableModel):
                                             description="Configuration for the toolsets that require keys and other configuration")
     misc: UserConfigCollectionField = Field(default_factory=UserConfigCollection,
                                             description="Miscellaneous configuration that does not fit into other categories")
-
-
-
-    def __init__(self, **data: Any) -> None:
-        """
-        Initializes the SystemConfigFile with the provided data.
-
-        Args:
-            **data: Additional keyword arguments to initialize the model.
-        """
-        # for cat in ['tools', 'misc', 'runtimes']:
-        #     if cat not in data:
-        #         data[cat] = UserConfigCollection()
-        #     elif isinstance(data[cat], UserConfigCollection):
-        #         # If it's already a ConfigCollection, no need to convert
-        #         continue
-        #     elif isinstance(data[cat], dict):
-        #         # Convert dict to ConfigCollection
-        #         data[cat] = UserConfigCollection(data[cat])
-        #     else:
-        #         raise ValueError(f"Invalid type for {cat}: {type(data[cat])}. Expected dict or UserConfigCollection.")
-
-        super().__init__(**data)
-
 
     def model_dump_yaml(self) -> Dict[str, Any]:
         """

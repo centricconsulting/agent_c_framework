@@ -1,7 +1,7 @@
 import json
 
 from pydantic import Field
-from typing import Optional, List, Dict, Any, Literal
+from typing import Optional, List, Dict, Any
 
 from agent_c.models.events.session_event import SessionEvent
 

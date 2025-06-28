@@ -1,7 +1,7 @@
 from typing import Any
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 
-class SalesforcePrompt(PromptSection):
+class SalesforcePrompt(OldPromptSection):
     def __init__(self, **data: Any):
         template = (
             "The Salesforce toolsets allow you to interact with Salesforce CRM data, focusing on querying, creating, updating, and deleting records. "

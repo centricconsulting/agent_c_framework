@@ -6,9 +6,8 @@ import logging
 from typing import Type, List, Union, Dict, Any, Tuple, Optional
 
 from agent_c.toolsets.tool_set import Toolset
-from agent_c.toolsets.tool_cache import ToolCache
 from agent_c.util.logging_utils import LoggingManager
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 from agent_c.models.context.interaction_context import InteractionContext
 
 class ToolChest:
@@ -35,7 +34,7 @@ class ToolChest:
         _execute_tool_call(function_id: str, function_args: Dict) -> Any: Execute a single tool call.
     """
 
-    def __init__(self, tool_cache: Optional[ToolCache] = None):
+    def __init__(self, tool_cache: Optional['ToolCache'] = None):
         """
         Initializes the ToolChest with toolset instances, toolset classes, and a logger.
         """
@@ -43,6 +42,7 @@ class ToolChest:
 
         if tool_cache is None:
             self.logger.warning("No tool_cache provided, using default ToolCache which stores in agent_c_config/tool_cache.")
+            from agent_c.toolsets.tool_cache import ToolCache
             self.tool_cache = ToolCache()
         else:
             self.tool_cache = tool_cache
@@ -344,7 +344,7 @@ class ToolChest:
             self.logger.exception(f"Failed calling {function_id} on {src_obj.name}. {e}", stacklevel=3)
             return f"Important! Tell the user an error occurred calling {function_id} on {src_obj.name}. {e}"
 
-    def get_tool_sections(self, toolset_names: List[str]) -> List[PromptSection]:
+    def get_tool_sections(self, toolset_names: List[str]) -> List[OldPromptSection]:
         """
         Get prompt sections for specified toolsets.
 
@@ -352,7 +352,7 @@ class ToolChest:
             toolset_names: List of toolset names to get sections for
 
         Returns:
-            List of PromptSection objects for the specified toolsets
+            List of OldPromptSection objects for the specified toolsets
         """
         sections = []
         for name in toolset_names:
@@ -420,7 +420,7 @@ class ToolChest:
         Returns:
             Dictionary containing:
                 - 'schemas': List of tool schemas in the requested format
-                - 'sections': List of PromptSection objects for the toolsets
+                - 'sections': List of OldPromptSection objects for the toolsets
         """
 
         return {

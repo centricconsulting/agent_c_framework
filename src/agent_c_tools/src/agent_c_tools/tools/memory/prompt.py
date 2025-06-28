@@ -1,9 +1,9 @@
 from typing import Any
-from agent_c.prompting import PromptSection, property_bag_item
+from agent_c.prompting import OldPromptSection, property_bag_item
 from agent_c.chat.session_manager import ChatSessionManager
 
 
-class MemorySection(PromptSection):
+class MemorySection(OldPromptSection):
     session_manager: ChatSessionManager
 
     def __init__(self, **data: Any):

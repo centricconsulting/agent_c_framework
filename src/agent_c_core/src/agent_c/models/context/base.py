@@ -1,18 +1,19 @@
-from typing import Any, Dict
-from pydantic import Field
+from pydantic import Field, model_validator
 
-from agent_c.models.observable import ObservableModel
+from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.util.string import to_snake_case
 
-class BaseContext(ObservableModel):
-    context_type: str = Field(..., description="The type of the context. Defaults to the snake case class name without event")
+class BaseContext(AsyncObservableModel):
+    context_type: str = Field(...,
+                              description="The type of the context. Defaults to the snake case class name without event")
 
+    @model_validator(mode='after')
+    def ensure_context_type(self):
+        self._init_observable()
+        if not self.context_type:
+            self.context_type = to_snake_case(self.__class__.__name__.removesuffix('Context'))
 
-    def __init__(self, **data: Any) -> None:
-        if 'context_type' not in data:
-            data['context_type'] = to_snake_case(self.__class__.__name__.removesuffix('Context'))
-
-        super().__init__(**data)
+        return self
 
     def __init_subclass__(cls, **kwargs):
         """Automatically register subclasses"""

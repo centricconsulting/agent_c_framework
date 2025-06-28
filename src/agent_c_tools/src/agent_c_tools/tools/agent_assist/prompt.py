@@ -1,9 +1,9 @@
 from typing import Any, Optional, Dict, List
 
 from agent_c.models.completion.agent_config import CurrentAgentConfiguration, AgentConfiguration
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 
-class AssistantBehaviorSection(PromptSection):
+class AssistantBehaviorSection(OldPromptSection):
     def __init__(self, **data: Any):
         TEMPLATE = """**Important**: Agent Assist mode has been activated.\n\n# Assistant Operating Context\n\n
                 You are being contacted via the Agent Assist Tool by another agent  to handle a specific delegated task. Important operating guidelines:\n
@@ -32,7 +32,7 @@ class AssistantBehaviorSection(PromptSection):
 
 
 
-class AgentAssistSection(PromptSection):
+class AgentAssistSection(OldPromptSection):
     tool: Any
 
     def __init__(self, **data: Any):

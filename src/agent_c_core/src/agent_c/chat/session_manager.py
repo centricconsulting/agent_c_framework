@@ -1,6 +1,4 @@
 import json
-from idlelib.window import add_windows_to_menu
-
 import yaml
 
 from typing import Optional, Dict, List

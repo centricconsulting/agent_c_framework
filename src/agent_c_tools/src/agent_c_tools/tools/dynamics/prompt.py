@@ -1,8 +1,8 @@
 from typing import Any
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 
 
-class DynamicsCRMPrompt(PromptSection):
+class DynamicsCRMPrompt(OldPromptSection):
     def __init__(self, **data: Any):
         template = ("The Dynamics toolsets allow you to retrieve and manipulate data from Microsoft Dynamics CRM using odata query parameters. The get_entities function is optimized to return only necessary fields by default to improve efficiency and reduce token usage. You can use the 'fields' parameter to specify exactly which fields you want returned, overriding the default fields. This is useful when you only need a few specific fields and want to minimize token usage. "
                     "You can use these toolsets to search for accounts, opportunities, and leads by their partial names. "

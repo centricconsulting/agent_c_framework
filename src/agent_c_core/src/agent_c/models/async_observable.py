@@ -1,13 +1,18 @@
+import time
 from contextlib import contextmanager, asynccontextmanager
-from typing import Any, Generator, AsyncGenerator
+from typing import Any, Generator, AsyncGenerator, Optional
+
+from pydantic import Field
 
 from agent_c.models.base import BaseModel
 from agent_c.util.observable.async_observable_mixin import AsyncObservableMixin
 
-class AsyncObservableModel(BaseModel, AsyncObservableMixin):
+class AsyncObservableModel(AsyncObservableMixin, BaseModel):
     """
     Base class for Pydantic models with observable fields.
     """
+    changed_at: Optional[float] = Field(None, description="Times of the last change to the model.", exclude=True)
+
 
     def __init__(self, **data: Any) -> None:
         """
@@ -17,7 +22,32 @@ class AsyncObservableModel(BaseModel, AsyncObservableMixin):
             **data: Keyword arguments used to initialize the model fields.
         """
         super().__init__(**data)
-        self._batch_active: bool = False
+
+    def model_post_init(self, __context: Any) -> None:
+        self._init_observable()
+
+    @property
+    def dirty(self) -> bool:
+        """
+        Check if the model has unsaved changes.
+
+        Returns:
+            bool: True if the model has unsaved changes, False otherwise.
+        """
+        return self._dirty
+
+    def mark_clean(self) -> None:
+        """
+        Mark the model as clean, indicating that there are no unsaved changes.
+        """
+        self._dirty = False
+
+    def mark_dirty(self) -> None:
+        """
+        Mark the model as dirty, indicating that there are unsaved changes.
+        """
+        self.changed_at = time.time()
+        self._dirty = True
 
     def __setattr__(self, name: str, value: Any) -> None:
         """
@@ -33,8 +63,10 @@ class AsyncObservableModel(BaseModel, AsyncObservableMixin):
         object.__setattr__(self, name, value)
 
         # Handle notifications
-        if name.startswith("_") or self._batch_active:
+        if name.startswith("_")  or name == 'changed_at' or self._batch_active:
             return
+
+        self.mark_dirty()
 
         if name != 'model':
             self.trigger(f"{name}_changed", old_value, value)
@@ -55,8 +87,10 @@ class AsyncObservableModel(BaseModel, AsyncObservableMixin):
         object.__setattr__(self, name, value)
 
         # Handle notifications
-        if name.startswith("_") or self._batch_active:
+        if name.startswith("_") or self._batch_active or name == 'changed_at':
             return
+
+        self.mark_dirty()
 
         if name != 'model':
             await self.atrigger(f"{name}_changed", old_value, value)
@@ -69,14 +103,18 @@ class AsyncObservableModel(BaseModel, AsyncObservableMixin):
         """
         self._batch_active = True
 
-    def end_batch(self, trigger: bool = True) -> None:
+    def end_batch(self, trigger: bool = True, mark_dirty: bool = True) -> None:
         """
         End a batch operation and optionally trigger a "model_changed" event.
 
         Args:
             trigger (bool): Whether to trigger a "model_changed" event after ending the batch.
+            mark_dirty (bool): Whether to mark the model as dirty after the batch ends.
         """
         self._batch_active = False
+        if mark_dirty:
+            self._dirty = True
+
         if trigger:
             self.trigger("model_changed", self)
 

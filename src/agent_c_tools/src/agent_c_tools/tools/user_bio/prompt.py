@@ -1,10 +1,10 @@
 from typing import Any
 
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 from agent_c.chat.session_manager import ChatSessionManager
 
 
-class UserBioSection(PromptSection):
+class UserBioSection(OldPromptSection):
     session_manager: ChatSessionManager
 
     def __init__(self, **data: Any):

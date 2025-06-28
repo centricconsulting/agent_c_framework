@@ -43,14 +43,19 @@ class ContextRegistry:
         return decorator
 
     @classmethod
-    def get(cls, context_type: str) -> Type[BaseModel]:
+    def get(cls, context_type: str, default_dynamic: Optional[bool] = False) -> Type[BaseModel]:
         """Get a context class by its context_type string"""
         if context_type not in cls._registry:
+            if default_dynamic:
+                from agent_c.models.context.dynamic import BaseDynamicContext
+                return BaseDynamicContext
+
             raise ValueError(f"Unknown context type: {context_type}. Registered types: {list(cls._registry.keys())}")
+
         return cls._registry[context_type]
 
     @classmethod
-    def create(cls, data: Dict[str, Any], context_type: Optional[str] = None) -> BaseModel:
+    def create(cls, data: Dict[str, Any], context_type: Optional[str] = None, default_dynamic: Optional[bool] = False) -> BaseModel:
         """Create a context instance from data dictionary"""
         if context_type is None:
             context_type = data.get('context_type')
@@ -58,7 +63,7 @@ class ContextRegistry:
             raise ValueError("Context data must include 'context_type' field")
 
         data['context_type'] = context_type
-        context_class = cls.get(context_type)
+        context_class = cls.get(context_type, default_dynamic=default_dynamic)
         return context_class(**data)
 
     @classmethod

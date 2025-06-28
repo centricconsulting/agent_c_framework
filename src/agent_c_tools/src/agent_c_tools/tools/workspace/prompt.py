@@ -1,9 +1,9 @@
 from typing import Any, Optional
 
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 
 
-class WorkspaceSection(PromptSection):
+class WorkspaceSection(OldPromptSection):
     tool: Any  # Reference to the workspace tool
 
     def __init__(self, **data: Any):

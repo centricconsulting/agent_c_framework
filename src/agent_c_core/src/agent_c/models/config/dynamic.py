@@ -1,29 +1,26 @@
 from typing import Any, Dict, ClassVar
 
+from pydantic import Field
+
 from agent_c.models.config.base import BaseConfig
-from agent_c.util.registries.config_registry import ConfigRegistry
 
 
 class BaseDynamicConfig(BaseConfig):
-    _dynamic_fields: Dict[str, Any]
+    dynamic_fields: Dict[str, Any] = Field(default_factory=dict,
+                                           description="Dynamic fields for the configuration",
+                                           exclude=True)
     auto_register: ClassVar[bool] = False
 
-    def __init__(self, **data: Any) -> None:
-        config_type = data.pop('config_type', None)
-        if config_type is None:
-            raise ValueError("BaseDynamicConfig must have 'config_type'")
+    def __init__(self, config_type=None,**data: Any) -> None:
+        object.__setattr__(self, 'dynamic_fields', data)
+        super().__init__(config_type=config_type, **data)
 
-        object.__setattr__(self, '_dynamic_fields', data)
-        super().__init__(config_type=config_type)
-        ConfigRegistry.register(self.__class__, config_type=config_type)
 
     def __getattr__(self, name: str) -> Any:
-        dynamic = object.__getattribute__(self, '_dynamic_fields')
-        if name in dynamic:
-            return dynamic[name]
-
-        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
-
+        try:
+            return self.dynamic_fields[name]
+        except KeyError:
+            raise AttributeError(f"{type(self).__name__!r} object has no attribute or key {name!r}")
 
 class BaseDynamicRuntimeConfig(BaseDynamicConfig):
     """

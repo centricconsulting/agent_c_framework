@@ -1,10 +1,10 @@
 from agent_c.util.observable.async_observable_mixin import AsyncObservableMixin
-from typing import MutableMapping, TypeVar, Iterable, Tuple, Any
+from typing import TypeVar, Iterable, Tuple, Any
 
 K = TypeVar('K')
 V = TypeVar('V')
 
-class ObservableDict(AsyncObservableMixin, dict, MutableMapping[K, V]):
+class ObservableDict(AsyncObservableMixin, dict):
     """
     A dict subclass that triggers events:
       - `item_added` with (key, value)
@@ -13,39 +13,28 @@ class ObservableDict(AsyncObservableMixin, dict, MutableMapping[K, V]):
     """
 
     def __init__(self, mapping: Iterable[Tuple[K, V]] = (), **kwargs):
-        super().__init__()
         dict.__init__(self, mapping, **kwargs)
+        AsyncObservableMixin.__init__(self)
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type, handler):
         from pydantic_core import core_schema
-        return core_schema.no_info_before_validator_function(
-            cls._validate,
-            core_schema.dict_schema()
-        )
 
-    @classmethod
-    def _validate(cls, value: Any) -> 'ObservableDict':
-        if isinstance(value, cls):
-            return value
-        if isinstance(value, dict):
-            return cls(value)
-        raise ValueError(f"Cannot convert {type(value)} to ObservableDict")
+        def validate_observable_dict(value: Any) -> 'ObservableDict':
+            if isinstance(value, cls):
+                return value
+            if isinstance(value, dict):
+                return cls(value)
+            if hasattr(value, 'items'):
+                return cls(value)
+            raise ValueError(f"Cannot convert {type(value)} to ObservableDict")
 
-    # def __getattr__(self, name: str) -> Any:
-    #     """Allow obj.key syntax for read-only dictionary access"""
-    #     try:
-    #         return super().__getattr__(name)
-    #     except AttributeError:
-    #         # If parent classes don't have the attribute, try dictionary lookup
-    #         try:
-    #             return self[name]
-    #         except KeyError:
-    #             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+        return core_schema.no_info_plain_validator_function(validate_observable_dict)
+
 
     def __setitem__(self, key: K, value: V) -> None:
         if key in self:
-            old = self[key]
+            old = self.__getitem__(key)
             super().__setitem__(key, value)
             self.trigger('item_updated', key, old, value)
         else:
@@ -53,15 +42,14 @@ class ObservableDict(AsyncObservableMixin, dict, MutableMapping[K, V]):
             self.trigger('item_added', key, value)
 
     def __delitem__(self, key: K) -> None:
-        old = self[key]
+        old = self.__getitem__(key)
         super().__delitem__(key)
         self.trigger('item_removed', key, old)
 
     def pop(self, key: K, default=None) -> V:
         if key in self:
-            old = self[key]
             value = super().pop(key)
-            self.trigger('item_removed', key, old)
+            self.trigger('item_removed', key, value)
             return value
         return super().pop(key, default)
 

@@ -18,10 +18,24 @@ class AsyncObservableMixin:
     """
 
     def __init__(self, *args, **kwargs):
+        self._batch_active = True
+        self._dirty = False
+        self._async_callbacks: dict[str, set[ref]] = getattr(self, '_async_callbacks', {})
+        self._observable = getattr(self, '_observable', Observable())
         super().__init__(*args, **kwargs)
         self._batch_active = False
-        self._observable = Observable()
-        self._async_callbacks: dict[str, set[ref]] = {}
+
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls)
+        instance._init_observable()
+        return instance
+
+    def _init_observable(self):
+        """Initialize the observable instance."""
+        self._batch_active =  getattr(self, '_batch_active', False)
+        self._dirty = getattr(self, '_dirty', False)
+        self._async_callbacks: dict[str, set[ref]] = getattr(self, '_async_callbacks', {})
+        self._observable = getattr(self, '_observable', Observable())
 
     def on(self, event: str, callback: CallbackType) -> None:
         """Register a sync or async callback for `event`."""

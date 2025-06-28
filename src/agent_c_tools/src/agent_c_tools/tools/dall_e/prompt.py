@@ -1,9 +1,9 @@
 from typing import Any
 
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 
 
-class DallESection(PromptSection):
+class DallESection(OldPromptSection):
     def __init__(self, **data: Any):
         TEMPLATE = ("The dalle_create_image tool allows you to generate an image based on a prompt using DALL-E-3 .\n"
                     "- If the user requests a portrait make sure to specify a tall ratio.\n"

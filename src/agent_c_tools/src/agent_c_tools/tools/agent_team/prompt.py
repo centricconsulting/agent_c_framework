@@ -1,10 +1,10 @@
 from typing import Any, Optional, Dict, List
 
 from agent_c.models.completion.agent_config import AgentConfiguration
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 
 
-class AgentTeamSection(PromptSection):
+class AgentTeamSection(OldPromptSection):
     tool: Any
 
     def __init__(self, **data: Any):

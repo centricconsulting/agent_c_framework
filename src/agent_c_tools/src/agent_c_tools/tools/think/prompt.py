@@ -1,9 +1,9 @@
 from typing import Any
 
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 
 
-class ThinkSection(PromptSection):
+class ThinkSection(OldPromptSection):
 
     def __init__(self, **data: Any):
         TEMPLATE = ("# MUST FOLLOW: Reflection Rules\n"

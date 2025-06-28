@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict, Any, Set, Optional
 
 from agent_c.models.context.interaction_context import InteractionContext
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 from agent_c.util.logging_utils import LoggingManager
 
 
@@ -12,7 +12,7 @@ class PromptBuilder:
     A class to build a prompt by rendering sections with provided data.
 
     Attributes:
-        sections (List[PromptSection]): A list of PromptSection objects that define the structure of the prompt.
+        sections (List[OldPromptSection]): A list of PromptSection objects that define the structure of the prompt.
     """
 
     def __init__(self) -> None:

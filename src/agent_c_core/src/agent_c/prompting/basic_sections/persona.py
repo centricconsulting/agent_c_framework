@@ -6,10 +6,10 @@ from string import Template
 from typing import Any, Optional, Dict
 
 from agent_c.models.context.interaction_context import InteractionContext
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 
 
-class PersonaSection(PromptSection):
+class PersonaSection(OldPromptSection):
     """
     The PersonaSection class defines a chat agent's persona and behavioral traits.
     By default, the persona is described as calm, casual, yet professional, and follows the operating guidelines.
@@ -37,11 +37,11 @@ class PersonaSection(PromptSection):
         # Use the provided template or the default one
         data['template'] = data.get('template', TEMPLATE)
 
-        # Initialize the base PromptSection with specific attributes
+        # Initialize the base OldPromptSection with specific attributes
         super().__init__(name="Your Persona", render_section_header=True, **data)
 
 
-class DynamicPersonaSection(PromptSection):
+class DynamicPersonaSection(OldPromptSection):
     """
     The DynamicPersonaSection class allows for dynamic persona customization based on external factors.
     It relies on a variable called 'persona_prompt' to insert the specific persona characteristics.
@@ -67,7 +67,7 @@ class DynamicPersonaSection(PromptSection):
         # Use the provided template or the default one
         data['template'] = data.get('template', TEMPLATE)
 
-        # Initialize the base PromptSection with specific attributes
+        # Initialize the base OldPromptSection with specific attributes
         super().__init__(name="Agent Persona, RULES and Task Context", render_section_header=True, **data)
 
     @staticmethod

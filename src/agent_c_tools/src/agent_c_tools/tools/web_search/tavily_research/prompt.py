@@ -1,9 +1,9 @@
 from typing import Any
 
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 
 
-class TavilyResearchPrompt(PromptSection):
+class TavilyResearchPrompt(OldPromptSection):
     def __init__(self, **data: Any):
         template = ("The search_tavily tool is used to perform research using Tavily's Large Language Model search retrieval approach.  "
                     "When using this tool to search for information, always include the search query. "

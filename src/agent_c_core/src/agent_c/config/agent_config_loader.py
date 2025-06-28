@@ -126,8 +126,10 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         agent_config_path = os.path.join(self.agent_config_folder, f"{agent_config.key}.yaml")
 
         with open(agent_config_path, 'w', encoding='utf-8') as file:
-            yaml_content = yaml.dump(agent_config.model_dump(exclude_none=True), allow_unicode=True, default_flow_style=False, sort_keys=False)
+            yaml_content = yaml.dump(agent_config.model_dump(exclude_none=True, exclude={'dirty'}), allow_unicode=True, default_flow_style=False, sort_keys=False)
             file.write(yaml_content)
+        agent_config.mark_clean()
+        self.logger.info(f"Saved agent configuration for {agent_config.key} to {agent_config_path}")
 
     def load_agent_config_file(self, agent_config_path) -> Optional[AgentConfiguration]:
         if os.path.exists(agent_config_path):
@@ -176,6 +178,9 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
                 'file_path': agent_config_path
             }
 
+            self._save_agent_config(config)
+        elif config.dirty:
+            # If the config is dirty, save it back to ensure it's up-to-date
             self._save_agent_config(config)
 
         self._agent_config_cache[config.key] = config

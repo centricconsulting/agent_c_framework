@@ -13,10 +13,32 @@ if TYPE_CHECKING:
     from agent_c.toolsets.tool_cache import ToolCache
     from agent_c.models.context.interaction_context import InteractionContext
     from agent_c.models.context.base import BaseContext
-    from agent_c.prompting.prompt_section import PromptSection
+    from agent_c.prompting.prompt_section import OldPromptSection
 
 
 class Toolset:
+    # The class variables below are used by the ToolsetRegistry to provide metadata about the toolset.
+    # These are not instance variables and should not be set in the constructor.
+    # Derived classes should declare their own overrides of these variables
+    context_types: List[str] = []           # Types of context based classes used by this toolset, for registry lookup.
+    config_types: List[str] = []            # Types of XxConfig based classes used by this toolset, for registry lookup.
+    prompt_section_types: List[str] = []    # Types of prompt sections used by this toolset, for registry lookup.
+    multi_user: bool = False                # Set to true if this toolset is designed to be used by multiple users simultaneously
+    required_toolsets: List[str] = []       # List of toolset classes that this toolset requires to function properly.
+    force_prefix: bool = True               # If true, the toolset name will always be prefixed to tool names.
+                                            # Used to  either to group its tools or avoid collisions with other tools.
+    tool_prefix: str = ""                   # The actual prefix used for this toolset, typically the short name.
+                                            # If not set, the toolset class name will be converted to snake_case, minus "Tools" suffix and used
+
+
+    # toolset_name: str = "My Cool Toolset" # This is not defaulted in the base class, but can be set in subclasses
+                                            # if not defined the toolset class name will be converted to Title Case
+
+    #                             This is also not defaulted in the base class, but can be set in subclasses
+    #                             The registry will use the `__doc__` attribute to provide a description
+    #                             of the toolset if this is not set.
+    # user_description: str = "A toolset that provides various tools for use in the agent."
+
     tool_registry: List[Any] = []
     tool_sep: str = "_"
     tool_dependencies: Dict[str, List[str]] = {}
@@ -73,7 +95,7 @@ class Toolset:
                 name (str): The name of the toolset.
                 tool_chest (ToolChest): Holds the active/tools available to the toolset.
                 tool_cache (ToolCache): Cache for tools.
-                section (PromptSection | None): Section-related information.
+                section (OldPromptSection | None): Section-related information.
                 needed_keys (List[str]): List of environment keys required for the toolset functionality.
                 tool_role (str): Defines the role of the tool (defaults to 'tool').
         """
@@ -95,7 +117,7 @@ class Toolset:
         self.valid: bool = True
 
         self.tool_cache: 'ToolCache' = kwargs.get("tool_cache")
-        self.section: Union['PromptSection', None] = kwargs.get('section')
+        self.section: Union['OldPromptSection', None] = kwargs.get('section')
         self.tool_role: str = kwargs.get('tool_role', 'tool')
 
     @staticmethod

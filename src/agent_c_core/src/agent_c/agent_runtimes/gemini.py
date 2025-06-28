@@ -4,12 +4,12 @@ from typing import Optional, Tuple
 from pydantic import Field
 
 from openai import AsyncOpenAI
-from agent_c.agent_runtimes.gpt import GPTChatAgentRuntime
-from agent_c.config import SystemConfigurationLoader
-from agent_c.models.completion.gemini_auth_info import GeminiAuthInfo
-from agent_c.models.config import BaseRuntimeConfig
-from agent_c.models.context import InteractionContext
 from agent_c.util.logging_utils import LoggingManager
+from agent_c.models.config import BaseRuntimeConfig
+from agent_c.agent_runtimes.gpt import GPTChatAgentRuntime
+from agent_c.models.completion.gemini_auth_info import GeminiAuthInfo
+from agent_c.config.system_config_loader import SystemConfigurationLoader
+
 
 class GeminiConfig(BaseRuntimeConfig):
     auth: GeminiAuthInfo = Field(default_factory=lambda: GeminiAuthInfo(api_key=os.environ.get("GEMINI_API_KEY", None)),

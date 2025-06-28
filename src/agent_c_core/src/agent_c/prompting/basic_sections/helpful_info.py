@@ -1,7 +1,7 @@
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 
 
-class HelpfulInfoStartSection(PromptSection):
+class HelpfulInfoStartSection(OldPromptSection):
     """
     Represents the starting section providing helpful information for the chat agent.
 

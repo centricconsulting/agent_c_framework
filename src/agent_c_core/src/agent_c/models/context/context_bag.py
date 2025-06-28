@@ -1,6 +1,6 @@
 from typing import Any, Annotated
 
-from pydantic import BaseModel, BeforeValidator, PlainValidator
+from pydantic import BaseModel, PlainValidator
 
 from agent_c.models.context.base import BaseContext
 from agent_c.util import to_snake_case
@@ -25,12 +25,12 @@ class ContextBag(ObservableDict):
         if isinstance(v, dict):
             result = {}
             for key, value in v.items():
-                if isinstance(value, BaseModel):
+                if isinstance(value, BaseContext ):
                     result[key] = value
                 elif isinstance(value, dict):
                     from agent_c.util.registries.context_registry import ContextRegistry
-                    result[key] = ContextRegistry.create(value, key)
-                elif isinstance(value, BaseContext):
+                    result[key] = ContextRegistry.create(value, key, default_dynamic=True)
+                elif isinstance(value, BaseModel):
                     result[key] = value
                 else:
                     raise ValueError(f"Context value must be BaseModel instance or dict, got {type(value)}")

@@ -1,9 +1,9 @@
 from agent_c.util.observable.async_observable_mixin import AsyncObservableMixin, CallbackType
-from typing import Generic, TypeVar, Iterable, Optional, Any
+from typing import Generic, TypeVar, Iterable, Optional, Any, Annotated, Type
 
 T = TypeVar('T')
 
-class ObservableList(AsyncObservableMixin, list, Generic[T]):
+class ObservableList(AsyncObservableMixin, list):
     """
     A list subclass that triggers events:
       - `item_added` with (item, index)
@@ -12,9 +12,8 @@ class ObservableList(AsyncObservableMixin, list, Generic[T]):
     """
 
     def __init__(self, items: Iterable[T] = None):
-        super(list, self).__init__()
-        super(AsyncObservableMixin, self).__init__(items or [])  # list
-
+        list.__init__(self, items or [])
+        AsyncObservableMixin.__init__(self)
 
     def add_observers(
             self,
@@ -103,21 +102,48 @@ class ObservableList(AsyncObservableMixin, list, Generic[T]):
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type, handler):
         from pydantic_core import core_schema
-        return core_schema.no_info_before_validator_function(
-            cls._validate,
-            core_schema.list_schema()
-        )
 
-    @classmethod
-    def _validate(cls, value: Any) -> 'ObservableList':
-        if isinstance(value, cls):
-            return value
-        if isinstance(value, list):
-            return cls(value)
-        raise ValueError(f"Cannot convert {type(value)} to ObservableList")
+        def validate_observable_list(value: Any) -> 'ObservableList':
+            if isinstance(value, cls):
+                return value
+            if isinstance(value, list):
+                c =  cls(value)
+                return c
+            if hasattr(value, '__iter__') and not isinstance(value, (str, bytes)):
+                return cls(list(value))
+            raise ValueError(f"Cannot convert {type(value)} to ObservableList")
+
+        return core_schema.no_info_plain_validator_function(validate_observable_list)
+
+    # @classmethod
+    # def _validate(cls, value: Any) -> 'ObservableList':
+    #     if isinstance(value, cls):
+    #         return value
+    #     if isinstance(value, list):
+    #         return cls(value)
+    #     raise ValueError(f"Cannot convert {type(value)} to ObservableList")
 
     async def aextend(self, iterable: Iterable[T]) -> None:
         start = len(self)
         super().extend(iterable)
         for i, item in enumerate(iterable, start=start):
             await self.atrigger('item_added', item, i)
+
+# def ensure_observable_list(value: Any) -> ObservableList:
+#     """
+#     Ensure the value is an ObservableList, converting if necessary.
+#
+#     Args:
+#         value: The value to convert.
+#
+#     Returns:
+#         ObservableList: The converted or original ObservableList.
+#     """
+#     if isinstance(value, ObservableList):
+#         return value
+#
+#     return ObservableList(value) if isinstance(value, list) else ObservableList([value])
+#
+#
+# def ObservableListField() -> type[Annotated[ObservableList, PlainValidator(ensure_observable_list)]]:
+#     return Annotated[ObservableList, PlainValidator(ensure_observable_list)]

@@ -1,6 +1,6 @@
-from agent_c.prompting import PromptSection, property_bag_item
+from agent_c.prompting import OldPromptSection, property_bag_item
 
-class RSSSection(PromptSection):
+class RSSSection(OldPromptSection):
     feeds: str
 
     def __init__(self, **data):

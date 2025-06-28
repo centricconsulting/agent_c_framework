@@ -1,9 +1,9 @@
 from typing import Any, List, Callable
 from .preferences.base import UserPreference
-from agent_c.prompting.prompt_section import PromptSection, property_bag_item
+from agent_c.prompting.prompt_section import OldPromptSection, property_bag_item
 
 
-class UserPrefSection(PromptSection):
+class UserPrefSection(OldPromptSection):
     user_preferences: List[UserPreference]
     model_preferences: Callable
 

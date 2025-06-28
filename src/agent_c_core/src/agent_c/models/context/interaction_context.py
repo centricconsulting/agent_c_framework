@@ -3,7 +3,6 @@ import threading
 from pydantic import Field
 from typing import List, Optional, Dict, Any, Callable, Awaitable
 
-from agent_c.config import ModelConfigurationLoader
 from agent_c.models.events import BaseEvent
 from agent_c.models.context.base import BaseContext
 from agent_c.models.context.context_bag import ContextBag
@@ -36,7 +35,7 @@ class InteractionContext(BaseContext):
                                                                                    "Used to pass additional data to tools and prompts during the interaction. "
                                                                                    "Key is the context model type, value is the context model.")
 
-    sections: List['PromptSection'] = Field(default_factory=list, description="A list of prompt sections that are used in the interaction. "
+    sections: List['OldPromptSection'] = Field(default_factory=list, description="A list of prompt sections that are used in the interaction. "
                                                                                       "This is used to store the prompt sections that are used in the interaction.")
     external_tool_schemas: List[Dict[str, Any]] = Field(default_factory=list, description="A dictionary of tool schemas that are used in the interaction. "
                                                                                            "This is used to store the schemas of the tools that are used in the interaction.")
@@ -69,7 +68,7 @@ class InteractionContext(BaseContext):
     ) -> bool | None:
         from agent_c.agent_runtimes.base import AgentRuntime # noqa
         from agent_c.toolsets.tool_chest import ToolChest # noqa
-        from agent_c.prompting.prompt_section import PromptSection # noqa
+        from agent_c.prompting.prompt_section import OldPromptSection # noqa
 
         super().model_rebuild(
             force=force,

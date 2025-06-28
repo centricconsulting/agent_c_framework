@@ -8,7 +8,7 @@ from agent_c.toolsets.tool_set import Toolset
 from agent_c.chat import DefaultChatSessionManager
 from agent_c_tools.tools.agent_assist.agent_session_cache import AgentSessionCache
 from agent_c_tools.tools.think.prompt import ThinkSection
-from agent_c.prompting.prompt_section import PromptSection
+from agent_c.prompting.prompt_section import OldPromptSection
 from agent_c.models.completion.agent_config import AgentConfiguration
 from agent_c_tools.tools.workspace.tool import WorkspaceTools
 from agent_c.config.agent_config_loader import AgentConfigLoader
@@ -26,7 +26,7 @@ class AgentAssistToolBase(Toolset):
         super().__init__( **kwargs)
         self.session_cache: AgentSessionCache = AgentSessionCache()
         self.agent_loader = AgentConfigLoader.instance()
-        self.sections: List[PromptSection] = [ThinkSection(), AssistantBehaviorSection(),  DynamicPersonaSection()]
+        self.sections: List[OldPromptSection] = [ThinkSection(), AssistantBehaviorSection(), DynamicPersonaSection()]
         self.runtime_cache: Dict[str, AgentRuntime] = {}
         self.workspace_tool: Optional[WorkspaceTools] = None
 
@@ -70,7 +70,7 @@ class AgentAssistToolBase(Toolset):
 
     @staticmethod
     def create_agent_context(agent_chat_session: ChatSession, inputs: InteractionInputs,
-                             agent_sections: List[PromptSection], parent_context: InteractionContext,
+                             agent_sections: List[OldPromptSection], parent_context: InteractionContext,
                              runtime: AgentRuntime):
         return InteractionContext(client_wants_cancel=parent_context.client_wants_cancel,
                                   tool_chest=parent_context.tool_chest,
@@ -83,7 +83,7 @@ class AgentAssistToolBase(Toolset):
 
 
     async def agent_oneshot(self, inputs: InteractionInputs, sub_agent_config: AgentConfiguration,
-                            parent_context: InteractionContext, sub_agent_sections: Optional[List[PromptSection]] = None) -> Optional[List[Dict[str, Any]]]:
+                            parent_context: InteractionContext, sub_agent_sections: Optional[List[OldPromptSection]] = None) -> Optional[List[Dict[str, Any]]]:
 
         session_name: str = f"Oneshot with {sub_agent_config.name} by {parent_context.chat_session.agent_config.key} for user session {parent_context.user_session_id}"
         sub_agent_sections = sub_agent_sections or self.sections
@@ -100,7 +100,7 @@ class AgentAssistToolBase(Toolset):
             return None
 
     async def agent_chat(self, inputs: InteractionInputs, sub_agent_config: AgentConfiguration,
-                         parent_context: InteractionContext, sub_agent_sections: Optional[List[PromptSection]] = None,
+                         parent_context: InteractionContext, sub_agent_sections: Optional[List[OldPromptSection]] = None,
                          agent_session_id: Optional[str]=None) -> Tuple[Optional[str], Optional[List[Dict[str, Any]]]]:
         session_name: str = f"Chat session with {sub_agent_config.name} by {parent_context.chat_session.agent_config.key} for user session {parent_context.user_session_id}"
 

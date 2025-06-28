@@ -10,7 +10,7 @@ from agent_c.util.logging_utils import LoggingManager
 
 def property_bag_item(func: Callable) -> Callable:
     """
-    Decorator to mark a method as a dynamic property for a PromptSection.
+    Decorator to mark a method as a dynamic property for a OldPromptSection.
     The method marked with this decorator will be included in the dynamic properties.
 
     Args:
@@ -28,7 +28,7 @@ def property_bag_item(func: Callable) -> Callable:
     return wrapper
 
 
-class PromptSection(BaseModel):
+class OldPromptSection(BaseModel):
     """
     A class representing a section of a prompt with dynamic properties.
 
@@ -46,7 +46,7 @@ class PromptSection(BaseModel):
 
     def __init__(self, **data: Any):
         """
-        Initialize the PromptSection with the provided data.
+        Initialize the OldPromptSection with the provided data.
 
         Args:
             **data: Arbitrary keyword arguments to initialize the section.
@@ -67,7 +67,7 @@ class PromptSection(BaseModel):
 
     async def get_dynamic_properties(self, context) -> Dict[str, Any]:
         """
-        Retrieves the dynamic properties of the PromptSection.
+        Retrieves the dynamic properties of the OldPromptSection.
 
         Args:
             data: Dict[str, Any]: The data dictionary to pass to attributes that accept it

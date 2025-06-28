@@ -1,11 +1,11 @@
 from typing import Dict, Any
 from pydantic import Field
 
-from agent_c.models import ObservableModel
-from agent_c.models.config.config_collection import ConfigCollection, ConfigCollectionField, ensure_config_collection
+from agent_c.models.async_observable import AsyncObservableModel
+from agent_c.models.config.config_collection import ConfigCollection, ConfigCollectionField
 
 
-class SystemConfigFile(ObservableModel):
+class SystemConfigFile(AsyncObservableModel):
     version: int = Field(1,
                          description="The version of the system config file format")
     runtimes: ConfigCollectionField = Field(default_factory=ConfigCollection,
@@ -19,21 +19,6 @@ class SystemConfigFile(ObservableModel):
 
     misc: ConfigCollectionField = Field(default_factory=ConfigCollection,
                                         description="Miscellaneous configuration that does not fit into other categories")
-
-    def __init__(self, **data) -> None:
-        """
-        Initializes the SystemConfigFile with the provided data.
-
-        Args:
-            **data: Keyword arguments to initialize the model.
-        """
-        super().__init__(**data)
-
-        if isinstance(self.runtimes, dict) and not isinstance(self.runtimes, ConfigCollection):
-            foo = ConfigCollection(self.runtimes)
-            self.runtimes = ensure_config_collection(self.runtimes)
-            self.runtimes= foo
-
 
 
     def model_dump_yaml(self) -> Dict[str, Any]:

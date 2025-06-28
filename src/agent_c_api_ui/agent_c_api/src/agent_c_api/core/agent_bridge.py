@@ -15,7 +15,6 @@ from agent_c.agent_runtimes.claude import ClaudeChatAgentRuntime, ClaudeBedrockC
 from agent_c.config import ModelConfigurationLoader
 from agent_c.models.completion.agent_config import AgentConfiguration
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
-from agent_c.models.events.chat import ThoughtDeltaEvent
 from agent_c.toolsets.tool_chest import ToolChest
 from agent_c_api.config.env_config import settings
 from agent_c.models.context.interaction_context import InteractionContext
@@ -94,6 +93,7 @@ class AgentBridge:
         """
         self.logger = LoggingManager(self.__class__.__name__).get_logger()
         InteractionContext.model_rebuild()
+        self._stream_queue = asyncio.Queue()  # Make the queue available to the callback
         self.chat_session = chat_session
         self.session_manager = session_manager
         self.file_handler = file_handler
@@ -245,20 +245,6 @@ class AgentBridge:
         except Exception as e:
             self.logger.exception("Error initializing tools: %s", e, exc_info=True)
             raise
-
-
-    async def reset_streaming_state(self) -> None:
-        """
-        Reset streaming state to ensure clean session.
-        
-        Creates a new asyncio Queue for streaming responses, ensuring that
-        each chat interaction starts with a clean state.
-        """
-        self.logger.info(
-            f"Resetting streaming state for session {self.chat_session.session_id}"
-        )
-        self._stream_queue = asyncio.Queue()
-
 
     @staticmethod
     def _current_timestamp() -> str:
@@ -588,7 +574,7 @@ class AgentBridge:
         }) + "\n"
         return payload
 
-    async def _handle_history(self, event: HistoryEvent) -> str:
+    async def _handle_history(self, event: HistoryEvent):
         """
         Handle history events which update the chat log.
         
@@ -606,30 +592,7 @@ class AgentBridge:
         """
         self.chat_session.messages = event.messages
         await self.session_manager.flush_id(self.chat_session.session_id)
-        
-        payload = json.dumps({
-            "type": "history",
-            "messages": event.messages,
-            "vendor": event.vendor,
-            "model_name": self.chat_session.agent_config.runtime_params.model_id,
-        }) + "\n"
-        return payload
-
-    @staticmethod
-    async def _handle_audio_delta(_: SessionEvent) -> None:
-        """
-        Handle audio events if voice features are enabled.
-        
-        Currently, audio events don't require special handling for tools/agents.
-        
-        Args:
-            _: Session event containing audio delta information (ignored).
-            
-        Returns:
-            None: No payload is generated for audio deltas.
-        """
-        return None
-
+        await self._forward_event(event)
 
     async def _handle_completion(self, event: SessionEvent) -> str:
         """
@@ -662,58 +625,6 @@ class AgentBridge:
         }) + "\n"
         return payload
 
-    @staticmethod
-    async def _handle_interaction(event: SessionEvent) -> str:
-        """
-        Handle interaction state events.
-        
-        Processes interaction start and end events to track
-        the lifecycle of chat interactions.
-        
-        Args:
-            event: Session event containing interaction state information.
-            
-        Returns:
-            str: JSON-formatted interaction payload.
-        """
-        if event.started:
-            payload = json.dumps({
-                "type": "interaction_start",
-                "id": event.id,
-                "session_id": event.session_id
-            }) + "\n"
-        else:
-            payload = json.dumps({
-                "type": "interaction_end",
-                "id": event.id,
-                "session_id": event.session_id
-            }) + "\n"
-        return payload
-
-    async def _handle_thought_delta(self, event: ThoughtDeltaEvent) -> str:
-        """
-        Handle thinking process events.
-        
-        Processes thought delta events from reasoning models, formatting
-        them with appropriate vendor and model information.
-        
-        Args:
-            event: Session event containing thought delta information.
-            
-        Returns:
-            str: JSON-formatted thought delta payload.
-        """
-
-        
-        payload = json.dumps({
-            "type": "thought_delta",
-            "data": event.content,
-            "vendor": event.vendor,
-            "model_name": self.chat_session.agent_config.runtime_params.model_id,
-            "format": "thinking"
-        }) + "\n"
-
-        return payload
 
     async def initialize(self) -> None:
         """
@@ -772,32 +683,29 @@ class AgentBridge:
             - message: Important messages from the model
             - system_message: System-level messages
             - history_delta: History streaming updates (ignored)
-            - complete_thought: Complete thought events (ignored)
-
         Raises:
             Exception: Logs errors if event handlers fail, but does not re-raise.
         """
-
         # A simple dispatch dictionary that maps event types to handler methods.
         handlers = {
-            "text_delta": self._handle_text_delta,
-            "tool_call": self._handle_tool_call,
-            "render_media": self._handle_render_media,
-            "history": self._handle_history,
-            "audio_delta": self._handle_audio_delta,
-            "completion": self._handle_completion,
-            "interaction": self._handle_interaction,
-            "thought_delta": self._forward_event,
-            "tool_call_delta": self._handle_tool_call_delta,
             "tool_select_delta": self._handle_tool_select_delta,
-            "message": self._handle_message,
-            "system_message": self._handle_system_message,
+            "interaction_end": self._handle_interaction_end,
+            "tool_call_delta": self._handle_tool_call_delta,
+            "render_media": self._handle_render_media,
+            "completion": self._handle_completion,
+            "tool_call": self._handle_tool_call,
+            "history": self._handle_history,
+
+            "message": self._forward_event,
+            "text_delta": self._forward_event,
+            "thought_delta": self._forward_event,
+            "system_message": self._forward_event,
+            "interaction_start": self._forward_event,
+
             "history_delta": self._ignore_event,
-            "complete_thought": self._ignore_event,
             "system_prompt": self._ignore_event,
             "user_request": self._ignore_event,
-            "interaction_start": self._forward_event,
-            "interaction_end": self._handle_interaction_end,
+            "audio_delta": self._ignore_event,
         }
 
         handler = handlers.get(event.type, self._warn_event)
@@ -810,6 +718,34 @@ class AgentBridge:
             except Exception as e:
                 self.logger.exception(f"Error in event handler {handler.__name__} for {event.type}: {str(e)}", exc_info=True)
 
+    async def _gather_inputs(self, user_message: str, file_ids: Optional[List[str]] = None) -> InteractionInputs:
+        """
+        Gather inputs for the chat session, including text and files.
+
+        Args:
+            user_message (str): The message from the user to process.
+            file_ids (List[str], optional): IDs of files to include with the message.
+
+        Returns:
+            InteractionInputs: An object containing the gathered inputs.
+        """
+        image_inputs = []
+        audio_inputs = []
+        document_inputs = []
+
+        if file_ids:
+            file_inputs = await self.process_files_for_message(file_ids, self.chat_session.user_id)
+            image_inputs = [input_obj for input_obj in file_inputs if isinstance(input_obj, ImageInput)]
+            audio_inputs = [input_obj for input_obj in file_inputs if isinstance(input_obj, AudioInput)]
+            document_inputs = [input_obj for input_obj in file_inputs if isinstance(input_obj, FileInput) and not isinstance(input_obj, (ImageInput, AudioInput))]
+
+        return InteractionInputs(
+            text=TextInput(content=user_message),
+            images=image_inputs,
+            audio=audio_inputs,
+            files=document_inputs
+        )
+
 
     async def stream_chat(
         self,
@@ -818,74 +754,31 @@ class AgentBridge:
         file_ids: Optional[List[str]] = None,
     ) -> AsyncGenerator[str, None]:
         """
-        Streams chat responses for a given user message.
-
-        This method handles the complete chat interaction process, including:
-        - Session updates
-        - Custom prompt integration
-        - Message processing
-        - Response streaming
-        - Event handling
+        Streams chat events from the runtime to the clinet
 
         Args:
             user_message (str): The message from the user to process
-            file_ids (List[str], optional): IDs of files to include with the message
             client_wants_cancel (threading.Event, optional): Event to signal cancellation of the chat. Defaults to None.
+            file_ids (List[str], optional): IDs of files to include with the message
+
 
         Yields:
-            str: JSON-formatted strings containing various response types:
-                - Content updates ("type": "content")
-                - Tool calls ("type": "tool_calls")
-                - Tool results ("type": "tool_results")
-                - Media renders ("type": "render_media")
-                - Completion status ("type": "completion_status")
-                - Errors ("type": "error")
+            (str): JSON-formatted strings representing chat events, with a newline at the end.
 
         Raises:
             Exception: Any errors during chat processing
         """
         await self.reset_streaming_state()
 
-        queue = asyncio.Queue()
-        self._stream_queue = queue  # Make the queue available to the callback
 
         try:
             await self.session_manager.update()
-
-            file_inputs = []
-            if file_ids and self.file_handler:
-                file_inputs = await self.process_files_for_message(file_ids, self.chat_session.user_id)
-
-                # Log information about processed files
-                if file_inputs:
-                    input_types = {type(input_obj).__name__: 0 for input_obj in file_inputs}
-                    for input_obj in file_inputs:
-                        input_types[type(input_obj).__name__] += 1
-                    self.logger.info(f"Processing {len(file_inputs)} files: {input_types}")
-
-            if len(self.chat_session.agent_config.tools):
-                await self.tool_chest.initialize_toolsets(self.chat_session.agent_config.tools)
+            await self.tool_chest.initialize_toolsets(self.chat_session.agent_config.tools)
 
             if "ThinkTools" in self.chat_session.agent_config.tools:
                 agent_sections = [ThinkSection(), DynamicPersonaSection()]
             else:
                 agent_sections = [DynamicPersonaSection()]
-
-            # Categorize file inputs by type to pass to appropriate parameters
-            image_inputs = [input_obj for input_obj in file_inputs
-                            if isinstance(input_obj, ImageInput)]
-            audio_inputs = [input_obj for input_obj in file_inputs
-                            if isinstance(input_obj, AudioInput)]
-            document_inputs = [input_obj for input_obj in file_inputs
-                               if isinstance(input_obj, FileInput) and
-                               not isinstance(input_obj, ImageInput) and
-                               not isinstance(input_obj, AudioInput)]
-
-
-            inputs = InteractionInputs(text=TextInput(content=user_message),
-                                       images=image_inputs,
-                                       audio=audio_inputs,
-                                       files=document_inputs)
 
             context = InteractionContext(client_wants_cancel=client_wants_cancel,
                                          tool_chest=self.tool_chest,
@@ -893,7 +786,7 @@ class AgentBridge:
                                          streaming_callback=self.streaming_callback_with_logging,
                                          chat_session=self.chat_session,
                                          user_session_id=self.chat_session.session_id,
-                                         inputs=inputs)
+                                         inputs=self._gather_inputs(user_message, file_ids))
 
             agent_runtime = self.runtime_for_agent(self.chat_session.agent_config, context)
             if not agent_runtime:
@@ -909,9 +802,8 @@ class AgentBridge:
             interaction_active = True
             while interaction_active:
                 try:
-                    timeout = getattr(settings, "CALLBACK_TIMEOUT")  # Get timeout from settings with fallback
-                    while not queue.empty():
-                        content = await queue.get()
+                    while not self._stream_queue.empty():
+                        content = await self._stream_queue.get()
                         if content is None:
                             self.logger.info("Received stream termination signal")
                             interaction_active = False
@@ -919,10 +811,10 @@ class AgentBridge:
 
                         yield content
 
-                        queue.task_done()
+                        self._stream_queue.task_done()
                     await asyncio.sleep(0.01)
                 except asyncio.TimeoutError:
-                    timeout_msg =f"Timeout waiting for stream content to occur in agent_bridge.py:stream_chat. Waiting for stream surpassed {timeout} seconds, terminating stream."
+                    timeout_msg =f"Timeout waiting for stream content to occur in agent_bridge.py:stream_chat. Terminating stream."
                     self.logger.warning(timeout_msg)
                     yield json.dumps({
                         "type": "error",
@@ -933,7 +825,7 @@ class AgentBridge:
                     error_type = type(e).__name__
                     error_traceback = traceback.format_exc()
                     cancelled_msg = f"Asyncio Cancelled error in agent_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}"
-                    self.logger.error(cancelled_msg)
+                    self.logger.warning(cancelled_msg)
                     yield json.dumps({
                         "type": "error",
                         "data": cancelled_msg
@@ -953,21 +845,19 @@ class AgentBridge:
 
         except Exception as e:
             self.logger.exception (f"Error in stream_chat: {e}", exc_info=True)
-            error_type = type(e).__name__
-            error_traceback = traceback.format_exc()
-            self.logger.error(f"Error in event_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}")
-            yield json.dumps({
-                "type": "error",
-                "data": f"Error in event_bridge.py:stream_chat {error_type}: {str(e)}\n{error_traceback}"
-            }) + "\n"
+            yield self._dump_error_message(f"An unrecoverable error occurred while processing the chat ({e}). See API logs for more details.")
         finally:
             # Drain any remaining items in the queue.
-            while not queue.empty():
+            while not self._stream_queue.empty():
                 try:
-                    await queue.get()
-                    queue.task_done()
+                    await self._stream_queue.get()
+                    self._stream_queue.task_done()
                 except asyncio.QueueEmpty:
                     break
+
+    @staticmethod
+    def _dump_error_message(message: str) -> str:
+        return f"{{\"type\": \"error\", \"data\": \"{message}\"}}\n"
 
     async def process_files_for_message(
         self, 

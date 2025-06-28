@@ -9,12 +9,12 @@ from anthropic import AsyncAnthropic, APITimeoutError, Anthropic, RateLimitError
 from anthropic.types import MessageParam
 from pydantic import Field
 
+from agent_c.util.logging_utils import LoggingManager
 from agent_c.agent_runtimes.base import AgentRuntime
-from agent_c.config import SystemConfigurationLoader
+from agent_c.models.config import BaseRuntimeConfig
+from agent_c.config.system_config_loader import SystemConfigurationLoader
 from agent_c.models.completion import ClaudeAuthInfo
 from agent_c.models.completion.bedrock_auth_info import BedrockAuthInfo
-from agent_c.models.config import BaseRuntimeConfig
-from agent_c.util.logging_utils import LoggingManager
 from agent_c.util.token_counter import TokenCounter
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
 from agent_c.models.completion.claude import ClaudeCompletionParams

@@ -11,7 +11,7 @@ class MemoryTools(Toolset):
 
     This simple tool unlocks a LOT of capabilities, the model can store complex information
     using nothing more than this tool and some model instructions.  This is a tool you'll likely want
-    to supply your own version of the `PromptSection` to provide better model instructions.
+    to supply your own version of the `OldPromptSection` to provide better model instructions.
     """
 
     def __init__(self, **kwargs: Any):
