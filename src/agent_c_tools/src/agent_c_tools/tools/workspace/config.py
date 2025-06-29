@@ -2,7 +2,6 @@ from typing import Annotated, Union, Optional, List, Literal
 
 from pydantic import Field, model_validator
 from agent_c.models.base import BaseModel
-from agent_c.models.literal_str import LiteralStrField, LiteralStr
 from agent_c.models.config.base import BaseToolsetConfig
 
 
@@ -30,8 +29,8 @@ class AllowedCommand(BaseModel):
                          description="The executable command to run, e.g. 'ls -l'. ")
     working_directory: str = Field("",
                                     description="Relative parth withing the workspace to use as the working directory for this command. "),
-    description: LiteralStrField = Field(default_factory=LiteralStr,
-                                         description="Description of the command, e.g. 'List files in the workspace'. ")
+    description: str = Field("",
+                             description="Description of the command, e.g. 'List files in the workspace'. ")
     uid: Optional[int] = Field(None,
                                description="If provided the command will run under the UID of this OS user"
                                            "If not provided, a unique ID will be generated automatically.")

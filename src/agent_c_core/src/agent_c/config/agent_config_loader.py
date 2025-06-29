@@ -89,6 +89,14 @@ class AgentConfigLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         """
         global _singleton_instance
         if _singleton_instance is None:
+            def str_presenter(dumper, data):
+                if len(data.splitlines()) > 1:  # check for multiline string
+                    return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+                return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
+            yaml.add_representer(str, str_presenter)
+            yaml.representer.SafeRepresenter.add_representer(str, str_presenter)
+
             _singleton_instance = cls()
         return _singleton_instance
 

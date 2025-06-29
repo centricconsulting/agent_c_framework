@@ -12,9 +12,9 @@ class CommonCompletionParams(AsyncObservableModel):
     user_name: Optional[str] = Field(None, description="The name of the user interacting with the agent")
     auth: Optional[AuthInfo] = Field(None, description="The vendor API key or whatnot to use for the agent")
 
-    @model_validator(mode='after')
-    def post_init(self):
-        #self._init_observable()
+    def model_post_init(self, __context):
+        """Hook up observer after model initialization"""
+        super().model_post_init(__context)
         if self.model_name is None:
             self.model_name = self.model_id
 

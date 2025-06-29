@@ -23,6 +23,7 @@ class Toolset:
     context_types: List[str] = []           # Types of context based classes used by this toolset, for registry lookup.
     config_types: List[str] = []            # Types of XxConfig based classes used by this toolset, for registry lookup.
     prompt_section_types: List[str] = []    # Types of prompt sections used by this toolset, for registry lookup.
+    prompt_macro_types: List[str] = []      # Types of prompt sections with macros this toolset provides tor rendering in templates.
     multi_user: bool = False                # Set to true if this toolset is designed to be used by multiple users simultaneously
     required_toolsets: List[str] = []       # List of toolset classes that this toolset requires to function properly.
     force_prefix: bool = True               # If true, the toolset name will always be prefixed to tool names.
