@@ -11,7 +11,7 @@ SectionType = TypeVar('SectionType', bound=BasePromptSection)
 class SectionRegistry:
     """Registry for models with section_type field to enable polymorphic deserialization"""
     _model_registry: Dict[str, Type[BasePromptSection]] = {}
-    _dynamic_registry: Dict[str, BasePromptSection] = {}
+    _sections: Dict[str, BasePromptSection] = {}
 
     @classmethod
     def register_section_class(cls, section_class: Type[BasePromptSection], section_type: str = None) -> Type[BasePromptSection]:
@@ -36,9 +36,19 @@ class SectionRegistry:
         return section_class
 
     @classmethod
-    def register_dynamic_section(cls, section_type: str, section_instance: BasePromptSection) -> None:
+    def register_section(cls, section_type: str, section_instance: BasePromptSection) -> None:
         """Register a dynamic section instance with its section_type string"""
-        cls._dynamic_registry[section_type] = section_instance.model_copy()
+        cls._sections[section_type] = section_instance.model_copy()
+
+    @classmethod
+    def register_section_dict(cls, section_type: str, section_data: Dict[str, Any]) -> BasePromptSection:
+        """Register a section instance from a dictionary"""
+        if not isinstance(section_data, dict):
+            raise ValueError("section_data must be a dictionary")
+
+        section_instance = cls.create(section_type=section_type, data=section_data)
+        cls.register_section(section_type, section_instance)
+        return section_instance
 
     @classmethod
     def register_with_section_type(cls, section_type: str):
@@ -74,16 +84,22 @@ class SectionRegistry:
             if not cls.is_section_registered(section_type):
                 raise ValueError(f"No data provided and section_type '{section_type}' is not registered")
 
-            data = {'section_type': section_type}
+        if section_type in cls._sections:
+            return cls._sections[section_type].model_copy(update=data)
 
         if cls.is_section_model_registered(section_type):
             section_class = cls.get_model_class(section_type)
             return section_class(**data)
-        else:
-            if section_type in cls._dynamic_registry:
-                return cls._dynamic_registry[section_type].model_copy(update=data)
 
-            raise ValueError(f"Section type '{section_type}' is not registered or does not have a model class")
+        if data:
+            if data.get('is_tool_section', False):
+                from agent_c.models.prompts.tool import BaseToolSection
+                return BaseToolSection(**data)
+
+            from agent_c.models.prompts.base import BasePromptSection
+            return BasePromptSection(**data)
+
+        raise ValueError(f"Section type '{section_type}' is not registered or does not have a model class, and no data provided to create an instance")
 
     @classmethod
     def is_section_model_registered(cls, section_type: str) -> bool:
@@ -94,9 +110,11 @@ class SectionRegistry:
     @classmethod
     def is_section_registered(cls, section_type: str) -> bool:
         """Check if a section_type is registered"""
-        return section_type in cls._model_registry or section_type in cls._dynamic_registry
+        return section_type in cls._model_registry or section_type in cls._sections
 
     @classmethod
     def list_types(cls) -> list[str]:
         """List all registered section types"""
-        return list(cls._model_registry.keys()) + list(cls._dynamic_registry.keys())
+        keys = list(set(list(cls._model_registry.keys()) + list(cls._sections.keys())))
+        keys.sort()
+        return keys

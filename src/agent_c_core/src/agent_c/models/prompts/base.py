@@ -1,3 +1,4 @@
+import os
 import time
 from enum import IntEnum
 from typing import Literal, Optional
@@ -150,6 +151,18 @@ class BasePromptSection(AsyncObservableModel):
 
         from agent_c.util.registries.section_registry import SectionRegistry
         SectionRegistry.register_section_class(cls)
+
+    def changed_on_disk(self) -> bool:
+        """
+        Check if the section has changed on disk since it was loaded.
+        This is done by comparing the current load time with the last modified time of the file.
+        """
+        if self.path_on_disk is None:
+            return False
+        if not os.path.exists(self.path_on_disk):
+            return False
+
+        return os.path.getmtime(self.path_on_disk) > self.load_time
 
 def create_example_section() -> BasePromptSection:
     return BasePromptSection(

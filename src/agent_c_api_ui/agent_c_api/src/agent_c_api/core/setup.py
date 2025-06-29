@@ -16,6 +16,8 @@ from agent_c_api.config.env_config import settings
 from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c_api.core.user_session_manager import UserSessionManager
 from agent_c_api.core.util.middleware_logging import APILoggingMiddleware
+from agent_c.config.system_config_loader import SystemConfigurationLoader
+from agent_c.config.prompt_section_loader import PromptSectionLoader
 
 logging_manager = LoggingManager(__name__)
 logger = logging_manager.get_logger()
@@ -50,9 +52,16 @@ def create_application(router: APIRouter, **kwargs) -> FastAPI:
     # Define a lifespan handler for startup and shutdown tasks.
     @asynccontextmanager
     async def lifespan(lifespan_app: FastAPI):
+        logger.info("🔍 Loading application configuration and initializing resources...")
+        SystemConfigurationLoader.instance()
+
+        logger.info("Loading prompt sections...")
+        PromptSectionLoader.instance().load_sections()
+
         # Import Redis configuration at runtime to avoid circular imports
         from agent_c_api.config.redis_config import RedisConfig
         from agent_c_api.config.env_config import settings
+
         
         # Validate Redis connection (no longer managing server lifecycle)
         logger.info("🔍 Validating Redis connection and configuration...")
