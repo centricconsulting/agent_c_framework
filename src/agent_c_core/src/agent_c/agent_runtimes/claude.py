@@ -7,14 +7,10 @@ from enum import Enum, auto
 from typing import Any, List, Union, Dict, Tuple, Optional
 from anthropic import AsyncAnthropic, APITimeoutError, Anthropic, RateLimitError, AsyncAnthropicBedrock
 from anthropic.types import MessageParam
-from pydantic import Field
 
 from agent_c.util.logging_utils import LoggingManager
 from agent_c.agent_runtimes.base import AgentRuntime
-from agent_c.models.config import BaseRuntimeConfig
 from agent_c.config.system_config_loader import SystemConfigurationLoader
-from agent_c.models.completion import ClaudeAuthInfo
-from agent_c.models.completion.bedrock_auth_info import BedrockAuthInfo
 from agent_c.util.token_counter import TokenCounter
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
 from agent_c.models.completion.claude import ClaudeCompletionParams
@@ -40,18 +36,6 @@ class ClaudeTokenCounter(TokenCounter):
         )
 
         return response.input_tokens
-
-class ClaudeConfig(BaseRuntimeConfig):
-    auth: Optional[ClaudeAuthInfo] = Field(default_factory=lambda: ClaudeAuthInfo(api_key=os.environ.get("ANTHROPIC_API_KEY")),
-                                            description="Authentication information for the Claude API, including API key and auth token.")
-
-class ClaudeUserConfig(BaseRuntimeConfig):
-    auth: Optional[ClaudeAuthInfo] = Field(default_factory=lambda: ClaudeAuthInfo(),
-                                            description="Authentication information for the Claude API, including API key and auth token.")
-
-class BedrockClaudeConfig(BaseRuntimeConfig):
-    auth: Optional[BedrockAuthInfo] = Field(default_factory=lambda: BedrockAuthInfo(),
-                                            description="Authentication information for the Claude API on AWS Bedrock, including region and credentials.")
 
 
 class ClaudeChatAgentRuntime(AgentRuntime):

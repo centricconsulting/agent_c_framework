@@ -2,18 +2,18 @@ from typing import Dict, Any
 from pydantic import Field
 
 from agent_c.models.async_observable import AsyncObservableModel
-from agent_c.models.config.config_collection import UserConfigCollection, UserConfigCollectionField
+from agent_c.models.config.config_collection import UserConfigCollection
 
 
 class UserConfig(AsyncObservableModel):
     version: int = Field(1,
                          description="The version of the system config file format")
-    runtimes: UserConfigCollectionField = Field(default_factory=UserConfigCollection,
-                                                description="Configuration for the various agent runtime APIs from the vendors")
-    tools: UserConfigCollectionField =Field(default_factory=UserConfigCollection,
-                                            description="Configuration for the toolsets that require keys and other configuration")
-    misc: UserConfigCollectionField = Field(default_factory=UserConfigCollection,
-                                            description="Miscellaneous configuration that does not fit into other categories")
+    runtimes: UserConfigCollection = Field(default_factory=UserConfigCollection,
+                                           description="Configuration for the various agent runtime APIs from the vendors")
+    tools: UserConfigCollection =Field(default_factory=UserConfigCollection,
+                                       description="Configuration for the toolsets that require keys and other configuration")
+    misc: UserConfigCollection = Field(default_factory=UserConfigCollection,
+                                       description="Miscellaneous configuration that does not fit into other categories")
 
     def model_dump_yaml(self) -> Dict[str, Any]:
         """

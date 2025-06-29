@@ -1,6 +1,6 @@
 import datetime
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from typing import Optional, Dict, Any, List
 
 from agent_c.util.slugs import MnemonicSlugs
@@ -149,32 +149,40 @@ class ChatSession(BaseModel):
         """
         return f"{self.session_id}-{MnemonicSlugs.generate_slug(2)}"
 
-    def __init__(self, **data):
+
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_session(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Initializes the ChatSession with the provided data.
+        Validates the session data before initialization.
+        Ensures that the session_id is set and that the user is a ChatUser instance.
 
         Args:
-            **data: Arbitrary keyword arguments to initialize the session.
+            values (Dict[str, Any]): The values to validate.
+
+        Returns:
+            Dict[str, Any]: The validated values.
         """
-        if isinstance(data['user'], str):
+        if 'session_id' not in values or not values['session_id']:
+            values['session_id'] = cls.__new_session_id(**values)
+
+        if 'user' in values and isinstance(values['user'], str):
             from agent_c.config.user_loader import UserLoader
-            data['user'] = UserLoader.instance().load_user_id(data['user'])
-        if 'context' not in data:
-            data['context'] = ContextBag()
-        elif isinstance(data.get('context', {}), dict):
-            data['context'] = ContextBag(data['context'])
+            values['user'] = UserLoader.instance().load_user_id(values['user'])
 
-        if 'agent_config' in data:
-            if isinstance(data.get('agent_config', {}), dict):
+        if 'agent_config' in values:
+            if isinstance(values.get('agent_config', {}), dict):
                 from agent_c.models.completion.agent_config import CurrentAgentConfiguration
-                data['agent_config'] = CurrentAgentConfiguration.model_validate(**data['agent_config'])
+                values['agent_config'] = CurrentAgentConfiguration.model_validate(**values['agent_config'])
 
-        if 'session_id' not in data:
-            data['session_id'] = self.__new_session_id(**data)
+        if 'session_id' not in values:
+            values['session_id'] = cls.__new_session_id(**values)
 
-        super().__init__(**data)
-        if self.user_session_id is None:
-            self.user_session_id = self.session_id
+        if 'user_session_id' not in values:
+            values['user_session_id'] = values.get('session_id')
+
+        return values
 
     def touch(self) -> None:
         """

@@ -116,7 +116,8 @@ class WorkspaceToolsUserConfig(BaseToolsetConfig):
     workspaces: List[WorkspaceParams] = Field(default_factory=list,
                                               description="List of workspaces available for the agent to use. "
                                                           "Each workspace is defined by its type and parameters.")
-
+    default_workspace: Optional[str] = Field(None,
+                                             description="Default workspace for the user")
 
 class WorkspaceToolsConfig(WorkspaceToolsUserConfig):
     path_to_grep: str = Field('grep',

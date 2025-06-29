@@ -13,16 +13,6 @@ class AsyncObservableModel(AsyncObservableMixin, BaseModel):
     """
     changed_at: Optional[float] = Field(None, description="Times of the last change to the model.", exclude=True)
 
-
-    def __init__(self, **data: Any) -> None:
-        """
-        Initialize the ObservableModel with provided data.
-
-        Args:
-            **data: Keyword arguments used to initialize the model fields.
-        """
-        super().__init__(**data)
-
     def model_post_init(self, __context: Any) -> None:
         self._init_observable()
 

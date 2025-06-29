@@ -88,14 +88,16 @@ class ConfigRegistry:
 
 
     @classmethod
-    def create_config(cls, data: Optional[Dict[str, Any]], config_type: Optional[str] = None, user_level: bool = False) -> BaseModel:
+    def create_config(cls, data: Optional[Dict[str, Any]], config_type: Optional[str] = None, user_level: bool = False) -> Optional[BaseModel]:
         """Create a config instance from data dictionary"""
         if config_type is None:
             raise ValueError("Config data must include 'config_type'")
-
-        data['config_type'] = config_type
-        config_class = cls.get_config_class(config_type, user_level)
-        return config_class(**data)
+        try:
+            data['config_type'] = config_type
+            config_class = cls.get_config_class(config_type, user_level)
+            return config_class(**data)
+        except ValidationError as e:
+            raise ValueError(f"Failed to create config of type '{config_type}': {e}") from e
 
 
     @classmethod

@@ -1,8 +1,8 @@
 import os
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from typing import Any, Optional, Literal, Union, List, Dict
-
+from agent_c.registration.configs import get_system_config
 from agent_c.models.completion.common import CommonCompletionParams
 
 class ClaudeCommonParams(CommonCompletionParams):
@@ -24,6 +24,17 @@ class ClaudeNonReasoningParams(ClaudeCommonParams):
 
         super().__init__(**data)
 
+    @model_validator(mode='before')
+    def validate_model_id(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Validates the model_id to ensure it is set to a valid Claude model.
+        """
+        if 'model_id' not in values or not values['model_id']:
+            values['model_id'] = get_system_config().runtimes.claude.default_non_reasoning_model
+
+        # Additional validation can be added here if needed
+        return values
+
     def as_completion_params(self, extra_excludes: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Converts the model to a dictionary of completion parameters.
@@ -41,11 +52,16 @@ class ClaudeReasoningParams(ClaudeCommonParams):
     budget_tokens: Optional[int] = Field(None, description="The budget tokens to use for the interaction, must be higher than max tokens")
     temperature: Literal[1] = Field(1, description="The temperature for reasoning interactions is fixed at 1")
 
-    def __init__(self, **data: Any) -> None:
-        if 'model_id' not in data:
-            data['model_id'] = os.environ.get("CLAUDE_REASONING_INTERACTION_MODEL", "claude-sonnet-4-20250514")
+    @model_validator(mode='before')
+    def validate_model_id(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Validates the model_id to ensure it is set to a valid Claude model.
+        """
+        if 'model_id' not in values or not values['model_id']:
+            values['model_id'] = get_system_config().runtimes.claude.default_reasoning_model
 
-        super().__init__(**data)
+        # Additional validation can be added here if needed
+        return values
 
     def as_completion_params(self, extra_excludes: Optional[List[str]] = None) -> Dict[str, Any]:
         """

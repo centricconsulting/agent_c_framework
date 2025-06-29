@@ -1,10 +1,8 @@
-from typing import Any, Optional, Dict
-
-import markdown
+from typing import Any, Optional
 import yaml
 
-from agent_c.models import TextInput
-from agent_c.models.context import InteractionContext, InteractionInputs
+from agent_c.models.input.text_input  import TextInput
+from agent_c.models.context.interaction_context import InteractionContext, InteractionInputs
 from agent_c.toolsets import Toolset, json_schema
 from .base import AgentAssistToolBase
 from .prompt import AgentAssistSection

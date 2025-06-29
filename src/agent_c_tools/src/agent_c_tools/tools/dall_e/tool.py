@@ -1,34 +1,19 @@
-import os
 import re
 import sys
-import json
 import base64
-from pydantic import Field
+
 
 from typing import cast, Literal, Optional, Tuple
 from openai import AsyncOpenAI
 from openai.types import ImagesResponse
 
-from agent_c.models import BaseContext
 
-
-from agent_c.models.config import BaseToolsetConfig
 from agent_c.models.context.interaction_context import InteractionContext
 from agent_c.toolsets import json_schema, Toolset
 from agent_c.util.uncish_path import UNCishPath
 from agent_c_tools.tools.workspace.base import BaseWorkspace
 
 from agent_c_tools.tools.workspace.tool import WorkspaceTools
-from agent_c_tools.tools.dall_e.prompt import DallESection
-
-class DallEToolsConfig(BaseToolsetConfig):
-    default_save_folder: Optional[str] = Field(None,
-                                                description="A UNC workspace path to save images to. If not provided, images will only be displayed in the UI.")
-
-class DallEToolsContext(BaseContext):
-    default_save_folder: Optional[str] = Field(None,
-                                                description="A UNC workspace path to save images to. If not provided, images will only be displayed in the UI.")
-
 
 
 class DallETools(Toolset):
@@ -47,11 +32,13 @@ class DallETools(Toolset):
     - `style`: The style of the image, which can be `vivid` (default) or `natural`. Vivid images are hyper-real and dramatic, while natural images are more subdued and realistic.
     """
     name: str = "DALL-E-3 Image Generation"
+    config_types = ['dall_e_tools']
+    context_types = ['dall_e_tools']
+    prompt_section_types = ['dall_e_tools']
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs, name='dalle', tool_role="DALL-E 3")
         self.openai_client: AsyncOpenAI = kwargs.get('openai_client', AsyncOpenAI())
-        self.section = DallESection()
         self.workspace_tool: Optional[WorkspaceTools] = None
 
     async def post_init(self):

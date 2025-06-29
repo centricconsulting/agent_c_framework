@@ -3,7 +3,6 @@ import time
 from pydantic import Field, model_validator
 from typing import Optional, List, Any, Union, Literal, Type
 
-from agent_c.models import LiteralStr
 from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.models.completion import CompletionParams
 from agent_c.models.context.context_bag import ContextBag

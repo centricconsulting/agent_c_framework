@@ -2,7 +2,6 @@ from typing import Any, Dict, List, Optional, cast, Tuple
 
 from agent_c.agent_runtimes.runtime_registry import RuntimeRegistry
 from agent_c.models.chat.chat_session import ChatSession
-from agent_c.models.context import InteractionInputs
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.chat import DefaultChatSessionManager
@@ -12,7 +11,7 @@ from agent_c.prompting.prompt_section import OldPromptSection
 from agent_c.models.completion.agent_config import AgentConfiguration
 from agent_c_tools.tools.workspace.tool import WorkspaceTools
 from agent_c.config.agent_config_loader import AgentConfigLoader
-from agent_c.models.context.interaction_context import InteractionContext
+from agent_c.models.context.interaction_context import InteractionContext, InteractionInputs
 from agent_c.agent_runtimes.base import AgentRuntime
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 from agent_c_tools.tools.agent_assist.prompt import AssistantBehaviorSection

@@ -28,6 +28,3 @@ class AppConfig(BaseApiConfig):
     contact_email: str = Field("joseph.ours@centricconsulting.com")
     license_name: str = Field("BSL 1.1")
     base_dir: str = Field(default_factory= lambda: str(get_project_root() / "src"))
-
-
-

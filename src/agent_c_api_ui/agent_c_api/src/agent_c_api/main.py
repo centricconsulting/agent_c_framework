@@ -7,7 +7,7 @@ from agent_c_api.core.util.logging_utils import LoggingManager
 from agent_c_api.api import router
 from agent_c_api.config.env_config import settings
 from agent_c_api.core.setup import create_application
-from fastapi import FastAPI
+from agent_c_api.registration import *  # noqa
 
 load_dotenv(override=True)
 

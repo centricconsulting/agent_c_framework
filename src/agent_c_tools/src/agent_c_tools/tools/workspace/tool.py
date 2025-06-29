@@ -14,7 +14,7 @@ from agent_c_tools.tools.workspace.blob_storage import BlobStorageWorkspace
 from agent_c_tools.tools.workspace.local_project import LocalProjectWorkspace
 from agent_c_tools.tools.workspace.prompt import WorkspaceSection
 from agent_c_tools.tools.workspace.util import ReplaceStringsHelper
-from agent_c_tools.tools.workspace.context import WorkspaceToolsContext
+from agent_c_tools.tools.workspace.contexts import WorkspaceToolsContext
 from agent_c_tools.tools.workspace.config import WorkspaceToolsConfig, S3StorageWorkspaceParams, WorkspaceParamsBase
 
 ws_type_map = {

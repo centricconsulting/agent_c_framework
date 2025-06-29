@@ -8,7 +8,6 @@ from agent_c.util.string import to_snake_case
 from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.util.observable.dict import ObservableDict
 from agent_c.models.context import ContextBag
-from agent_c.models.literal_str import LiteralStr
 from agent_c.models.state_machines import StateMachineTemplate, StateMachineOrchestrator
 
 class SectionPriorityBase(IntEnum):
@@ -44,9 +43,15 @@ class BasePromptSection(AsyncObservableModel):
     template: str = Field(None,
                                  description="A Jinja 2 template string that defines the content of the section.")
 
-    is_macro_template: bool = Field(False,
-                                    description="If True, this section contains only macros and be added to the Jinja environment."
-                                                "This allows for dynamic generation of sections based on the template content.")
+    is_macro: bool = Field(False,
+                           description="If True, this section contains only macros and be added to the Jinja environment."
+                                       "This allows for dynamic generation of sections based on the template content.")
+    is_tool_section: bool = Field(False,
+                                    description="If True, this section is for a tool")
+
+    load_on_start: bool = Field(False,
+                                description="If True, this section will be added to Jinja environment on startup."
+                                            "This is for sections and macros that should be generally available or see constant use.")
 
     required_toolsets: list[str] = Field(default_factory=list,
                                          description="List of required toolsets for this section to function.")
@@ -84,6 +89,21 @@ class BasePromptSection(AsyncObservableModel):
     path_on_disk: Optional[str] = Field(None,
                                         description="The path to the section file on disk. Used to determine if the section has changed on disk.",
                                         exclude=True)
+    tool_class_name: str = Field(None,
+                                 description="The class name of the tool this section is for. "
+                                             "This is used to find the tool if needed")
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_class_names(cls, values):
+        """Ensure tool_class_name is set if is_tool_section is True."""
+        if values.get("is_tool_section") and not values.get("tool_class_name"):
+            values["tool_class_name"] = cls.__name__.removesuffix("Section")
+        return values
+
+    @field_serializer('tool_class_name', when_used='unless-none')
+    def serialize_conditional(self, value):
+        return value
 
     @field_serializer('base_priority')
     def serialize_priority(self, value: SectionPriorityBase) -> str:
@@ -103,18 +123,17 @@ class BasePromptSection(AsyncObservableModel):
     @model_validator(mode='after')
     def post_init(self):
         """
-        - Ensure section_type is set to the snake_case class name if not provided.
-        - Construct the state machines for this section.
+        Ensure section_type is set to the snake_case class name if not provided.
         """
         if not self.section_type:
             self.section_type = to_snake_case(self.__class__.__name__.removesuffix('Section'))
 
-        if not self.template:
-            self.template = LiteralStr( self.__class__.__doc__)
-
-        self._build_machines()
-
         return self
+
+    def model_post_init(self, __context):
+        """Hook up observer after model initialization"""
+        super().model_post_init(__context)
+        self._build_machines()
 
     def _build_machines(self):
         """

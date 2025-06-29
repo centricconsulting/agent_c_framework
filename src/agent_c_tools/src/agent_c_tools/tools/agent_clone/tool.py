@@ -1,8 +1,8 @@
 
 from typing import Optional
 
-from agent_c.models import TextInput
-from agent_c.models.context import InteractionContext, InteractionInputs
+from agent_c.models.input.text_input import TextInput
+from agent_c.models.context.interaction_context import InteractionContext, InteractionInputs
 from agent_c.toolsets import json_schema
 from agent_c.toolsets.tool_set import Toolset
 from agent_c_tools.tools.think.prompt import ThinkSection

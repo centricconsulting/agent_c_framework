@@ -2,7 +2,7 @@ import os
 
 from openai import Omit
 from openai.types.chat.completion_create_params import WebSearchOptions
-from pydantic import Field
+from pydantic import Field, model_validator
 from typing import Any, Dict, List, Union, Optional, Literal, Mapping
 
 from agent_c.models.base import BaseModel
@@ -17,10 +17,15 @@ class GPTResponseFormat(BaseModel):
     json_schema: Optional[str] = Field(None,
                                        description="The schema for the JSON response, if the type is json_schema")
 
-    def __init__(self, **data: Any) -> None:
-        if 'type' not in data:
-            data['type'] = 'json_schema' if 'json_schema' in data else 'json_object'
-        super().__init__(**data)
+    @model_validator(mode='before')
+    def validate_response_type(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Validates the type to ensure it is set to a valid response format.
+        """
+        if 'type' not in values:
+            values['type'] = 'json_schema' if 'json_schema' in values else 'json_object'
+        return values
+
 
 class GPTCommonParams(CommonCompletionParams):
     """

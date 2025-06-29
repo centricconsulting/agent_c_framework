@@ -9,7 +9,7 @@ import yaml
 import threading
 
 from pathlib import Path
-from typing import Union, Dict, Any, Optional, List
+from typing import Union, Dict, Any, Optional
 
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames
 

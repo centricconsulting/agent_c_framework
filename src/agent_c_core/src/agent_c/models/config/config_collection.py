@@ -1,6 +1,5 @@
-from typing import Optional, Dict, Any, Annotated
-
-from pydantic import BaseModel, BeforeValidator, PlainValidator
+from typing import Any
+from pydantic import BaseModel
 
 from agent_c.util import to_snake_case
 from agent_c.util.observable import ObservableDict
@@ -13,36 +12,52 @@ class ConfigCollection(ObservableDict):
     """
     user_level: bool = False  # Indicates that this collection is user-level
 
-    def __init__(self, starting_data: Optional[Dict]=None):
-        super().__init__()
-        for k, v in (starting_data or {}).items():
-            self[k] = v
-
-    def __str__(self):
-        return f"ConfigCollection({super().__str__()})"
-
-    def __repr__(self):
-        return f"ConfigCollection({super().__repr__()})"
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
     @classmethod
     def validate(cls, v):
-        if isinstance(v, dict):
-            result = {}
+        if isinstance(v, cls):
             for key, value in v.items():
                 if isinstance(value, BaseModel):
-                    result[key] = value
+                    v[key] = value
                 elif isinstance(value, dict):
-                    result[key] = ConfigRegistry.create_config(value, key, getattr(cls, 'user_level', False))
+                    v[key] = ConfigRegistry.create_config(value, key, getattr(cls, 'user_level', False))
+                else:
+                    raise ValueError(f"Config value must be BaseModel instance or dict, got {type(value)}")
+        elif hasattr(v, 'items'):
+            result = {}
+            for key, value in v.items():
+                norm_key = cls._normalize_key(key)
+                if isinstance(value, BaseModel):
+                    result[norm_key] = value
+                elif isinstance(value, dict):
+                    result[norm_key] = ConfigRegistry.create_config(value, norm_key, getattr(cls, 'user_level', False))
                 else:
                     raise ValueError(f"Config value must be BaseModel instance or dict, got {type(value)}")
             return cls(result)
         return v
 
-    def __getitem__(self, item):
+    @staticmethod
+    def _normalize_key(item):
+        """Extract the logic for normalizing keys into a separate method."""
+        if isinstance(item, type):
+            return to_snake_case(item.__name__)
+        elif isinstance(item, str):
+            return to_snake_case(item)
+        elif isinstance(item, object):
+            return to_snake_case(item.__class__.__name__)
+        else:
+            return item
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        from pydantic_core import core_schema
+
+        def validate_config_collection(value: Any) -> 'ConfigCollection':
+            return cls.validate(value)
+
+        return core_schema.no_info_plain_validator_function(validate_config_collection)
+
+
+    def __getitem__(self, item) -> Any:
         # if the item is a Class use the snake case of the class name as the key,
         # if it's an instance of ANY object use the snake case of the class name of that object,
         if isinstance(item, type):
@@ -66,57 +81,35 @@ class ConfigCollection(ObservableDict):
             raise KeyError(f"Config item '{item}' not found in collection and not registered in ConfigRegistry.")
 
     def __setitem__(self, key, value):
-        # if the key is a Class use the snake case of the class name as the key,
-        # if it's an instance of ANY object use the snake case of the class name of that object as the key,
-        if isinstance(key, type):
-            key = to_snake_case(key.__name__)
-        elif isinstance(key, str):
-            key = to_snake_case(key)
-        elif not isinstance(key, str):
-            key = to_snake_case(key.__class__.__name__)
+        norm_key: str = self._normalize_key(key)
 
         if isinstance(value, dict):
-            value['config_type'] = key
-            value = ConfigRegistry.create_config(value, key, getattr(self, 'user_level', False))
+            value['config_type'] = norm_key
+            value = ConfigRegistry.create_config(value, norm_key, getattr(self, 'user_level', False))
         elif isinstance(value, BaseModel):
             if hasattr(value, 'config_type'):
-                value.config_type = key  # Ensure config_type is set
+                value.config_type = norm_key  # Ensure config_type is set
         else:
-            raise ValueError(f"Config value must be BaseModel instance or dict, got {type(value)}")
+            raise ValueError(f"ConfigCollection value must be BaseModel instance or dict, got {type(value)}")
 
-        super().__setitem__(key.removesuffix('_user'), value)
+        super().__setitem__(norm_key, value)
 
 class UserConfigCollection(ConfigCollection):
     user_level: bool = True
 
-    def __str__(self):
-        return f"UserConfigCollection({super().__str__()})"
+    def __getitem__(self, item) -> Any:
+        norm_key: str = self._normalize_key(item)
+        return super().__getitem__(norm_key.removesuffix('_user'))
 
-    def __repr__(self):
-        return f"UserConfigCollection({super().__repr__()})"
+    def __setitem__(self, key, value):
+        norm_key: str = self._normalize_key(key)
+        super().__setitem__(norm_key.removesuffix('_user'), value)
 
-def ensure_config_collection(v: Any) -> ConfigCollection:
-    """Ensure the value is a UserConfigCollection."""
-    if isinstance(v, dict):
-        return ConfigCollection(v)
-    elif isinstance(v, ConfigCollection):
-        return v
-    elif v is None:
-        return ConfigCollection()
-    else:
-        raise ValueError(f"Expected dict or ConfigCollection, got {type(v)}")
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        from pydantic_core import core_schema
 
-ConfigCollectionField = Annotated[ConfigCollection, PlainValidator(ensure_config_collection)]
+        def validate_user_config_collection(value: Any) -> 'UserConfigCollection':
+            return cls.validate(value)
 
-def ensure_user_config_collection(v: Any) -> UserConfigCollection:
-    """Ensure the value is a UserConfigCollection."""
-    if isinstance(v, dict):
-        return UserConfigCollection(v)
-    elif isinstance(v, UserConfigCollection):
-        return v
-    elif v is None:
-        return UserConfigCollection()
-    else:
-        raise ValueError(f"Expected dict or UserConfigCollection, got {type(v)}")
-
-UserConfigCollectionField = Annotated[UserConfigCollection, PlainValidator(ensure_user_config_collection)]
+        return core_schema.no_info_plain_validator_function(validate_user_config_collection)

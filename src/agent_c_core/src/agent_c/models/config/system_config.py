@@ -2,23 +2,23 @@ from typing import Dict, Any
 from pydantic import Field
 
 from agent_c.models.async_observable import AsyncObservableModel
-from agent_c.models.config.config_collection import ConfigCollection, ConfigCollectionField
+from agent_c.models.config.config_collection import ConfigCollection
 
 
 class SystemConfigFile(AsyncObservableModel):
     version: int = Field(1,
                          description="The version of the system config file format")
-    runtimes: ConfigCollectionField = Field(default_factory=ConfigCollection,
-                                            description="Configuration for the various agent runtime APIs from the vendors")
-    core: ConfigCollectionField = Field(default_factory=ConfigCollection,
-                                        description="Configuration for Agent C core")
-    tools: ConfigCollectionField = Field(default_factory=ConfigCollection,
-                                         description="Configuration for the toolsets that require keys and other configuration")
-    api: ConfigCollectionField = Field(default_factory=ConfigCollection,
-                                       description="Configuration for the API FastAPI endpoints and other API related settings")
+    runtimes: ConfigCollection = Field(default_factory=ConfigCollection,
+                                       description="Configuration for the various agent runtime APIs from the vendors")
+    core: ConfigCollection = Field(default_factory=ConfigCollection,
+                                   description="Configuration for Agent C core")
+    tools: ConfigCollection = Field(default_factory=ConfigCollection,
+                                    description="Configuration for the toolsets that require keys and other configuration")
+    api: ConfigCollection = Field(default_factory=ConfigCollection,
+                                  description="Configuration for the API FastAPI endpoints and other API related settings")
 
-    misc: ConfigCollectionField = Field(default_factory=ConfigCollection,
-                                        description="Miscellaneous configuration that does not fit into other categories")
+    misc: ConfigCollection = Field(default_factory=ConfigCollection,
+                                   description="Miscellaneous configuration that does not fit into other categories")
 
 
     def model_dump_yaml(self) -> Dict[str, Any]:

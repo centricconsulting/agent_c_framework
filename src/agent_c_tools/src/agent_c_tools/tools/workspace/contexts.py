@@ -10,3 +10,10 @@ class WorkspaceToolsContext(BaseContext):
                                                                                          "If not provided, all workspaces are allowed.")
     force_read_only: bool = Field(default=False, description="If True, all workspace operations will be read-only. "
                                                              "This is used to prevent accidental writes to workspaces.")
+
+class WorkspaceToolsInteractionContext(BaseContext):
+    """
+    This context is used to store information during an interaction by the workspace.
+    """
+    did_trigger_context_warning: bool = Field(default=False,
+                                              description="If True, a context warning has been triggered by one or more tool calls ")
