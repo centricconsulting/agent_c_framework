@@ -20,7 +20,7 @@ class ContextRegistry:
             # Try to get it from the model's field default
             if hasattr(context_class, 'model_fields') and 'context_type' in context_class.model_fields:
                 field = context_class.model_fields['context_type']
-                if hasattr(field, 'default') and field.default is not None:
+                if hasattr(field, 'default') and field.default is not None and not field.default is Ellipsis:
                     type_name = field.default
                 else:
                     # Fall back to computed name
@@ -29,8 +29,8 @@ class ContextRegistry:
                 raise ValidationError(
                     f"Context class {context_class.__name__} must have 'context_type' field or be registered with explicit context_type"
                 )
-
-        cls._registry[type_name] = context_class
+        if not type_name.lower().startswith("base"):
+            cls._registry[type_name] = context_class
         return context_class
 
     @classmethod

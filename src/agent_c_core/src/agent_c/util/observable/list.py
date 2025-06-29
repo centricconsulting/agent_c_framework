@@ -1,5 +1,5 @@
 from agent_c.util.observable.async_observable_mixin import AsyncObservableMixin, CallbackType
-from typing import Generic, TypeVar, Iterable, Optional, Any, Annotated, Type
+from typing import TypeVar, Iterable, Optional, Any
 
 T = TypeVar('T')
 
@@ -10,11 +10,6 @@ class ObservableList(AsyncObservableMixin, list):
       - `item_removed` with (item, index)
       - `item_set` with (old, new, index)
     """
-
-    def __init__(self, items: Iterable[T] = None):
-        list.__init__(self, items or [])
-        AsyncObservableMixin.__init__(self)
-
     def add_observers(
             self,
             item_added: Optional[CallbackType] = None,
@@ -115,35 +110,8 @@ class ObservableList(AsyncObservableMixin, list):
 
         return core_schema.no_info_plain_validator_function(validate_observable_list)
 
-    # @classmethod
-    # def _validate(cls, value: Any) -> 'ObservableList':
-    #     if isinstance(value, cls):
-    #         return value
-    #     if isinstance(value, list):
-    #         return cls(value)
-    #     raise ValueError(f"Cannot convert {type(value)} to ObservableList")
-
     async def aextend(self, iterable: Iterable[T]) -> None:
         start = len(self)
         super().extend(iterable)
         for i, item in enumerate(iterable, start=start):
             await self.atrigger('item_added', item, i)
-
-# def ensure_observable_list(value: Any) -> ObservableList:
-#     """
-#     Ensure the value is an ObservableList, converting if necessary.
-#
-#     Args:
-#         value: The value to convert.
-#
-#     Returns:
-#         ObservableList: The converted or original ObservableList.
-#     """
-#     if isinstance(value, ObservableList):
-#         return value
-#
-#     return ObservableList(value) if isinstance(value, list) else ObservableList([value])
-#
-#
-# def ObservableListField() -> type[Annotated[ObservableList, PlainValidator(ensure_observable_list)]]:
-#     return Annotated[ObservableList, PlainValidator(ensure_observable_list)]

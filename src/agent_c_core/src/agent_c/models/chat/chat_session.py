@@ -3,7 +3,6 @@ import datetime
 from pydantic import Field
 from typing import Optional, Dict, Any, List
 
-from agent_c.models.context import ContextBagField
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.models.base import BaseModel
 from agent_c.models.context.context_bag import ContextBag
@@ -42,8 +41,8 @@ class ChatSession(BaseModel):
                                            description="List of messages in the session")
     agent_config: Optional['AgentConfiguration'] = Field(None,
                                                          description="Configuration for the agent associated with the session")
-    context: ContextBagField = Field(default_factory=ContextBag,
-                                     description="A dictionary of context models to provide data for tools / prompts.")
+    context: ContextBag = Field(default_factory=ContextBag,
+                                description="A dictionary of context models to provide data for tools / prompts.")
 
     @property
     def user_id(self) -> str:

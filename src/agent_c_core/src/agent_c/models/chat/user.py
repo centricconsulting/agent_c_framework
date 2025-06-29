@@ -7,7 +7,7 @@ from agent_c.util import MnemonicSlugs
 from agent_c.models.base import BaseModel
 from agent_c.models.chat.chat_user_location import ChatUserLocation
 from agent_c.models.config.user_config import UserConfig
-from agent_c.models.context.context_bag import ContextBag, ContextBagField
+from agent_c.models.context.context_bag import ContextBag
 
 
 class ChatUser(BaseModel):
@@ -61,7 +61,7 @@ class ChatUser(BaseModel):
     default_location: ChatUserLocation = Field(default_factory=ChatUserLocation,
                                                description="The default location of the user, used for "
                                                            "context in interactions and Open AI search tools. ")
-    context: ContextBagField = Field(default_factory=ContextBag,
+    context: ContextBag = Field(default_factory=ContextBag,
                                 description="A dictionary of context models to provide data for tools / prompts. ")
     config: UserConfig = Field(default_factory=UserConfig,
                                description="A collection of configuration settings for the user, used for "

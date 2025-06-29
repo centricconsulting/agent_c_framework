@@ -6,8 +6,8 @@ from pydantic import Field, model_validator, field_serializer, field_validator
 from agent_c.models import BaseDynamicContext
 from agent_c.util.string import to_snake_case
 from agent_c.models.async_observable import AsyncObservableModel
-from agent_c.util.observable.dict import ObservableStrDictField, ObservableDict
-from agent_c.models.context import ContextBag, ContextBagField
+from agent_c.util.observable.dict import ObservableDict
+from agent_c.models.context import ContextBag
 from agent_c.models.literal_str import LiteralStrField, LiteralStr
 from agent_c.models.state_machines import StateMachineTemplate, StateMachineOrchestrator
 
@@ -57,9 +57,9 @@ class BasePromptSection(AsyncObservableModel):
                                                description="The base priority of the section, used to determine rendering order."
                                                            "Lower values are rendered first. Defaults to DEFAULT (lowest) priority.")
 
-    context: ContextBagField = Field(default_factory=ContextBag,
-                                     description="Context bag for this section, used to store context specific data."
-                                                 "This will be available in the prompt template as `bag`.")
+    context: ContextBag = Field(default_factory=ContextBag,
+                                description="Context bag for this section, used to store context specific data."
+                                            "This will be available in the prompt template as `bag`.")
 
     my_context: Optional[BaseDynamicContext] = Field(default_factory=BaseDynamicContext,
                                                      description="Optional context for this section, used to store section specific data."

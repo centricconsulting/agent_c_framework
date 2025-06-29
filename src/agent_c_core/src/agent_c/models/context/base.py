@@ -4,7 +4,7 @@ from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.util.string import to_snake_case
 
 class BaseContext(AsyncObservableModel):
-    context_type: str = Field(...,
+    context_type: str = Field(None,
                               description="The type of the context. Defaults to the snake case class name without event")
 
     @model_validator(mode='after')

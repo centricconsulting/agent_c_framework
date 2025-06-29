@@ -1,12 +1,11 @@
 import time
 
-from pydantic import Field, model_validator, field_validator
+from pydantic import Field, model_validator
 from typing import Optional, List, Any, Union, Literal, Type
 
 from agent_c.models import LiteralStr
 from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.models.completion import CompletionParams
-from agent_c.models.context import ContextBagField
 from agent_c.models.context.context_bag import ContextBag
 from agent_c.models.literal_str import LiteralStrField
 from agent_c.toolsets import Toolset
@@ -109,8 +108,8 @@ class AgentConfigurationV3(BaseAgentConfiguration):
                            description="If True, the agent is a oneshot 'agent as tool'")
     category: List[str] = Field(default_factory=list,
                                 description="A list of categories this agent belongs to from most to least general" )
-    context: ContextBagField = Field(default_factory=ContextBag,
-                                     description="Context models for tools and prompts")
+    context: ContextBag = Field(default_factory=ContextBag,
+                                description="Context models for tools and prompts")
     agent_instructions: LiteralStrField = Field(default_factory=LiteralStr,
                                                 description="Primary agent instructions defining the agent's behavior")
     clone_instructions: LiteralStrField = Field(default_factory=LiteralStr,
@@ -121,7 +120,7 @@ class AgentConfigurationV3(BaseAgentConfiguration):
                                           description="List of agent IDs to make available as team members for this agent. ")
 
     def __init__(self, **data: Any) -> None:
-        self.__tool_registry: Optional[Type['ToolsetRegistry']] = None  # Toolset registry instance
+        self._tool_registry: Optional[Type['ToolsetRegistry']] = None  # Toolset registry instance
         super().__init__(**data)
 
     @property
@@ -131,20 +130,11 @@ class AgentConfigurationV3(BaseAgentConfiguration):
     def model_post_init(self, __context):
         """Hook up observers after model initialization"""
         super().model_post_init(__context)
+        from agent_c.util.registries.toolset_registry import ToolsetRegistry
+        self._tool_registry = ToolsetRegistry
+        self._ensure_contexts_for_tools()
         self.tools.add_observers(self.toolset_added, self.toolset_set, self.toolset_removed, self.toolset_extended)
         return self
-
-    @property
-    def _tool_registry(self) -> Type['ToolsetRegistry']:
-        """
-        Returns the toolset registry instance.
-        This is used to access toolset classes and ensure that the context bag has sections for all tools.
-        """
-        if self.__tool_registry is None:
-            from agent_c.util.registries.toolset_registry import ToolsetRegistry
-            self.__tool_registry = ToolsetRegistry
-
-        return self.__tool_registry
 
 
     def _add_contexts_for_tool(self, tool_name: str) -> None:
@@ -156,14 +146,14 @@ class AgentConfigurationV3(BaseAgentConfiguration):
         if cls.has_context:
             if cls.context_types:
                 for context_type in cls.context_types:
-                    _ = self.context[context_type]
+                    self.context[context_type] = self.context[context_type]
 
     def _remove_contexts_for_tool(self, tool_name: str) -> None:
         """
         Remove a context section for the given tool name.
         This is used to ensure that the context bag has sections for all tools.
         """
-        cls = self._tool_registry.get(tool_name)
+        cls = self.__tool_registry.get(tool_name)
         if cls.has_context:
             for context_type in cls.context_types:
                 if context_type in self.context:
@@ -204,8 +194,12 @@ class AgentConfigurationV3(BaseAgentConfiguration):
         Ensure that the context bag has sections for all tools.
         This is necessary to ensure that the agent can use the tools correctly.
         """
+        start_count = len(self.context)
         for tool_name in self.tools:
             self._add_contexts_for_tool(tool_name)
+
+        if len(self.context) > start_count:
+            self.mark_dirty()
 
     @model_validator(mode='after')
     def validate_and_setup(self):
@@ -227,7 +221,7 @@ class AgentConfigurationV3(BaseAgentConfiguration):
         if any( 'oneshot' in field for field in [self.key, self.name, self.agent_instructions, self.clone_instructions]):
             self.oneshot = True
 
-        self._ensure_contexts_for_tools()
+
 
         return self
 
