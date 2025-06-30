@@ -181,4 +181,5 @@ package-lock.json
 package.json
 
 # Ignore all log files
-logs/
+logs/agent_c_env/
+agent_c_env/
