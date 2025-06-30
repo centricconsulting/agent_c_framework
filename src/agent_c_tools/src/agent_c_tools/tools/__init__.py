@@ -18,6 +18,7 @@ from . import workspace_planning  # Workspace Planning toolset
 from . import workspace_knowledge  # Workspace Knowledge toolset
 from . import workspace_sequential_thinking  # Workspace Sequential Thinking toolset
 from . import browser_playwright  # Browser Playwright toolset
+from . import pdf_converter  # PDF Converter toolset
 __all__ = [
     'workspace',
     'web', 
@@ -36,5 +37,6 @@ __all__ = [
     'workspace_planning',
     'workspace_knowledge',
     'workspace_sequential_thinking',
-    'browser_playwright'
+    'browser_playwright',
+    'pdf_converter'
 ]

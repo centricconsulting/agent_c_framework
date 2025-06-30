@@ -1,0 +1,9 @@
+# Test requirements for PDF Converter Tool
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# PDF creation for testing
+reportlab>=3.6.0
+
+# Additional testing utilities
+python-dotenv>=1.0.0  # For environment configuration in tests
