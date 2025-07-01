@@ -8,7 +8,6 @@ from agent_c.models import BaseDynamicContext
 from agent_c.util.string import to_snake_case
 from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.util.observable.dict import ObservableDict
-from agent_c.models.context import ContextBag
 from agent_c.models.state_machines import StateMachineTemplate, StateMachineOrchestrator
 
 class SectionPriorityBase(IntEnum):
@@ -54,24 +53,10 @@ class BasePromptSection(AsyncObservableModel):
                                 description="If True, this section will be added to Jinja environment on startup."
                                             "This is for sections and macros that should be generally available or see constant use.")
 
-    required_toolsets: list[str] = Field(default_factory=list,
-                                         description="List of required toolsets for this section to function.")
-
     required_contexts: list[str] = Field(default_factory=list,
                                          description="List of additional required context types beyond the bag contents for this section to function.")
 
-    required_sections: list[str] = Field(default_factory=list,
-                                         description="List of additional required section types for this section to function.")
-
-    base_priority: SectionPriorityBase = Field(SectionPriorityBase.DEFAULT,
-                                               description="The base priority of the section, used to determine rendering order."
-                                                           "Lower values are rendered first. Defaults to DEFAULT (lowest) priority.")
-
-    context: ContextBag = Field(default_factory=ContextBag,
-                                description="Context bag for this section, used to store context specific data."
-                                            "This will be available in the prompt template as `bag`.")
-
-    my_context: Optional[BaseDynamicContext] = Field(default_factory=BaseDynamicContext,
+    my_context: Optional[BaseDynamicContext] = Field(None,
                                                      description="Optional context for this section, used to store section specific data."
                                                                  "This will be also be available in the prompt template as `bag.my .")
 
@@ -106,21 +91,6 @@ class BasePromptSection(AsyncObservableModel):
     def serialize_conditional(self, value):
         return value
 
-    @field_serializer('base_priority')
-    def serialize_priority(self, value: SectionPriorityBase) -> str:
-        """Serialize enum as its string name."""
-        return value.name
-
-    @field_validator('base_priority', mode='before')
-    @classmethod
-    def validate_priority(cls, v):
-        """Accept both string names and integer values, convert to enum."""
-        if isinstance(v, str):
-            return SectionPriorityBase[v]  # Convert string name to enum
-        elif isinstance(v, int):
-            return SectionPriorityBase(v)  # Convert integer value to enum
-        return v  # Already an enum instance
-
     @model_validator(mode='after')
     def post_init(self):
         """
@@ -128,6 +98,9 @@ class BasePromptSection(AsyncObservableModel):
         """
         if not self.section_type:
             self.section_type = to_snake_case(self.__class__.__name__.removesuffix('Section'))
+
+        if not self.my_context:
+            self.my_context = BaseDynamicContext(context_type=f"{self.section_type}_section_context")
 
         return self
 
@@ -165,19 +138,19 @@ class BasePromptSection(AsyncObservableModel):
         return os.path.getmtime(self.path_on_disk) > self.load_time
 
 def create_example_section() -> BasePromptSection:
-    return BasePromptSection(
+    section =  BasePromptSection(
         section_type="example_section",
         section_description="This is an example Prompt Section with fields defined",
         template="This is an example template for the section. These templates can include Jinja 2 syntax for dynamic content.\n\nLike this: {{ context.my.example_context_variable }}\n\nTemplates can otherwise be considered plain text in Markdown format.\n\n",
-        my_context=BaseDynamicContext(context_type="example_section_context",
-                                      example_context_variable="Hello World!"),
+
     )
+    return section
 
 
 if __name__ == "__main__":
     async def main():
         import yaml
-        from agent_c.config.config_loader import locate_config_folder
+        from agent_c.registration.configs import locate_config_folder
         config_folder = locate_config_folder().removesuffix("/")
         section = create_example_section()
         yaml = yaml.dump(section.model_dump(), allow_unicode=True, sort_keys=False, default_flow_style=False)

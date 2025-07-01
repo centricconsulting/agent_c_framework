@@ -11,11 +11,6 @@ class BaseDynamicContext(BaseContext):
                                                        "These fields are not defined in the model schema and can be used for flexible data storage.",
                                            exclude=True)
 
-    def __init__(self, **data: Any) -> None:
-        object.__setattr__(self, 'dynamic_fields', data)
-        if isinstance(data, dict):
-            super().__init__(context_type=data['context_type'])
-
     @model_validator(mode='before')
     @classmethod
     def ensure_context_type(cls, data: Any):
@@ -26,10 +21,21 @@ class BaseDynamicContext(BaseContext):
         return data
 
     def __getattr__(self, name: str) -> Any:
+        """
+        Called only when attribute is not found through normal lookup.
+        This is Python's equivalent of Ruby's method_missing.
+        """
+        if name.startswith('_') or name == 'dynamic_fields':
+            raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+
         try:
             return self.dynamic_fields[name]
         except KeyError:
-            raise AttributeError(f"{type(self).__name__!r} object has no attribute or key {name!r}")
+            raise AttributeError(
+                f"{type(self).__name__!r} object has no attribute {name!r} "
+                f"and no dictionary key {name!r}"
+            )
+
 
     def model_dump(
         self,

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from pydantic import Field
@@ -28,3 +29,8 @@ class AppConfig(BaseApiConfig):
     contact_email: str = Field("joseph.ours@centricconsulting.com")
     license_name: str = Field("BSL 1.1")
     base_dir: str = Field(default_factory= lambda: str(get_project_root() / "src"))
+    runtime_environment: str = Field(default_factory= lambda: os.environ.get("ENVIRONMENT", "LOCAL_DEV") ,
+                                    description="The runtime environment for the API. "
+                                                "This is used to determine the configuration settings to use. "
+                                                "Defaults to LOCAL_DEV if not set in the environment.",
+                                    examples=["LOCAL_DEV", "DOCKER)DEV", "LOCAL_TEST", "DOCKER_TEST", "LOCAL_PROD", "DOCKER_PROD"])

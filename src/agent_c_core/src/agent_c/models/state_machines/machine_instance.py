@@ -15,10 +15,13 @@ class StateMachineInstance:
         })()
 
         # Build the actual state machine
-        self.machine = template.build(self.model, use_hierarchical=template.hierarchical)
+        self.machine = template.build(self.model)
         self.model._machine_ref = self.machine
 
-    def __getattr__(self, item):
-        # Delegate attribute access to the model
+    def __getattr__(self, name):
+        if name.startswith('_'):
+            raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+
+        # Delegate attribute access to the machine
         # This allows: orchestrator.machine_name.state, .trigger(), etc.
-        return getattr(self.model, item)
+        return getattr(self.machine, name)

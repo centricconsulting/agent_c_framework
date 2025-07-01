@@ -2,6 +2,7 @@ import os
 
 from diskcache import Cache
 from typing import Any, Optional, Union
+from agent_c.registration.configs import locate_config_folder
 
 class ToolCache:
     """
@@ -23,7 +24,6 @@ class ToolCache:
             cache (Optional[Cache]): An existing diskcache Cache instance. If not provided, one will be created.
         """
         if supplied_cache is None:
-            from agent_c.config.config_loader import locate_config_folder
             cache_dir = os.path.join(locate_config_folder(), "tool_cache")
             os.makedirs(cache_dir, exist_ok=True)
             self.cache = Cache(cache_dir)
