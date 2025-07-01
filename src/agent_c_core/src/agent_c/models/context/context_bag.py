@@ -60,7 +60,7 @@ class ContextBag(ObservableDict):
         else:
             return item
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> BaseContext:
         item_key = self._normalize_key(item)
 
         try:
@@ -145,3 +145,7 @@ class ContextBag(ObservableDict):
                     f"{type(self).__name__!r} object has no attribute {name!r} "
                     f"and no dictionary key {name!r}"
                 )
+
+    def __contains__(self, item) -> bool:
+        return super().__contains__(self._normalize_key(item))
+

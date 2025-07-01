@@ -88,17 +88,21 @@ class ChatUser(BaseModel):
     def is_new_user(self) -> bool:
         return self.user_name == self.model_fields['user_name'].default
 
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        from pydantic_core import core_schema
 
-def ensure_chat_user(v: Any) -> ChatUser:
-    """Ensure the value is a ContextBag."""
-    if isinstance(v, ChatUser) or v is None:
-        return v
-    elif isinstance(v, dict):
-        return ChatUser(**v)
-    elif isinstance(v, str):
-        from agent_c.config.user_loader import UserLoader
-        return UserLoader.instance().load_user_id(v)
-    else:
-        raise ValueError(f"Expected dict or ConfigCollection, got {type(v)}")
+        def ensure_chat_user(v: Any) -> ChatUser:
+            """Ensure the value is a ContextBag."""
+            if isinstance(v, ChatUser) or v is None:
+                return v
+            elif isinstance(v, dict):
+                return ChatUser(**v)
+            elif isinstance(v, str):
+                from agent_c.config.user_loader import UserLoader
+                return UserLoader.instance().load_user_id(v)
+            else:
+                raise ValueError(f"Expected ChatUser, dict or str, got {type(v)}")
 
-ChatUserField = Annotated[ChatUser, BeforeValidator(ensure_chat_user)]
+        return core_schema.no_info_before_validator_function(ensure_chat_user)
+

@@ -1,6 +1,6 @@
 import threading
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from typing import List, Optional, Dict, Any, Callable, Awaitable
 
 from agent_c.models.events import BaseEvent
@@ -8,6 +8,8 @@ from agent_c.models.context.base import BaseContext
 from agent_c.models.context.context_bag import ContextBag
 from agent_c.models.context.interaction_inputs import InteractionInputs
 from agent_c.models.chat.chat_session import ChatSession, MnemonicSlugs
+from agent_c.models.prompts.section_bag import SectionBag
+
 
 class InteractionContext(BaseContext):
     """
@@ -31,12 +33,13 @@ class InteractionContext(BaseContext):
         description="A callback function that is called when a streaming event occurs. This is used to handle streaming events from the agent."
     )
 
-    sub_contexts: ContextBag = Field(default_factory=dict, description="A dictionary of context models to provide data for tools / prompts."
-                                                                                   "Used to pass additional data to tools and prompts during the interaction. "
-                                                                                   "Key is the context model type, value is the context model.")
+    sections: SectionBag = Field(default_factory=SectionBag,
+                                 description="A bag of sections that are used in the interaction. ")
 
-    sections: List['OldPromptSection'] = Field(default_factory=list, description="A list of prompt sections that are used in the interaction. "
-                                                                                      "This is used to store the prompt sections that are used in the interaction.")
+    context: ContextBag = Field(default_factory=dict, description="A dictionary of context models to provide data for tools / prompts."
+                                                                   "Used to pass additional data to tools and prompts during the interaction. "
+                                                                   "Key is the context model type, value is the context model.")
+
     external_tool_schemas: List[Dict[str, Any]] = Field(default_factory=list, description="A dictionary of tool schemas that are used in the interaction. "
                                                                                            "This is used to store the schemas of the tools that are used in the interaction.")
     user_session_id: Optional[str] = Field(None, description="The user session ID associated with the interaction. If this is a sub session "
@@ -51,11 +54,24 @@ class InteractionContext(BaseContext):
     def model_id(self):
         return self.chat_session.agent_config.runtime_params.model_id
 
-    def __init__(self, **data) -> None:
-        if 'interaction_id' not in data:
-            data['interaction_id'] = f"{data['chat_session'].session_id}:{MnemonicSlugs.generate_slug(2)}"
+    @model_validator(mode='after')
+    def post_init(self) -> 'InteractionContext':
+        self._ensure_extras_for_sections()
 
-        super().__init__(**data)
+    def _ensure_extras_for_sections(self):
+        for section_type, section in self.sections.items():
+            self.context.merge(section.context)
+
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_interaction_id(cls, values):
+        """
+        Ensure the interaction_id is set to a unique value based on the chat session ID.
+        """
+        if 'interaction_id' not in values or not values['interaction_id']:
+            values['interaction_id'] = f"{values['chat_session'].session_id}:{MnemonicSlugs.generate_slug(2)}"
+        return values
 
     @classmethod
     def model_rebuild(

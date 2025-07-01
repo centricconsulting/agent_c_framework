@@ -1,7 +1,7 @@
 import os
 import time
 from enum import IntEnum
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 from pydantic import Field, model_validator, field_serializer, field_validator
 
 from agent_c.models import BaseDynamicContext
@@ -38,35 +38,30 @@ class BasePromptSection(AsyncObservableModel):
                                           "Will be automatically set to the snake_case class name if not provided.")
 
     section_description: str = Field("",
-                                            description="A human readable description of the section's purpose and usage.")
+                                     description="A human readable description of the section's purpose and usage.")
 
     template: str = Field(None,
-                                 description="A Jinja 2 template string that defines the content of the section.")
+                           description="A Jinja 2 template string that defines the content of the section.")
 
-    is_macro: bool = Field(False,
-                           description="If True, this section contains only macros and be added to the Jinja environment."
-                                       "This allows for dynamic generation of sections based on the template content.")
+    is_include: bool = Field(False,
+                             description="If True, this section intended to be used as an include / macro file.")
     is_tool_section: bool = Field(False,
-                                    description="If True, this section is for a tool")
+                                  description="If True, this section is for a tool")
 
     load_on_start: bool = Field(False,
                                 description="If True, this section will be added to Jinja environment on startup."
                                             "This is for sections and macros that should be generally available or see constant use.")
 
-    required_contexts: list[str] = Field(default_factory=list,
+    required_contexts: List[str] = Field(default_factory=list,
                                          description="List of additional required context types beyond the bag contents for this section to function.")
 
-    my_context: Optional[BaseDynamicContext] = Field(None,
-                                                     description="Optional context for this section, used to store section specific data."
-                                                                 "This will be also be available in the prompt template as `bag.my .")
+    context: Optional[BaseDynamicContext] = Field(None,
+                                                  description="Optional context for this section, used to store section specific data."
+                                                              "This will be also be available in the prompt template as `bag.my .")
 
 
     state_machines: ObservableDict[str, StateMachineTemplate] = Field(default_factory=ObservableDict[str, StateMachineTemplate],
                                                                       description="State machine templates for this section, keyed by name.")
-
-    machines: StateMachineOrchestrator = Field(default_factory=StateMachineOrchestrator,
-                                               description="State machine orchestrator for this section, used to manage state machines.",
-                                               exclude=True)
 
     load_time: float = Field(default_factory=lambda: time.time(),
                              description="The time this section was loaded.  Used to determine if the section has changed on disk",
@@ -99,22 +94,15 @@ class BasePromptSection(AsyncObservableModel):
         if not self.section_type:
             self.section_type = to_snake_case(self.__class__.__name__.removesuffix('Section'))
 
-        if not self.my_context:
-            self.my_context = BaseDynamicContext(context_type=f"{self.section_type}_section_context")
+        if not self.context:
+            self.context = BaseDynamicContext(context_type=f"{self.section_type}_section_context")
 
         return self
 
     def model_post_init(self, __context):
         """Hook up observer after model initialization"""
         super().model_post_init(__context)
-        self._build_machines()
 
-    def _build_machines(self):
-        """
-        Build the state machines for this section.
-        """
-        for name, template in self.state_machines.items():
-            self.machines.add_machine(name, template)
 
     def __init_subclass__(cls, **kwargs):
         """Automatically register subclasses"""

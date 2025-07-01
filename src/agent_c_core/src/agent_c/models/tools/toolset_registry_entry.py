@@ -2,6 +2,7 @@ from typing import Dict, Any, List, Type, Optional
 
 from pydantic import Field
 from agent_c.models.base import BaseModel
+from agent_c.models.state_machines import StateMachineTemplate
 from agent_c.util import to_snake_case
 from agent_c.toolsets.tool_set import Toolset
 from agent_c.prompting.prompt_section import OldPromptSection
@@ -36,6 +37,8 @@ class ToolsetRegistryEntry(BaseModel):
                                      description="The context type this toolset uses for user configuration. Used to look up the correct context class in the registry")
     config_types: List[str] = Field(default_factory=list,
                                     description="The config type this toolset uses for server configuration. Used to look up the correct config class in the registry")
+    state_machines: List[StateMachineTemplate] = Field(default_factory=list[StateMachineTemplate],
+                                                       description="State machine templates for this toolset")
 
     @property
     def has_config(self) -> bool:
@@ -66,6 +69,16 @@ class ToolsetRegistryEntry(BaseModel):
             bool: True if context_type is set, False otherwise.
         """
         return len(self.prompt_section_types) > 0
+
+    @property
+    def has_state_machines(self) -> bool:
+        """
+        Check if this toolset has a context type defined.
+
+        Returns:
+            bool: True if context_type is set, False otherwise.
+        """
+        return len(self.state_machines) > 0
 
     @classmethod
     def from_toolset(cls, toolset) -> 'ToolsetRegistryEntry':
@@ -103,7 +116,8 @@ class ToolsetRegistryEntry(BaseModel):
             multi_user=getattr(toolset, 'multi_user', False),
             context_types=getattr(toolset, 'context_types', []),
             config_types=getattr(toolset, 'config_types', []),
-            prompt_section_types=getattr(toolset, 'prompt_section_types', [])
+            prompt_section_types=getattr(toolset, 'prompt_section_types', []),
+            state_machines=getattr(toolset, 'state_machines', []),
         )
 
 

@@ -58,7 +58,10 @@ class PromptSectionLoader(ConfigLoader, metaclass=SingletonCacheMeta):
             self.logger.warning(f"Sections folder {self.sections_folder} does not exist.")
             raise RuntimeError(f"Sections folder {self.sections_folder} does not exist.")
 
-        section_files = list(self.sections_folder.glob("*.yaml"))
+        # TODO: Check for markdown files as well, build and empty section model with just the prompt
+        section_files = []
+        for ext in ['.yaml', '.yml', '.md']:
+            section_files.extend(list(self.sections_folder.glob(f"**/*.{ext}")))
         if not section_files:
             self.logger.warning("No section files found in the sections folder.")
             return []
@@ -97,10 +100,23 @@ class PromptSectionLoader(ConfigLoader, metaclass=SingletonCacheMeta):
             raise FileNotFoundError(f"Section file {file_path} does not exist.")
 
         try:
-            with file_path.open('r', encoding='utf-8') as f:
-                section_data = yaml.load(f, Loader=yaml.FullLoader)
 
-            key = ("_".join(file_path.parts)).removesuffix(".yaml")
+            if file_path.suffix in ['.yml', '.yaml']:
+                key = ("/".join(file_path.parts)).removesuffix(".yaml").removesuffix(".yml")
+                with file_path.open('r', encoding='utf-8') as f:
+                    section_data = yaml.load(f, Loader=yaml.FullLoader)
+            else:
+                key = ("/".join(file_path.parts)).removesuffix(".md")
+                with file_path.open('r', encoding='utf-8') as f:
+                    template = f.read()
+
+                section_data = {
+                    'section_type': key,
+                    'section_description': f"This is a section loaded from {file_path}",
+                    'template': template,
+                    'is_include': True,
+                }
+
             section_data['path_on_disk'] = str(file_path)
             section_instance = self.registry.register_section_dict(key, section_data)
 

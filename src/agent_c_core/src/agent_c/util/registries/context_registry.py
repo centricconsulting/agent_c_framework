@@ -55,7 +55,7 @@ class ContextRegistry:
         return cls._registry[context_type]
 
     @classmethod
-    def create(cls, data: Dict[str, Any], context_type: Optional[str] = None, default_dynamic: Optional[bool] = False) -> BaseModel:
+    def create(cls, data: Dict[str, Any], context_type: Optional[str] = None, default_dynamic: Optional[bool] = False) -> 'BaseContext':
         """Create a context instance from data dictionary"""
         if context_type is None:
             context_type = data.get('context_type')

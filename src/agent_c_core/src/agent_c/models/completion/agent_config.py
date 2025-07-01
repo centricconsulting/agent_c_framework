@@ -3,6 +3,7 @@ import time
 from pydantic import Field, model_validator
 from typing import Optional, List, Any, Union, Literal, Type
 
+from agent_c.models import BaseDynamicContext
 from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.models.completion import CompletionParams
 from agent_c.models.context.context_bag import ContextBag
@@ -22,8 +23,8 @@ class BaseAgentConfiguration(AsyncObservableModel):
                                   description="List of enabled toolset names the agent can use")
     runtime_params: CompletionParams = Field(...,
                                              description="Parameters for the interaction with the agent")
-    sections: List[str] = Field(default_factory=list,
-                                description="List of prompt sections that define the agent's behavior and capabilities")
+    sections: ObservableList[str] = Field(default_factory=ObservableList,
+                                          description="List of prompt sections that define the agent's behavior and capabilities")
 
     load_time: float = Field(default_factory=lambda: time.time(),
                              description="The time this section was loaded.  Used to determine if the section has changed on disk",
@@ -33,14 +34,137 @@ class BaseAgentConfiguration(AsyncObservableModel):
                                         description="The path to the section file on disk. Used to determine if the section has changed on disk.",
                                         exclude=True)
 
+    context: BaseDynamicContext = Field(None,
+                                        description="Context models for tools and prompts. This is used to provide data for tools and prompts.")
+    state_machines: ObservableList[str] = Field(default_factory=ObservableList,
+                                                description="List of state machine names that define the agent's behavior and capabilities")
+    @property
+    def prompt_section_types(self) -> ObservableList[str]:
+        return self.sections
+
+    @property
+    def context_types(self) -> List[str]:
+        return [self.context.context_type]
+
     def model_post_init(self, __context):
         """Hook up observer after model initialization"""
         super().model_post_init(__context)
-        if not isinstance(self.tools, ObservableList):
-            self.tools = ObservableList(self.tools)
+        if self.context is None:
+            self.context = BaseDynamicContext(context_type=f"{self.key}_context")
+
 
         self.runtime_params.on(self.on_runtime_params_model_id_change, "model_id")
+        self.context.add_observers(
+            self.on_context_added,
+            self.on_context_set,
+            self.on_context_removed,
+            self.on_context_extended()
+        )
+        self.state_machines.add_observers(
+            self.on_state_machine_added,
+            self.on_state_machine_set,
+            self.on_state_machine_removed,
+            self.on_state_machine_extended
+        )
+        self.sections.add_observers(
+            self.on_section_added,
+            self.on_section_set,
+            self.on_section_removed,
+            self.on_section_extended
+        )
         return self
+
+    def on_context_added(self, item, index: int) -> None:
+        """
+        Callback when a context is added to the agent.
+        This can be used to ensure that the context bag has sections for the new context.
+        """
+        self.trigger('context_added', item, index)
+
+    def on_context_removed(self, item, index: int) -> None:
+        """
+        Callback when a context is removed from the agent.
+        This can be used to ensure that the context bag has sections for the removed context.
+        """
+        self.trigger('context_removed', item, index)
+
+    def on_context_set(self, old, new, index: int) -> None:
+        """
+        Callback when a context is set in the agent.
+        This can be used to ensure that the context bag has sections for the new context.
+        """
+        self.trigger('context_set', old, new, index)
+
+    def on_context_extended(self, start_index: int, end_index: int) -> None:
+        """
+        Callback when contexts are extended in the agent.
+        This can be used to ensure that the context bag has sections for the new contexts.
+        """
+        for index in range(start_index, end_index + 1):
+            context_name = self.context[index]
+            self.trigger('context_extended', context_name, index)
+
+    def on_state_machine_added(self, item, index: int) -> None:
+        """
+        Callback when a state machine is added to the agent.
+        This can be used to ensure that the context bag has sections for the new state machine.
+        """
+        self.trigger('state_machine_added', item, index)
+
+    def on_state_machine_removed(self, item, index: int) -> None:
+        """
+        Callback when a state machine is removed from the agent.
+        This can be used to ensure that the context bag has sections for the removed state machine.
+        """
+        self.trigger('state_machine_removed', item, index)
+
+    def on_state_machine_set(self, old, new, index: int) -> None:
+        """
+        Callback when a state machine is set in the agent.
+        This can be used to ensure that the context bag has sections for the new state machine.
+        """
+        self.trigger('state_machine_set', old, new, index)
+
+    def on_state_machine_extended(self, start_index: int, end_index: int) -> None:
+        """
+        Callback when state machines are extended in the agent.
+        This can be used to ensure that the context bag has sections for the new state machines.
+        """
+        for index in range(start_index, end_index + 1):
+            state_machine_name = self.state_machines[index]
+            self.trigger('state_machine_extended', state_machine_name, index)
+
+    def on_section_added(self, item: str, index: int) -> None:
+        """
+        Callback when a section is added to the agent.
+        This can be used to ensure that the context bag has sections for the new section.
+        """
+        self.trigger('section_added', item, index)
+
+    def on_section_removed(self, item: str, index: int) -> None:
+        """
+        Callback when a section is removed from the agent.
+        This can be used to ensure that the context bag has sections for the removed section.
+        """
+        self.trigger('section_removed', item, index)
+
+    def on_section_set(self, old: str, new: str, index: int) -> None:
+        """
+        Callback when a section is set in the agent.
+        This can be used to ensure that the context bag has sections for the new section.
+        """
+        self.trigger('section_set', old, new, index)
+
+    def on_section_extended(self, start_index: int, end_index: int) -> None:
+        """
+        Callback when sections are extended in the agent.
+        This can be used to ensure that the context bag has sections for the new sections.
+        """
+        for index in range(start_index, end_index + 1):
+            section_name = self.sections[index]
+            self.trigger('section_extended', section_name, index)
+
+
 
     @property
     def tool_classes(self) -> List[Type[Toolset]]:
@@ -135,27 +259,6 @@ class AgentConfigurationV3(BaseAgentConfiguration):
         return self
 
 
-    def _add_contexts_for_tool(self, tool_name: str) -> None:
-        """
-        Add a context section for the given tool name.
-        This is used to ensure that the context bag has sections for all tools.
-        """
-        cls = self._tool_registry.get(tool_name)
-        if cls.has_context:
-            if cls.context_types:
-                for context_type in cls.context_types:
-                    self.context[context_type] = self.context[context_type]
-
-    def _remove_contexts_for_tool(self, tool_name: str) -> None:
-        """
-        Remove a context section for the given tool name.
-        This is used to ensure that the context bag has sections for all tools.
-        """
-        cls = self.__tool_registry.get(tool_name)
-        if cls.has_context:
-            for context_type in cls.context_types:
-                if context_type in self.context:
-                    del self.context[context_type]
 
     def toolset_added(self, item: str, index: int) -> None:
         """
@@ -187,17 +290,6 @@ class AgentConfigurationV3(BaseAgentConfiguration):
             tool_name = self.tools[index]
             self._add_contexts_for_tool(tool_name)
 
-    def _ensure_contexts_for_tools(self) -> None:
-        """
-        Ensure that the context bag has sections for all tools.
-        This is necessary to ensure that the agent can use the tools correctly.
-        """
-        start_count = len(self.context)
-        for tool_name in self.tools:
-            self._add_contexts_for_tool(tool_name)
-
-        if len(self.context) > start_count:
-            self.mark_dirty()
 
     @model_validator(mode='after')
     def validate_and_setup(self):

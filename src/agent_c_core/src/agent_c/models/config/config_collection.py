@@ -18,22 +18,55 @@ class ConfigCollection(ObservableDict):
             for key, value in v.items():
                 if isinstance(value, BaseModel):
                     v[key] = value
-                elif isinstance(value, dict):
+                elif isinstance(value, dict) or value is None:
                     v[key] = ConfigRegistry.create_config(value, key, getattr(cls, 'user_level', False))
+                elif isinstance(value, str):
+                    if ConfigRegistry.is_config_registered(value, getattr(cls, 'user_level', False)):
+                        v[key] = ConfigRegistry.create_config({}, value, getattr(cls, 'user_level', False))
+                    else:
+                        raise ValueError(f"Config type '{value}' is not registered in ConfigRegistry.")
                 else:
                     raise ValueError(f"Config value must be BaseModel instance or dict, got {type(value)}")
+
+            return v
+
         elif hasattr(v, 'items'):
             result = {}
             for key, value in v.items():
                 norm_key = cls._normalize_key(key)
                 if isinstance(value, BaseModel):
                     result[norm_key] = value
-                elif isinstance(value, dict):
+                elif isinstance(value, dict) or value is None:
                     result[norm_key] = ConfigRegistry.create_config(value, norm_key, getattr(cls, 'user_level', False))
+                elif isinstance(value, str):
+                    if ConfigRegistry.is_config_registered(value, getattr(cls, 'user_level', False)):
+                        v[key] = ConfigRegistry.create_config({}, value, getattr(cls, 'user_level', False))
+                    else:
+                        raise ValueError(f"Config type '{value}' is not registered in ConfigRegistry.")
                 else:
                     raise ValueError(f"Config value must be BaseModel instance or dict, got {type(value)}")
             return cls(result)
-        return v
+        elif isinstance(v, list):
+            result = {}
+            for item in v:
+                norm_key = cls._normalize_key(item)
+                if isinstance(item, BaseModel):
+                    result[norm_key] = item
+                elif isinstance(item, dict) or item is None:
+                    result[norm_key] = ConfigRegistry.create_config(item, norm_key, getattr(cls, 'user_level', False))
+                elif isinstance(item, str):
+                    if ConfigRegistry.is_config_registered(item, getattr(cls, 'user_level', False)):
+                        result[norm_key] = ConfigRegistry.create_config({}, item, getattr(cls, 'user_level', False))
+                    else:
+                        raise ValueError(f"Config type '{item}' is not registered in ConfigRegistry.")
+                else:
+                    raise ValueError(f"Config value must be BaseModel instance or dict, got {type(item)}")
+
+            return cls(result)
+
+        raise ValueError(f"Cannot convert {type(v)} to ConfigCollection.")
+
+
 
     @staticmethod
     def _normalize_key(item):
@@ -93,6 +126,9 @@ class ConfigCollection(ObservableDict):
             raise ValueError(f"ConfigCollection value must be BaseModel instance or dict, got {type(value)}")
 
         super().__setitem__(norm_key, value)
+
+    def __contains__(self, item) -> bool:
+        return super().__contains__(self._normalize_key(item))
 
 class UserConfigCollection(ConfigCollection):
     user_level: bool = True
