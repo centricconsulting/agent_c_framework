@@ -18,10 +18,14 @@ class StateMachineOrchestrator(AsyncObservableModel):
 
     def add_machine(self, name: str, template: StateMachineTemplate) -> StateMachineInstance:
         """Add a new state machine from a template"""
+        if name not in self.templates:
+            self.trigger('template_added', name=name, template=template)
+
         self.templates[name] = template
 
         instance = StateMachineInstance(name, template)
         self.instances[name] = instance
+        self.trigger('machine_added', name=name, instance=instance)
 
         return instance
 

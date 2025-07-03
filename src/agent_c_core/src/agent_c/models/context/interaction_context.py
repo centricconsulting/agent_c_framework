@@ -15,6 +15,8 @@ class InteractionContext(BaseContext):
     """
     Represents the context of an interaction with an agent.
     This includes the agent configuration and the agent itself.
+
+    This is available as `interaction` in the Jinja environment.
     """
     interaction_id: str = Field(default_factory=lambda: MnemonicSlugs.generate_slug(3),
                                 description="The ID of the interaction, used to identify the interaction in the system. "
@@ -38,7 +40,8 @@ class InteractionContext(BaseContext):
 
     context: ContextBag = Field(default_factory=dict, description="A dictionary of context models to provide data for tools / prompts."
                                                                    "Used to pass additional data to tools and prompts during the interaction. "
-                                                                   "Key is the context model type, value is the context model.")
+                                                                   "Key is the context model type, value is the context model."
+                                                                   "This is available as `interaction.context` in the Jinja environment.")
 
     external_tool_schemas: List[Dict[str, Any]] = Field(default_factory=list, description="A dictionary of tool schemas that are used in the interaction. "
                                                                                            "This is used to store the schemas of the tools that are used in the interaction.")
@@ -50,6 +53,34 @@ class InteractionContext(BaseContext):
 
     runtime_role: Optional[str] = Field("assistant", description="The role the runtime should used for events in the interaction. ")
 
+    def interaction_started(self):
+        self.trigger("interaction_start", self)
+        self.chat_session.interaction_started()
+
+    def interaction_ended(self):
+        """
+        Trigger the interaction_completed event.
+        This is used to signal that the interaction has been completed.
+        """
+        self.trigger("interaction_end", self)
+        self.chat_session.interaction_ended()
+
+    def completion_started(self):
+        """
+        Trigger the completion_started event.
+        This is used to signal that the completion process has started.
+        """
+        self.trigger("completion_start", self)
+        self.chat_session.completion_started()
+
+    def completion_ended(self):
+        """
+        Trigger the completion_completed event.
+        This is used to signal that the completion process has been completed.
+        """
+        self.trigger("completion_end", self)
+        self.chat_session.completion_ended()
+
     @property
     def model_id(self):
         return self.chat_session.agent_config.runtime_params.model_id
@@ -57,6 +88,7 @@ class InteractionContext(BaseContext):
     @model_validator(mode='after')
     def post_init(self) -> 'InteractionContext':
         self._ensure_extras_for_sections()
+        return self
 
     def _ensure_extras_for_sections(self):
         for section_type, section in self.sections.items():

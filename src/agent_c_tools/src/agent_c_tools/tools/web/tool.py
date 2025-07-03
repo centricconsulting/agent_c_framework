@@ -14,12 +14,17 @@ from agent_c_tools.tools.web.util.expires_header import expires_header_to_cache_
 
 class WebTools(Toolset):
     """
-    WebTools class to fetch and format web page content.
+    The Web Tool enables agents to access and interact with web pages during your conversation. This capability allows you to get information from specific websites without having to leave the chat, switch applications, or copy-paste content back and forth.
 
-    Attributes:
-        default_formatter (ContentFormatter): Default formatter to use when no specific formatter is found.
-        formatters (List[ContentFormatter]): List of custom formatters for specific URL patterns.
-        cache (Cache): Cache object for storing responses.
+    ## Key Capabilities
+
+    Agents equipped with this tool can help you work with web content in various ways:
+
+    - **Information Extraction**: Get clean, readable content from articles, blog posts, and web pages
+    - **Research Assistance**: Access specific information from websites you're interested in
+    - **Content Summarization**: Obtain and summarize key points from longer web articles
+    - **Reference Collection**: Save important web content for later use in your projects
+    - **Visual Access**: View the original web page when needed for visual elements or interaction
     """
 
     def __init__(self, **kwargs):

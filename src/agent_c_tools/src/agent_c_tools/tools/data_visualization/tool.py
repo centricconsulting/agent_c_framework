@@ -17,6 +17,23 @@ from ...helpers.path_helper import create_unc_path, os_file_system_path
 
 
 class DataVisualizationTools(Toolset):
+    """
+    The Data Visualization Tool enables agents to create professional-quality charts and visual representations of data. This capability allows agents to transform raw numbers and statistics into intuitive, easy-to-understand visual formats that reveal patterns, trends, and insights at a glance.
+
+    ## Key Capabilities
+
+    Agents equipped with this tool can create a variety of visualizations, including:
+
+    - **Bar Charts**: Compare values across different categories
+    - **Line Charts**: Show trends over time or continuous variables
+    - **Pie Charts**: Display proportions and percentages of a whole
+    - **Histograms**: Visualize distributions and frequency of data points
+    - **Box Plots**: Summarize statistical distributions with quartiles
+    - **Scatter Plots**: Reveal relationships between two variables
+    - **Violin Plots**: Display probability density of data at different values
+    - **Heatmaps**: Represent data values as colors to show patterns in matrices
+    - **Pair Plots**: Explore relationships between multiple variables simultaneously
+    """
     def __init__(self, **kwargs):
         super().__init__(**kwargs, name='data_visualization')
         self.workspace_tool = self.tool_chest.active_tools.get('WorkspaceTools')
@@ -55,7 +72,7 @@ class DataVisualizationTools(Toolset):
         self.logger.info(f"Data loaded successfully with shape: {df.shape}")
         return df
 
-    async def _save_plot(self, fig: plt.Figure, output_filename: str, workspace_name: str = 'project', file_path: str = 'plots', tool_context: Optional[Dict] = None) -> Dict[str, str]:
+    async def _save_plot(self, tool_context, fig: plt.Figure, output_filename: str, workspace_name: str = 'project', file_path: str = 'plots') -> Dict[str, str]:
         full_path = f"{file_path}/{output_filename}" if file_path else f"{output_filename}"
         unc_path = create_unc_path(workspace_name, full_path)
 
@@ -69,13 +86,10 @@ class DataVisualizationTools(Toolset):
 
         content_base64 = base64.b64encode(data).decode('utf-8')
 
-        await self._raise_render_media(
-            sent_by_class=self.__class__.__name__,
+        await self._raise_render_media(tool_context,"image/png",
             sent_by_function='save_plot',
-            content_type="image/png",
             content=content_base64,
-            content_bytes=data,
-            tool_context=tool_context,
+            content_bytes=data
         )
 
         # await self.chat_callback(render_media={"content-type": "image/png", "content_bytes": buffer.getvalue()},
@@ -216,9 +230,8 @@ class DataVisualizationTools(Toolset):
             # Adjust layout and save
             plt.tight_layout()
 
-            result = await self._save_plot(fig=plt.gcf(), output_filename=kwargs['output_filename'],
-                                           workspace_name=kwargs.get('workspace_name', 'project'),
-                                           tool_context=tool_context)
+            result = await self._save_plot(tool_context, fig=plt.gcf(), output_filename=kwargs['output_filename'],
+                                           workspace_name=kwargs.get('workspace_name', 'project'))
             self.logger.info(f"Bar chart created and saved successfully. Result: {result}")
             return json.dumps(result)
         except Exception as e:
@@ -310,9 +323,8 @@ class DataVisualizationTools(Toolset):
             # Adjust layout and save
             plt.tight_layout()
 
-            result = await self._save_plot(fig=plt.gcf(), output_filename=kwargs['output_filename'],
-                                           workspace_name=kwargs.get('workspace_name', 'project'),
-                                           tool_context=tool_context)
+            result = await self._save_plot(tool_context, fig=plt.gcf(), output_filename=kwargs['output_filename'],
+                                           workspace_name=kwargs.get('workspace_name', 'project'))
             self.logger.info(f"Line chart created and saved successfully. Result: {result}")
             return json.dumps(result)
         except Exception as e:
@@ -375,9 +387,8 @@ class DataVisualizationTools(Toolset):
             ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
             plt.tight_layout()
 
-            result = await self._save_plot(fig=plt.gcf(), output_filename=kwargs['output_filename'],
-                                           workspace_name=kwargs.get('workspace_name', 'project'),
-                                           tool_context=tool_context)
+            result = await self._save_plot(tool_context, fig=plt.gcf(), output_filename=kwargs['output_filename'],
+                                           workspace_name=kwargs.get('workspace_name', 'project'))
             self.logger.info(f"Pie chart created and saved successfully. Result: {result}")
             return json.dumps(result)
         except Exception as e:
@@ -400,6 +411,7 @@ class DataVisualizationTools(Toolset):
     )
     async def create_histogram_plot(self, **kwargs):
         self.logger.info(f"Creating histogram plot with parameters: {kwargs}")
+        tool_context = kwargs.get('tool_context')
         try:
             df = await self._load_data(in_memory_or_cache=kwargs['in_memory_or_cache'], data_key=kwargs.get('data_key'))
             columns = kwargs['columns']
@@ -442,7 +454,7 @@ class DataVisualizationTools(Toolset):
             plt.tight_layout()
             fig.suptitle(kwargs.get('title', 'Multi-Column Histogram Plot'), fontsize=16, y=1.02)
 
-            result = await self._save_plot(fig, kwargs['output_filename'], kwargs.get('workspace_name', 'project'))
+            result = await self._save_plot(tool_context, fig, kwargs['output_filename'], kwargs.get('workspace_name', 'project'))
 
             # Add bin information to the result
             result['bin_info'] = bin_info_dict
@@ -499,9 +511,8 @@ class DataVisualizationTools(Toolset):
             plt.tight_layout()
 
             # Save the plot and return result
-            result = await self._save_plot(fig=plt.gcf(), output_filename=kwargs['output_filename'],
-                                           workspace_name=kwargs.get('workspace_name', 'project'),
-                                           tool_context=tool_context)
+            result = await self._save_plot(tool_context, fig=plt.gcf(), output_filename=kwargs['output_filename'],
+                                           workspace_name=kwargs.get('workspace_name', 'project'))
             self.logger.info(f"Box plot created and saved successfully. Result: {result}")
             return json.dumps(result)
         except Exception as e:
@@ -558,9 +569,8 @@ class DataVisualizationTools(Toolset):
             plt.tight_layout()
 
             # Save the plot and return result
-            result = await self._save_plot(fig=plt.gcf(), output_filename=kwargs['output_filename'],
-                                           workspace_name=kwargs.get('workspace_name', 'project'),
-                                           tool_context=tool_context)
+            result = await self._save_plot(tool_context, fig=plt.gcf(), output_filename=kwargs['output_filename'],
+                                           workspace_name=kwargs.get('workspace_name', 'project'))
             self.logger.info(f"Scatter plot created and saved successfully. Result: {result}")
             return json.dumps(result)
         except Exception as e:
@@ -613,9 +623,8 @@ class DataVisualizationTools(Toolset):
             plt.tight_layout()
 
             # Save the plot and return result
-            result = await self._save_plot(fig=plt.gcf(), output_filename=kwargs['output_filename'],
-                                           workspace_name=kwargs.get('workspace_name', 'project'),
-                                           tool_context=tool_context)
+            result = await self._save_plot(tool_context, fig=plt.gcf(), output_filename=kwargs['output_filename'],
+                                           workspace_name=kwargs.get('workspace_name', 'project'))
             self.logger.info(f"Violin plot created and saved successfully. Result: {result}")
             return json.dumps(result)
         except Exception as e:
@@ -667,9 +676,8 @@ class DataVisualizationTools(Toolset):
             plt.tight_layout()
 
             # Save the plot and return result
-            result = await self._save_plot(fig=plt.gcf(), output_filename=kwargs['output_filename'],
-                                           workspace_name=kwargs.get('workspace_name', 'project'),
-                                           tool_context=tool_context)
+            result = await self._save_plot(tool_context, fig=plt.gcf(), output_filename=kwargs['output_filename'],
+                                           workspace_name=kwargs.get('workspace_name', 'project'))
             self.logger.info(f"Heatmap created and saved successfully. Result: {result}")
             return json.dumps(result)
         except Exception as e:
@@ -721,9 +729,8 @@ class DataVisualizationTools(Toolset):
             plt.tight_layout()
 
             # Save the plot and return result
-            result = await self._save_plot(fig=pairplot.fig, output_filename=kwargs['output_filename'],
-                                           workspace_name=kwargs.get('workspace_name', 'project'),
-                                           tool_context=tool_context)
+            result = await self._save_plot(tool_context, fig=pairplot.fig, output_filename=kwargs['output_filename'],
+                                           workspace_name=kwargs.get('workspace_name', 'project'))
             self.logger.info(f"Pair plot created and saved successfully. Result: {result}")
             return json.dumps(result)
         except Exception as e:

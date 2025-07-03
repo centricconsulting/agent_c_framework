@@ -1,28 +1,27 @@
 import os
 import time
-from enum import IntEnum
+from enum import StrEnum
 from typing import Literal, Optional, List
-from pydantic import Field, model_validator, field_serializer, field_validator
+from pydantic import Field, model_validator, field_serializer
 
 from agent_c.models import BaseDynamicContext
 from agent_c.util.string import to_snake_case
 from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.util.observable.dict import ObservableDict
-from agent_c.models.state_machines import StateMachineTemplate, StateMachineOrchestrator
+from agent_c.models.state_machines import StateMachineTemplate
 
-class SectionPriorityBase(IntEnum):
+class SectionRenderSlot(StrEnum):
     """
-    Base class for section priorities.
-    This is used to determine the default rendering order of sections.
+    This is used to determine the rendering order of sections.
     """
-    INCLUDE_ONLY = -1
-    ROOT = 0
-    SYSTEM = 100
-    USER = 200
-    CRITICAL = 300
-    STANDALONE_TOOL = 400
-    TOOL = 500
-    DEFAULT = 600
+    INCLUDE_ONLY = "include_only"   # For macros or includes that should not be rendered directly
+    SYSTEM = "system"               # Reserved.
+    BEFORE_AGENT = "before_agent"   # For content  more important than the agent instructions
+    AFTER_AGENT = "after_agent"     # For content less important than the agent instructions but more important than tools
+    TOOL = "tool"                   # Tool sections for agent tools
+    DEFAULT = "default"             # Default render slot for sections that do not fit into other categories
+    AT_BOTTOM = "at_bottom"         # For temporary sections that should be rendered at the bottom of the prompt
+
 
 class BasePromptSection(AsyncObservableModel):
     """
@@ -43,8 +42,12 @@ class BasePromptSection(AsyncObservableModel):
     template: str = Field(None,
                            description="A Jinja 2 template string that defines the content of the section.")
 
+    template_key: Optional[str] = Field(None,
+                                        description="An optional key to identify the template in the Jinja environment.")
+
     is_include: bool = Field(False,
                              description="If True, this section intended to be used as an include / macro file.")
+
     is_tool_section: bool = Field(False,
                                   description="If True, this section is for a tool")
 
@@ -73,6 +76,10 @@ class BasePromptSection(AsyncObservableModel):
     tool_class_name: str = Field(None,
                                  description="The class name of the tool this section is for. "
                                              "This is used to find the tool if needed")
+    render_slot: SectionRenderSlot = Field(SectionRenderSlot.DEFAULT,
+                                           description="The render slot for this section. "
+                                                       "This determines where the section will be rendered in the prompt. "
+                                                       )
 
     @model_validator(mode="before")
     @classmethod
@@ -94,15 +101,21 @@ class BasePromptSection(AsyncObservableModel):
         if not self.section_type:
             self.section_type = to_snake_case(self.__class__.__name__.removesuffix('Section'))
 
-        if not self.context:
-            self.context = BaseDynamicContext(context_type=f"{self.section_type}_section_context")
+        if not self.template_key:
+            self.template_key = self.section_type
+            if self.is_tool_section:
+                self.template_key = f"tools/{self.template_key}"
 
         return self
 
     def model_post_init(self, __context):
         """Hook up observer after model initialization"""
         super().model_post_init(__context)
+        if not self.context:
+            self.context = BaseDynamicContext(context_type=f"{self.section_type}_section_context")
 
+        if not self.template_key:
+            self.template_key = self.section_type
 
     def __init_subclass__(cls, **kwargs):
         """Automatically register subclasses"""

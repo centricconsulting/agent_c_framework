@@ -123,7 +123,7 @@ class AgentRuntime:
         """
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
-
+        context.completion_started()
         await self._raise_event(context, CompletionEvent(running=True,
                                                          completion_options=completion_options,
                                                          session_id=context.chat_session.user_session_id))
@@ -134,6 +134,7 @@ class AgentRuntime:
         """
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
+        context.completion_ended()
         await self._raise_event(context, CompletionEvent(running=False,
                                                          completion_options=completion_options,
                                                          session_id=context.chat_session.user_session_id,
@@ -164,9 +165,11 @@ class AgentRuntime:
 
     async def _raise_interaction_start(self, context: InteractionContext):
         await self._raise_event(context, InteractionStartEvent(id=context.interaction_id))
+        context.interaction_started()
         return context.interaction_id
 
     async def _raise_interaction_end(self, context: InteractionContext):
+        context.interaction_ended()
         await self._raise_event(context, InteractionEndEvent(id=context.interaction_id))
 
     async def _raise_text_delta(self, context: InteractionContext, content: str):

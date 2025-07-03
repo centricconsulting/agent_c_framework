@@ -1,13 +1,15 @@
 import datetime
 
 from pydantic import Field, model_validator
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Literal
 
 from agent_c.models import AsyncObservableModel
 from agent_c.models.prompts import BasePromptSection
 from agent_c.models.prompts.section_bag import SectionBag
 from agent_c.models.state_machines import StateMachineTemplate, StateMachineOrchestrator
+from agent_c.models.state_machines.toggle_machine import ToggleMachine
 from agent_c.util.observable import ObservableDict
+from agent_c.util.registries.context_registry import ContextRegistry
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.models.context.context_bag import ContextBag
 from agent_c.models.chat.user import ChatUser
@@ -45,6 +47,11 @@ class ChatSession(AsyncObservableModel):
                                            description="List of messages in the session")
     agent_config: Optional['CurrentAgentConfiguration'] = Field(None,
                                                                 description="Configuration for the agent associated with the session")
+    is_clone_session: bool = Field(False,
+                                   description="If True, this session is a clone of another session. "
+                                               "This is used to indicate that the session is a copy of another session, "
+                                               "and should not be modified directly.")
+
     context: ContextBag = Field(default_factory=ContextBag,
                                 description="A dictionary of context models to provide data for tools / prompts.")
 
@@ -78,7 +85,19 @@ class ChatSession(AsyncObservableModel):
         from agent_c.chat import DefaultChatSessionManager
         DefaultChatSessionManager.instance().add_session(self)
 
+        self.machines.on('machine_added', self.on_machine_added)
         return self
+
+    def on_machine_added(self, template: StateMachineTemplate) -> None:
+        """
+        Callback for when a state machine is added to the orchestrator by an external source.
+        This ensures that we store it in our model collection
+        """
+        if template.name not in self.state_machines:
+            self.state_machines[template.name] = template
+            if not ContextRegistry.is_context_registered(template.name):
+                ctx = ContextRegistry.create(template.context, template.name, True)
+                self.context[template.name] = ctx
 
     def _ensure_extras_for_agent_config(self, agent_config) -> None:
         """
@@ -111,7 +130,6 @@ class ChatSession(AsyncObservableModel):
                 self._remove_extras_for_tool(tool_name)
 
             self._remove_extras_cls(agent_config)
-
 
     def _add_contexts_for_user(self) -> None:
         """
@@ -238,15 +256,12 @@ class ChatSession(AsyncObservableModel):
         """
         for name, template in self.state_machines.items():
             if template.machine is None:
+                if not ContextRegistry.is_context_registered(name):
+                    ctx = ContextRegistry.create(template.context, name, True)
+                    self.context[name] = ctx
+
                 template.machine = self.machines.add_machine(name, template)
                 self.trigger('machine_added', template)
-
-    def on_machine_added(self, template: StateMachineTemplate) -> None:
-        """
-        Callback for when a state machine is added to the state machines collection.
-        """
-        if template.machine is None:
-            template.machine = self.machines.add_machine(template.name, template)
 
     def on_machine_removed(self, template: StateMachineTemplate) -> None:
         """
@@ -428,3 +443,171 @@ class ChatSession(AsyncObservableModel):
         Updates the updated_at timestamp to the current time.
         """
         self.updated_at = datetime.datetime.now().isoformat()
+
+    def get_toggle_state(self, name: str, default: Literal['open', 'closed'] = 'closed') -> str:
+        """
+        Get the current state of a toggle machine, creating it if it doesn't exist.
+
+        Args:
+            name: Name of the toggle (will create toggle_{name}_machine)
+            default: Initial state if machine doesn't exist
+
+        Returns:
+            Current state ('open' or 'closed')
+        """
+        machine_name = f"toggle_{name}_machine"
+
+        # Check if machine already exists
+        if self.machines.has_machine(machine_name):
+            machine_instance = self.machines.get_machine(machine_name)
+            return machine_instance.current_state
+
+        # Create new toggle machine
+        toggle_machine = ToggleMachine(name=name, default_state=default)
+
+        # Add to state machines dict (for persistence)
+        self.state_machines[machine_name] = toggle_machine
+
+        # Add to orchestrator (for runtime)
+        machine_instance = self.machines.add_machine(machine_name, toggle_machine)
+
+        return machine_instance.current_state
+
+    def get_machine_state(self, name: str) -> str:
+        """
+        Get the current state of a machine by its name.
+
+        Args:
+            name: Name of the machine (without toggle_ prefix and _machine suffix)
+
+        Returns:
+            Current state ('open' or 'closed') of the toggle machine
+        """
+        machine_name = f"toggle_{name}_machine"
+
+        if not self.machines.has_machine(machine_name):
+            raise ValueError(f"Machine '{machine_name}' does not exist.")
+
+        machine_instance = self.machines.get_machine(machine_name)
+        return machine_instance.current_state
+
+    def set_toggle_open(self, name: str, open_for: int = 0) -> None:
+        """
+        Force a toggle to the 'open' state.
+
+        Args:
+            name: Name of the toggle
+            open_for: Optional duration in seconds to keep the toggle open for in completions
+        """
+        machine_name = f"toggle_{name}_machine"
+
+        # Ensure machine exists (create with closed state if not)
+        if not self.machines.has_machine(machine_name):
+            self.get_toggle_state(name, 'closed')
+
+        machine_instance = self.machines.get_machine(machine_name)
+        machine_instance.force_open()
+
+        def close_after_countdown(_):
+            nonlocal open_for
+            open_for -= 1
+            if open_for <= 0:
+                machine_instance.force_close()
+                self.remove_listener('completion_started', close_after_countdown)
+
+        if open_for > 0:
+            # Register a listener to close the toggle after the specified duration
+            self.on('completion_started', close_after_countdown)
+
+
+
+    def set_toggle_closed(self, name: str) -> None:
+        """
+        Force a toggle to the 'closed' state.
+
+        Args:
+            name: Name of the toggle
+        """
+        machine_name = f"toggle_{name}_machine"
+
+        # Ensure machine exists (create with open state if not)
+        if not self.machines.has_machine(machine_name):
+            self.get_toggle_state(name, 'open')
+
+        machine_instance = self.machines.get_machine(machine_name)
+        machine_instance.force_close()
+
+    def toggle_switch(self, name: str) -> str:
+        """
+        Toggle a machine's state and return the new state.
+
+        Args:
+            name: Name of the toggle
+
+        Returns:
+            New state after toggling ('open' or 'closed')
+        """
+        machine_name = f"toggle_{name}_machine"
+
+        # Ensure machine exists (create with closed state if not, then toggle to open)
+        if not self.machines.has_machine(machine_name):
+            self.get_toggle_state(name, 'closed')
+
+        machine_instance = self.machines.get_machine(machine_name)
+        machine_instance.toggle()
+        return machine_instance.current_state
+
+    def list_toggles(self) -> List[str]:
+        """
+        List all toggle machine names (without the toggle_ prefix and _machine suffix).
+
+        Returns:
+            List of toggle names
+        """
+        toggles = []
+        for machine_name in self.machines.list_machines():
+            if machine_name.startswith('toggle_') and machine_name.endswith('_machine'):
+                # Extract the toggle name from toggle_{name}_machine
+                toggle_name = machine_name[7:-8]  # Remove 'toggle_' and '_machine'
+                toggles.append(toggle_name)
+
+        return toggles
+
+    def get_all_toggle_states(self) -> Dict[str, str]:
+        """
+        Get the current state of all toggle machines.
+
+        Returns:
+            Dictionary mapping toggle names to their current states
+        """
+        states = {}
+        for toggle_name in self.list_toggles():
+            machine_name = f"toggle_{toggle_name}_machine"
+            machine_instance = self.machines.get_machine(machine_name)
+            if machine_instance:
+                states[toggle_name] = machine_instance.current_state
+        return states
+
+    def interaction_started(self):
+        self.trigger("interaction_start", self)
+
+    def interaction_ended(self):
+        """
+        Trigger the interaction_completed event.
+        This is used to signal that the interaction has been completed.
+        """
+        self.trigger("interaction_end", self)
+
+    def completion_started(self):
+        """
+        Trigger the completion_started event.
+        This is used to signal that the completion process has started.
+        """
+        self.trigger("completion_start", self)
+
+    def completion_ended(self):
+        """
+        Trigger the completion_completed event.
+        This is used to signal that the completion process has been completed.
+        """
+        self.trigger("completion_end", self)

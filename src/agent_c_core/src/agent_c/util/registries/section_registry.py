@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, Type, TypeVar, Optional
 from pydantic import ValidationError
 
@@ -37,15 +38,12 @@ class SectionRegistry:
 
     @classmethod
     def register_section(cls, section_type: str, section_instance: BasePromptSection) -> None:
-        """Register a dynamic section instance with its section_type string"""
+        """Register a section instance with its section_type string"""
         cls._sections[section_type] = section_instance.model_copy()
 
     @classmethod
     def register_section_dict(cls, section_type: str, section_data: Dict[str, Any]) -> BasePromptSection:
         """Register a section instance from a dictionary"""
-        if not isinstance(section_data, dict):
-            raise ValueError("section_data must be a dictionary")
-
         section_instance = cls.create(section_type=section_type, data=section_data)
         cls.register_section(section_type, section_instance)
         return section_instance
@@ -85,7 +83,10 @@ class SectionRegistry:
                 raise ValueError(f"No data provided and section_type '{section_type}' is not registered")
 
         if section_type in cls._sections:
-            return cls._sections[section_type].model_copy(update=data)
+            section = cls._sections[section_type].model_copy(update=data)
+            if section.changed_on_disk():
+                from agent_c.config.prompt_section_loader import PromptSectionLoader
+                return PromptSectionLoader.instance().load_section_from_file(Path(section.path_on_disk))
 
         if cls.is_section_model_registered(section_type):
             section_class = cls.get_model_class(section_type)

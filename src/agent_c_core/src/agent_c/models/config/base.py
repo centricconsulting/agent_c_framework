@@ -1,4 +1,6 @@
-from pydantic import Field, model_validator
+from typing import Optional
+
+from pydantic import Field, model_validator, field_validator
 
 from agent_c.models.async_observable import AsyncObservableModel
 from agent_c.util.string import to_snake_case
@@ -24,13 +26,16 @@ class BaseConfig(AsyncObservableModel):
     config_type: str = Field(None, description="The type of the config. Defaults to the snake case class name without config")
     category: str = Field(CONFIG_MISC, description="The high level category of the config, used for grouping.")
 
-    @model_validator(mode='after')
-    def ensure_config_type(self):
-        self._init_observable()
-        if not self.config_type:
-            self.config_type = to_snake_case(self.__class__.__name__.removesuffix('Config'))
-
-        return self
+    @field_validator('config_type', mode='after')
+    @classmethod
+    def normalize_config_type(cls, value: Optional[str]) -> str:
+        """
+        Normalize the name to snake_case for consistency.
+        This is done after the model is initialized to ensure the name is always in the correct format.
+        """
+        if value is None or value == '':
+            value = cls.__name__
+        return to_snake_case(value).removesuffix('_config')
 
     def __init_subclass__(cls, **kwargs):
         """Automatically register subclasses"""

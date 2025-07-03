@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator, field_validator
 from typing import List, Optional, Any, Union, Dict, Literal, Callable
 
 from pydantic.main import IncEx
@@ -6,7 +6,7 @@ from transitions import Machine
 from transitions.extensions import HierarchicalMachine
 
 from agent_c.models.async_observable import AsyncObservableModel
-
+from agent_c.util import to_snake_case
 
 
 class StateConfig(BaseModel):
@@ -27,7 +27,10 @@ class TransitionConfig(BaseModel):
 
 
 class StateMachineTemplate(AsyncObservableModel):
-    name: str
+    name: str = Field(...,
+                      description="Name of the state machine template, used for registration and lookup, "
+                                  "Will be converted to snake case for normalization."
+                                  "If the resulting name does nor end with '_machine', it will be appended automatically.")
     states: List[StateConfig] = Field(default_factory=list,
                                       description="List of states for the state machine")
 
@@ -37,7 +40,8 @@ class StateMachineTemplate(AsyncObservableModel):
                          description="Initial state of the state machine")
 
     context_vars: Dict[str,Any] = Field(default_factory=dict,
-                                        description="Context variables for the state machine, used in Jinja templates")
+                                        description="Context variables for the state machine, used in Jinja templates"
+                                                    "this wille be available as `session.context.[state_machine_name]` in the Jinja environment")
 
     hierarchical: bool = Field(False,
                                description="If True, use HierarchicalMachine instead of Machine")
@@ -53,6 +57,19 @@ class StateMachineTemplate(AsyncObservableModel):
     def __init__(self, **data):
         self._machine: Optional[Union[HierarchicalMachine, Machine]] = None
         super().__init__(**data)
+
+    @field_validator('name', mode='after')
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        """
+        Normalize the name to snake_case for consistency.
+        This is done after the model is initialized to ensure the name is always in the correct format.
+        """
+        new_val = to_snake_case(value)
+        if not new_val.endswith('_machine'):
+            new_val += '_machine'
+        return new_val
+
 
     def model_dump(
         self,
