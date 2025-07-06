@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 """
 PDF Converter Tool for Agent C
 
@@ -31,3 +32,6 @@ from .tool import PDFConverterTools
 
 __all__ = ['PDFConverterTools']
 __version__ = '1.0.0'
+=======
+from .tool import PDFConverterTools
+>>>>>>> Stashed changes

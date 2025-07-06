@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 # PDF Converter Tool for Agent C
 
 A robust PDF to JSON converter tool that integrates seamlessly with the Agent C framework. This tool extracts text content, metadata, and structure from PDF files and outputs structured JSON data.
@@ -296,3 +297,91 @@ Ready to use the PDF Converter Tool? Here's a quick start:
 4. **Integrate with your agent**: Import and use as shown in the examples above
 
 Happy PDF processing! 🚀📄✨
+=======
+# PDF to YAML Converter Tool
+
+The PDF to YAML Converter is an Agent C tool that extracts text content, metadata, and structure from PDF files and outputs structured YAML data. This tool helps agents work with PDF documents by converting them into a machine-readable format.
+
+## Features
+
+- Extract text content from PDF files
+- Preserve page structure (text extracted by page)
+- Extract PDF metadata (title, author, creation date, etc.)
+- Output structured data in YAML format
+- Robust error handling for various PDF parsing issues
+
+## Usage
+
+This tool is available to agents as `pdf_converter-pdf_to_yaml`. Here's how to use it:
+
+```python
+result = await pdf_converter.pdf_to_yaml(
+    file_path="//workspace/path/to/document.pdf",
+    include_metadata=True,  # Optional, defaults to True
+    extract_by_page=True    # Optional, defaults to True
+)
+
+# result contains YAML string with the extracted PDF data
+```
+
+## Parameters
+
+- `file_path` (string, required): Path to the PDF file in a workspace (e.g., `//documents/report.pdf`)
+- `include_metadata` (boolean, optional): Include PDF metadata in output (title, author, etc.). Default: `True`
+- `extract_by_page` (boolean, optional): Extract text separated by pages vs all text together. Default: `True`
+
+## Output Format
+
+The tool returns a YAML string with the following structure:
+
+```yaml
+success: true
+extracted_at: "2025-07-06T03:14:15.123456"
+total_pages: 3
+metadata:
+  title: "Sample Document"
+  author: "John Doe"
+  creator: "Word"
+  creation_date: "2025-06-01T00:00:00"
+content:
+  pages:
+    - page_number: 1
+      text: "This is the text content from page 1"
+      character_count: 37
+    - page_number: 2
+      text: "This is the text content from page 2"
+      character_count: 37
+    - page_number: 3
+      text: "This is the text content from page 3"
+      character_count: 37
+```
+
+If `extract_by_page` is set to `False`, the content will instead contain:
+
+```yaml
+content:
+  full_text: "This is the text content from page 1\nThis is the text content from page 2\nThis is the text content from page 3"
+  character_count: 113
+```
+
+## Error Handling
+
+The tool returns a YAML document with error information if something goes wrong:
+
+```yaml
+success: false
+extracted_at: "2025-07-06T03:14:15.123456"
+error: "File not found: //documents/missing.pdf"
+```
+
+## Dependencies
+
+- PyPDF2: PDF parsing library
+- PyYAML: YAML generation library
+
+## Limitations
+
+- The tool can extract text content but not images from PDFs
+- Some heavily formatted or scanned PDFs may not extract cleanly
+- Some PDF metadata might not be available depending on the PDF creator
+>>>>>>> Stashed changes

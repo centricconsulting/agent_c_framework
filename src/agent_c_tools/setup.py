@@ -20,6 +20,7 @@ setup(
         "mcp",
         "pyyaml",
         "playwright",
+        "PyPDF2",
     ],
     entry_points={
         'console_scripts': [
