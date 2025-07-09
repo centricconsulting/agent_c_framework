@@ -19,3 +19,4 @@ from .health import FDANDCTools, ClinicalTrialsTools, PubMedTools
 from .salesforce import SalesforceTools
 from .linked_in import LinkedInTools
 from .youtube import YoutubeTranscriptTools, YoutubeCommentsTools, YoutubeSearchViaApiTools, YoutubeSearchViaWebTools
+from .pdf_converter import PDFConverterTools
