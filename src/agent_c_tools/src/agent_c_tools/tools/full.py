@@ -1,4 +1,5 @@
 from .workspace import WorkspaceTools, LocalStorageWorkspace, WorkspaceSection
+from .web_search import WebSearchTools
 from .web_search import WikipediaTools, HackerNewsTools, SeekingAlphaTools, TavilyResearchTools
 from .web_search import GoogleSerpTools, GoogleTrendsTools, HackerNewsTools, NewsApiTools
 from .user_preferences import UserPreference, AddressMeAsPreference, AssistantPersonalityPreference, \
@@ -53,6 +54,7 @@ __all__ = [
     'WorkspaceSequentialThinkingTools',
 
     # Web tools
+    'WebSearchTools',  # Unified web search interface
     'WikipediaTools',
     'HackerNewsTools',
     'SeekingAlphaTools',

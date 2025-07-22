@@ -40,15 +40,19 @@ def _discover_tools():
 
 _tools_mapping = _discover_tools()
 
-__all__ = list(_tools_mapping.keys())
+__all__ = list(_tools_mapping.keys()) + ['WebSearchTools']
 from agent_c_tools.tools.workspace.tool import WorkspaceTools
 from agent_c_tools.tools.think.tool import ThinkTools
+from agent_c_tools.tools.web_search.web_search_tools import WebSearchTools
 
 def __getattr__(name: str):
     if name in _tools_mapping:
         module = importlib.import_module(_tools_mapping[name])
         tool_class = getattr(module, name)
         return tool_class
+    # Handle manually registered tools
+    if name == 'WebSearchTools':
+        return WebSearchTools
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 

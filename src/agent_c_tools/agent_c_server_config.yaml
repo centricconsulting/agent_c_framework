@@ -24,3 +24,20 @@ tools:
 
   # Configuration for specific tools (if needed)
   config: {}
+
+# =============================================================================
+# Web Search Tools Configuration
+# =============================================================================
+# The following environment variables are required for web search functionality:
+#
+# Required for Google Search, News, Flights, Events:
+# SERPAPI_API_KEY=your_serpapi_key_here
+#
+# Required for advanced research searches:
+# TAVILI_API_KEY=your_tavily_key_here
+#
+# Required for news-specific searches:
+# NEWSAPI_API_KEY=your_newsapi_key_here
+#
+# Note: DuckDuckGo, Wikipedia, and Hacker News work without API keys
+# See src/agent_c_tools/src/agent_c_tools/tools/web_search/.env.example for details

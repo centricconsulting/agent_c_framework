@@ -1,20 +1,43 @@
-# Web Search Tool
+# WebSearchTools - Unified Web Search Interface
 
 ## What This Tool Does
 
-The Web Search Tool enables agents to search the internet for current information, news, events, and research on virtually any topic. This capability allows you to access up-to-date information that goes beyond what the agent was trained on, ensuring you get the most current and relevant information without having to conduct searches yourself.
+The WebSearchTools provides a unified interface for searching the internet across multiple search engines and specialized content sources. This powerful tool automatically selects the best search engine based on your query type and requirements, giving you access to current information, news, research, and specialized content from a variety of sources.
 
-## Key Capabilities
+**Key Features:**
+- **Unified Interface**: Single tool that replaces multiple individual search tools
+- **Intelligent Routing**: Automatically selects the optimal search engine for your query
+- **Multiple Search Types**: Web, news, educational, research, tech, flights, and events
+- **6 Search Engines**: DuckDuckGo, Google SERP, Tavily, Wikipedia, NewsAPI, and HackerNews
+- **Flexible Configuration**: Works with or without API keys, gracefully falling back to available engines
 
-Agents equipped with this tool can help you find information from a variety of sources:
+## Available Search Methods
 
-- **General Web Results**: Find relevant websites, articles, and resources on any topic
-- **Current News**: Access the latest news articles about specific topics or general headlines
-- **Research Content**: Gather in-depth information from reputable sources for research purposes
-- **Financial Information**: Find market news and stock-specific updates
-- **Events Information**: Discover upcoming events in specific locations
-- **Trending Topics**: See what topics are currently popular or trending
-- **Technical Information**: Access specific documentation, discussions, or solutions
+The WebSearchTools provides 8 specialized search methods:
+
+### Core Search Methods
+- **`web_search()`**: General web search with intelligent engine selection
+- **`news_search()`**: News-specific search with date filtering capabilities
+- **`educational_search()`**: Academic and educational content from Wikipedia and research sources
+- **`research_search()`**: Deep research with content analysis and domain filtering
+- **`tech_search()`**: Technology and programming content from HackerNews and tech sources
+
+### Specialized Search Methods
+- **`flights_search()`**: Flight search using Google Flights with pricing and scheduling
+- **`events_search()`**: Event discovery using Google Events with location filtering
+- **`get_engine_info()`**: Engine status, capabilities, and health monitoring
+
+## Supported Search Engines
+
+### Engines with API Keys (Optional)
+- **Google SERP**: Web, news, flights, events (requires SERPAPI_API_KEY)
+- **Tavily**: Research and content analysis (requires TAVILY_API_KEY)
+- **NewsAPI**: News articles with advanced filtering (requires NEWSAPI_API_KEY)
+
+### Free Engines (No API Key Required)
+- **DuckDuckGo**: Privacy-focused web search
+- **Wikipedia**: Educational and reference content
+- **HackerNews**: Technology community discussions and news
 
 ## Practical Use Cases
 
@@ -27,27 +50,67 @@ Agents equipped with this tool can help you find information from a variety of s
 
 ## Example Interactions
 
-### Current Information Research
+### General Web Search
 
 **User**: "What are the latest developments in quantum computing?"
 
-**Agent**: *Searches the web for recent quantum computing news and research, then provides a summary of the most significant recent advances, breakthroughs, and announcements from credible sources.*
+**Agent**: Uses `web_search(query="latest quantum computing developments", search_type="research")` to automatically route to research-optimized engines and provide comprehensive, up-to-date information.
 
-### Problem-Solving Support
+### News Search with Date Filtering
 
-**User**: "I'm getting an 'ERR_CONNECTION_REFUSED' error on my website. What might be causing this?"
+**User**: "What happened in AI news this week?"
 
-**Agent**: *Searches for technical information about this specific error, then synthesizes solutions from various sources to provide troubleshooting steps and potential fixes.*
+**Agent**: Uses `news_search(query="artificial intelligence", start_date="2024-01-15")` to find recent AI news articles from the past week.
 
-### Travel Research
+### Educational Content Search
 
-**User**: "I'm planning a trip to Barcelona in October. What events will be happening then, and what's the typical weather?"
+**User**: "Explain machine learning algorithms for beginners"
 
-**Agent**: *Searches for upcoming events in Barcelona during October and current weather trend information, then provides a comprehensive overview of cultural events, festivals, and typical weather conditions.*
+**Agent**: Uses `educational_search(query="machine learning algorithms beginner")` to find educational content from Wikipedia and academic sources.
 
-## Configuration Requirements
+### Technical Problem Solving
 
-This tool requires API keys for certain search providers. Your administrator should ensure the appropriate API keys are configured for the search capabilities you need.
+**User**: "I'm getting a 'connection refused' error in my Python application"
+
+**Agent**: Uses `tech_search(query="Python connection refused error solutions")` to find technical discussions and solutions from HackerNews and programming communities.
+
+### Flight and Event Search
+
+**User**: "Find flights from LAX to JFK on March 15th"
+
+**Agent**: Uses `flights_search(departure_id="LAX", arrival_id="JFK", outbound_date="2024-03-15")` to search Google Flights for available options.
+
+**User**: "What events are happening in San Francisco this weekend?"
+
+**Agent**: Uses `events_search(query="weekend events", location="San Francisco")` to find local events and activities.
+
+## Agent Configuration
+
+To enable WebSearchTools for an agent, add it to the agent's YAML configuration:
+
+```yaml
+version: 2
+name: "My Agent"
+key: "my_agent"
+model_id: "claude-sonnet-4-20250514"
+tools:
+  - ThinkTools
+  - WebSearchTools  # Add this line
+  - WorkspaceTools
+```
+
+## Environment Configuration
+
+The WebSearchTools works with or without API keys. For full functionality, configure these environment variables:
+
+```bash
+# Optional API keys for enhanced functionality
+SERPAPI_API_KEY=your_serpapi_key_here      # For Google search, flights, events
+TAVILY_API_KEY=your_tavily_key_here        # For research and content analysis
+NEWSAPI_API_KEY=your_newsapi_key_here      # For news search
+```
+
+**Note**: Even without API keys, the tool provides full functionality using free engines (DuckDuckGo, Wikipedia, HackerNews).
 
 ## Important Considerations
 
@@ -76,9 +139,41 @@ For best results when requesting searches:
 - Specify if you want a particular type of information (news, research papers, etc.)
 - Indicate if you need information from specific sources or domains
 
+### Migration from Legacy Tools
+
+If you're upgrading from individual web search tools, simply replace them with WebSearchTools:
+
+**Before (Legacy)**:
+```yaml
+tools:
+  - GoogleSerpTools
+  - WikipediaTools
+  - HackerNewsTools
+  - TavilyResearchTools
+```
+
+**After (Unified)**:
+```yaml
+tools:
+  - WebSearchTools
+```
+
 ### Limitations
 
-- While the agent can search the web, it cannot access information behind logins or paywalls
-- Very recent breaking news (within minutes) may not yet be indexed by search engines
-- The agent summarizes information from multiple sources but may not capture every detail
-- Search operations use API credits which may have associated usage limits
+- Cannot access information behind logins or paywalls
+- Very recent breaking news (within minutes) may not be indexed
+- API-dependent engines require valid API keys for full functionality
+- Search operations may have usage limits based on API quotas
+- Some specialized searches (flights, events) require Google SERP API access
+
+### Testing and Validation
+
+To verify WebSearchTools is properly registered and configured:
+
+```bash
+# Run the registration test
+python src/agent_c_tools/test_websearch_registration.py
+
+# Check engine availability
+# Use get_engine_info() method in agent to see which engines are available
+```
