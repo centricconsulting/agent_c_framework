@@ -62,12 +62,12 @@ class EnhancedChatSession(BaseModel):
     )
     
     # Backward compatibility fields
-    _legacy_messages: Optional[List[dict[str, Any]]] = Field(
+    legacy_messages: Optional[List[dict[str, Any]]] = Field(
         None, 
         description="Legacy message array for backward compatibility",
         alias="messages"
     )
-    _migration_status: str = Field(
+    migration_status: str = Field(
         "enhanced", 
         description="Migration status: 'legacy', 'migrating', 'enhanced'"
     )
@@ -232,8 +232,8 @@ class EnhancedChatSession(BaseModel):
         
         Returns messages in the legacy dict format for existing code.
         """
-        if self._migration_status == "legacy" and self._legacy_messages is not None:
-            return self._legacy_messages
+        if self.migration_status == "legacy" and self.legacy_messages is not None:
+            return self.legacy_messages
         
         return self.get_messages_for_llm()
     
@@ -265,11 +265,11 @@ class EnhancedChatSession(BaseModel):
                 container.add_message(enhanced_msg)
             except Exception as e:
                 # If conversion fails, store as legacy
-                self._legacy_messages = value
-                self._migration_status = "legacy"
+                self.legacy_messages = value
+                self.migration_status = "legacy"
                 return
         
-        self._migration_status = "enhanced"
+        self.migration_status = "enhanced"
         self.touch()
     
     def _convert_dict_to_enhanced_message(
@@ -352,14 +352,14 @@ class EnhancedChatSession(BaseModel):
             True if migration successful, False otherwise
         """
         try:
-            self._migration_status = "migrating"
+            self.migration_status = "migrating"
             
             # Clear existing data
             self.interaction_containers.clear()
             self.current_interaction_id = None
             
             if not legacy_messages:
-                self._migration_status = "enhanced"
+                self.migration_status = "enhanced"
                 return True
             
             # Group messages into interactions based on conversation flow
@@ -375,15 +375,15 @@ class EnhancedChatSession(BaseModel):
                 
                 self.end_interaction(interaction_id)
             
-            self._migration_status = "enhanced"
-            self._legacy_messages = None
+            self.migration_status = "enhanced"
+            self.legacy_messages = None
             self.touch()
             return True
             
         except Exception as e:
             # Migration failed, revert to legacy
-            self._migration_status = "legacy"
-            self._legacy_messages = legacy_messages
+            self.migration_status = "legacy"
+            self.legacy_messages = legacy_messages
             return False
     
     def _group_messages_into_interactions(
@@ -446,7 +446,7 @@ class EnhancedChatSession(BaseModel):
             "metadata": self.metadata,
             "token_count": self.token_count,
             "context_window_size": self.context_window_size,
-            "migration_status": self._migration_status,
+            "migration_status": self.migration_status,
             "interactions": {}
         }
         
@@ -490,7 +490,7 @@ class EnhancedChatSession(BaseModel):
             self.metadata = data.get("metadata", {})
             self.token_count = data.get("token_count", 0)
             self.context_window_size = data.get("context_window_size", 0)
-            self._migration_status = data.get("migration_status", "enhanced")
+            self.migration_status = data.get("migration_status", "enhanced")
             
             # Clear existing interactions
             self.interaction_containers.clear()
