@@ -142,6 +142,7 @@ class ChatEvent(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     session_id: str  # This field is mandatory.
     role: str
+    interaction_id: Optional[str] = None  # ID of the interaction this event belongs to
     content: Optional[str] = None
     completed: Optional[bool] = None
     tool_use_active: Optional[bool] = None

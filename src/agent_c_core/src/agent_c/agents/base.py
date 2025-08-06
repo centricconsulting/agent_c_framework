@@ -1,12 +1,19 @@
 import os
 import copy
 import asyncio
+import uuid
+import time
+from threading import RLock
 
 from asyncio import Semaphore
 
 from typing import Any, Dict, List, Union, Optional, Callable, Awaitable, Tuple
 
 from agent_c.models.chat_history.chat_session import ChatSession
+from agent_c.models.chat_history.enhanced_chat_session import EnhancedChatSession
+from agent_c.models.chat_history.interaction_container import InteractionContainer
+from agent_c.models.chat_history.compatibility import SessionManagerCompatibility
+from agent_c.models.common_chat.enhanced_models import EnhancedCommonChatMessage
 from agent_c.chat.session_manager import ChatSessionManager
 from agent_c.models import ChatEvent, ImageInput
 from agent_c.models.events.chat import ThoughtDeltaEvent, HistoryDeltaEvent, CompleteThoughtEvent, SystemPromptEvent, UserRequestEvent
@@ -48,6 +55,8 @@ class BaseAgent:
             A semaphore to limit the number of concurrent operations.
         max_delay: int, default is 10
             Maximum delay for exponential backoff.
+        enable_interaction_tracking: bool, default is True
+            Enable automatic interaction tracking and work log generation.
         """
         self.model_name: str = kwargs.get("model_name")
         self.temperature: float = kwargs.get("temperature", 0.5)
@@ -67,6 +76,13 @@ class BaseAgent:
         self.supports_multimodal: bool = False
         self.token_counter: TokenCounter = kwargs.get("token_counter", TokenCounter())
         self.root_message_role: str = kwargs.get("root_message_role", os.environ.get("ROOT_MESSAGE_ROLE", "system"))
+        
+        # Interaction tracking and management
+        self.enable_interaction_tracking: bool = kwargs.get("enable_interaction_tracking", True)
+        self._current_interaction_id: Optional[str] = None
+        self._current_interaction_container: Optional[InteractionContainer] = None
+        self._interaction_lock = RLock()
+        self._interaction_containers: Dict[str, InteractionContainer] = {}
 
         logging_manager = LoggingManager(self.__class__.__name__)
         self.logger = logging_manager.get_logger()
@@ -94,6 +110,129 @@ class BaseAgent:
 
     def count_tokens(self, text: str) -> int:
         return self.token_counter.count_tokens(text)
+    
+    # Interaction Management Methods
+    
+    def _generate_interaction_id(self) -> str:
+        """Generate a new interaction ID."""
+        return str(uuid.uuid4())
+    
+    def _start_interaction(self, interaction_id: Optional[str] = None, **kwargs) -> str:
+        """Start a new interaction and return the interaction ID."""
+        if not self.enable_interaction_tracking:
+            return "disabled"
+            
+        with self._interaction_lock:
+            if interaction_id is None:
+                interaction_id = self._generate_interaction_id()
+            
+            # Create new interaction container
+            container = InteractionContainer(
+                interaction_id=interaction_id,
+                interaction_start=time.time()
+            )
+            
+            self._current_interaction_id = interaction_id
+            self._current_interaction_container = container
+            self._interaction_containers[interaction_id] = container
+            
+            # Register with tool chest if available
+            if self.tool_chest is not None:
+                self.tool_chest.register_interaction_container(interaction_id, container)
+            
+            self.logger.debug(f"Started interaction: {interaction_id}")
+            return interaction_id
+    
+    def _end_interaction(self, interaction_id: Optional[str] = None, **kwargs) -> None:
+        """End the current or specified interaction."""
+        if not self.enable_interaction_tracking:
+            return
+            
+        with self._interaction_lock:
+            target_id = interaction_id or self._current_interaction_id
+            if target_id is None:
+                return
+                
+            container = self._interaction_containers.get(target_id)
+            if container is not None:
+                container.complete_interaction()
+                
+                # Generate work log entries if we have tool calls
+                try:
+                    container.generate_work_log_entries()
+                    self.logger.debug(f"Generated work log entries for interaction: {target_id}")
+                except Exception as e:
+                    self.logger.warning(f"Failed to generate work log entries for interaction {target_id}: {e}")
+                
+                # Unregister from tool chest
+                if self.tool_chest is not None:
+                    self.tool_chest.unregister_interaction_container(target_id)
+            
+            # Clear current interaction if it's the one being ended
+            if target_id == self._current_interaction_id:
+                self._current_interaction_id = None
+                self._current_interaction_container = None
+            
+            self.logger.debug(f"Ended interaction: {target_id}")
+    
+    def _get_current_interaction_id(self) -> Optional[str]:
+        """Get the current interaction ID."""
+        return self._current_interaction_id
+    
+    def _get_interaction_container(self, interaction_id: Optional[str] = None) -> Optional[InteractionContainer]:
+        """Get the interaction container for the specified or current interaction."""
+        if not self.enable_interaction_tracking:
+            return None
+            
+        target_id = interaction_id or self._current_interaction_id
+        if target_id is None:
+            return None
+            
+        return self._interaction_containers.get(target_id)
+    
+    def _add_message_to_interaction(self, message: EnhancedCommonChatMessage, interaction_id: Optional[str] = None) -> bool:
+        """Add a message to the specified or current interaction."""
+        if not self.enable_interaction_tracking:
+            return False
+            
+        container = self._get_interaction_container(interaction_id)
+        if container is None:
+            return False
+            
+        try:
+            # Ensure message has the correct interaction ID
+            if message.interaction_id != container.interaction_id:
+                message.interaction_id = container.interaction_id
+            
+            container.add_message(message)
+            return True
+        except Exception as e:
+            self.logger.warning(f"Failed to add message to interaction {container.interaction_id}: {e}")
+            return False
+    
+    def _create_enhanced_message(self, role: str, content: Any, interaction_id: Optional[str] = None, **kwargs) -> EnhancedCommonChatMessage:
+        """Create an enhanced message with interaction tracking."""
+        target_interaction_id = interaction_id or self._current_interaction_id or "unknown"
+        
+        # Handle different content types
+        if isinstance(content, str):
+            from agent_c.models.common_chat.enhanced_models import EnhancedTextContentBlock
+            content_blocks = [EnhancedTextContentBlock(text=content)]
+        elif isinstance(content, list):
+            content_blocks = content
+        else:
+            # Convert other types to text
+            from agent_c.models.common_chat.enhanced_models import EnhancedTextContentBlock
+            content_blocks = [EnhancedTextContentBlock(text=str(content))]
+        
+        return EnhancedCommonChatMessage(
+            id=kwargs.get('message_id', str(uuid.uuid4())),
+            role=role,
+            content=content_blocks,
+            interaction_id=target_interaction_id,
+            created_at=time.time(),
+            **kwargs
+        )
 
     async def one_shot(self, **kwargs) -> Optional[List[dict[str, Any]]]:
         """For text in, text out processing. without chat"""
@@ -145,7 +284,7 @@ class BaseAgent:
         Returns a dictionary of options for the callback method to be used by default.
         """
         agent_role: str = kwargs.get("agent_role", 'assistant')
-        chat_session: Optional[ChatSession] = kwargs.get("chat_session", None)
+        chat_session: Optional[Union[ChatSession, EnhancedChatSession]] = kwargs.get("chat_session", None)
 
         if chat_session is not None:
             session_id = chat_session.session_id
@@ -211,17 +350,26 @@ class BaseAgent:
         """
         Raise a system event to the event stream.
         """
+        # Add interaction context if available
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(SystemMessageEvent(role="system", severity=severity, content=content,
-                                                   session_id=data.get("session_id", "none")),
+                                                   session_id=data.get("session_id", "none"), **data),
                                                    streaming_callback=streaming_callback)
 
     async def _raise_history_delta(self, messages, **data):
         """
-        Raise a system event to the event stream.
+        Raise a history delta event to the event stream.
         """
         data['role'] = data.get('role', 'assistant')
         data['session_id'] = data.get("session_id", "none")
+        
+        # Add interaction context if available
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(HistoryDeltaEvent(messages=messages, **data), streaming_callback=streaming_callback)
 
@@ -231,6 +379,11 @@ class BaseAgent:
         """
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
+        
+        # Add interaction context if available
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
 
         await self._raise_event(CompletionEvent(running=True, completion_options=completion_options, **data),
@@ -238,10 +391,15 @@ class BaseAgent:
 
     async def _raise_completion_end(self, comp_options, **data):
         """
-        Raise a completion start event to the event stream.
+        Raise a completion end event to the event stream.
         """
         completion_options: dict = copy.deepcopy(comp_options)
         completion_options.pop("messages", None)
+        
+        # Add interaction context if available
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
         event = CompletionEvent(running=False, completion_options=completion_options, **data)
 
@@ -249,51 +407,113 @@ class BaseAgent:
         # logging.debug(f"Completed raising CompletionEvent")
 
     async def _raise_tool_call_start(self, tool_calls, **data):
+        # Add interaction context to tool calls
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = self._current_interaction_id
+            
+            # Enhance tool calls with interaction metadata
+            if isinstance(tool_calls, list):
+                for tool_call in tool_calls:
+                    if isinstance(tool_call, dict) and 'metadata' not in tool_call:
+                        tool_call['metadata'] = {'interaction_id': self._current_interaction_id}
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(ToolCallEvent(active=True, tool_calls=tool_calls, **data), streaming_callback=streaming_callback )
 
     async def _raise_system_prompt(self, prompt: str, **data):
+        # Add interaction context if available
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(SystemPromptEvent(content=prompt, **data), streaming_callback=streaming_callback )
 
     async def _raise_user_request(self, request: str, **data):
+        # Add interaction context if available
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(UserRequestEvent(data={"message": request}, **data), streaming_callback=streaming_callback )
 
     async def _raise_tool_call_delta(self, tool_calls, **data):
+        # Add interaction context to tool call deltas
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = self._current_interaction_id
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(ToolCallDeltaEvent(tool_calls=tool_calls, **data), streaming_callback=streaming_callback)
 
     async def _raise_tool_call_end(self, tool_calls, tool_results, **data):
+        # Add interaction context to tool results
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = self._current_interaction_id
+            
+            # Enhance tool results with interaction metadata
+            if isinstance(tool_results, list):
+                for tool_result in tool_results:
+                    if isinstance(tool_result, dict) and 'metadata' not in tool_result:
+                        tool_result['metadata'] = {'interaction_id': self._current_interaction_id}
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(ToolCallEvent(active=False, tool_calls=tool_calls,
                                               tool_results=tool_results,  **data),
                                               streaming_callback=streaming_callback)
 
     async def _raise_interaction_start(self, **data):
-        iid = data.get('interaction_id',MnemonicSlugs.generate_slug(3))
+        # Start the interaction tracking
+        interaction_id = data.get('interaction_id')
+        if interaction_id is None:
+            interaction_id = self._start_interaction()
+            data['interaction_id'] = interaction_id
+        else:
+            self._start_interaction(interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(InteractionEvent(started=True, id=iid, **data), streaming_callback=streaming_callback)
-        return iid
+        await self._raise_event(InteractionEvent(started=True, id=interaction_id, **data), streaming_callback=streaming_callback)
+        return interaction_id
 
     async def _raise_interaction_end(self, **data):
+        # End the interaction tracking
+        interaction_id = data.get('interaction_id', self._current_interaction_id)
+        if interaction_id:
+            self._end_interaction(interaction_id)
+            data['interaction_id'] = interaction_id
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(InteractionEvent(started=False, **data), streaming_callback=streaming_callback)
 
     async def _raise_text_delta(self, content: str, **data):
+        # Add interaction context if available
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(TextDeltaEvent(content=content, **data), streaming_callback=streaming_callback)
 
     async def _raise_thought_delta(self, content: str, **data):
+        # Add interaction context if available
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(ThoughtDeltaEvent(content=content, **data), streaming_callback=streaming_callback)
 
     async def _raise_complete_thought(self, content: str, **data):
         data['role'] = data.get('role', 'assistant')
+        
+        # Add interaction context if available
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(CompleteThoughtEvent(content=content, **data), streaming_callback=streaming_callback)
 
     async def _raise_history_event(self, messages: List[dict[str, Any]], **data):
+        # Add interaction context if available
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
+        
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(HistoryEvent(messages=messages, **data), streaming_callback=streaming_callback)
 
@@ -314,6 +534,9 @@ class BaseAgent:
 
         This method retrieves messages from session manager if available, and adds
         the current user message (including any multimodal content) to the array.
+        
+        If interaction tracking is enabled, messages will be automatically added to
+        the current interaction container.
 
         Args:
             **kwargs: Keyword arguments including:
@@ -323,15 +546,24 @@ class BaseAgent:
                 - images (List[ImageInput]): Image inputs
                 - audio (List[AudioInput]): Audio inputs
                 - files (List[FileInput]): File inputs
+                - interaction_id (str): Override interaction ID
 
         Returns:
             List[dict[str, Any]]: Formatted message array for LLM API
         """
         messages: Optional[List[Dict[str, Any]]] = kwargs.get("messages", None)
         if messages is None:
-            chat_session: Optional[ChatSession] = kwargs.get("chat_session", None)
-            messages = chat_session.messages if chat_session is not None else []
+            chat_session: Optional[Union[ChatSession, EnhancedChatSession]] = kwargs.get("chat_session", None)
+            if chat_session is not None:
+                # Use compatibility layer to get messages from any session type
+                messages = SessionManagerCompatibility.get_messages_compatible(chat_session)
+            else:
+                messages = []
             kwargs["messages"] = messages
+
+        # Add interaction context to kwargs for downstream processing
+        if self.enable_interaction_tracking and self._current_interaction_id:
+            kwargs['interaction_id'] = kwargs.get('interaction_id', self._current_interaction_id)
 
         return await self.__construct_message_array(**kwargs)
 
@@ -345,12 +577,17 @@ class BaseAgent:
     async def __construct_message_array(self, **kwargs) -> List[dict[str, Any]]:
         """
        Construct a message using an array of messages.
+       
+       If interaction tracking is enabled, the user message will be automatically
+       added to the current interaction container as an EnhancedCommonChatMessage.
 
        Parameters:
        user_message: str
            User message.
        sys_prompt: str, optional
            System prompt to be used for messages[0]
+       interaction_id: str, optional
+           Interaction ID for message tracking
 
        Returns: Message array as a list.
        """
@@ -360,6 +597,7 @@ class BaseAgent:
         images: List[ImageInput] = kwargs.get("images") or []
         audio_clips: List[AudioInput] = kwargs.get("audio") or []
         files: List[FileInput] = kwargs.get("files") or []
+        interaction_id: Optional[str] = kwargs.get("interaction_id")
 
         message_array: List[dict[str, Any]] = []
 
@@ -372,10 +610,25 @@ class BaseAgent:
         if messages is not None:
             message_array += messages
 
-        if len(images) > 0 or len(audio_clips) > 0 or len(files) > 0:
-            multimodal_user_message = await self._generate_multi_modal_user_message(user_message, images, audio_clips, files)
-            message_array += multimodal_user_message
-        else:
-            message_array.append({"role": "user", "content": user_message})
+        # Create and track user message if we have content
+        if user_message:
+            if len(images) > 0 or len(audio_clips) > 0 or len(files) > 0:
+                multimodal_user_message = await self._generate_multi_modal_user_message(user_message, images, audio_clips, files)
+                message_array += multimodal_user_message
+            else:
+                user_msg_dict = {"role": "user", "content": user_message}
+                message_array.append(user_msg_dict)
+                
+                # Track user message in interaction container if enabled
+                if self.enable_interaction_tracking and user_message:
+                    try:
+                        enhanced_message = self._create_enhanced_message(
+                            role="user", 
+                            content=user_message, 
+                            interaction_id=interaction_id
+                        )
+                        self._add_message_to_interaction(enhanced_message, interaction_id)
+                    except Exception as e:
+                        self.logger.warning(f"Failed to track user message in interaction: {e}")
 
         return message_array

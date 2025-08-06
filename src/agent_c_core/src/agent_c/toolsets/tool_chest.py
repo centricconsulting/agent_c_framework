@@ -2,6 +2,7 @@ import asyncio
 import copy
 import json
 import logging
+import uuid
 from typing import Type, List, Union, Dict, Any, Tuple, Optional
 
 
@@ -49,6 +50,7 @@ class ToolChest:
                 - (legacy) tool_classes: Alias for available_toolset_classes for backward compatibility
                 - tool_cache: Optional ToolCache instance to use
                 - session_manager: Optional SessionManager instance to use
+                - enable_tool_manipulation: Enable tool manipulation API (default: True)
         """
         # Initialize main dictionaries for toolset tracking
         self.__toolset_instances: dict[str, Toolset] = {}  # All instantiated toolsets
@@ -74,6 +76,16 @@ class ToolChest:
         # Initialize tool_cache
         self.tool_cache = kwargs.get('tool_cache')
         # self.session_manager = kwargs.get('session_manager')
+        
+        # Initialize Tool Manipulation API if enabled
+        self._tool_manipulation_api = None
+        if kwargs.get('enable_tool_manipulation', True):
+            try:
+                from agent_c.toolsets.tool_manipulation_api import ToolManipulationAPI
+                self._tool_manipulation_api = ToolManipulationAPI(tool_chest=self)
+                self.logger.info("Tool Manipulation API initialized")
+            except ImportError:
+                self.logger.warning("Tool Manipulation API not available")
 
     @property
     def available_toolset_classes(self) -> List:
@@ -419,6 +431,7 @@ class ToolChest:
         
         Args:
             tool_calls (List[dict]): List of tool calls to execute.
+            tool_context (Dict[str, Any]): Context for tool execution including interaction_id.
             format_type (str): The format to use for the results ("claude" or "gpt").
             
         Returns:
@@ -451,7 +464,68 @@ class ToolChest:
 
                 full_args = copy.deepcopy(args)
                 full_args['tool_context'] = tool_context
+                
+                # Add interaction context if available
+                interaction_id = tool_context.get('interaction_id')
+                if interaction_id:
+                    full_args['interaction_id'] = interaction_id
+                    
+                    # Track tool call in interaction container if manipulation API is available
+                    if hasattr(self, '_manipulation_api') and self._manipulation_api:
+                        container = self._manipulation_api._interaction_containers.get(interaction_id)
+                        if container:
+                            # Create enhanced message for tool call
+                            try:
+                                from agent_c.models.common_chat.enhanced_models import (
+                                    EnhancedCommonChatMessage, 
+                                    EnhancedToolUseContentBlock
+                                )
+                                tool_message = EnhancedCommonChatMessage(
+                                    id=tool_call.get('id', str(uuid.uuid4())),
+                                    role='assistant',
+                                    content=[EnhancedToolUseContentBlock(
+                                        id=tool_call.get('id', str(uuid.uuid4())),
+                                        name=fn,
+                                        input=args
+                                    )],
+                                    interaction_id=interaction_id
+                                )
+                                container.add_message(tool_message)
+                            except Exception as e:
+                                self.logger.warning(f"Failed to track tool call in interaction {interaction_id}: {e}")
+                
                 function_response = await self._execute_tool_call(fn, full_args)
+                
+                # Track tool result in interaction container if available
+                if interaction_id and hasattr(self, '_manipulation_api') and self._manipulation_api:
+                    container = self._manipulation_api._interaction_containers.get(interaction_id)
+                    if container:
+                        try:
+                            from agent_c.models.common_chat.enhanced_models import (
+                                EnhancedCommonChatMessage, 
+                                EnhancedToolResultContentBlock,
+                                OutcomeStatus
+                            )
+                            # Determine outcome status based on response
+                            outcome_status = OutcomeStatus.SUCCESS
+                            if isinstance(function_response, str) and "Exception:" in function_response:
+                                outcome_status = OutcomeStatus.FAILURE
+                            
+                            tool_result_message = EnhancedCommonChatMessage(
+                                id=str(uuid.uuid4()),
+                                role='user',  # Tool results come back as user messages
+                                content=[EnhancedToolResultContentBlock(
+                                    tool_use_id=tool_call.get('id', str(uuid.uuid4())),
+                                    content=function_response,
+                                    outcome_status=outcome_status,
+                                    execution_time=0.0,  # TODO: Track actual execution time
+                                    impact_scope='local'
+                                )],
+                                interaction_id=interaction_id
+                            )
+                            container.add_message(tool_result_message)
+                        except Exception as e:
+                            self.logger.warning(f"Failed to track tool result in interaction {interaction_id}: {e}")
                 
                 if format_type == "claude":
                     call_resp = {
@@ -570,3 +644,140 @@ class ToolChest:
             "schemas": schemas,
             "sections": sections
         }
+    
+    # Tool Manipulation API Integration
+    
+    @property
+    def manipulation_api(self):
+        """Get the tool manipulation API instance."""
+        return self._tool_manipulation_api
+    
+    def register_tool_optimizer(self, tool_name: str, optimization_callback, **kwargs) -> bool:
+        """
+        Register a tool optimization callback.
+        
+        Args:
+            tool_name: Name of the tool
+            optimization_callback: Callback function for optimization
+            **kwargs: Additional arguments for the optimizer
+            
+        Returns:
+            True if registration successful, False otherwise
+        """
+        if self._tool_manipulation_api:
+            return self._tool_manipulation_api.register_tool_optimizer(
+                tool_name, optimization_callback, **kwargs
+            )
+        else:
+            self.logger.warning("Tool Manipulation API not available")
+            return False
+    
+    def invalidate_conflicting_calls(
+        self, 
+        tool_name: str, 
+        new_call_params: Dict[str, Any], 
+        interaction_id: str
+    ) -> List[str]:
+        """
+        Invalidate messages that conflict with new tool call parameters.
+        
+        Args:
+            tool_name: Name of the tool making the call
+            new_call_params: Parameters of the new tool call
+            interaction_id: ID of the interaction
+            
+        Returns:
+            List of invalidated message IDs
+        """
+        if self._tool_manipulation_api:
+            return self._tool_manipulation_api.invalidate_conflicting_calls(
+                tool_name, new_call_params, interaction_id
+            )
+        else:
+            self.logger.warning("Tool Manipulation API not available")
+            return []
+    
+    def optimize_for_tool_sequence(
+        self, 
+        tool_sequence: List[str], 
+        interaction_id: str, 
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Optimize message array for a sequence of tool operations.
+        
+        Args:
+            tool_sequence: Ordered list of tool names in the sequence
+            interaction_id: ID of the interaction
+            **kwargs: Additional optimization parameters
+            
+        Returns:
+            Dictionary with optimization results
+        """
+        if self._tool_manipulation_api:
+            return self._tool_manipulation_api.optimize_for_tool_sequence(
+                tool_sequence, interaction_id, **kwargs
+            )
+        else:
+            self.logger.warning("Tool Manipulation API not available")
+            return {'success': False, 'error': 'Tool Manipulation API not available'}
+    
+    def rollback_tool_optimizations(self, interaction_id: str, **kwargs) -> Dict[str, Any]:
+        """
+        Rollback tool optimizations for an interaction.
+        
+        Args:
+            interaction_id: ID of the interaction
+            **kwargs: Additional rollback parameters
+            
+        Returns:
+            Dictionary with rollback results
+        """
+        if self._tool_manipulation_api:
+            return self._tool_manipulation_api.rollback_tool_optimizations(
+                interaction_id, **kwargs
+            )
+        else:
+            self.logger.warning("Tool Manipulation API not available")
+            return {'success': False, 'error': 'Tool Manipulation API not available'}
+    
+    def get_optimization_audit_trail(self, **kwargs) -> List[Dict[str, Any]]:
+        """
+        Get optimization audit trail with optional filtering.
+        
+        Args:
+            **kwargs: Filter parameters (interaction_id, tool_name, limit)
+            
+        Returns:
+            List of optimization records
+        """
+        if self._tool_manipulation_api:
+            return self._tool_manipulation_api.get_optimization_audit_trail(**kwargs)
+        else:
+            self.logger.warning("Tool Manipulation API not available")
+            return []
+    
+    def register_interaction_container(self, interaction_id: str, container) -> None:
+        """
+        Register an InteractionContainer for optimization.
+        
+        Args:
+            interaction_id: ID of the interaction
+            container: InteractionContainer instance
+        """
+        if self._tool_manipulation_api:
+            self._tool_manipulation_api.register_container(interaction_id, container)
+        else:
+            self.logger.warning("Tool Manipulation API not available")
+    
+    def unregister_interaction_container(self, interaction_id: str) -> None:
+        """
+        Unregister an InteractionContainer.
+        
+        Args:
+            interaction_id: ID of the interaction
+        """
+        if self._tool_manipulation_api:
+            self._tool_manipulation_api.unregister_container(interaction_id)
+        else:
+            self.logger.warning("Tool Manipulation API not available")
