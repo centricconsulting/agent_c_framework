@@ -17,7 +17,7 @@ from enum import Enum
 from dataclasses import dataclass, field
 from pydantic import BaseModel, Field, validator, root_validator
 
-from ..base import ObservableModel
+from ..observable import ObservableModel
 from ..common_chat.enhanced_models import (
     OutcomeStatus, 
     EnhancedCommonChatMessage,

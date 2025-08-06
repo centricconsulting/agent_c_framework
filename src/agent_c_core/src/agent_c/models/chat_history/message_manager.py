@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
-from ..base import ObservableModel
+from ..observable import ObservableModel
 from ..common_chat.enhanced_models import (
     EnhancedCommonChatMessage, ValidityState, OutcomeStatus
 )
@@ -154,4 +154,423 @@ class MessageManager(ObservableModel):
             True if removed, False if not found
         """
         with self._lock:
-            if interaction_id not in self.interactions:\n                return False\n            \n            interaction = self.interactions[interaction_id]\n            \n            # Remove from indexes\n            self._remove_from_indexes(interaction)\n            \n            # Remove relationships\n            self._remove_relationships_for_interaction(interaction_id)\n            \n            # Remove interaction\n            del self.interactions[interaction_id]\n            \n            # Clear search cache\n            self._clear_search_cache()\n            \n            return True\n    \n    def get_interaction(self, interaction_id: str) -> Optional[InteractionContainer]:\n        \"\"\"Get an interaction by ID.\"\"\"\n        with self._lock:\n            return self.interactions.get(interaction_id)\n    \n    def list_interactions(\n        self,\n        include_inactive: bool = False,\n        sort_by: str = 'start_time'\n    ) -> List[InteractionContainer]:\n        \"\"\"\n        List all managed interactions.\n        \n        Args:\n            include_inactive: Whether to include inactive interactions\n            sort_by: Field to sort by ('start_time', 'stop_time', 'message_count')\n            \n        Returns:\n            List of interaction containers\n        \"\"\"\n        with self._lock:\n            interactions = list(self.interactions.values())\n            \n            if not include_inactive:\n                interactions = [i for i in interactions if i.is_active()]\n            \n            # Sort interactions\n            if sort_by == 'start_time':\n                interactions.sort(key=lambda i: i.interaction_start)\n            elif sort_by == 'stop_time':\n                interactions.sort(key=lambda i: i.interaction_stop or float('inf'))\n            elif sort_by == 'message_count':\n                interactions.sort(key=lambda i: len(i.messages), reverse=True)\n            \n            return interactions\n    \n    # Advanced Message Retrieval Methods\n    \n    def get_messages_for_interaction(\n        self,\n        interaction_id: str,\n        include_invalidated: bool = False\n    ) -> List[EnhancedCommonChatMessage]:\n        \"\"\"\n        Get all messages for a specific interaction.\n        \n        Args:\n            interaction_id: ID of the interaction\n            include_invalidated: Whether to include invalidated messages\n            \n        Returns:\n            List of messages\n        \"\"\"\n        with self._lock:\n            interaction = self.interactions.get(interaction_id)\n            if not interaction:\n                return []\n            \n            return interaction.get_all_messages(include_invalidated=include_invalidated)\n    \n    def find_message_by_id(self, message_id: str) -> Optional[EnhancedCommonChatMessage]:\n        \"\"\"\n        Find a message by ID across all interactions.\n        \n        Args:\n            message_id: ID of the message to find\n            \n        Returns:\n            Message if found, None otherwise\n        \"\"\"\n        with self._lock:\n            interaction_id = self.message_index.get(message_id)\n            if not interaction_id:\n                return None\n            \n            interaction = self.interactions.get(interaction_id)\n            if not interaction:\n                return None\n            \n            return interaction.get_message_by_id(message_id)\n    \n    def get_messages_by_tool(\n        self,\n        tool_name: str,\n        include_results: bool = True,\n        scope: QueryScope = QueryScope.ALL_INTERACTIONS\n    ) -> List[EnhancedCommonChatMessage]:\n        \"\"\"\n        Get messages related to a specific tool.\n        \n        Args:\n            tool_name: Name of the tool\n            include_results: Whether to include tool result messages\n            scope: Query scope\n            \n        Returns:\n            List of messages related to the tool\n        \"\"\"\n        with self._lock:\n            tool_messages = []\n            \n            interactions_to_search = self._get_interactions_for_scope(scope)\n            \n            for interaction in interactions_to_search:\n                messages = interaction.get_messages_by_tool(tool_name, include_results)\n                tool_messages.extend(messages)\n            \n            return tool_messages\n    \n    def search_messages(\n        self,\n        criteria: MessageSearchCriteria,\n        scope: QueryScope = QueryScope.ALL_INTERACTIONS\n    ) -> List[Tuple[EnhancedCommonChatMessage, Dict[str, Any]]]:\n        \"\"\"\n        Advanced message search with multiple criteria.\n        \n        Args:\n            criteria: Search criteria\n            scope: Query scope\n            \n        Returns:\n            List of tuples (message, context_info)\n        \"\"\"\n        with self._lock:\n            # Check cache first\n            cache_key = self._generate_search_cache_key(criteria, scope)\n            cached_result = self._get_cached_search_result(cache_key)\n            if cached_result:\n                return cached_result\n            \n            results = []\n            interactions_to_search = self._get_interactions_for_scope(scope)\n            \n            for interaction in interactions_to_search:\n                messages = interaction.get_all_messages(include_invalidated=True)\n                \n                for message in messages:\n                    if self._message_matches_criteria(message, criteria):\n                        context_info = {\n                            'interaction_id': interaction.interaction_id,\n                            'message_index': messages.index(message),\n                            'total_messages': len(messages),\n                            'interaction_start': interaction.interaction_start,\n                            'interaction_stop': interaction.interaction_stop\n                        }\n                        \n                        if criteria.include_context:\n                            context_info.update(self._get_message_context(message, interaction))\n                        \n                        results.append((message, context_info))\n            \n            # Apply result limit\n            if criteria.max_results:\n                results = results[:criteria.max_results]\n            \n            # Cache results\n            self._cache_search_result(cache_key, results)\n            \n            return results\n    \n    def get_message_relationships(\n        self,\n        message_id: str,\n        relationship_types: Optional[List[str]] = None,\n        min_strength: float = 0.0\n    ) -> List[MessageRelationship]:\n        \"\"\"\n        Get relationships for a specific message.\n        \n        Args:\n            message_id: ID of the message\n            relationship_types: Types of relationships to include\n            min_strength: Minimum relationship strength\n            \n        Returns:\n            List of message relationships\n        \"\"\"\n        with self._lock:\n            relationships = self.relationship_graph.get(message_id, [])\n            \n            # Filter by relationship type\n            if relationship_types:\n                relationships = [\n                    rel for rel in relationships\n                    if rel.relationship_type in relationship_types\n                ]\n            \n            # Filter by strength\n            relationships = [\n                rel for rel in relationships\n                if rel.strength >= min_strength\n            ]\n            \n            return relationships\n    \n    # Message Manipulation Methods\n    \n    def edit_message(\n        self,\n        message_id: str,\n        new_content: List[Any],\n        create_branch: bool = False,\n        preserve_metadata: bool = True\n    ) -> Union[str, InteractionContainer]:\n        \"\"\"\n        Edit a message across interactions.\n        \n        Args:\n            message_id: ID of the message to edit\n            new_content: New content for the message\n            create_branch: Whether to create a branch\n            preserve_metadata: Whether to preserve metadata\n            \n        Returns:\n            Message ID or new InteractionContainer if branched\n        \"\"\"\n        with self._lock:\n            interaction_id = self.message_index.get(message_id)\n            if not interaction_id:\n                raise ValueError(f\"Message {message_id} not found\")\n            \n            interaction = self.interactions[interaction_id]\n            result = interaction.edit_message(\n                message_id, new_content, create_branch, preserve_metadata\n            )\n            \n            # If a new branch was created, add it to management\n            if isinstance(result, InteractionContainer):\n                self.add_interaction(result)\n            \n            # Update relationships if content changed significantly\n            self._update_relationships_for_message(message_id)\n            \n            # Clear search cache\n            self._clear_search_cache()\n            \n            return result\n    \n    def branch_from_message(\n        self,\n        message_id: str,\n        new_interaction_id: Optional[str] = None\n    ) -> InteractionContainer:\n        \"\"\"\n        Create a branch from a specific message.\n        \n        Args:\n            message_id: ID of the message to branch from\n            new_interaction_id: Optional ID for new interaction\n            \n        Returns:\n            New InteractionContainer\n        \"\"\"\n        with self._lock:\n            interaction_id = self.message_index.get(message_id)\n            if not interaction_id:\n                raise ValueError(f\"Message {message_id} not found\")\n            \n            interaction = self.interactions[interaction_id]\n            branch_container = interaction.branch_from_message(message_id)\n            \n            # Set custom interaction ID if provided\n            if new_interaction_id:\n                branch_container.interaction_id = new_interaction_id\n                # Update message interaction IDs\n                for message in branch_container.messages:\n                    message.interaction_id = new_interaction_id\n            \n            # Add to management\n            self.add_interaction(branch_container)\n            \n            return branch_container\n    \n    def batch_update_messages(\n        self,\n        updates: List[Dict[str, Any]],\n        scope: QueryScope = QueryScope.ALL_INTERACTIONS\n    ) -> Dict[str, Any]:\n        \"\"\"\n        Perform batch updates across multiple interactions.\n        \n        Args:\n            updates: List of update operations\n            scope: Scope for updates\n            \n        Returns:\n            Dictionary with batch update results\n        \"\"\"\n        with self._lock:\n            results = {\n                'successful_updates': [],\n                'failed_updates': [],\n                'interactions_affected': set(),\n                'total_updates': len(updates)\n            }\n            \n            for update in updates:\n                try:\n                    message_id = update.get('message_id')\n                    interaction_id = self.message_index.get(message_id)\n                    \n                    if not interaction_id:\n                        results['failed_updates'].append({\n                            'update': update,\n                            'error': f'Message {message_id} not found'\n                        })\n                        continue\n                    \n                    interaction = self.interactions[interaction_id]\n                    \n                    # Check scope\n                    if not self._interaction_in_scope(interaction, scope):\n                        results['failed_updates'].append({\n                            'update': update,\n                            'error': f'Interaction {interaction_id} not in scope'\n                        })\n                        continue\n                    \n                    # Perform update\n                    batch_result = interaction.batch_update_messages([update])\n                    \n                    results['successful_updates'].extend(batch_result['successful_updates'])\n                    results['failed_updates'].extend(batch_result['failed_updates'])\n                    results['interactions_affected'].add(interaction_id)\n                    \n                except Exception as e:\n                    results['failed_updates'].append({\n                        'update': update,\n                        'error': str(e)\n                    })\n            \n            results['interactions_affected'] = list(results['interactions_affected'])\n            \n            # Clear search cache\n            self._clear_search_cache()\n            \n            return results\n    \n    # Advanced Features\n    \n    def get_interaction_summary(\n        self,\n        interaction_id: str,\n        include_work_log: bool = True\n    ) -> Dict[str, Any]:\n        \"\"\"\n        Get comprehensive interaction summary with work log integration.\n        \n        Args:\n            interaction_id: ID of the interaction\n            include_work_log: Whether to include work log data\n            \n        Returns:\n            Dictionary with interaction summary\n        \"\"\"\n        with self._lock:\n            interaction = self.interactions.get(interaction_id)\n            if not interaction:\n                return {'error': f'Interaction {interaction_id} not found'}\n            \n            summary = interaction.export_context(format='summary')\n            \n            if include_work_log and self.work_log:\n                work_log_summary = self.work_log.get_interaction_summary(interaction_id)\n                summary['work_log'] = work_log_summary\n            \n            # Add relationship information\n            message_relationships = []\n            for message in interaction.messages:\n                relationships = self.get_message_relationships(message.id)\n                if relationships:\n                    message_relationships.append({\n                        'message_id': message.id,\n                        'relationship_count': len(relationships),\n                        'relationship_types': list(set(\n                            rel.relationship_type for rel in relationships\n                        ))\n                    })\n            \n            summary['message_relationships'] = message_relationships\n            \n            return summary\n    \n    def validate_message_integrity(\n        self,\n        scope: QueryScope = QueryScope.ALL_INTERACTIONS\n    ) -> Dict[str, Any]:\n        \"\"\"\n        Validate message integrity across interactions.\n        \n        Args:\n            scope: Validation scope\n            \n        Returns:\n            Dictionary with validation results\n        \"\"\"\n        with self._lock:\n            validation_results = {\n                'is_valid': True,\n                'global_issues': [],\n                'interaction_results': {},\n                'total_interactions': 0,\n                'total_messages': 0,\n                'validation_timestamp': time.time()\n            }\n            \n            interactions_to_validate = self._get_interactions_for_scope(scope)\n            validation_results['total_interactions'] = len(interactions_to_validate)\n            \n            # Validate each interaction\n            for interaction in interactions_to_validate:\n                interaction_validation = interaction.validate_message_integrity()\n                validation_results['interaction_results'][interaction.interaction_id] = interaction_validation\n                validation_results['total_messages'] += interaction_validation['message_count']\n                \n                if not interaction_validation['is_valid']:\n                    validation_results['is_valid'] = False\n            \n            # Global validations\n            \n            # Check for duplicate message IDs across interactions\n            all_message_ids = []\n            for interaction in interactions_to_validate:\n                all_message_ids.extend([msg.id for msg in interaction.messages])\n            \n            if len(all_message_ids) != len(set(all_message_ids)):\n                validation_results['is_valid'] = False\n                validation_results['global_issues'].append(\n                    'Duplicate message IDs found across interactions'\n                )\n            \n            # Check message index consistency\n            for message_id, indexed_interaction_id in self.message_index.items():\n                if indexed_interaction_id not in self.interactions:\n                    validation_results['is_valid'] = False\n                    validation_results['global_issues'].append(\n                        f'Message index references non-existent interaction: {indexed_interaction_id}'\n                    )\n                    continue\n                \n                interaction = self.interactions[indexed_interaction_id]\n                if not interaction.get_message_by_id(message_id):\n                    validation_results['is_valid'] = False\n                    validation_results['global_issues'].append(\n                        f'Message index inconsistency: message {message_id} not found in interaction {indexed_interaction_id}'\n                    )\n            \n            return validation_results\n    \n    def optimize_message_storage(\n        self,\n        scope: QueryScope = QueryScope.ALL_INTERACTIONS\n    ) -> Dict[str, Any]:\n        \"\"\"\n        Optimize message storage across interactions.\n        \n        Args:\n            scope: Optimization scope\n            \n        Returns:\n            Dictionary with optimization results\n        \"\"\"\n        with self._lock:\n            optimization_results = {\n                'interactions_optimized': 0,\n                'total_messages_before': 0,\n                'total_messages_after': 0,\n                'space_saved_percent': 0.0,\n                'optimization_details': {},\n                'optimization_timestamp': time.time()\n            }\n            \n            interactions_to_optimize = self._get_interactions_for_scope(scope)\n            \n            for interaction in interactions_to_optimize:\n                before_count = len(interaction.messages)\n                optimization_results['total_messages_before'] += before_count\n                \n                interaction_optimization = interaction.optimize_message_storage()\n                optimization_results['optimization_details'][interaction.interaction_id] = interaction_optimization\n                \n                after_count = len(interaction.messages)\n                optimization_results['total_messages_after'] += after_count\n                optimization_results['interactions_optimized'] += 1\n            \n            # Calculate overall space saved\n            if optimization_results['total_messages_before'] > 0:\n                optimization_results['space_saved_percent'] = (\n                    (optimization_results['total_messages_before'] - optimization_results['total_messages_after']) /\n                    optimization_results['total_messages_before'] * 100\n                )\n            \n            # Rebuild indexes after optimization\n            self._rebuild_all_indexes()\n            \n            # Clear search cache\n            self._clear_search_cache()\n            \n            return optimization_results\n    \n    def export_interaction_context(\n        self,\n        interaction_id: str,\n        format: str = 'json',\n        include_work_log: bool = True,\n        include_relationships: bool = True\n    ) -> str:\n        \"\"\"\n        Export interaction context in specified format.\n        \n        Args:\n            interaction_id: ID of the interaction to export\n            format: Export format ('json', 'yaml', 'xml')\n            include_work_log: Whether to include work log data\n            include_relationships: Whether to include relationship data\n            \n        Returns:\n            Exported context as string\n        \"\"\"\n        with self._lock:\n            interaction = self.interactions.get(interaction_id)\n            if not interaction:\n                raise ValueError(f\"Interaction {interaction_id} not found\")\n            \n            # Get base context\n            context_data = interaction.export_context(format='full')\n            \n            # Add work log data\n            if include_work_log and self.work_log:\n                work_log_summary = self.work_log.get_interaction_summary(interaction_id)\n                context_data['work_log'] = work_log_summary\n            \n            # Add relationship data\n            if include_relationships:\n                relationships = {}\n                for message in interaction.messages:\n                    message_relationships = self.get_message_relationships(message.id)\n                    if message_relationships:\n                        relationships[message.id] = [\n                            {\n                                'target_message_id': rel.target_message_id,\n                                'relationship_type': rel.relationship_type,\n                                'strength': rel.strength,\n                                'metadata': rel.metadata\n                            }\n                            for rel in message_relationships\n                        ]\n                context_data['relationships'] = relationships\n            \n            # Export in requested format\n            if format.lower() == 'json':\n                return json.dumps(context_data, indent=2, default=str)\n            elif format.lower() == 'yaml':\n                try:\n                    import yaml\n                    return yaml.dump(context_data, default_flow_style=False)\n                except ImportError:\n                    raise ValueError(\"YAML export requires PyYAML package\")\n            elif format.lower() == 'xml':\n                # Basic XML export (simplified)\n                return self._dict_to_xml(context_data, 'interaction_context')\n            else:\n                raise ValueError(f\"Unsupported export format: {format}\")\n    \n    def import_interaction_context(\n        self,\n        context_data: Union[str, Dict[str, Any]],\n        merge_strategy: MergeStrategy = MergeStrategy.CREATE_NEW,\n        target_interaction_id: Optional[str] = None\n    ) -> str:\n        \"\"\"\n        Import interaction context data.\n        \n        Args:\n            context_data: Context data to import (string or dict)\n            merge_strategy: Strategy for merging with existing data\n            target_interaction_id: Target interaction ID for merging\n            \n        Returns:\n            ID of the created/updated interaction\n        \"\"\"\n        with self._lock:\n            # Parse context data if it's a string\n            if isinstance(context_data, str):\n                try:\n                    context_dict = json.loads(context_data)\n                except json.JSONDecodeError:\n                    try:\n                        import yaml\n                        context_dict = yaml.safe_load(context_data)\n                    except ImportError:\n                        raise ValueError(\"Unable to parse context data\")\n            else:\n                context_dict = context_data\n            \n            # Extract interaction data\n            interaction_id = context_dict.get('interaction_id')\n            messages_data = context_dict.get('messages', [])\n            \n            # Create messages from data\n            messages = []\n            for msg_data in messages_data:\n                try:\n                    message = EnhancedCommonChatMessage.model_validate(msg_data)\n                    messages.append(message)\n                except Exception as e:\n                    raise ValueError(f\"Invalid message data: {e}\")\n            \n            # Apply merge strategy\n            if merge_strategy == MergeStrategy.CREATE_NEW:\n                # Create new interaction\n                new_interaction = InteractionContainer(\n                    interaction_id=target_interaction_id or str(uuid4()),\n                    messages=messages,\n                    interaction_start=context_dict.get('start_time', time.time()),\n                    interaction_stop=context_dict.get('stop_time')\n                )\n                result_id = self.add_interaction(new_interaction)\n            \n            elif merge_strategy == MergeStrategy.APPEND:\n                # Append to existing interaction\n                if not target_interaction_id:\n                    raise ValueError(\"Target interaction ID required for APPEND strategy\")\n                \n                target_interaction = self.interactions.get(target_interaction_id)\n                if not target_interaction:\n                    raise ValueError(f\"Target interaction {target_interaction_id} not found\")\n                \n                for message in messages:\n                    message.interaction_id = target_interaction_id\n                    target_interaction.add_message(message)\n                \n                result_id = target_interaction_id\n            \n            elif merge_strategy == MergeStrategy.REPLACE:\n                # Replace existing interaction\n                if not target_interaction_id:\n                    raise ValueError(\"Target interaction ID required for REPLACE strategy\")\n                \n                if target_interaction_id in self.interactions:\n                    self.remove_interaction(target_interaction_id)\n                \n                new_interaction = InteractionContainer(\n                    interaction_id=target_interaction_id,\n                    messages=messages,\n                    interaction_start=context_dict.get('start_time', time.time()),\n                    interaction_stop=context_dict.get('stop_time')\n                )\n                result_id = self.add_interaction(new_interaction)\n            \n            elif merge_strategy == MergeStrategy.MERGE_BY_TIMESTAMP:\n                # Merge by timestamp\n                if not target_interaction_id:\n                    raise ValueError(\"Target interaction ID required for MERGE_BY_TIMESTAMP strategy\")\n                \n                target_interaction = self.interactions.get(target_interaction_id)\n                if not target_interaction:\n                    raise ValueError(f\"Target interaction {target_interaction_id} not found\")\n                \n                # Merge messages by timestamp\n                all_messages = target_interaction.messages + messages\n                all_messages.sort(key=lambda m: m.created_at)\n                \n                # Update interaction IDs\n                for message in all_messages:\n                    message.interaction_id = target_interaction_id\n                \n                target_interaction.messages = all_messages\n                result_id = target_interaction_id\n            \n            else:\n                raise ValueError(f\"Unsupported merge strategy: {merge_strategy}\")\n            \n            # Import work log data if present\n            if 'work_log' in context_dict and self.work_log:\n                work_log_data = context_dict['work_log']\n                # Implementation would depend on work log import capabilities\n                pass\n            \n            # Import relationship data if present\n            if 'relationships' in context_dict:\n                relationships_data = context_dict['relationships']\n                for message_id, message_relationships in relationships_data.items():\n                    for rel_data in message_relationships:\n                        relationship = MessageRelationship(\n                            source_message_id=message_id,\n                            target_message_id=rel_data['target_message_id'],\n                            relationship_type=rel_data['relationship_type'],\n                            strength=rel_data['strength'],\n                            metadata=rel_data.get('metadata', {})\n                        )\n                        self._add_relationship(relationship)\n            \n            return result_id\n    \n    # Private Helper Methods\n    \n    def _update_indexes_for_interaction(self, interaction: InteractionContainer):\n        \"\"\"Update indexes for a new interaction.\"\"\"\n        for message in interaction.messages:\n            self.message_index[message.id] = interaction.interaction_id\n            \n            # Update tool index\n            for tool_name in message.get_tool_names():\n                if tool_name not in self.tool_index:\n                    self.tool_index[tool_name] = []\n                if message.id not in self.tool_index[tool_name]:\n                    self.tool_index[tool_name].append(message.id)\n    \n    def _remove_from_indexes(self, interaction: InteractionContainer):\n        \"\"\"Remove interaction from indexes.\"\"\"\n        for message in interaction.messages:\n            self.message_index.pop(message.id, None)\n            \n            # Remove from tool index\n            for tool_name in message.get_tool_names():\n                if tool_name in self.tool_index:\n                    if message.id in self.tool_index[tool_name]:\n                        self.tool_index[tool_name].remove(message.id)\n                    if not self.tool_index[tool_name]:\n                        del self.tool_index[tool_name]\n    \n    def _rebuild_all_indexes(self):\n        \"\"\"Rebuild all indexes from scratch.\"\"\"\n        self.message_index.clear()\n        self.tool_index.clear()\n        \n        for interaction in self.interactions.values():\n            self._update_indexes_for_interaction(interaction)\n    \n    def _build_relationships_for_interaction(self, interaction: InteractionContainer):\n        \"\"\"Build relationships for messages in an interaction.\"\"\"\n        messages = interaction.messages\n        \n        for i, message in enumerate(messages):\n            # Conversation flow relationships\n            if i > 0:\n                prev_message = messages[i - 1]\n                relationship = MessageRelationship(\n                    source_message_id=prev_message.id,\n                    target_message_id=message.id,\n                    relationship_type='conversation_flow',\n                    strength=0.8,\n                    metadata={'flow_index': i}\n                )\n                self._add_relationship(relationship)\n            \n            # Tool call-result relationships\n            for content_block in message.content:\n                if hasattr(content_block, 'tool_call_id'):\n                    # Find corresponding tool result\n                    for other_message in messages[i:]:  # Look in current and subsequent messages\n                        for other_block in other_message.content:\n                            if (hasattr(other_block, 'tool_call_id') and\n                                other_block.tool_call_id == content_block.tool_call_id and\n                                other_message.id != message.id):\n                                \n                                relationship = MessageRelationship(\n                                    source_message_id=message.id,\n                                    target_message_id=other_message.id,\n                                    relationship_type='tool_call_result',\n                                    strength=1.0,\n                                    metadata={\n                                        'tool_call_id': content_block.tool_call_id,\n                                        'tool_name': getattr(content_block, 'tool_name', 'unknown')\n                                    }\n                                )\n                                self._add_relationship(relationship)\n    \n    def _add_relationship(self, relationship: MessageRelationship):\n        \"\"\"Add a relationship to the graph.\"\"\"\n        source_id = relationship.source_message_id\n        if source_id not in self.relationship_graph:\n            self.relationship_graph[source_id] = []\n        self.relationship_graph[source_id].append(relationship)\n    \n    def _remove_relationships_for_interaction(self, interaction_id: str):\n        \"\"\"Remove all relationships for an interaction.\"\"\"\n        interaction = self.interactions.get(interaction_id)\n        if not interaction:\n            return\n        \n        message_ids = {msg.id for msg in interaction.messages}\n        \n        # Remove relationships where source or target is in this interaction\n        for source_id in list(self.relationship_graph.keys()):\n            if source_id in message_ids:\n                del self.relationship_graph[source_id]\n            else:\n                # Remove relationships targeting messages in this interaction\n                self.relationship_graph[source_id] = [\n                    rel for rel in self.relationship_graph[source_id]\n                    if rel.target_message_id not in message_ids\n                ]\n                if not self.relationship_graph[source_id]:\n                    del self.relationship_graph[source_id]\n    \n    def _get_interactions_for_scope(self, scope: QueryScope) -> List[InteractionContainer]:\n        \"\"\"Get interactions based on query scope.\"\"\"\n        if scope == QueryScope.ALL_INTERACTIONS:\n            return list(self.interactions.values())\n        elif scope == QueryScope.ACTIVE_INTERACTIONS:\n            return [i for i in self.interactions.values() if i.is_active()]\n        else:\n            # For single/multiple interaction scopes, return all for now\n            # This would be refined based on specific scope parameters\n            return list(self.interactions.values())\n    \n    def _interaction_in_scope(self, interaction: InteractionContainer, scope: QueryScope) -> bool:\n        \"\"\"Check if interaction is in the specified scope.\"\"\"\n        if scope == QueryScope.ALL_INTERACTIONS:\n            return True\n        elif scope == QueryScope.ACTIVE_INTERACTIONS:\n            return interaction.is_active()\n        else:\n            return True  # Default to include\n    \n    def _message_matches_criteria(self, message: EnhancedCommonChatMessage, criteria: MessageSearchCriteria) -> bool:\n        \"\"\"Check if a message matches search criteria.\"\"\"\n        # Text pattern matching\n        if criteria.text_patterns:\n            message_text = ' '.join(str(block) for block in message.content)\n            if not any(pattern.lower() in message_text.lower() for pattern in criteria.text_patterns):\n                return False\n        \n        # Tool name filtering\n        if criteria.tool_names:\n            message_tools = message.get_tool_names()\n            if not any(tool in message_tools for tool in criteria.tool_names):\n                return False\n        \n        # Role filtering\n        if criteria.roles:\n            if message.role.value not in criteria.roles:\n                return False\n        \n        # Validity state filtering\n        if criteria.validity_states:\n            if message.validity_state not in criteria.validity_states:\n                return False\n        \n        # Time range filtering\n        if criteria.start_time and message.created_at < criteria.start_time:\n            return False\n        if criteria.end_time and message.created_at > criteria.end_time:\n            return False\n        \n        return True\n    \n    def _get_message_context(self, message: EnhancedCommonChatMessage, interaction: InteractionContainer) -> Dict[str, Any]:\n        \"\"\"Get context information for a message.\"\"\"\n        message_index = None\n        for i, msg in enumerate(interaction.messages):\n            if msg.id == message.id:\n                message_index = i\n                break\n        \n        context = {\n            'previous_messages': [],\n            'next_messages': [],\n            'tool_calls': [],\n            'tool_results': []\n        }\n        \n        if message_index is not None:\n            # Get surrounding messages\n            start_idx = max(0, message_index - 2)\n            end_idx = min(len(interaction.messages), message_index + 3)\n            \n            context['previous_messages'] = [\n                {'id': msg.id, 'role': msg.role.value, 'summary': str(msg.content)[:100]}\n                for msg in interaction.messages[start_idx:message_index]\n            ]\n            \n            context['next_messages'] = [\n                {'id': msg.id, 'role': msg.role.value, 'summary': str(msg.content)[:100]}\n                for msg in interaction.messages[message_index + 1:end_idx]\n            ]\n        \n        # Extract tool information\n        for block in message.content:\n            if hasattr(block, 'tool_name'):\n                if hasattr(block, 'parameters'):  # Tool use block\n                    context['tool_calls'].append({\n                        'tool_name': block.tool_name,\n                        'tool_call_id': getattr(block, 'tool_call_id', None),\n                        'parameters': block.parameters\n                    })\n                else:  # Tool result block\n                    context['tool_results'].append({\n                        'tool_name': block.tool_name,\n                        'tool_call_id': getattr(block, 'tool_call_id', None),\n                        'outcome_status': getattr(block, 'outcome_status', None)\n                    })\n        \n        return context\n    \n    def _generate_search_cache_key(self, criteria: MessageSearchCriteria, scope: QueryScope) -> str:\n        \"\"\"Generate cache key for search results.\"\"\"\n        import hashlib\n        \n        cache_data = {\n            'criteria': criteria.__dict__,\n            'scope': scope.value,\n            'timestamp': int(time.time() / self._cache_ttl)  # Round to cache TTL\n        }\n        \n        cache_str = json.dumps(cache_data, sort_keys=True, default=str)\n        return hashlib.md5(cache_str.encode()).hexdigest()\n    \n    def _get_cached_search_result(self, cache_key: str) -> Optional[List[Tuple[EnhancedCommonChatMessage, Dict[str, Any]]]]:\n        \"\"\"Get cached search result if valid.\"\"\"\n        if cache_key in self._search_cache:\n            cached_data = self._search_cache[cache_key]\n            if time.time() - cached_data['timestamp'] < self._cache_ttl:\n                return cached_data['results']\n            else:\n                del self._search_cache[cache_key]\n        return None\n    \n    def _cache_search_result(self, cache_key: str, results: List[Tuple[EnhancedCommonChatMessage, Dict[str, Any]]]):\n        \"\"\"Cache search results.\"\"\"\n        self._search_cache[cache_key] = {\n            'results': results,\n            'timestamp': time.time()\n        }\n        \n        # Clean old cache entries\n        current_time = time.time()\n        expired_keys = [\n            key for key, data in self._search_cache.items()\n            if current_time - data['timestamp'] > self._cache_ttl\n        ]\n        for key in expired_keys:\n            del self._search_cache[key]\n    \n    def _clear_search_cache(self):\n        \"\"\"Clear the search cache.\"\"\"\n        self._search_cache.clear()\n    \n    def _update_relationships_for_message(self, message_id: str):\n        \"\"\"Update relationships for a specific message after content changes.\"\"\"\n        # Remove existing relationships for this message\n        if message_id in self.relationship_graph:\n            del self.relationship_graph[message_id]\n        \n        # Remove relationships targeting this message\n        for source_id in list(self.relationship_graph.keys()):\n            self.relationship_graph[source_id] = [\n                rel for rel in self.relationship_graph[source_id]\n                if rel.target_message_id != message_id\n            ]\n            if not self.relationship_graph[source_id]:\n                del self.relationship_graph[source_id]\n        \n        # Rebuild relationships for the interaction containing this message\n        interaction_id = self.message_index.get(message_id)\n        if interaction_id:\n            interaction = self.interactions.get(interaction_id)\n            if interaction:\n                self._build_relationships_for_interaction(interaction)\n    \n    def _dict_to_xml(self, data: Dict[str, Any], root_name: str) -> str:\n        \"\"\"Convert dictionary to basic XML format.\"\"\"\n        def dict_to_xml_recursive(d, name):\n            if isinstance(d, dict):\n                xml = f'<{name}>'\n                for key, value in d.items():\n                    xml += dict_to_xml_recursive(value, key)\n                xml += f'</{name}>'\n                return xml\n            elif isinstance(d, list):\n                xml = f'<{name}>'\n                for i, item in enumerate(d):\n                    xml += dict_to_xml_recursive(item, f'{name}_item')\n                xml += f'</{name}>'\n                return xml\n            else:\n                return f'<{name}>{str(d)}</{name}>'\n        \n        return f'<?xml version=\"1.0\" encoding=\"UTF-8\"?>{dict_to_xml_recursive(data, root_name)}'
+            if interaction_id not in self.interactions:
+                return False
+            
+            interaction = self.interactions[interaction_id]
+            
+            # Remove from indexes
+            self._remove_from_indexes(interaction)
+            
+            # Remove relationships
+            self._remove_relationships_for_interaction(interaction_id)
+            
+            # Remove interaction
+            del self.interactions[interaction_id]
+            
+            # Clear search cache
+            self._clear_search_cache()
+            
+            return True
+    
+    def get_interaction(self, interaction_id: str) -> Optional[InteractionContainer]:
+        """Get an interaction by ID."""
+        with self._lock:
+            return self.interactions.get(interaction_id)
+    
+    def list_interactions(
+        self,
+        include_inactive: bool = False,
+        sort_by: str = 'start_time'
+    ) -> List[InteractionContainer]:
+        """
+        List all managed interactions.
+        
+        Args:
+            include_inactive: Whether to include inactive interactions
+            sort_by: Field to sort by ('start_time', 'stop_time', 'message_count')
+            
+        Returns:
+            List of interaction containers
+        """
+        with self._lock:
+            interactions = list(self.interactions.values())
+            
+            if not include_inactive:
+                interactions = [i for i in interactions if i.is_active()]
+            
+            # Sort interactions
+            if sort_by == 'start_time':
+                interactions.sort(key=lambda i: i.interaction_start)
+            elif sort_by == 'stop_time':
+                interactions.sort(key=lambda i: i.interaction_stop or float('inf'))
+            elif sort_by == 'message_count':
+                interactions.sort(key=lambda i: len(i.messages), reverse=True)
+            
+            return interactions
+    
+    # Advanced Message Retrieval Methods
+    
+    def get_messages_for_interaction(
+        self,
+        interaction_id: str,
+        include_invalidated: bool = False
+    ) -> List[EnhancedCommonChatMessage]:
+        """
+        Get all messages for a specific interaction.
+        
+        Args:
+            interaction_id: ID of the interaction
+            include_invalidated: Whether to include invalidated messages
+            
+        Returns:
+            List of messages
+        """
+        with self._lock:
+            interaction = self.interactions.get(interaction_id)
+            if not interaction:
+                return []
+            
+            return interaction.get_all_messages(include_invalidated=include_invalidated)
+    
+    def find_message_by_id(self, message_id: str) -> Optional[EnhancedCommonChatMessage]:
+        """
+        Find a message by ID across all interactions.
+        
+        Args:
+            message_id: ID of the message to find
+            
+        Returns:
+            Message if found, None otherwise
+        """
+        with self._lock:
+            interaction_id = self.message_index.get(message_id)
+            if not interaction_id:
+                return None
+            
+            interaction = self.interactions.get(interaction_id)
+            if not interaction:
+                return None
+            
+            return interaction.get_message_by_id(message_id)
+    
+    def get_messages_by_tool(
+        self,
+        tool_name: str,
+        include_results: bool = True,
+        scope: QueryScope = QueryScope.ALL_INTERACTIONS
+    ) -> List[EnhancedCommonChatMessage]:
+        """
+        Get messages related to a specific tool.
+        
+        Args:
+            tool_name: Name of the tool
+            include_results: Whether to include tool result messages
+            scope: Query scope
+            
+        Returns:
+            List of messages related to the tool
+        """
+        with self._lock:
+            tool_messages = []
+            
+            interactions_to_search = self._get_interactions_for_scope(scope)
+            
+            for interaction in interactions_to_search:
+                messages = interaction.get_messages_by_tool(tool_name, include_results)
+                tool_messages.extend(messages)
+            
+            return tool_messages
+    
+    def search_messages(
+        self,
+        criteria: MessageSearchCriteria,
+        scope: QueryScope = QueryScope.ALL_INTERACTIONS
+    ) -> List[Tuple[EnhancedCommonChatMessage, Dict[str, Any]]]:
+        """
+        Advanced message search with multiple criteria.
+        
+        Args:
+            criteria: Search criteria
+            scope: Query scope
+            
+        Returns:
+            List of tuples (message, context_info)
+        """
+        with self._lock:
+            # Check cache first
+            cache_key = self._generate_search_cache_key(criteria, scope)
+            cached_result = self._get_cached_search_result(cache_key)
+            if cached_result:
+                return cached_result
+            
+            results = []
+            interactions_to_search = self._get_interactions_for_scope(scope)
+            
+            for interaction in interactions_to_search:
+                messages = interaction.get_all_messages(include_invalidated=True)
+                
+                for message in messages:
+                    if self._message_matches_criteria(message, criteria):
+                        context_info = {
+                            'interaction_id': interaction.interaction_id,
+                            'message_index': messages.index(message),
+                            'total_messages': len(messages),
+                            'interaction_start': interaction.interaction_start,
+                            'interaction_stop': interaction.interaction_stop
+                        }
+                        
+                        if criteria.include_context:
+                            context_info.update(self._get_message_context(message, interaction))
+                        
+                        results.append((message, context_info))
+            
+            # Apply result limit
+            if criteria.max_results:
+                results = results[:criteria.max_results]
+            
+            # Cache results
+            self._cache_search_result(cache_key, results)
+            
+            return results
+    
+    def get_message_relationships(
+        self,
+        message_id: str,
+        relationship_types: Optional[List[str]] = None,
+        min_strength: float = 0.0
+    ) -> List[MessageRelationship]:
+        """
+        Get relationships for a specific message.
+        
+        Args:
+            message_id: ID of the message
+            relationship_types: Types of relationships to include
+            min_strength: Minimum relationship strength
+            
+        Returns:
+            List of message relationships
+        """
+        with self._lock:
+            relationships = self.relationship_graph.get(message_id, [])
+            
+            # Filter by relationship type
+            if relationship_types:
+                relationships = [
+                    rel for rel in relationships
+                    if rel.relationship_type in relationship_types
+                ]
+            
+            # Filter by strength
+            relationships = [
+                rel for rel in relationships
+                if rel.strength >= min_strength
+            ]
+            
+            return relationships
+    
+    # Private Helper Methods
+    
+    def _update_indexes_for_interaction(self, interaction: InteractionContainer):
+        """Update indexes for a new interaction."""
+        for message in interaction.messages:
+            self.message_index[message.id] = interaction.interaction_id
+            
+            # Update tool index
+            for tool_name in message.get_tool_names():
+                if tool_name not in self.tool_index:
+                    self.tool_index[tool_name] = []
+                if message.id not in self.tool_index[tool_name]:
+                    self.tool_index[tool_name].append(message.id)
+    
+    def _remove_from_indexes(self, interaction: InteractionContainer):
+        """Remove interaction from indexes."""
+        for message in interaction.messages:
+            self.message_index.pop(message.id, None)
+            
+            # Remove from tool index
+            for tool_name in message.get_tool_names():
+                if tool_name in self.tool_index:
+                    if message.id in self.tool_index[tool_name]:
+                        self.tool_index[tool_name].remove(message.id)
+                    if not self.tool_index[tool_name]:
+                        del self.tool_index[tool_name]
+    
+    def _build_relationships_for_interaction(self, interaction: InteractionContainer):
+        """Build relationships for messages in an interaction."""
+        messages = interaction.messages
+        
+        for i, message in enumerate(messages):
+            # Conversation flow relationships
+            if i > 0:
+                prev_message = messages[i - 1]
+                relationship = MessageRelationship(
+                    source_message_id=prev_message.id,
+                    target_message_id=message.id,
+                    relationship_type='conversation_flow',
+                    strength=0.8,
+                    metadata={'flow_index': i}
+                )
+                self._add_relationship(relationship)
+    
+    def _add_relationship(self, relationship: MessageRelationship):
+        """Add a relationship to the graph."""
+        source_id = relationship.source_message_id
+        if source_id not in self.relationship_graph:
+            self.relationship_graph[source_id] = []
+        self.relationship_graph[source_id].append(relationship)
+    
+    def _remove_relationships_for_interaction(self, interaction_id: str):
+        """Remove all relationships for an interaction."""
+        interaction = self.interactions.get(interaction_id)
+        if not interaction:
+            return
+        
+        message_ids = {msg.id for msg in interaction.messages}
+        
+        # Remove relationships where source or target is in this interaction
+        for source_id in list(self.relationship_graph.keys()):
+            if source_id in message_ids:
+                del self.relationship_graph[source_id]
+            else:
+                # Remove relationships targeting messages in this interaction
+                self.relationship_graph[source_id] = [
+                    rel for rel in self.relationship_graph[source_id]
+                    if rel.target_message_id not in message_ids
+                ]
+                if not self.relationship_graph[source_id]:
+                    del self.relationship_graph[source_id]
+    
+    def _get_interactions_for_scope(self, scope: QueryScope) -> List[InteractionContainer]:
+        """Get interactions based on query scope."""
+        if scope == QueryScope.ALL_INTERACTIONS:
+            return list(self.interactions.values())
+        elif scope == QueryScope.ACTIVE_INTERACTIONS:
+            return [i for i in self.interactions.values() if i.is_active()]
+        else:
+            # For single/multiple interaction scopes, return all for now
+            # This would be refined based on specific scope parameters
+            return list(self.interactions.values())
+    
+    def _message_matches_criteria(self, message: EnhancedCommonChatMessage, criteria: MessageSearchCriteria) -> bool:
+        """Check if a message matches search criteria."""
+        # Text pattern matching
+        if criteria.text_patterns:
+            message_text = ' '.join(str(block) for block in message.content)
+            if not any(pattern.lower() in message_text.lower() for pattern in criteria.text_patterns):
+                return False
+        
+        # Tool name filtering
+        if criteria.tool_names:
+            message_tools = message.get_tool_names()
+            if not any(tool in message_tools for tool in criteria.tool_names):
+                return False
+        
+        # Role filtering
+        if criteria.roles:
+            if message.role.value not in criteria.roles:
+                return False
+        
+        # Validity state filtering
+        if criteria.validity_states:
+            if message.validity_state not in criteria.validity_states:
+                return False
+        
+        # Time range filtering
+        if criteria.start_time and message.created_at < criteria.start_time:
+            return False
+        if criteria.end_time and message.created_at > criteria.end_time:
+            return False
+        
+        return True
+    
+    def _get_message_context(self, message: EnhancedCommonChatMessage, interaction: InteractionContainer) -> Dict[str, Any]:
+        """Get context information for a message."""
+        message_index = None
+        for i, msg in enumerate(interaction.messages):
+            if msg.id == message.id:
+                message_index = i
+                break
+        
+        context = {
+            'previous_messages': [],
+            'next_messages': [],
+            'tool_calls': [],
+            'tool_results': []
+        }
+        
+        if message_index is not None:
+            # Get surrounding messages
+            start_idx = max(0, message_index - 2)
+            end_idx = min(len(interaction.messages), message_index + 3)
+            
+            context['previous_messages'] = [
+                {'id': msg.id, 'role': msg.role.value, 'summary': str(msg.content)[:100]}
+                for msg in interaction.messages[start_idx:message_index]
+            ]
+            
+            context['next_messages'] = [
+                {'id': msg.id, 'role': msg.role.value, 'summary': str(msg.content)[:100]}
+                for msg in interaction.messages[message_index + 1:end_idx]
+            ]
+        
+        # Extract tool information
+        for block in message.content:
+            if hasattr(block, 'tool_name'):
+                if hasattr(block, 'parameters'):  # Tool use block
+                    context['tool_calls'].append({
+                        'tool_name': block.tool_name,
+                        'tool_call_id': getattr(block, 'tool_call_id', None),
+                        'parameters': block.parameters
+                    })
+                else:  # Tool result block
+                    context['tool_results'].append({
+                        'tool_name': block.tool_name,
+                        'tool_call_id': getattr(block, 'tool_call_id', None),
+                        'outcome_status': getattr(block, 'outcome_status', None)
+                    })
+        
+        return context
+    
+    def _generate_search_cache_key(self, criteria: MessageSearchCriteria, scope: QueryScope) -> str:
+        """Generate cache key for search results."""
+        import hashlib
+        
+        cache_data = {
+            'criteria': criteria.__dict__,
+            'scope': scope.value,
+            'timestamp': int(time.time() / self._cache_ttl)  # Round to cache TTL
+        }
+        
+        cache_str = json.dumps(cache_data, sort_keys=True, default=str)
+        return hashlib.md5(cache_str.encode()).hexdigest()
+    
+    def _get_cached_search_result(self, cache_key: str) -> Optional[List[Tuple[EnhancedCommonChatMessage, Dict[str, Any]]]]:
+        """Get cached search result if valid."""
+        if cache_key in self._search_cache:
+            cached_data = self._search_cache[cache_key]
+            if time.time() - cached_data['timestamp'] < self._cache_ttl:
+                return cached_data['results']
+            else:
+                del self._search_cache[cache_key]
+        return None
+    
+    def _cache_search_result(self, cache_key: str, results: List[Tuple[EnhancedCommonChatMessage, Dict[str, Any]]]):
+        """Cache search results."""
+        self._search_cache[cache_key] = {
+            'results': results,
+            'timestamp': time.time()
+        }
+        
+        # Clean old cache entries
+        current_time = time.time()
+        expired_keys = [
+            key for key, data in self._search_cache.items()
+            if current_time - data['timestamp'] > self._cache_ttl
+        ]
+        for key in expired_keys:
+            del self._search_cache[key]
+    
+    def _clear_search_cache(self):
+        """Clear the search cache."""
+        self._search_cache.clear()
