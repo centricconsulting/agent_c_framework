@@ -332,6 +332,51 @@ class EventSessionLogger:
         self.error_handler(last_exception, f"retry_failed:{operation_name}")
         return False
     
+    def _prepare_event_for_downstream(self, event: Any) -> Any:
+        """
+        Prepare event for downstream forwarding with compatibility fixes.
+        
+        This method handles compatibility issues where downstream callbacks
+        expect certain attributes that may not be present on all event types.
+        
+        Args:
+            event: Event to prepare
+            
+        Returns:
+            Event object with compatibility attributes added if needed
+        """
+        # Handle UserRequestEvent content compatibility
+        # UserRequestEvent has 'data' field but downstream callbacks may expect 'content'
+        if hasattr(event, 'type') and event.type == "user_request":
+            if hasattr(event, 'data') and not hasattr(event, 'content'):
+                # Create a copy of the event with content attribute for compatibility
+                try:
+                    # If it's a Pydantic model, we can't add attributes directly
+                    # So we'll create a simple wrapper object
+                    class EventWrapper:
+                        def __init__(self, original_event):
+                            # Copy all attributes from original
+                            for attr_name in dir(original_event):
+                                if not attr_name.startswith('_') and not callable(getattr(original_event, attr_name)):
+                                    setattr(self, attr_name, getattr(original_event, attr_name))
+                            
+                            # Add content attribute for compatibility
+                            if hasattr(original_event, 'data'):
+                                # Convert data to content - use JSON string representation
+                                if isinstance(original_event.data, dict):
+                                    self.content = json.dumps(original_event.data)
+                                else:
+                                    self.content = str(original_event.data)
+                    
+                    return EventWrapper(event)
+                except Exception as e:
+                    # If wrapping fails, log and return original event
+                    self.logger.debug(f"Failed to create event wrapper for UserRequestEvent: {e}")
+                    return event
+        
+        # For all other events, return as-is
+        return event
+    
     async def _forward_downstream(self, event: Any) -> bool:
         """
         Forward event to downstream callback or transport.
@@ -345,11 +390,14 @@ class EventSessionLogger:
         callback_success = False
         transport_success = False
         
+        # Prepare event for downstream compatibility
+        prepared_event = self._prepare_event_for_downstream(event)
+        
         # Try callback (current transition pattern)
         if self.downstream_callback:
             try:
                 callback_success = await self._retry_operation(
-                    lambda: self.downstream_callback(event),
+                    lambda: self.downstream_callback(prepared_event),
                     "downstream_callback"
                 )
             except Exception as e:
@@ -359,7 +407,7 @@ class EventSessionLogger:
         if self.downstream_transport:
             try:
                 transport_success = await self._retry_operation(
-                    lambda: self.downstream_transport.send(event),
+                    lambda: self.downstream_transport.send(prepared_event),
                     "downstream_transport"
                 )
             except Exception as e:
