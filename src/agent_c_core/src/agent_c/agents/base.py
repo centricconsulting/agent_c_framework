@@ -78,7 +78,7 @@ class BaseAgent:
         self.root_message_role: str = kwargs.get("root_message_role", os.environ.get("ROOT_MESSAGE_ROLE", "system"))
         
         # Interaction tracking and management
-        self.enable_interaction_tracking: bool = kwargs.get("enable_interaction_tracking", True)
+        self.enable_interaction_tracking: bool = kwargs.get("enable_interaction_tracking", False)
         self._current_interaction_id: Optional[str] = None
         self._current_interaction_container: Optional[InteractionContainer] = None
         self._interaction_lock = RLock()

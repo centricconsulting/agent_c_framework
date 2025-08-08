@@ -669,12 +669,12 @@ class InteractionContainer(ObservableModel):
     
     # Work Log Integration Methods
     
-    def generate_work_log_entries(self, work_log: 'AgentWorkLog') -> List[str]:
+    def generate_work_log_entries(self, work_log: Optional['AgentWorkLog'] = None) -> List[str]:
         """
         Generate work log entries for all tool calls in this interaction.
         
         Args:
-            work_log: AgentWorkLog instance to add entries to
+            work_log: AgentWorkLog instance to add entries to (optional)
             
         Returns:
             List of generated work log entry IDs
@@ -683,6 +683,10 @@ class InteractionContainer(ObservableModel):
         
         with self.lock:
             entry_ids = []
+            
+            # If no work log provided, just return empty list
+            if work_log is None:
+                return entry_ids
             
             for message in self.messages:
                 # Process tool use blocks
