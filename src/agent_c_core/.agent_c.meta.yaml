@@ -2024,6 +2024,143 @@ _plans:
         updated_at: '2025-08-05T16:34:26.771561'
     title: Intelligent Message Management System - Container & Work Logs
     updated_at: '2025-08-06T17:20:22.866366'
+  interaction_event_fix:
+    created_at: '2025-08-11T17:37:38.051407'
+    description: Fix the Pydantic validation error where 'interaction_id' field is
+      being passed to InteractionEvent but the model expects 'id' field. The error
+      occurs when interaction tracking is disabled and 'disabled' is passed as interaction_id.
+    id: 883745fe-e80b-481f-957c-af59cc68acfa
+    lessons_learned: []
+    tasks:
+      71ffad3f-e131-4162-bc21-a1a98f96afc9:
+        child_tasks: []
+        completed: true
+        completion_report: 'Fixed _raise_interaction_end method:
+
+
+          1. Removed the line that was setting data[''interaction_id''] = interaction_id
+
+          2. Added data.pop(''interaction_id'', None) to remove any existing interaction_id
+          from data
+
+          3. Added explicit id=interaction_id parameter to InteractionEvent constructor
+
+          4. This ensures consistency with _raise_interaction_start and prevents the
+          same Pydantic validation error
+
+
+          Both interaction event methods now properly handle the interaction_id parameter
+          without field name conflicts.'
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-08-11T17:38:01.423880'
+        description: Apply the same fix to _raise_interaction_end method to ensure
+          consistency and prevent similar issues.
+        id: 71ffad3f-e131-4162-bc21-a1a98f96afc9
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Fix the field name mismatch in _raise_interaction_end
+        updated_at: '2025-08-11T17:39:17.485569'
+      9db5a885-ff73-4bed-929d-291b72a30615:
+        child_tasks: []
+        completed: true
+        completion_report: 'Created comprehensive test script at //core/.scratch/test_interaction_event_fix.py
+          that verifies:
+
+
+          1. Basic InteractionEvent creation with required fields
+
+          2. InteractionEvent creation with "disabled" id (the problematic case)
+
+          3. Proper rejection of extra fields (validates that extra="forbid" works)
+
+          4. Data dict scenario that simulates the original error condition
+
+          5. Async callback compatibility
+
+
+          The test script can be run to verify the fix works correctly. It tests both
+          the successful cases and ensures that the Pydantic validation still properly
+          rejects invalid extra fields.'
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-08-11T17:38:07.695563'
+        description: Create a simple test to verify that the InteractionEvent can
+          be created without validation errors and that the streaming callback works
+          properly.
+        id: 9db5a885-ff73-4bed-929d-291b72a30615
+        parent_id: null
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Test the fix
+        updated_at: '2025-08-11T17:39:50.401584'
+      e26c8bce-bc86-4b50-8ab2-567101311fa7:
+        child_tasks: []
+        completed: true
+        completion_report: "Fixed _raise_interaction_start method:\n\n1. Removed the\
+          \ line that was setting data['interaction_id'] = interaction_id \n2. Added\
+          \ data.pop('interaction_id', None) to remove any existing interaction_id\
+          \ from data before passing to InteractionEvent\n3. This prevents the field\
+          \ name conflict where both id and interaction_id were being passed to the\
+          \ constructor\n\nThe method now properly handles the interaction_id parameter\
+          \ without creating Pydantic validation conflicts."
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-08-11T17:37:53.334981'
+        description: Modify the _raise_interaction_start method to properly handle
+          the interaction_id field and ensure it doesn't get passed as an extra field
+          to InteractionEvent.
+        id: e26c8bce-bc86-4b50-8ab2-567101311fa7
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Fix the field name mismatch in _raise_interaction_start
+        updated_at: '2025-08-11T17:38:53.301245'
+      e59a20f3-a693-43a0-8c60-1b47cd10a311:
+        child_tasks: []
+        completed: true
+        completion_report: 'Root cause identified:
+
+
+          1. BaseAgent._start_interaction() returns "disabled" when interaction tracking
+          is disabled
+
+          2. This gets passed as interaction_id in the data dictionary to _raise_interaction_start()
+
+          3. The method tries to create InteractionEvent(started=True, id=interaction_id,
+          **data)
+
+          4. The **data contains interaction_id="disabled" which conflicts with the
+          id parameter
+
+          5. InteractionEvent model has extra="forbid" so it rejects the extra interaction_id
+          field
+
+          6. Same issue exists in _raise_interaction_end method
+
+
+          Fix needed: Remove interaction_id from data dictionary before passing to
+          InteractionEvent constructor since we''re already explicitly passing it
+          as the id parameter.'
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-08-11T17:37:46.964278'
+        description: Examine the code flow to understand why 'interaction_id' is being
+          passed to InteractionEvent when it expects 'id'. Document the specific issue
+          and identify the fix needed.
+        id: e59a20f3-a693-43a0-8c60-1b47cd10a311
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Analyze the root cause of the validation error
+        updated_at: '2025-08-11T17:38:28.774700'
+    title: Fix InteractionEvent Pydantic Validation Error
+    updated_at: '2025-08-11T17:39:50.401584'
   message_container_implementation:
     created_at: '2025-07-30T17:46:35.553853'
     description: Implementation of InteractionContainer class to replace bare message

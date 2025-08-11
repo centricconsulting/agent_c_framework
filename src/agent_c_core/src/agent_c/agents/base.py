@@ -465,10 +465,11 @@ class BaseAgent:
         interaction_id = data.get('interaction_id')
         if interaction_id is None:
             interaction_id = self._start_interaction()
-            data['interaction_id'] = interaction_id
         else:
             self._start_interaction(interaction_id)
         
+        # Remove interaction_id from data to avoid conflict with id parameter
+        data.pop('interaction_id', None)
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(InteractionEvent(started=True, id=interaction_id, **data), streaming_callback=streaming_callback)
         return interaction_id
@@ -478,10 +479,11 @@ class BaseAgent:
         interaction_id = data.get('interaction_id', self._current_interaction_id)
         if interaction_id:
             self._end_interaction(interaction_id)
-            data['interaction_id'] = interaction_id
         
+        # Remove interaction_id from data to avoid conflict with id parameter
+        data.pop('interaction_id', None)
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(InteractionEvent(started=False, **data), streaming_callback=streaming_callback)
+        await self._raise_event(InteractionEvent(started=False, id=interaction_id, **data), streaming_callback=streaming_callback)
 
     async def _raise_text_delta(self, content: str, **data):
         # Add interaction context if available
