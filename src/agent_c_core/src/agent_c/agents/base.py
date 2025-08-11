@@ -355,8 +355,11 @@ class BaseAgent:
             data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
         
         streaming_callback = data.pop('streaming_callback', None)
+        # Remove conflicting parameters to avoid conflicts with explicit parameters
+        session_id = data.pop('session_id', 'none')
+        data.pop('role', None)  # Remove 'role' to avoid conflict with explicit role parameter
         await self._raise_event(SystemMessageEvent(role="system", severity=severity, content=content,
-                                                   session_id=data.get("session_id", "none"), **data),
+                                                   session_id=session_id, **data),
                                                    streaming_callback=streaming_callback)
 
     async def _raise_history_delta(self, messages, **data):
@@ -434,6 +437,8 @@ class BaseAgent:
             data['interaction_id'] = data.get('interaction_id', self._current_interaction_id)
         
         streaming_callback = data.pop('streaming_callback', None)
+        # Remove conflicting parameters to avoid conflicts with explicit parameters
+        data.pop('data', None)  # Remove 'data' to avoid conflict with explicit data parameter
         await self._raise_event(UserRequestEvent(data={"message": request}, **data), streaming_callback=streaming_callback )
 
     async def _raise_tool_call_delta(self, tool_calls, **data):
@@ -468,8 +473,9 @@ class BaseAgent:
         else:
             self._start_interaction(interaction_id)
         
-        # Remove interaction_id from data to avoid conflict with id parameter
+        # Remove conflicting parameters from data to avoid conflicts with explicit parameters
         data.pop('interaction_id', None)
+        data.pop('id', None)  # Remove 'id' to avoid conflict with explicit id parameter
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(InteractionEvent(started=True, id=interaction_id, **data), streaming_callback=streaming_callback)
         return interaction_id
@@ -480,8 +486,9 @@ class BaseAgent:
         if interaction_id:
             self._end_interaction(interaction_id)
         
-        # Remove interaction_id from data to avoid conflict with id parameter
+        # Remove conflicting parameters from data to avoid conflicts with explicit parameters
         data.pop('interaction_id', None)
+        data.pop('id', None)  # Remove 'id' to avoid conflict with explicit id parameter
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(InteractionEvent(started=False, id=interaction_id, **data), streaming_callback=streaming_callback)
 
