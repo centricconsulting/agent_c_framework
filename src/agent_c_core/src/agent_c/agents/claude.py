@@ -255,7 +255,10 @@ class ClaudeChatAgent(BaseAgent):
                     messages.extend(state['server_tool_calls'])
                     messages.extend(state['server_tool_responses'])
                     await self._raise_history_event(messages, **callback_opts)
-                    await self._raise_interaction_end(id=state['interaction_id'], **callback_opts)
+                    # Add interaction_id to callback_opts to avoid parameter conflicts
+                    callback_opts_with_interaction = callback_opts.copy()
+                    callback_opts_with_interaction['interaction_id'] = state['interaction_id']
+                    await self._raise_interaction_end(**callback_opts_with_interaction)
                     return messages, state
 
                 # If we've reached the end of a tool call response, continue after processing tool calls
@@ -751,7 +754,11 @@ class ClaudeChatAgent(BaseAgent):
                     # Check for cancellation
                     if client_wants_cancel.is_set():
                         self.logger.info("Chat cancelled by client")
-                        await self._raise_interaction_end(id=interaction_id, stop_reason="client_cancel", **callback_opts)
+                        # Add interaction_id to callback_opts to avoid parameter conflicts
+                        callback_opts_with_interaction = callback_opts.copy()
+                        callback_opts_with_interaction['interaction_id'] = interaction_id
+                        callback_opts_with_interaction['stop_reason'] = "client_cancel"
+                        await self._raise_interaction_end(**callback_opts_with_interaction)
                         return messages
                     
                     # Process conversation with tool calls until completion
@@ -767,7 +774,10 @@ class ClaudeChatAgent(BaseAgent):
                         emit_tool_events
                     )
                     
-                    await self._raise_interaction_end(id=interaction_id, **callback_opts)
+                    # Add interaction_id to callback_opts to avoid parameter conflicts
+                    callback_opts_with_interaction = callback_opts.copy()
+                    callback_opts_with_interaction['interaction_id'] = interaction_id
+                    await self._raise_interaction_end(**callback_opts_with_interaction)
                     return final_messages
                     
                 except (APITimeoutError, RateLimitError) as e:
@@ -781,12 +791,20 @@ class ClaudeChatAgent(BaseAgent):
                     else:
                         self.logger.exception(f"Unrecoverable error during Claude chat_sync: {e}", exc_info=True)
                         await self._raise_system_event(f"Exception calling `client.messages.create`.\n\n{e}\n", **callback_opts)
-                        await self._raise_interaction_end(id=interaction_id, stop_reason="exception", **callback_opts)
+                        # Add interaction_id to callback_opts to avoid parameter conflicts
+                        callback_opts_with_interaction = callback_opts.copy()
+                        callback_opts_with_interaction['interaction_id'] = interaction_id
+                        callback_opts_with_interaction['stop_reason'] = "exception"
+                        await self._raise_interaction_end(**callback_opts_with_interaction)
                         raise
             
             self.logger.warning("Claude API is overloaded. GIVING UP")
             await self._raise_system_event(f"Claude API is overloaded. GIVING UP.\n", **callback_opts)
-            await self._raise_interaction_end(id=interaction_id, stop_reason="overload", **callback_opts)
+            # Add interaction_id to callback_opts to avoid parameter conflicts
+            callback_opts_with_interaction = callback_opts.copy()
+            callback_opts_with_interaction['interaction_id'] = interaction_id
+            callback_opts_with_interaction['stop_reason'] = "overload"
+            await self._raise_interaction_end(**callback_opts_with_interaction)
             return messages
     
     async def _handle_claude_sync(self, completion_opts, tool_chest, session_manager,
