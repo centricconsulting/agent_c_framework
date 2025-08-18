@@ -1,6 +1,6 @@
 import copy
 import json
-
+import uuid
 import httpcore
 import yaml
 import base64
@@ -517,30 +517,77 @@ class ClaudeChatAgent(BaseAgent):
         state['stop_reason'] = event.delta.stop_reason
 
 
-    async def _finalize_tool_calls(self, state, tool_chest, session_manager, messages, callback_opts, tool_context):
-        """Finalize tool calls after receiving a complete message."""
-        await self._raise_tool_call_start(state['collected_tool_calls'], vendor="anthropic", **callback_opts)
+    # async def _finalize_tool_calls(self, state, tool_chest, session_manager, messages, callback_opts, tool_context):
+    #     """Finalize tool calls after receiving a complete message."""
+    #     await self._raise_tool_call_start(state['collected_tool_calls'], vendor="anthropic", **callback_opts)
+    #
+    #     # Process tool calls and get response messages
+    #     tool_response_messages = await self.__tool_calls_to_messages(
+    #         state,
+    #         tool_chest,
+    #         tool_context
+    #     )
+    #
+    #
+    #     # Add tool response messages to the conversation history
+    #     messages.extend(tool_response_messages)
+    #
+    #
+    #
+    #     await self._raise_tool_call_end(
+    #         state['collected_tool_calls'],
+    #         messages[-1]['content'],
+    #         vendor="anthropic",
+    #         **callback_opts
+    #     )
 
-        # Process tool calls and get response messages
-        tool_response_messages = await self.__tool_calls_to_messages(
+
+    async def _finalize_tool_calls(
+            self,
             state,
             tool_chest,
-            tool_context
-        )
+            session_manager,
+            *args,
+            **kwargs
+    ):
+        tool_results = []
+        tool_calls = state.get("tool_calls", [])
 
+        # Run tools
+        for tool_call in tool_calls:
+            tool_name = tool_call.get("name")
+            tool_input = tool_call.get("input")
 
-        # Add tool response messages to the conversation history
-        messages.extend(tool_response_messages)
+            if tool_name and tool_chest.has_tool(tool_name):
+                try:
+                    result = await tool_chest.run_tool(
+                        tool_name, tool_input, session_manager=session_manager
+                    )
+                    tool_results.append({"id": tool_call.get("id"), "output": result})
+                except Exception as e:
+                    tool_results.append({"id": tool_call.get("id"), "error": str(e)})
+            else:
+                tool_results.append({"id": tool_call.get("id"), "error": f"Unknown tool: {tool_name}"})
 
+        # ✅ session_id handling
+        session_id = state.get("session_id") or getattr(session_manager, "session_id", None)
+        if not session_id:
+            session_id = str(uuid.uuid4())
 
+        # ✅ role fallback
+        role = state.get("role") or "assistant"
 
         await self._raise_tool_call_end(
-            state['collected_tool_calls'],
-            messages[-1]['content'],
-            vendor="anthropic",
-            **callback_opts
+            {
+                "tool_calls": tool_calls,
+                "tool_results": tool_results,
+                "vendor": "anthropic",
+                "session_id": session_id,
+                "role": role,
+            }
         )
 
+        return state
 
     async def _generate_multi_modal_user_message(self, user_input: str, images: List[ImageInput], audio: List[AudioInput],
                                            files: List[FileInput]) -> Union[List[dict[str, Any]], None]:

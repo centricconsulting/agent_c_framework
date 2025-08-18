@@ -369,21 +369,58 @@ class BaseAgent:
         streaming_callback = data.pop('streaming_callback', None)
         await self._raise_event(ToolCallDeltaEvent(tool_calls=tool_calls, **data), streaming_callback=streaming_callback)
 
-    async def _raise_tool_call_end(self, tool_calls, tool_results, **data):
-        # Add interaction context to tool results
+    # async def _raise_tool_call_end(self, tool_calls, tool_results, **data):
+    #     # Add interaction context to tool results
+    #     if self.enable_interaction_tracking and self._current_interaction_id:
+    #         data['interaction_id'] = self._current_interaction_id
+    #
+    #         # Enhance tool results with interaction metadata
+    #         if isinstance(tool_results, list):
+    #             for tool_result in tool_results:
+    #                 if isinstance(tool_result, dict) and 'metadata' not in tool_result:
+    #                     tool_result['metadata'] = {'interaction_id': self._current_interaction_id}
+    #
+    #     streaming_callback = data.pop('streaming_callback', None)
+    #     await self._raise_event(ToolCallEvent(active=False, tool_calls=tool_calls,
+    #                                           tool_results=tool_results,  **data),
+    #                                           streaming_callback=streaming_callback)
+
+    async def _raise_tool_call_end(self, tool_calls, tool_results=None, *args, **data):
+        """
+        Handles the end of a tool call. Accepts extra args for compatibility with caller.
+        Ensures ToolCallEvent gets the correct flattened structure.
+        """
+        # Add interaction context (internal only, not in payload to Anthropic)
         if self.enable_interaction_tracking and self._current_interaction_id:
             data['interaction_id'] = self._current_interaction_id
-            
-            # Enhance tool results with interaction metadata
-            if isinstance(tool_results, list):
-                for tool_result in tool_results:
-                    if isinstance(tool_result, dict) and 'metadata' not in tool_result:
-                        tool_result['metadata'] = {'interaction_id': self._current_interaction_id}
-        
+
+        # If tool_calls is accidentally a dict wrapper, unpack it
+        if isinstance(tool_calls, dict):
+            tool_results = tool_results or tool_calls.get("tool_results")
+            data.setdefault("vendor", tool_calls.get("vendor"))
+            data.setdefault("session_id", tool_calls.get("session_id"))
+            data.setdefault("role", tool_calls.get("role"))
+            tool_calls = tool_calls.get("tool_calls", [])
+
         streaming_callback = data.pop('streaming_callback', None)
-        await self._raise_event(ToolCallEvent(active=False, tool_calls=tool_calls,
-                                              tool_results=tool_results,  **data),
-                                              streaming_callback=streaming_callback)
+
+        # Extract known fields so they don’t collide in **data
+        vendor = data.pop("vendor", "anthropic")
+        session_id = data.pop("session_id", None)
+        role = data.pop("role", "assistant")
+
+        await self._raise_event(
+            ToolCallEvent(
+                active=False,
+                tool_calls=tool_calls or [],  # always a list
+                tool_results=tool_results,  # optional
+                vendor=vendor,
+                session_id=session_id,
+                role=role,
+                **data
+            ),
+            streaming_callback=streaming_callback
+        )
 
     async def _raise_interaction_start(self, **data):
         # Start the interaction tracking
