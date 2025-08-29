@@ -11,8 +11,8 @@ agent_params:
 category:
   - "domo"
 tools:
-  - WorkspaceToolset
-  - PlanningToolset
+  - ThinkTools
+  - WorkspaceTools
   - DynamicCommandTools
   - MarkdownToHtmlReportTools
 persona: |
