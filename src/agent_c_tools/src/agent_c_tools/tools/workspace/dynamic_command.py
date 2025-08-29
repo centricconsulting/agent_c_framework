@@ -151,7 +151,7 @@ class DynamicCommandTools(Toolset):
 
             # 7) Return YAML, capped by tokens if we have a counter.
             counter = tool_context.get("agent_runtime").count_tokens if tool_context else None
-            self.logger.debug(f"Counter exist: {'yes' if counter else 'no'}")
+            # self.logger.debug(f"Counter exist: {'yes' if counter else 'no'}")
             return result.to_yaml_capped(max_tokens, counter) if counter else result.to_yaml()
 
         tool_method.__name__ = f"run_{base_cmd}"
