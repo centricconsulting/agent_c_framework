@@ -12,7 +12,7 @@ async def run_example():
     # tool_opts is how you pass in required keys to, without loading .env
     # tool_opts={'FLASHDOCS_API_KEY': api_key}
     # from agent_c_tools.tools.workspace
-    await tester.setup_tool(tool_import_path='agent_c_tools.tools.workspace.DynamicCommandToolset',
+    await tester.setup_tool(tool_import_path='agent_c_tools.tools.workspace.DynamicCommandTools',
                             tool_opts={})
 
     # Get tool info

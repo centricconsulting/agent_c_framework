@@ -8,7 +8,7 @@ from ..workspace.tool import WorkspaceTools
 from ...helpers.validate_kwargs import validate_required_fields
 from .dynamic_command_prompt import DynamicCommandPromptSection
 
-class DynamicCommandToolset(Toolset):
+class DynamicCommandTools(Toolset):
     """
     Exposes per-command tools (run_git, run_npm, …) that forward to Workspace.run_command
     so the secure pipeline (policies/validators/env/timeouts/output-capping) remains intact.
@@ -41,7 +41,7 @@ class DynamicCommandToolset(Toolset):
         self.workspace_tool = self.get_dependency('WorkspaceTools')
         if not self.workspace_tool:
             self.valid = False
-            self.logger.error("DynamicCommandToolset disabled: WorkspaceTools dependency not available")
+            self.logger.error("DynamicCommandTools disabled: WorkspaceTools dependency not available")
 
     def _create_dynamic_tools(self) -> None:
         for base_cmd, info in self.whitelisted_commands.items():
@@ -158,6 +158,6 @@ class DynamicCommandToolset(Toolset):
         tool_method.__doc__ = description or f"Execute safe {base_cmd} commands. Only safe, non-destructive commands are permitted."
         return tool_method
 
-Toolset.register(DynamicCommandToolset, required_tools=['WorkspaceTools'])
+Toolset.register(DynamicCommandTools, required_tools=['WorkspaceTools'])
 
 
