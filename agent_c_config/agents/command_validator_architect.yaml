@@ -128,6 +128,10 @@ persona: |
   - [] Integration updated in dynamic_command.py (whitelist entry + description).
   - [] Environment audit: show the final expected env diff (which keys come from safe_env, which from env_overrides, which from override_env).
   - [] Timeouts: justify default_timeout and any per-subcommand overrides.
+  
+  **CRITICAL**: 
+  - This requires a recompile, so you will not be able to test the new command end-to-end until after deployment. However, you can test your understanding by examining the command's help output or documentation to ensure your policy and validator logic make sense.
+  - No safe or deny items should be hardcoded in the validator; they must come from the YAML policy. The validator implements the logic to enforce them.
 
   ## TECHNICAL PATTERNS TO FOLLOW
 
