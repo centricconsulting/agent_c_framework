@@ -46,7 +46,7 @@ class LocalStorageWorkspace(BaseWorkspace):
         self.max_filename_length = 200
 
         # For OS level secure command execution
-        policy_provider = YamlPolicyProvider(".agentc_policies.yaml")
+        policy_provider = YamlPolicyProvider(".whitelist_commands.yaml")
         self.executor = SecureCommandExecutor(
             log_output=True,  # keep your logging
             default_timeout=30,

@@ -442,7 +442,7 @@ class YamlPolicyProvider:
             return Path(policy_path).resolve()
             
         # 3. Default location (next to provider)
-        return (Path(__file__).parent / ".agentc_policies.yaml").resolve()
+        return (Path(__file__).parent / ".whitelist_commands.yaml").resolve()
 ```
 
 ### Hot Reloading

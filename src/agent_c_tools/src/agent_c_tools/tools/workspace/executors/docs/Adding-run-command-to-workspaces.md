@@ -64,7 +64,7 @@ class MyWorkspaceType(BaseWorkspace):
         # ...
         
         # Initialize secure command executor
-        policy_provider = YamlPolicyProvider(".agentc_policies.yaml")
+        policy_provider = YamlPolicyProvider(".whitelist_commands.yaml")
         self.executor = SecureCommandExecutor(
             debug_mode=kwargs.get('debug_mode', True),
             log_output=True,
