@@ -180,3 +180,75 @@ dotnet:
     TERM: "dumb"
     # Stable, English output (helps tokenization & parsing):
     DOTNET_CLI_UI_LANGUAGE: "en-US"
+
+# ---- PowerShell (HIGHLY RESTRICTED) ----
+# PowerShell is extremely dangerous and powerful. This configuration only allows
+# safe, read-only information gathering cmdlets with maximum security restrictions.
+# All script execution, file operations, and dangerous cmdlets are blocked.
+powershell: &powershell_common
+  validator: powershell
+  description: "Execute safe, read-only PowerShell cmdlets for information gathering only"
+  rationale: |
+    PowerShell is extremely powerful and can execute arbitrary code, access system APIs,
+    modify files, and perform dangerous operations. This policy implements maximum security
+    restrictions:
+    - Only allows whitelisted safe cmdlets (Get-*, Format-*, Out-*, etc.)
+    - Blocks all script execution (-Command, -File, -EncodedCommand)
+    - Forces Restricted execution policy
+    - Enables lockdown mode and constrained language mode
+    - Blocks dangerous patterns and cmdlets
+    - Only permits read-only information gathering operations
+  flags: ["-Help", "-?", "-NoProfile", "-nop", "-NonInteractive", "-noni", "-NoLogo", "-nol"]
+  deny_global_flags: [
+    "-Command", "-c", "-EncodedCommand", "-enc", "-e", "-File", "-f",
+    "-ExecutionPolicy", "-ep", "-ex", "-WindowStyle", "-w", "-Sta", "-Mta",
+    "-Version", "-v", "-PSConsoleFile", "-ConfigurationName",
+    "-InputFormat", "-if", "-OutputFormat", "-of"
+  ]
+  require_flags: ["-NoProfile", "-NonInteractive"]
+  # Whitelist of safe, read-only cmdlets allowed for information gathering
+  safe_cmdlets: [
+    # Information gathering cmdlets
+    "get-process", "get-service", "get-childitem", "get-location", "get-date",
+    "get-host", "get-culture", "get-uiculture", "get-executionpolicy",
+    "get-psdrive", "get-item", "get-itemproperty", "get-content",
+    "get-variable", "get-alias", "get-command", "get-module",
+    "get-pssession", "get-history", "get-member", "get-help",
+    "get-computerinfo", "get-timezone", "get-uptime",
+    # Safe formatting and output cmdlets
+    "format-table", "format-list", "format-wide", "format-custom",
+    "out-string", "out-null", "out-default",
+    "select-object", "where-object", "sort-object", "group-object",
+    "measure-object", "compare-object",
+    # Safe utility cmdlets
+    "write-output", "write-host", "write-verbose", "write-debug",
+    "test-path", "resolve-path", "split-path", "join-path", "convert-path"
+  ]
+  # Regex patterns that indicate dangerous operations (case-insensitive)
+  dangerous_patterns: [
+    "invoke-expression", "invoke-command", "iex\\s", "icm\\s",
+    "\\$\\(", "`", "&\\s", "\\.\\s",  # Command substitution, backticks, call operator, dot sourcing
+    "start-process", "new-object", "add-type",
+    "\\[system\\.", "\\[reflection\\.",
+    "downloadstring", "downloadfile", "webrequest", "webclient",
+    "invoke-webrequest", "invoke-restmethod",
+    "set-", "new-", "remove-", "clear-", "stop-", "restart-",  # Modification cmdlets
+    "enable-", "disable-", "install-", "uninstall-",
+    "register-", "unregister-"
+  ]
+  safe_env:
+    PSExecutionPolicyPreference: "Restricted"
+    __PSLockdownPolicy: "1"
+    PSModuleAutoLoadingPreference: "None"
+  env_overrides:
+    PSReadlineHistorySaveStyle: "SaveNothing"
+    POWERSHELL_TELEMETRY_OPTOUT: "1"
+    POWERSHELL_UPDATECHECK: "Off"
+    PSDisableWinRTForCurrentUser: "1"
+    NO_COLOR: "1"
+    TERM: "dumb"
+    CLICOLOR: "0"
+  default_timeout: 30
+
+# PowerShell Core (pwsh) - same restrictions as Windows PowerShell
+pwsh: *powershell_common

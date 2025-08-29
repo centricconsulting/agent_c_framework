@@ -17,6 +17,7 @@ from .validators.git_validator import GitCommandValidator
 from .validators.node_validator import NodeCommandValidator
 from .validators.npm_validator import NpmCommandValidator
 from .validators.os_basic_validator import OSBasicValidator
+from .validators.powershell_validator import PowerShellCommandValidator
 from .validators.pytest_validator import PytestCommandValidator
 
 # ANSI stripping Regex
@@ -222,6 +223,7 @@ class SecureCommandExecutor:
             "node": NodeCommandValidator(),
             "npm": NpmCommandValidator(),
             "dotnet": DotnetCommandValidator(),
+            "powershell": PowerShellCommandValidator(),
         }
 
         # Logging setup

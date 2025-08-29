@@ -30,6 +30,8 @@ class DynamicCommandTools(Toolset):
             "where": {"description": "Run safe, non-destructive where commands."},
             "whoami": {"description": "Run safe, non-destructive whoami commands."},
             "echo": {"description": "Run safe, non-destructive echo commands."},
+            "powershell": {"description": "Run safe, read-only PowerShell cmdlets for information gathering only."},
+            "pwsh": {"description": "Run safe, read-only PowerShell Core cmdlets for information gathering only."},
             # Add more as policies/validators exist
         }
 
