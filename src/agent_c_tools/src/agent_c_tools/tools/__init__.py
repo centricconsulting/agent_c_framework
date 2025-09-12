@@ -18,6 +18,8 @@ from . import workspace_planning  # Workspace Planning toolset
 from . import workspace_knowledge  # Workspace Knowledge toolset
 from . import workspace_sequential_thinking  # Workspace Sequential Thinking toolset
 from . import browser_playwright  # Browser Playwright toolset
+from . import uipath  # UIPath toolset
+
 __all__ = [
     'workspace',
     'web', 
@@ -37,5 +39,24 @@ __all__ = [
     'workspace_knowledge',
     'workspace_sequential_thinking',
     'browser_playwright',
-    'sars'
+    'uipath',
+    'sars',
+    'dataframe',
+    'data_visualization',
+    'dall_e',
+    'database_query',
+    'dynamics',
+    'gmail',
+    'linked_in',
+    'markdown_to_html_report',
+    'office_to_markdown',
+    'rss',
+    'salesforce',
+    'user_preferences',
+    'youtube',
+    'agent_assist',
+    'agent_clone',
+    'agent_team',
+    'code_interpreter',
+    'tool_debugger'
 ]

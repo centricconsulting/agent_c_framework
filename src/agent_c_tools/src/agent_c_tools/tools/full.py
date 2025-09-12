@@ -33,6 +33,7 @@ from .salesforce import SalesforceTools
 from .linked_in import LinkedInTools
 from .youtube import YoutubeTranscriptTools, YoutubeCommentsTools, YoutubeSearchViaApiTools, YoutubeSearchViaWebTools
 from .sars import SarsTools
+from .uipath import UiPathTools
 
 __all__ = [
     # Essential Tools for good agents
@@ -108,5 +109,8 @@ __all__ = [
 
     # BOKF Demo Only
     'SARSTools',
+
+    # UiPath Integration
+    'UiPathTools',
 
 ]

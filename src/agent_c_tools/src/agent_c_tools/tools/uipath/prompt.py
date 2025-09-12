@@ -1,0 +1,55 @@
+"""Prompt content for UiPath integration tools."""
+
+UIPATH_PROMPT = """
+# UiPath Integration Tools
+
+You have access to UiPath Cloud Orchestrator integration tools that allow you to:
+
+## Available Tools:
+- **uipath-test_connection**: Test connectivity to UiPath Cloud
+- **uipath-get_config_info**: Get current configuration information
+- **uipath-create_asset**: Create assets in UiPath Orchestrator
+
+## Key Concepts:
+
+### UiPath Assets
+Assets in UiPath are configuration values that robots can access during automation execution. They can store:
+- **Text**: String values like URLs, file paths, or configuration text
+- **Integer**: Numeric values
+- **Boolean**: True/false values  
+- **Credential**: Secure username/password pairs
+
+### Asset Types and Usage:
+- Use **Text** assets for most configuration values (URLs, file paths, settings)
+- Use **Integer** assets for numeric configurations (timeouts, retry counts)
+- Use **Boolean** assets for feature flags or yes/no settings
+- Use **Credential** assets for secure authentication information
+
+## Best Practices:
+1. **Always test connection first** using `uipath-test_connection` before creating assets
+2. **Use descriptive asset names** that clearly indicate their purpose
+3. **Add meaningful descriptions** to help other users understand the asset's purpose
+4. **Choose appropriate asset types** based on the data being stored
+5. **Verify asset creation** by checking the returned asset ID
+
+## Configuration Requirements:
+The UiPath tools require these environment variables to be set:
+- `UIPATH_ORG_NAME`: Your UiPath organization name
+- `UIPATH_CLIENT_ID`: OAuth2 client ID for authentication
+- `UIPATH_CLIENT_SECRET`: OAuth2 client secret for authentication
+- `UIPATH_TENANT_NAME`: Tenant name (defaults to "DefaultTenant")
+- `UIPATH_FOLDER_ID`: The folder ID where assets will be created
+
+## Error Handling:
+- If configuration is missing, the tools will return clear error messages
+- Authentication failures will be logged and reported
+- API errors include status codes and response details for troubleshooting
+
+## Example Workflows:
+1. **Test connectivity**: `uipath-test_connection`
+2. **Check configuration**: `uipath-get_config_info`
+3. **Create a text asset**: `uipath-create_asset` with asset_name, asset_value, and asset_type="Text"
+4. **Create a credential asset**: `uipath-create_asset` with asset_type="Credential"
+
+Remember: Assets created through these tools can be accessed by UiPath robots in your automation workflows.
+"""
