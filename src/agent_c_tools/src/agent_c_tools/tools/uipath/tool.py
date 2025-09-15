@@ -22,7 +22,7 @@ class UiPathTools(Toolset):
     """
     
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(**kwargs, name='uipath')
         self._token_cache: Dict[str, str] = {}
         
     async def post_init(self):
