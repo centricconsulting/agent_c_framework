@@ -11,11 +11,12 @@ from agent_c.toolsets.json_schema import json_schema
 
 class UiPathTools(Toolset):
     """
-    UiPath integration toolset providing authentication and asset management capabilities.
+    UiPath integration toolset providing authentication, asset management, and queue management capabilities.
     
     This toolset allows agents to interact with UiPath Cloud Orchestrator to:
     - Authenticate with UiPath Cloud
-    - Create and manage assets
+    - Create and manage assets (Text, Integer, Boolean, Credential)
+    - Create and manage queues for work item processing
     - Future: Deploy processes, trigger jobs, manage robots
     
     Configuration is handled via environment variables for security.
@@ -68,7 +69,7 @@ class UiPathTools(Toolset):
         
         return required_configs
     
-    async def _get_auth_token(self, scope: str = "OR.Assets OR.Assets.Read OR.Assets.Write") -> str:
+    async def _get_auth_token(self, scope: str = "OR.Assets OR.Assets.Read OR.Assets.Write OR.Queues OR.Queues.Read OR.Queues.Write") -> str:
         """Get authentication token from UiPath Cloud."""
         try:
             config = self._validate_config()
@@ -280,6 +281,121 @@ class UiPathTools(Toolset):
                 
         except Exception as e:
             error_msg = f"Error creating UiPath asset: {str(e)}"
+            self.logger.error(error_msg)
+            return f"ERROR: {error_msg}"
+    
+    @json_schema(
+        description="Create a new queue in UiPath Orchestrator. Queues are used to store work items that can be processed by UiPath robots. Each queue can have specific settings for retry attempts, SLA, and priority.",
+        params={
+            "queue_name": {
+                "type": "string",
+                "description": "The name of the queue to create",
+                "required": True
+            },
+            "description": {
+                "type": "string",
+                "description": "Optional description for the queue",
+                "default": "Created via Agent C"
+            },
+            "max_number_of_retries": {
+                "type": "integer",
+                "description": "Maximum number of retry attempts for failed items (0-10)",
+                "default": 1
+            },
+            "auto_retry": {
+                "type": "boolean",
+                "description": "Whether to automatically retry failed items",
+                "default": False
+            },
+            "unique_ref": {
+                "type": "boolean",
+                "description": "Whether to enforce unique reference IDs for queue items",
+                "default": False
+            }
+        }
+    )
+    async def create_queue(self, **kwargs) -> str:
+        """Create a new queue in UiPath Orchestrator."""
+        try:
+            tool_context = kwargs.get('tool_context')
+            queue_name = kwargs.get('queue_name')
+            description = kwargs.get('description', 'Created via Agent C')
+            max_retries = kwargs.get('max_number_of_retries', 0)
+            auto_retry = kwargs.get('auto_retry', False)
+            unique_ref = kwargs.get('unique_ref', False)
+            
+            if not queue_name:
+                return "ERROR: queue_name is required"
+            
+            # Validate parameters
+            if not isinstance(max_retries, int) or max_retries < 0 or max_retries > 10:
+                return "ERROR: max_number_of_retries must be an integer between 0 and 10"
+            
+            # Get configuration
+            config = self._validate_config()
+            
+            # Get authentication token with queue permissions
+            token = await self._get_auth_token("OR.Queues OR.Queues.Read OR.Queues.Write")
+            
+            # Prepare the API request for queue creation
+            create_queue_url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/QueueDefinitions"
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+            
+            # Build payload for queue creation (matching the working createQueue.py implementation)
+            payload = {
+                "Name": queue_name,
+                "Description": description,
+                "AcceptAutomaticallyRetry": auto_retry,
+                "EnforceUniqueReference": unique_ref,
+                "MaxNumberOfRetries": max_retries,
+                "ProcessingType": "Multiple",
+                "SpecificDataJson": "{}"
+            }
+            
+            # Debug logging
+            self.logger.info(f"UiPath Queue API URL: {create_queue_url}")
+            self.logger.info(f"UiPath Queue Headers: {json.dumps({k: v if k != 'Authorization' else 'Bearer ***' for k, v in headers.items()}, indent=2)}")
+            self.logger.info(f"UiPath Queue Payload: {json.dumps(payload, indent=2)}")
+            
+            # Make the API call
+            response = requests.post(create_queue_url, headers=headers, data=json.dumps(payload))
+            
+            # Debug response
+            self.logger.info(f"UiPath Queue Response Status: {response.status_code}")
+            self.logger.info(f"UiPath Queue Response Body: {response.text}")
+            
+            if response.status_code == 201:
+                result_data = response.json()
+                self.logger.info(f"Successfully created UiPath queue: {queue_name}")
+                
+                # Return a formatted success response
+                result = {
+                    "status": "success",
+                    "message": f"Queue '{queue_name}' created successfully",
+                    "queue_id": result_data.get("Id"),
+                    "queue_name": queue_name,
+                    "description": description,
+                    "max_number_of_retries": max_retries,
+                    "auto_retry": auto_retry,
+                    "unique_ref": unique_ref,
+                    "processing_type": "Multiple"
+                }
+                return yaml.dump(result, allow_unicode=True)
+                
+            else:
+                error_msg = f"Failed to create queue. Status code: {response.status_code}, Response: {response.text}"
+                self.logger.error(error_msg)
+                return f"ERROR: {error_msg}"
+                
+        except Exception as e:
+            error_msg = f"Error creating UiPath queue: {str(e)}"
             self.logger.error(error_msg)
             return f"ERROR: {error_msg}"
     

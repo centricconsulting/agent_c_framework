@@ -9,6 +9,7 @@ You have access to UiPath Cloud Orchestrator integration tools that allow you to
 - **uipath-test_connection**: Test connectivity to UiPath Cloud
 - **uipath-get_config_info**: Get current configuration information
 - **uipath-create_asset**: Create assets in UiPath Orchestrator
+- **uipath-create_queue**: Create queues in UiPath Orchestrator
 
 ## Key Concepts:
 
@@ -24,6 +25,19 @@ Assets in UiPath are configuration values that robots can access during automati
 - Use **Integer** assets for numeric configurations (timeouts, retry counts) - provide the number as a string
 - Use **Boolean** assets for feature flags or yes/no settings - use 'true' or 'false' as the value
 - Use **Credential** assets for secure authentication information - provide separate username and password parameters
+
+### UiPath Queues
+Queues in UiPath are containers for work items that robots can process. They provide:
+- **Work item management**: Store data that needs to be processed by robots
+- **Retry mechanisms**: Automatic retry of failed items with configurable settings
+- **Priority handling**: Process items based on priority levels
+- **Reference tracking**: Optional unique reference enforcement for items
+
+### Queue Configuration Options:
+- **max_number_of_retries**: How many times to retry failed items (0-10)
+- **auto_retry**: Whether to enable automatic retry (defaults to false)
+- **unique_ref**: Prevent duplicate reference IDs (defaults to false)
+- **processing_type**: Set to "Multiple" for standard queue processing
 
 ## Best Practices:
 1. **Always test connection first** using `uipath-test_connection` before creating assets
@@ -46,6 +60,8 @@ The UiPath tools require these environment variables to be set:
 - API errors include status codes and response details for troubleshooting
 
 ## Example Workflows:
+
+### Asset Management:
 1. **Test connectivity**: `uipath-test_connection`
 2. **Check configuration**: `uipath-get_config_info`
 3. **Create a text asset**: `uipath-create_asset` with asset_name="MyConfig", asset_value="some text", asset_type="Text"
@@ -53,5 +69,10 @@ The UiPath tools require these environment variables to be set:
 5. **Create a boolean asset**: `uipath-create_asset` with asset_name="FeatureEnabled", asset_value="true", asset_type="Boolean"
 6. **Create a credential asset**: `uipath-create_asset` with asset_name="LoginCreds", asset_type="Credential", username="rohan", password="rohan123"
 
-Remember: Assets created through these tools can be accessed by UiPath robots in your automation workflows.
+### Queue Management:
+7. **Create a basic queue**: `uipath-create_queue` with queue_name="ProcessInvoices", description="Queue for invoice processing"
+8. **Create a queue with custom retry settings**: `uipath-create_queue` with queue_name="CriticalTasks", max_number_of_retries=3, auto_retry=true
+9. **Create a queue with unique references**: `uipath-create_queue` with queue_name="UniqueOrders", unique_ref=true
+
+Remember: Assets and queues created through these tools can be accessed by UiPath robots in your automation workflows.
 """
