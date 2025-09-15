@@ -1,98 +1,80 @@
 #!/usr/bin/env python3
 """
-Create a UiPath asset using the proper Agent C toolset framework
+Test script to create UiPath asset with the exact payload structure shown by the user
 """
 
-import asyncio
-import sys
+import json
+import requests
 import os
 
-# Load environment variables from .env file
-try:
-    from dotenv import load_dotenv
-    env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-    if os.path.exists(env_path):
-        load_dotenv(env_path)
-        print(f"✅ Loaded .env file from: {env_path}")
-    else:
-        load_dotenv()
-        print("✅ Attempted to load .env file from current directory")
-except ImportError:
-    print("⚠️  python-dotenv not available, trying manual .env loading...")
-    env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-    if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, value = line.split('=', 1)
-                    os.environ[key.strip()] = value.strip().strip('"').strip("'")
-        print(f"✅ Manually loaded .env file from: {env_path}")
-
-# Add the src directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
-from agent_c_tools.tools.uipath.tool import UiPathTools
-import threading
-
-async def create_asset_with_agentc():
-    """Create a UiPath asset using the Agent C toolset directly"""
+def test_exact_payload():
+    """Test with the exact payload structure provided by the user"""
     
-    print("🚀 Initializing UiPath toolset...")
+    # Configuration
+    org_name = "centrusjldws"
+    tenant_name = "DefaultTenant"
+    folder_id = 3310023
+    client_id = "885ffd53-2db7-480d-baed-563c20293da1"
+    client_secret = "giXACS$axxocj5s1$UHc?4vbSSCbP03cvn1Q#nVny(8)!sd@oa^*y4Dq~!l5kHkd"
+    scope = "OR.Assets OR.Assets.Read OR.Assets.Write"
     
-    # Initialize the UiPath toolset directly (like in the test)
-    uipath_tools = UiPathTools(
-        name="UiPathTools",
-        tool_cache=None,  # We'll use None for standalone testing
-        tool_chest=None   # We'll use None for standalone testing
-    )
+    # Get token
+    print("🔧 Getting authentication token...")
+    token_url = f"https://cloud.uipath.com/{org_name}/identity_/connect/token"
     
-    print("✅ UiPath tools initialized successfully")
-    
-    # Create the tool context
-    tool_context = {
-        'session_id': 'agentc_test_session',
-        'current_user_username': 'tim_toolman',
-        'timestamp': '2024-12-19T00:00:00Z',
-        'env_name': 'development',
-        'agent_config': {},
-        'client_wants_cancel': threading.Event(),
-        'streaming_callback': None,
-        'calling_model_name': 'claude'
+    token_data = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "scope": scope,
+        "grant_type": "client_credentials",
     }
     
-    print("📋 Creating asset with parameters:")
-    print("   Asset Name: TestAsset")
-    print("   Asset Value: asset value")
-    print("   Asset Type: Text")
-    print("   Description: from agnetC")
-    print()
+    token_response = requests.post(token_url, data=token_data)
+    if token_response.status_code != 200:
+        print(f"❌ Token request failed: {token_response.status_code} - {token_response.text}")
+        return
     
-    try:
-        # Test connection first
-        print("🔍 Testing UiPath connection...")
-        connection_result = await uipath_tools.test_connection(tool_context=tool_context)
-        print("Connection test result:")
-        print(connection_result)
-        print()
-        
-        # Create the asset using the proper Agent C method
-        print("🏗️  Creating the asset via Agent C toolset...")
-        result = await uipath_tools.create_asset(
-            asset_name="TestAsset",
-            asset_value="asset value",
-            asset_type="Text", 
-            description="from agnetC",
-            tool_context=tool_context
-        )
-        
-        print("✅ Asset creation result:")
-        print(result)
-        
-    except Exception as e:
-        print(f"❌ Error occurred: {str(e)}")
-        import traceback
-        traceback.print_exc()
+    token = token_response.json().get("access_token")
+    print("✅ Got authentication token")
+    
+    # Create Boolean asset with EXACT payload from user
+    print("\n🔧 Creating Boolean asset with user's exact payload...")
+    
+    create_asset_url = f"https://cloud.uipath.com/{org_name}/{tenant_name}/orchestrator_/odata/Assets"
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-UIPATH-TenantName": tenant_name,
+        "X-UIPATH-OrganizationUnitId": str(folder_id),
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    
+    # This is the EXACT payload structure provided by the user
+    payload = {
+        "Name": "TestAsset-boolean-exact",
+        "ValueType": "Bool",
+        "ValueScope": "Global",
+        "Description": "Created via AgentC",
+        "BoolValue": True  # Python boolean, will serialize to JSON true
+    }
+    
+    print(f"URL: {create_asset_url}")
+    print(f"Headers: {json.dumps({k: v if k != 'Authorization' else 'Bearer ***' for k, v in headers.items()}, indent=2)}")
+    print(f"Payload: {json.dumps(payload, indent=2)}")
+    
+    response = requests.post(create_asset_url, headers=headers, data=json.dumps(payload))
+    
+    print(f"\nResponse Status: {response.status_code}")
+    print(f"Response Headers: {dict(response.headers)}")
+    print(f"Response Body: {response.text}")
+    
+    if response.status_code == 201:
+        print("✅ Boolean asset created successfully with exact payload!")
+        result = response.json()
+        print(f"Asset ID: {result.get('Id')}")
+    else:
+        print("❌ Boolean asset creation failed even with exact payload")
 
 if __name__ == "__main__":
-    asyncio.run(create_asset_with_agentc())
+    test_exact_payload()

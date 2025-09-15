@@ -119,7 +119,7 @@ class UiPathTools(Toolset):
             raise Exception(error_msg)
     
     @json_schema(
-        description="Create a new asset in UiPath Orchestrator. Assets are configuration values that can be accessed by UiPath robots during automation execution.",
+        description="Create a new asset in UiPath Orchestrator. Assets are configuration values that can be accessed by UiPath robots during automation execution. For credentials, provide username and password as separate parameters.",
         params={
             "asset_name": {
                 "type": "string",
@@ -128,14 +128,24 @@ class UiPathTools(Toolset):
             },
             "asset_value": {
                 "type": "string", 
-                "description": "The value to store in the asset",
-                "required": True
+                "description": "The value to store in the asset. For Text assets, provide the string value. For Integer assets, provide the number as string. For Boolean assets, provide 'true' or 'false'. For Credential assets, this parameter is ignored - use username and password instead.",
+                "required": False
             },
             "asset_type": {
                 "type": "string",
                 "description": "The type of asset (Text, Integer, Boolean, Credential)",
                 "enum": ["Text", "Integer", "Boolean", "Credential"],
                 "default": "Text"
+            },
+            "username": {
+                "type": "string",
+                "description": "Username for Credential type assets. Required only when asset_type is 'Credential'.",
+                "required": False
+            },
+            "password": {
+                "type": "string",
+                "description": "Password for Credential type assets. Required only when asset_type is 'Credential'.",
+                "required": False
             },
             "description": {
                 "type": "string",
@@ -151,10 +161,20 @@ class UiPathTools(Toolset):
             asset_name = kwargs.get('asset_name')
             asset_value = kwargs.get('asset_value')
             asset_type = kwargs.get('asset_type', 'Text')
+            username = kwargs.get('username')
+            password = kwargs.get('password')
             description = kwargs.get('description', 'Created via Agent C')
             
-            if not asset_name or not asset_value:
-                return "ERROR: asset_name and asset_value are required parameters"
+            if not asset_name:
+                return "ERROR: asset_name is required"
+            
+            # Validate required parameters based on asset type
+            if asset_type == 'Credential':
+                if not username or not password:
+                    return "ERROR: username and password are required for Credential type assets"
+            else:
+                if not asset_value:
+                    return "ERROR: asset_value is required for non-Credential type assets"
             
             # Get configuration
             config = self._validate_config()
@@ -173,20 +193,73 @@ class UiPathTools(Toolset):
                 "Accept": "application/json"
             }
             
+            # Build payload with correct format for each asset type
             payload = {
                 "Name": asset_name,
-                "StringValue": asset_value,
-                "ValueType": asset_type,
                 "ValueScope": "Global",
                 "Description": description
             }
             
+            # Set the correct value field and type based on asset_type
+            if asset_type == 'Boolean':
+                # Boolean assets need BoolValue and ValueType "Bool"
+                bool_value = asset_value.lower() in ['true', '1', 'yes', 'on']
+                payload["BoolValue"] = bool_value
+                payload["ValueType"] = "Bool"
+            elif asset_type == 'Integer':
+                # Integer assets need IntValue with numeric value
+                payload["IntValue"] = int(asset_value)
+                payload["ValueType"] = asset_type
+            elif asset_type == 'Credential':
+                # Credential assets need separate CredentialUsername and CredentialPassword fields
+                payload["CredentialUsername"] = username
+                payload["CredentialPassword"] = password
+                payload["ValueType"] = asset_type
+            else:
+                # Text assets use StringValue
+                payload["StringValue"] = asset_value
+                payload["ValueType"] = asset_type
+            
+            # Set actual_value for response
+            if asset_type == 'Credential':
+                actual_value = f"{{username: '{username}', password: '[HIDDEN]'}}"
+            else:
+                actual_value = asset_value
+                
+            # Validate asset_value for non-Credential types
+            if asset_type == 'Integer':
+                try:
+                    int(asset_value)  # Just validate, but still store as string
+                except ValueError:
+                    return f"ERROR: Invalid integer value '{asset_value}' for Integer asset type"
+            elif asset_type == 'Boolean':
+                if asset_value.lower() not in ['true', 'false', '1', '0', 'yes', 'no', 'on', 'off']:
+                    return f"ERROR: Invalid boolean value '{asset_value}'. Use 'true' or 'false'"
+            
+            # Debug logging and console output for debugging
+            self.logger.info(f"UiPath API URL: {create_asset_url}")
+            self.logger.info(f"UiPath Headers: {json.dumps({k: v if k != 'Authorization' else 'Bearer ***' for k, v in headers.items()}, indent=2)}")
+            self.logger.info(f"UiPath Payload: {json.dumps(payload, indent=2)}")
+            
+            # Also return payload info for debugging
+            debug_info = f"DEBUG - Payload being sent:\n{json.dumps(payload, indent=2)}\n\n"
+            
             # Make the API call
             response = requests.post(create_asset_url, headers=headers, data=json.dumps(payload))
             
+            # Debug response
+            self.logger.info(f"UiPath Response Status: {response.status_code}")
+            self.logger.info(f"UiPath Response Body: {response.text}")
+            
+            # Include debug info in error responses
+            if response.status_code != 201:
+                error_msg = f"Failed to create asset. Status code: {response.status_code}, Response: {response.text}"
+                self.logger.error(error_msg)
+                return f"ERROR: {error_msg}\n\n{debug_info}"
+            
             if response.status_code == 201:
                 result_data = response.json()
-                self.logger.info(f"Successfully created UiPath asset: {asset_name}")
+                self.logger.info(f"Successfully created UiPath asset: {asset_name} (type: {asset_type})")
                 
                 # Return a formatted success response
                 result = {
@@ -195,7 +268,7 @@ class UiPathTools(Toolset):
                     "asset_id": result_data.get("Id"),
                     "asset_name": asset_name,
                     "asset_type": asset_type,
-                    "asset_value": asset_value,
+                    "asset_value": actual_value,
                     "description": description
                 }
                 return yaml.dump(result, allow_unicode=True)

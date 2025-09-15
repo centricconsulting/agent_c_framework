@@ -1,97 +1,87 @@
 #!/usr/bin/env python3
 """
-Simple test to create UiPath asset using Agent C toolset pattern
+Test script to replicate the working UiPath asset creation
 """
-
-import asyncio
-import sys
+import json
+import requests
 import os
-import threading
 
-# Load environment variables from .env file
-try:
-    from dotenv import load_dotenv
-    env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-    if os.path.exists(env_path):
-        load_dotenv(env_path)
-        print(f"✅ Loaded .env file from: {env_path}")
-    else:
-        load_dotenv()
-        print("✅ Attempted to load .env file from current directory")
-except ImportError:
-    print("⚠️  python-dotenv not available, trying manual .env loading...")
-    env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-    if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, value = line.split('=', 1)
-                    os.environ[key.strip()] = value.strip().strip('"').strip("'")
-        print(f"✅ Manually loaded .env file from: {env_path}")
+# Configuration (using same values from the working example)
+org_name = "centrusjldws"
+tenant_name = "DefaultTenant"
+folder_id = 3310023
+client_id = "885ffd53-2db7-480d-baed-563c20293da1"
+client_secret = "giXACS$axxocj5s1$UHc?4vbSSCbP03cvn1Q#nVny(8)!sd@oa^*y4Dq~!l5kHkd"
+scope = "OR.Assets OR.Assets.Read OR.Assets.Write"
 
-# Add the src directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
-async def main():
-    """Create the UiPath asset as requested by Tim"""
+def get_token():
+    """Get OAuth2 token using the working method"""
+    url = f"https://cloud.uipath.com/{org_name}/identity_/connect/token"
     
-    print("🚀 Creating UiPath asset via Agent C toolset...")
-    
-    # Import the UiPath toolset
-    from agent_c_tools.tools.uipath.tool import UiPathTools
-    
-    # Initialize the toolset (same as the working test script)
-    uipath_tool = UiPathTools(
-        name="UiPathTools",
-        tool_cache=None,
-        tool_chest=None
-    )
-    
-    # Create tool context
-    tool_context = {
-        'session_id': 'tim_request_session',
-        'current_user_username': 'tim_toolman',
-        'timestamp': '2024-12-19T12:00:00Z',
-        'env_name': 'production',
-        'agent_config': {},
-        'client_wants_cancel': threading.Event(),
-        'streaming_callback': None,
-        'calling_model_name': 'claude'
+    data = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "scope": scope,
+        "grant_type": "client_credentials",
     }
     
-    print("📋 Creating asset with Tim's specified parameters:")
-    print("   Asset Name: TestAsset")
-    print("   Asset Value: asset value")
-    print("   Asset Type: Text")
-    print("   Description: from agnetC")
-    print()
-    
     try:
-        # Test connection first
-        print("🔍 Testing UiPath connection...")
-        connection_result = await uipath_tool.test_connection(tool_context=tool_context)
-        print("Connection test result:")
-        print(connection_result)
-        print()
-        
-        # Create the asset with Tim's exact specifications
-        print("🏗️  Creating the asset...")
-        result = await uipath_tool.create_asset(
-            asset_name="TestAsset",
-            asset_value="asset value",
-            asset_type="Text",
-            description="from agnetC",
-            tool_context=tool_context
-        )
-        
-        print("✅ Asset creation result:")
-        print(result)
-        
-    except Exception as e:
-        print(f"❌ Error occurred: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        response = requests.post(url, data=data)
+        response.raise_for_status()
+        token = response.json().get("access_token")
+        print("✓ Token retrieved successfully")
+        return token
+    except requests.RequestException as e:
+        print(f"✗ Failed to retrieve token: {e}")
+        return None
+
+def create_boolean_asset(token):
+    """Create a boolean asset using the exact working method"""
+    create_asset_url = f"https://cloud.uipath.com/{org_name}/{tenant_name}/orchestrator_/odata/Assets"
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-UIPATH-TenantName": tenant_name,
+        "X-UIPATH-OrganizationUnitId": str(folder_id),
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    
+    payload = {
+        "Name": "test_boolean_from_script",
+        "StringValue": "true",
+        "ValueType": "Boolean",
+        "ValueScope": "Global",
+        "Description": "Test boolean asset created by debug script"
+    }
+    
+    print(f"Sending payload: {json.dumps(payload, indent=2)}")
+    print(f"Headers: {json.dumps({k: v if k != 'Authorization' else 'Bearer ***' for k, v in headers.items()}, indent=2)}")
+    
+    response = requests.post(create_asset_url, headers=headers, data=json.dumps(payload))
+    
+    print(f"Response status: {response.status_code}")
+    print(f"Response body: {response.text}")
+    
+    if response.status_code == 201:
+        print("✓ Asset created successfully!")
+        return response.json()
+    else:
+        print(f"✗ Failed to create asset. Status: {response.status_code}")
+        return None
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    print("Testing UiPath asset creation...")
+    
+    # Get token
+    token = get_token()
+    if not token:
+        print("Cannot proceed without token")
+        exit(1)
+    
+    # Create asset
+    result = create_boolean_asset(token)
+    if result:
+        print(f"Asset created with ID: {result.get('Id')}")
+    else:
+        print("Asset creation failed")

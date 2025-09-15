@@ -1,31 +1,64 @@
 #!/usr/bin/env python3
 """
-Test importing UiPath tools
+Test UiPath asset creation using the exact working approach
 """
 
 import sys
 import os
 
-# Add the src directory to the path so we can import agent_c_tools
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+# Add the UiPath workspace to path
+sys.path.insert(0, '/workspaces/uipath')
 
-try:
-    from agent_c_tools.tools.uipath.tool import UiPathTools
-    print("✅ Successfully imported UiPathTools")
+from getToken import UiPathAuth
+from createAsset import CreateAsset
+
+def test_working_approach():
+    """Test using the exact working createAsset.py approach"""
     
-    # Try to create an instance
-    uipath_tool = UiPathTools()
-    print("✅ Successfully created UiPathTools instance")
+    print("🔧 Testing with the working createAsset.py approach...")
     
-    # Check if we can get config info
-    try:
-        config_info = uipath_tool._validate_config()
-        print("✅ Configuration is valid")
-        print(f"Config keys found: {list(config_info.keys())}")
-    except Exception as e:
-        print(f"❌ Configuration validation failed: {str(e)}")
-        
-except ImportError as e:
-    print(f"❌ Failed to import UiPathTools: {str(e)}")
-except Exception as e:
-    print(f"❌ Error: {str(e)}")
+    # Configuration
+    org_name = "centrusjldws"
+    tenant_name = "DefaultTenant"
+    folder_id = 3310023
+    client_id = "885ffd53-2db7-480d-baed-563c20293da1"
+    client_secret = "giXACS$axxocj5s1$UHc?4vbSSCbP03cvn1Q#nVny(8)!sd@oa^*y4Dq~!l5kHkd"
+    scope = "OR.Assets OR.Assets.Read OR.Assets.Write"
+    
+    # Get authentication token
+    auth = UiPathAuth(
+        org_name=org_name,
+        client_id=client_id,
+        client_secret=client_secret,
+        scope=scope,
+        tenant_name=tenant_name
+    )
+    
+    token = auth.get_token()
+    if not token:
+        print("❌ Failed to get authentication token")
+        return
+    
+    print("✅ Got authentication token")
+    
+    # Test Boolean asset creation
+    print("\n🔧 Creating Boolean asset with working approach...")
+    
+    asset = CreateAsset(
+        asset_name="WorkingBooleanTest",
+        asset_type="Boolean",
+        asset_value="true",
+        create_asset_url=f"https://cloud.uipath.com/{org_name}/{tenant_name}/orchestrator_/odata/Assets",
+        tenant_name=tenant_name,
+        folder_id=folder_id
+    )
+    
+    result = asset.create_asset(token)
+    if result:
+        print("✅ Boolean asset created successfully using working approach!")
+        print(f"Asset ID: {result.get('Id')}")
+    else:
+        print("❌ Boolean asset creation failed even with working approach")
+
+if __name__ == "__main__":
+    test_working_approach()

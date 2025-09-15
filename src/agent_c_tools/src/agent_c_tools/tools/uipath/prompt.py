@@ -21,9 +21,9 @@ Assets in UiPath are configuration values that robots can access during automati
 
 ### Asset Types and Usage:
 - Use **Text** assets for most configuration values (URLs, file paths, settings)
-- Use **Integer** assets for numeric configurations (timeouts, retry counts)
-- Use **Boolean** assets for feature flags or yes/no settings
-- Use **Credential** assets for secure authentication information
+- Use **Integer** assets for numeric configurations (timeouts, retry counts) - provide the number as a string
+- Use **Boolean** assets for feature flags or yes/no settings - use 'true' or 'false' as the value
+- Use **Credential** assets for secure authentication information - provide separate username and password parameters
 
 ## Best Practices:
 1. **Always test connection first** using `uipath-test_connection` before creating assets
@@ -48,8 +48,10 @@ The UiPath tools require these environment variables to be set:
 ## Example Workflows:
 1. **Test connectivity**: `uipath-test_connection`
 2. **Check configuration**: `uipath-get_config_info`
-3. **Create a text asset**: `uipath-create_asset` with asset_name, asset_value, and asset_type="Text"
-4. **Create a credential asset**: `uipath-create_asset` with asset_type="Credential"
+3. **Create a text asset**: `uipath-create_asset` with asset_name="MyConfig", asset_value="some text", asset_type="Text"
+4. **Create an integer asset**: `uipath-create_asset` with asset_name="Timeout", asset_value="30", asset_type="Integer"
+5. **Create a boolean asset**: `uipath-create_asset` with asset_name="FeatureEnabled", asset_value="true", asset_type="Boolean"
+6. **Create a credential asset**: `uipath-create_asset` with asset_name="LoginCreds", asset_type="Credential", username="rohan", password="rohan123"
 
 Remember: Assets created through these tools can be accessed by UiPath robots in your automation workflows.
 """

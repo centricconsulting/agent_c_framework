@@ -46,8 +46,10 @@ Create a new asset in UiPath Orchestrator.
 
 **Parameters:**
 - `asset_name` (required): Name of the asset
-- `asset_value` (required): Value to store in the asset
+- `asset_value` (conditional): Value to store in the asset. Required for Text, Integer, and Boolean types. Ignored for Credential type.
 - `asset_type` (optional): Type of asset (Text, Integer, Boolean, Credential) - defaults to "Text"
+- `username` (conditional): Username for Credential assets. Required only when asset_type is "Credential"
+- `password` (conditional): Password for Credential assets. Required only when asset_type is "Credential"
 - `description` (optional): Description of the asset - defaults to "Created via Agent C"
 
 **Returns:** Asset creation details including asset ID
@@ -55,9 +57,9 @@ Create a new asset in UiPath Orchestrator.
 ## Asset Types
 
 - **Text**: String values (URLs, file paths, configuration text)
-- **Integer**: Numeric values (timeouts, retry counts)
-- **Boolean**: True/false values (feature flags)
-- **Credential**: Secure username/password pairs
+- **Integer**: Numeric values (timeouts, retry counts) - provide as string, will be converted to integer
+- **Boolean**: True/false values (feature flags) - use 'true' or 'false' as string values
+- **Credential**: Secure username/password pairs - stored as JSON: {"username":"user","password":"pass"}
 
 ## Usage Examples
 
@@ -73,12 +75,29 @@ await uipath_tools.create_asset(
     description="API endpoint for database access"
 )
 
+# Create an integer asset
+await uipath_tools.create_asset(
+    asset_name="RetryCount",
+    asset_value="5",
+    asset_type="Integer",
+    description="Number of retry attempts"
+)
+
 # Create a boolean asset
 await uipath_tools.create_asset(
     asset_name="EnableLogging",
     asset_value="true",
     asset_type="Boolean",
     description="Enable detailed logging in automation"
+)
+
+# Create a credential asset
+await uipath_tools.create_asset(
+    asset_name="LoginCredentials",
+    asset_type="Credential",
+    username="rohan",
+    password="rohan123",
+    description="Login credentials for external system"
 )
 ```
 
