@@ -33,3 +33,9 @@ export type { ChatMessagesViewProps } from './ChatMessagesView'
 
 export { SubsessionDivider } from './SubsessionDivider'
 export type { SubsessionDividerProps } from './SubsessionDivider'
+
+export { MediaRenderer } from './MediaRenderer'
+export type { MediaRendererProps } from './MediaRenderer'
+
+export { SystemMessage } from './SystemMessage'
+export type { SystemMessageProps } from './SystemMessage'

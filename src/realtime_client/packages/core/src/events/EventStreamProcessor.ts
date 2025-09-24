@@ -190,8 +190,11 @@ export class EventStreamProcessor {
       !('timestamp' in serverSession.messages[0]);
     
     if (!needsConversion) {
-      // Already in the correct format
-      return serverSession as ChatSession;
+      // Already in the correct format but ensure messages is an array
+      return {
+        ...serverSession,
+        messages: serverSession.messages || []
+      } as ChatSession;
     }
     
     // Convert messages from MessageParam[] to Message[]
@@ -519,24 +522,36 @@ export class EventStreamProcessor {
   
   /**
    * Handle system messages
+   * SystemMessageEvent is a SessionEvent that should be displayed in the chat as an alert-style bubble
+   * Must maintain API naming consistency - emit as 'system_message' not 'system-notification'
    */
   private handleSystemMessage(event: SystemMessageEvent): void {
-    this.sessionManager.emit('system-notification', {
-      type: 'system',
-      severity: event.severity || 'info',
+    // Emit the system message event with all original fields preserved
+    // This maintains API naming consistency with the server event type
+    this.sessionManager.emit('system_message', {
+      type: event.type,
+      session_id: event.session_id,
+      role: event.role,
       content: event.content,
-      timestamp: new Date().toISOString()
+      format: event.format,
+      severity: event.severity || 'info',
+      // Include session event fields if present
+      parent_session_id: event.parent_session_id,
+      user_session_id: event.user_session_id
     });
   }
   
   /**
    * Handle error events
+   * ErrorEvent is NOT a SessionEvent - it indicates unhandled server errors
+   * Should be displayed as a toast notification, not in the chat stream
    */
   private handleError(event: ErrorEvent): void {
-    this.sessionManager.emit('system-notification', {
-      type: 'error',
-      severity: 'error',
-      content: event.message,
+    // Emit as 'error' event for toast notifications
+    // This is distinct from system messages and should not appear in chat
+    this.sessionManager.emit('error', {
+      type: event.type,
+      message: event.message,
       source: event.source,
       timestamp: new Date().toISOString()
     });
@@ -600,12 +615,29 @@ export class EventStreamProcessor {
     // Reset the message builder for new session context
     this.messageBuilder.reset();
     
-    // ALWAYS emit session-messages-loaded event, even if messages array is empty
-    // This ensures the UI clears the chat display when switching to a new empty session
-    this.sessionManager.emit('session-messages-loaded', {
-      sessionId: session.session_id,
-      messages: session.messages || []  // Ensure we always pass an array
-    });
+    // Use new event-based approach instead of bulk loading
+    if (event.chat_session.messages && event.chat_session.messages.length > 0) {
+      // Check if messages need conversion (are they MessageParam[] or Message[]?)
+      const firstMessage = event.chat_session.messages[0];
+      
+      if (firstMessage && 'timestamp' in firstMessage) {
+        // Already converted to Message[] - use the existing bulk loading for now
+        // This happens when messages are already in runtime format
+        this.sessionManager.emit('session-messages-loaded', {
+          sessionId: session.session_id,
+          messages: session.messages || []
+        });
+      } else {
+        // Raw MessageParam[] from server - process through event system
+        this.mapResumedMessagesToEvents(event.chat_session.messages as MessageParam[], event.chat_session.session_id);
+      }
+    } else {
+      // Empty session - clear messages
+      this.sessionManager.emit('session-messages-loaded', {
+        sessionId: event.chat_session.session_id,
+        messages: []
+      });
+    }
   }
   
   /**
@@ -858,6 +890,370 @@ export class EventStreamProcessor {
     
     // Emit cancellation event for UI to handle
     this.sessionManager.emit('response-cancelled', {});
+  }
+  
+  /**
+   * Map resumed messages to events for proper rendering
+   * Task 1.1: Core converter method that processes resumed messages as if they were streamed
+   */
+  private mapResumedMessagesToEvents(messages: MessageParam[], sessionId: string): void {
+    // Clear existing messages first
+    this.sessionManager.emit('session-messages-loaded', {
+      sessionId,
+      messages: []
+    });
+    
+    // Process each message
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      if (!message) continue; // Safety check
+      
+      // Handle based on role
+      if (message.role === 'assistant') {
+        // Process assistant message and check how many messages it consumed
+        const messagesConsumed = this.processAssistantMessage(message, messages[i + 1], sessionId);
+        // Skip the next message if it was consumed as a tool result
+        if (messagesConsumed > 0) {
+          i += messagesConsumed;
+        }
+      } else if (message.role === 'user') {
+        // Process user message (tool results are handled with their tool use)
+        this.processUserMessage(message, sessionId);
+      } else if (message.role === 'system') {
+        this.processSystemMessage(message, sessionId);
+      }
+    }
+  }
+  
+  /**
+   * Process an assistant message and emit appropriate events
+   * Returns the number of additional messages consumed (for tool results)
+   */
+  private processAssistantMessage(
+    message: MessageParam,
+    nextMessage: MessageParam | undefined,
+    sessionId: string
+  ): number {
+    let messagesConsumed = 0;
+    
+    // Check for tool use blocks
+    if (message.content && Array.isArray(message.content)) {
+      let hasTextContent = false;
+      const textParts: string[] = [];
+      
+      for (const block of message.content) {
+        if (isTextBlockParam(block)) {
+          hasTextContent = true;
+          textParts.push(block.text);
+        } else if (isToolUseBlockParam(block)) {
+          // Task 1.2: THINK TOOL - Special handling
+          if (block.name === 'think') {
+            // Emit message-added event for think tool as a thought
+            const thoughtContent = (block.input as any).thought || '';
+            this.sessionManager.emit('message-added', {
+              sessionId,
+              message: {
+                role: 'assistant (thought)' as 'assistant',
+                content: thoughtContent,
+                timestamp: new Date().toISOString(),
+                format: 'markdown'
+              }
+            });
+            // Mark that we'll consume the next message (tool result)
+            messagesConsumed = 1;
+            continue;
+          }
+          
+          // Task 1.3: DELEGATION TOOLS - Special handling
+          if (this.isDelegationTool(block.name)) {
+            const consumed = this.processDelegationTool(block, nextMessage, sessionId);
+            messagesConsumed = Math.max(messagesConsumed, consumed);
+            continue;
+          }
+          
+          // Task 1.5: Regular tool calls
+          const consumed = this.processRegularToolCall(block, nextMessage, sessionId);
+          messagesConsumed = Math.max(messagesConsumed, consumed);
+        }
+      }
+      
+      // Emit any text content as a regular message
+      if (hasTextContent) {
+        const combinedText = textParts.join('');
+        this.sessionManager.emit('message-added', {
+          sessionId,
+          message: {
+            role: 'assistant',
+            content: combinedText,
+            timestamp: new Date().toISOString(),
+            format: 'text'
+          }
+        });
+      }
+    } else {
+      // Task 1.6: Handle regular text messages
+      this.emitTextMessage(message, sessionId);
+    }
+    
+    return messagesConsumed;
+  }
+  
+  /**
+   * Check if a tool name is a delegation tool
+   */
+  private isDelegationTool(name: string): boolean {
+    return name.startsWith('act_') || 
+           name.startsWith('ateam_') || 
+           name.startsWith('aa_');
+  }
+  
+  /**
+   * Process a delegation tool and emit subsession events
+   * Returns 1 if it consumed the next message (tool result)
+   */
+  private processDelegationTool(
+    toolBlock: any,
+    toolResult: MessageParam | undefined,
+    sessionId: string
+  ): number {
+    // 1. Start subsession
+    const subSessionType = toolBlock.name.includes('oneshot') ? 'oneshot' : 'chat';
+    const subAgentKey = (toolBlock.input as any).agent_key || 'clone';
+    
+    this.sessionManager.emit('subsession-started', {
+      subSessionType,
+      subAgentType: this.getAgentType(toolBlock.name),
+      primeAgentKey: 'current_agent',
+      subAgentKey
+    });
+    
+    // 2. User message from tool input
+    const request = (toolBlock.input as any).request || '';
+    const processContext = (toolBlock.input as any).process_context || '';
+    const userContent = processContext ? 
+      request + '\n# Process Context\n\n' + processContext : 
+      request;
+    
+    this.sessionManager.emit('message-added', {
+      sessionId,
+      message: {
+        role: 'user',
+        content: userContent,
+        timestamp: new Date().toISOString(),
+        format: 'text'
+      }
+    });
+    
+    // 3. Assistant message from tool result
+    if (toolResult && toolResult.role === 'user' && toolResult.content) {
+      // Tool result is in the next user message
+      let resultContent = '';
+      
+      if (Array.isArray(toolResult.content)) {
+        // Find the tool_result block
+        for (const block of toolResult.content) {
+          if ('type' in block && block.type === 'tool_result') {
+            const yamlContent = (block as any).content || '';
+            resultContent = this.parseAssistantFromYaml(yamlContent);
+            break;
+          }
+        }
+      }
+      
+      if (resultContent) {
+        this.sessionManager.emit('message-added', {
+          sessionId,
+          message: {
+            role: 'assistant',
+            content: resultContent,
+            timestamp: new Date().toISOString(),
+            format: 'text'
+          }
+        });
+      }
+    }
+    
+    // 4. End subsession
+    this.sessionManager.emit('subsession-ended', {});
+    
+    return 1; // Consumed the tool result message
+  }
+  
+  /**
+   * Get agent type from tool name
+   */
+  private getAgentType(toolName: string): 'clone' | 'team' | 'assist' | 'tool' {
+    if (toolName.startsWith('act_')) return 'clone';
+    if (toolName.startsWith('ateam_')) return 'team';
+    if (toolName.startsWith('aa_')) return 'assist';
+    return 'tool'; // Default to 'tool' instead of 'unknown'
+  }
+  
+  /**
+   * Parse assistant content from YAML tool result
+   * Task 1.4: YAML parser for delegation results
+   */
+  private parseAssistantFromYaml(yamlContent: string): string {
+    // Remove preamble if present
+    let content = yamlContent;
+    const preamble = '**IMPORTANT**: The following response is also displayed in the UI for the user, you do not need to relay it.';
+    if (content.includes(preamble)) {
+      content = content.replace(preamble, '').trim();
+      // Remove the --- separator if present
+      if (content.startsWith('---')) {
+        content = content.substring(3).trim();
+      }
+    }
+    
+    // Try to parse YAML
+    try {
+      // Simple YAML parsing for the text field
+      // Look for text: 'content' or text: "content" or text: content
+      const textMatch = content.match(/^text:\s*['"]?([\s\S]*?)['"]?$/m);
+      if (textMatch && textMatch[1]) {
+        // Handle multi-line YAML strings
+        let text = textMatch[1];
+        
+        // If it starts with | or >, it's a multi-line string
+        if (text.startsWith('|') || text.startsWith('>')) {
+          // Get everything after the indicator
+          const lines = content.split('\n');
+          const textLineIndex = lines.findIndex(line => line.trim().startsWith('text:'));
+          if (textLineIndex >= 0) {
+            // Get all lines after text: that are indented
+            const textLines = [];
+            for (let i = textLineIndex + 1; i < lines.length; i++) {
+              const line = lines[i];
+              if (!line) continue; // Skip undefined lines
+              // Stop if we hit another field (not indented)
+              if (line.length > 0 && !line.startsWith(' ') && !line.startsWith('\t')) {
+                break;
+              }
+              textLines.push(line);
+            }
+            text = textLines.join('\n').trim();
+          }
+        } else if (text.startsWith("'") && text.endsWith("'")) {
+          // Single-quoted string
+          text = text.slice(1, -1).replace(/''/g, "'");
+        } else if (text.startsWith('"') && text.endsWith('"')) {
+          // Double-quoted string
+          text = text.slice(1, -1);
+        }
+        
+        return text;
+      }
+      
+      // If no text field found, return the cleaned content
+      return content;
+    } catch (e) {
+      Logger.error('[EventStreamProcessor] Failed to parse delegation result YAML:', e);
+      return content; // Fallback to raw content
+    }
+  }
+  
+  /**
+   * Process a regular tool call
+   * Returns 1 if it consumed the next message (tool result)
+   */
+  private processRegularToolCall(
+    toolBlock: any,
+    nextMessage: MessageParam | undefined,
+    _sessionId: string
+  ): number {
+    // Find the corresponding tool result
+    let toolResult = undefined;
+    
+    if (nextMessage && nextMessage.role === 'user' && Array.isArray(nextMessage.content)) {
+      for (const block of nextMessage.content) {
+        if ('type' in block && block.type === 'tool_result' && 
+            (block as any).tool_use_id === toolBlock.id) {
+          toolResult = (block as any).content;
+          break;
+        }
+      }
+    }
+    
+    // Emit tool call event with active=false (completed)
+    this.sessionManager.emit('tool-call-complete', {
+      toolCalls: [{
+        id: toolBlock.id,
+        name: toolBlock.name,
+        input: toolBlock.input
+      }],
+      toolResults: toolResult ? [{
+        tool_use_id: toolBlock.id,
+        content: toolResult,
+        is_error: false
+      }] : undefined
+    });
+    
+    return toolResult ? 1 : 0; // Consume next message if we found a result
+  }
+  
+  /**
+   * Process a user message
+   */
+  private processUserMessage(message: MessageParam | undefined, sessionId: string): void {
+    if (!message) return;
+    
+    // Skip if this is a tool result (those are handled with their tool use)
+    if (Array.isArray(message.content)) {
+      const hasToolResult = message.content.some(block => 
+        'type' in block && block.type === 'tool_result'
+      );
+      if (hasToolResult) {
+        return; // Skip tool results
+      }
+    }
+    
+    // Task 1.6: Emit regular user message
+    const normalizedContent = this.normalizeMessageContent(message.content);
+    this.sessionManager.emit('message-added', {
+      sessionId,
+      message: {
+        role: 'user',
+        content: normalizedContent,
+        timestamp: new Date().toISOString(),
+        format: 'text'
+      }
+    });
+  }
+  
+  /**
+   * Process a system message  
+   */
+  private processSystemMessage(message: MessageParam | undefined, sessionId: string): void {
+    if (!message) return;
+    
+    const normalizedContent = this.normalizeMessageContent(message.content);
+    this.sessionManager.emit('message-added', {
+      sessionId,
+      message: {
+        role: 'system',
+        content: normalizedContent,
+        timestamp: new Date().toISOString(),
+        format: 'text'
+      }
+    });
+  }
+  
+  /**
+   * Emit a text message event
+   */
+  private emitTextMessage(message: MessageParam | undefined, sessionId: string): void {
+    if (!message) return;
+    
+    const normalizedContent = this.normalizeMessageContent(message.content);
+    this.sessionManager.emit('message-added', {
+      sessionId,
+      message: {
+        role: message.role as Message['role'],
+        content: normalizedContent,
+        timestamp: new Date().toISOString(),
+        format: 'text'
+      }
+    });
   }
   
   /**

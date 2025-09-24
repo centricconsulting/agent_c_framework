@@ -57,6 +57,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo Installing dependencies for realtime client...
+cd ..\..\realtime_client
+pnpm install
+if errorlevel 1 (
+    echo Failed to install the packages.
+    popd
+    exit /b 1
+)
+
 :: Return to the original directory
 popd
 

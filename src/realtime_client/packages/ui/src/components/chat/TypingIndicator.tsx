@@ -86,9 +86,12 @@ const TypingIndicator = React.forwardRef<HTMLDivElement, TypingIndicatorProps>(
                     currentSize.dot
                   )}
                   style={{
-                    animation: `typing-wave ${speed * 4}ms ease-in-out infinite`,
+                    animationName: 'typing-wave',
+                    animationDuration: `${speed * 4}ms`,
+                    animationTimingFunction: 'ease-in-out',
+                    animationIterationCount: 'infinite',
                     animationDelay: `${index * speed}ms`
-                  }}
+                  } as React.CSSProperties}
                 />
               ))}
             </div>
@@ -106,9 +109,12 @@ const TypingIndicator = React.forwardRef<HTMLDivElement, TypingIndicatorProps>(
                     currentSize.dot
                   )}
                   style={{
-                    animation: `typing-bounce ${speed * 4}ms ease-in-out infinite`,
+                    animationName: 'typing-bounce',
+                    animationDuration: `${speed * 4}ms`,
+                    animationTimingFunction: 'ease-in-out',
+                    animationIterationCount: 'infinite',
                     animationDelay: `${index * speed}ms`
-                  }}
+                  } as React.CSSProperties}
                 />
               ))}
             </div>

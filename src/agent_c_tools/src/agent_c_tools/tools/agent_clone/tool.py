@@ -1,14 +1,14 @@
 import yaml
 import markdown
+import json
+from typing import Any, Optional, Dict
 
-from typing import Any, Optional, Dict,  List
-
+from agent_c.models.events import SystemMessageEvent
 from agent_c.toolsets import json_schema
 from agent_c.util.slugs import MnemonicSlugs
 from agent_c.toolsets.tool_set import Toolset
 from agent_c_tools.tools.think.prompt import ThinkSection
 from agent_c_tools.tools.agent_clone.prompt import AgentCloneSection, CloneBehaviorSection
-from agent_c.models.completion import ClaudeReasoningParams
 from agent_c.models.agent_config import AgentConfigurationV2, AgentConfiguration, CurrentAgentConfiguration
 from agent_c_tools.tools.agent_assist.base import AgentAssistToolBase
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
@@ -72,7 +72,7 @@ class AgentCloneTools(AgentAssistToolBase):
         clone_config.model_id = tool_context['calling_model_name']
         clone_config.tools = clone_tools
         content = f"**Prime agent** requesting assistance:\n\n{request}"
-        # await self._render_media_markdown(f"**Prime** agent requesting assistance from clone:\n\n{orig_request}\n\n## Clone context:\n{process_context}", "oneshot",tool_context=tool_context)
+        agent_session_id = f"clone-oneshot-{MnemonicSlugs.generate_slug(2)}"
 
         user_session_id = tool_context.get('user_session_id', tool_context ['session_id'])
         parent_session_id = tool_context.get('session_id')
@@ -80,25 +80,25 @@ class AgentCloneTools(AgentAssistToolBase):
         messages =  await self.agent_oneshot(content, clone_config, user_session_id,
                                              tool_context, client_wants_cancel=tool_context.get('client_wants_cancel', None),
                                              process_context=process_context, parent_session_id=parent_session_id,
-                                             sub_agent_type="clone",  prime_agent_key=calling_agent_config.key
+                                             sub_agent_type="clone",  prime_agent_key=calling_agent_config.key,
+                                             agent_session_id=agent_session_id
                                              )
 
         await self._render_media_markdown(f"Interaction complete for Agent Clone oneshot. Control returned to prime agent.", "oneshot", tool_context=tool_context)
 
-        last_message = messages[-1] if messages else None
-        if last_message is not None:
-            content = last_message.get('content', None)
+        if messages is not None and len(messages) > 0:
+            last_message = messages[-1]
 
-            if content is not None:
-                agent_response = yaml.dump(content[-1], allow_unicode=True).replace("\\n", "\n")
+            response = {'notice': 'This response is also displayed in the UI for the user, you do not need to relay it.',
+                        'agent_message': last_message}
 
-                return f"**IMPORTANT**: The following response is also displayed in the UI for the user, you do not need to relay it.\n---\n\n{agent_response}"
-            else:
-                self.logger.warning("No content in last message from agent.")
-                agent_response = yaml.dump(last_message, allow_unicode=True)
-                return agent_response
+            return json.dumps(response, ensure_ascii=False)
 
-        return "No response from clone. This usually means that you overloaded the clone with too many tasks."
+        await self._raise_event(SystemMessageEvent(content=f"Agent Assist session {agent_session_id} completed with no messages returned.",
+                                                   session_id=agent_session_id, parent_session_id=parent_session_id,
+                                                   user_session_id=user_session_id, ), tool_context['streaming_callback'])
+
+        return f"No messages returned from agent session {agent_session_id}.  This usually means that you overloaded the agent with too many tasks."
 
     @json_schema(
         'Begin or resume a chat session with a clone of yourself. The return value will be the final output from the agent along with the agent session ID.',
@@ -166,26 +166,19 @@ class AgentCloneTools(AgentAssistToolBase):
                                                            sub_agent_type="clone", prime_agent_key=calling_agent_config.key
                                                            )
 
+        if messages is not None and len(messages) > 0:
+            last_message = messages[-1]
 
+            response = {'notice': 'This response is also displayed in the UI for the user, you do not need to relay it.',
+                        'agent_message': last_message}
 
-        await self._render_media_markdown(markdown.markdown(f"Interaction complete for Agent Clone Session ID: {agent_session_id}. Control returned to prime agent."),
-                                                            "chat",
-                                                            tool_context=tool_context,
-                                                            streaming_callback=tool_context['streaming_callback'])
+            return json.dumps(response, ensure_ascii=False)
 
-        last_message = messages[-1] if messages else None
-        if last_message is not None:
-            content = last_message.get('content', None)
-            if content is not None:
-                agent_response = yaml.dump(content[-1], allow_unicode=True).replace("\\n", "\n")
-                return f"**IMPORTANT**: The following response is also displayed in the UI for the user, you do not need to relay it.\n\nAgent Session ID: {agent_session_id}\n{agent_response}"
-            else:
-                self.logger.warning("No content in last message from agent.")
-                agent_response = yaml.dump(last_message, allow_unicode=True)
-                return agent_response
+        await self._raise_event(SystemMessageEvent(content=f"Agent Assist session {agent_session_id} completed with no messages returned.",
+                                                   session_id=agent_session_id, parent_session_id=parent_session_id,
+                                                   user_session_id=user_session_id, ), tool_context['streaming_callback'])
 
-        self.logger.warning("No response from agent.")
-        return "No response from clone. This usually means that you overloaded the clone with too many tasks. "
+        return f"No messages returned from agent session {agent_session_id}.  This usually means that you overloaded the agent with too many tasks."
 
 
 Toolset.register(AgentCloneTools, required_tools=['WorkspaceTools'])

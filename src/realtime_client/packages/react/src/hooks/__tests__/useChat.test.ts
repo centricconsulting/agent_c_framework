@@ -199,6 +199,12 @@ describe('useChat - Part 1: Message Management', () => {
       expect(mockSessionManager.on).toHaveBeenCalledWith('message-streaming', expect.any(Function));
       expect(mockSessionManager.on).toHaveBeenCalledWith('message-complete', expect.any(Function));
       expect(mockSessionManager.on).toHaveBeenCalledWith('session-messages-loaded', expect.any(Function));
+      
+      // Phase 1 new event subscriptions
+      expect(mockSessionManager.on).toHaveBeenCalledWith('subsession-started', expect.any(Function));
+      expect(mockSessionManager.on).toHaveBeenCalledWith('subsession-ended', expect.any(Function));
+      expect(mockSessionManager.on).toHaveBeenCalledWith('media-added', expect.any(Function));
+      expect(mockSessionManager.on).toHaveBeenCalledWith('system_message', expect.any(Function));
     });
 
     it('unsubscribes all events on unmount', () => {
@@ -216,6 +222,12 @@ describe('useChat - Part 1: Message Management', () => {
       expect(mockSessionManager.off).toHaveBeenCalledWith('message-streaming', expect.any(Function));
       expect(mockSessionManager.off).toHaveBeenCalledWith('message-complete', expect.any(Function));
       expect(mockSessionManager.off).toHaveBeenCalledWith('session-messages-loaded', expect.any(Function));
+      
+      // Phase 1 new event cleanup
+      expect(mockSessionManager.off).toHaveBeenCalledWith('subsession-started', expect.any(Function));
+      expect(mockSessionManager.off).toHaveBeenCalledWith('subsession-ended', expect.any(Function));
+      expect(mockSessionManager.off).toHaveBeenCalledWith('media-added', expect.any(Function));
+      expect(mockSessionManager.off).toHaveBeenCalledWith('system_message', expect.any(Function));
     });
   });
 
@@ -536,7 +548,10 @@ describe('useChat - Part 1: Message Management', () => {
 
       // Verify messages were loaded
       expect(mockEnsureMessagesFormat).toHaveBeenCalledWith(existingMessages);
-      expect(result.current.messages).toEqual(existingMessages);
+      // Messages now have additional id and type fields added
+      expect(result.current.messages).toHaveLength(existingMessages.length);
+      expect(result.current.messages[0]?.content).toBe('Hello');
+      expect(result.current.messages[1]?.content).toBe('Hi there');
 
       // Verify streaming state was cleared
       expect(result.current.streamingMessage).toBeNull();
@@ -580,7 +595,10 @@ describe('useChat - Part 1: Message Management', () => {
 
       // Messages from EventStreamProcessor come already formatted
       // So ensureMessagesFormat is not called in the new implementation
-      expect(result.current.messages).toEqual(loadedMessages);
+      // Messages now have additional id and type fields added
+      expect(result.current.messages).toHaveLength(loadedMessages.length);
+      expect(result.current.messages[0]?.content).toBe('Question');
+      expect(result.current.messages[1]?.content).toBe('Answer');
       expect(result.current.streamingMessage).toBeNull();
     });
 
@@ -623,7 +641,9 @@ describe('useChat - Part 1: Message Management', () => {
 
       // Verify streaming was cleared
       expect(result.current.streamingMessage).toBeNull();
-      expect(result.current.messages).toEqual(messages);
+      // Messages now have additional id and type fields added
+      expect(result.current.messages).toHaveLength(messages.length);
+      expect(result.current.messages[0]?.content).toBe('Loaded message');
     });
   });
 
@@ -1053,14 +1073,14 @@ describe('useChat - Part 2: Typing Indicators & Events', () => {
 
       // Initial render subscribes events
       expect(mockClient.on).toHaveBeenCalledTimes(3); // user_turn_start, user_turn_end, chat_session_changed
-      expect(mockSessionManager.on).toHaveBeenCalledTimes(4); // message-added, message-streaming, message-complete, session-messages-loaded
+      expect(mockSessionManager.on).toHaveBeenCalledTimes(8); // message-added, message-streaming, message-complete, session-messages-loaded, subsession-started, subsession-ended, media-added, system_message
 
       // Rerender should not duplicate subscriptions
       rerender();
 
       // Should still have same number of subscriptions
       expect(mockClient.on).toHaveBeenCalledTimes(3);
-      expect(mockSessionManager.on).toHaveBeenCalledTimes(4);
+      expect(mockSessionManager.on).toHaveBeenCalledTimes(8);
     });
 
     it('handles events when sessionManager is null', () => {
@@ -1294,7 +1314,7 @@ describe('useChat - Part 2: Typing Indicators & Events', () => {
       });
 
       // Verify all session handlers were removed
-      ['message-added', 'message-streaming', 'message-complete', 'session-messages-loaded'].forEach(event => {
+      ['message-added', 'message-streaming', 'message-complete', 'session-messages-loaded', 'subsession-started', 'subsession-ended', 'media-added', 'system_message'].forEach(event => {
         expect(mockSessionManager.off).toHaveBeenCalledWith(event, sessionHandlers.get(event));
       });
     });
@@ -1406,7 +1426,7 @@ describe('useChat - Part 2: Typing Indicators & Events', () => {
 
       // All handlers should be removed
       expect(mockClient.off.mock.calls.length).toBe(3); // user_turn_start, user_turn_end, chat_session_changed
-      expect(mockSessionManager.off.mock.calls.length).toBe(4); // message-added, message-streaming, message-complete, session-messages-loaded
+      expect(mockSessionManager.off.mock.calls.length).toBe(8); // message-added, message-streaming, message-complete, session-messages-loaded, subsession-started, subsession-ended, media-added, system_message
     });
   });
 

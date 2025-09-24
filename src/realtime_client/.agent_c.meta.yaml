@@ -1716,4 +1716,731 @@ _plans:
         updated_at: '2025-09-22T19:24:44.006298'
     title: Chat Rendering Fixes Implementation Plan
     updated_at: '2025-09-22T19:26:23.515185'
+  phase_2_message_converter:
+    created_at: '2025-09-23T12:01:06.726123'
+    description: 'THIRD ATTEMPT - Convert resumed chat session messages to streaming
+      events for identical rendering. MANDATORY: All implementers must read requirements
+      documents completely before starting work.'
+    id: virus-book
+    lessons_learned: []
+    tasks:
+      boston-nato:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "**MANDATORY READING BEFORE STARTING:**\n- `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`\
+          \ - Sections \"User chat input\" and \"Assistant messages / thoughts\"\n\
+          - Review existing delta event handling in EventStreamProcessor\n- `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`\
+          \ - Task 2.2 details\n\n**Implementation:** In `messageToEventConverter.ts`,\
+          \ implement:\n- `convertTextBlockToDeltas()` - Convert TextBlockParam to\
+          \ text_delta event  \n- `convertThinkingBlockToDeltas()` - Convert ThinkingBlockParam\
+          \ to thought_delta event\n- `convertMediaBlocks()` - Handle ImageBlockParam\
+          \ and DocumentBlockParam\n\n**Exact Rules:**\n1. TextBlockParam → Single\
+          \ TextDeltaEvent with complete text\n2. ThinkingBlockParam → Single ThoughtDeltaEvent\
+          \ with complete content\n3. Media blocks → Preserved in UserMessageEvent\n\
+          \n**Dependencies:** Task 2.1 must be complete\n**Owner:** React Package\
+          \ - Communication Flow Dev Specialist\n**Duration:** 1 day"
+        created_at: '2025-09-23T12:01:35.929620'
+        description: Implement conversion of text, thinking blocks, and media to appropriate
+          events.
+        id: boston-nato
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 2
+        title: 'Task 2.2: Standard Content Conversion'
+        updated_at: '2025-09-23T12:01:35.929623'
+      earth-bank:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "**MANDATORY READING BEFORE STARTING:**\n- `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`\
+          \ - Section \"Mapping chat sessions to events\"  \n- `//realtime_client/.scratch/chat_fixes/chat_streaming_notes.md`\
+          \ - Section \"Events vs messages\"\n- `//realtime_client/.scratch/chat_fixes/gap_analysis_and_implementation_plan.md`\n\
+          \n**Implementation Location:** Create new file `packages/react/src/utils/messageToEventConverter.ts`\n\
+          \n**Required Method Signatures:**\n```typescript\nexport function convertMessagesToEvents(\n\
+          \  messages: MessageParam[] | ChatCompletionMessageParam[],\n  sessionId:\
+          \ string,\n  userSessionId: string,\n  vendorType: 'anthropic' | 'openai'\n\
+          ): SessionEvent[]\n\nfunction convertAnthropicMessage(\n  message: MessageParam,\n\
+          \  sessionId: string,\n  userSessionId: string,\n  messageIndex: number,\n\
+          \  allMessages: MessageParam[]\n): SessionEvent[]\n\nfunction convertOpenAIMessage(\n\
+          \  message: ChatCompletionMessageParam,\n  sessionId: string,\n  userSessionId:\
+          \ string,\n  messageIndex: number,\n  allMessages: ChatCompletionMessageParam[]\n\
+          ): SessionEvent[]\n```\n\n**Owner:** React Package - Event Stream Dev Specialist\n\
+          **Duration:** 1 day"
+        created_at: '2025-09-23T12:01:21.919052'
+        description: Create the foundational message-to-event conversion framework
+          in React package.
+        id: earth-bank
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 1
+        title: 'Task 2.1: Core Message Conversion Infrastructure'
+        updated_at: '2025-09-23T12:01:21.919055'
+      korea-right:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "**MANDATORY READING BEFORE STARTING:**\n- Review current ChatSessionChanged\
+          \ handling in useRealtimeChat.ts\n- `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`\
+          \ - Task 2.6 details\n\n**Implementation Location:** `packages/react/src/hooks/useRealtimeChat.ts`\n\
+          \n**Required Changes:**\n```typescript\nconst handleChatSessionChanged =\
+          \ (event: ChatSessionChangedEvent) => {\n  // Existing logic...\n  \n  if\
+          \ (event.chat_session.messages && event.chat_session.messages.length > 0)\
+          \ {\n    const syntheticEvents = convertMessagesToEvents(\n      event.chat_session.messages,\n\
+          \      event.session_id,\n      event.user_session_id || event.session_id,\n\
+          \      vendorType\n    );\n    \n    syntheticEvents.forEach(syntheticEvent\
+          \ => {\n      // Route to appropriate existing handler\n    });\n  }\n};\n\
+          ```\n\n**Success Criteria:**\n- Conversion triggered on resumed session\n\
+          - Events routed to existing handlers\n- No duplicate processing\n- Maintains\
+          \ streaming compatibility\n\n**Dependencies:** Tasks 2.1-2.5 must be complete\n\
+          **Owner:** React Package - Event Stream Dev Specialist\n**Duration:** 0.5\
+          \ days"
+        created_at: '2025-09-23T12:02:35.849560'
+        description: Integrate converter with ChatSessionChanged handler in useRealtimeChat
+          hook.
+        id: korea-right
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 6
+        title: 'Task 2.6: Integration with useRealtimeChat Hook'
+        updated_at: '2025-09-23T12:02:35.849562'
+      media-bazooka:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "**MANDATORY READING BEFORE STARTING:**\n- `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`\
+          \ - Section \"Tool calls and results\"\n- Review ToolCallEvent structure\
+          \ in ServerEvents.ts\n- `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`\
+          \ - Task 2.3 details\n\n**Implementation:** In `messageToEventConverter.ts`,\
+          \ implement:\n- `convertToolUseToEvent()` - Convert tool use + result to\
+          \ ToolCallEvent\n- `findToolResult()` - Match tool use blocks with their\
+          \ results\n\n**Exact Rules:**\n1. Find ToolUseBlockParam in assistant message\n\
+          2. Look ahead to next user message for matching ToolResultBlockParam\n3.\
+          \ Combine into ToolCallEvent with `active: false`\n4. Skip ToolResultBlockParam\
+          \ when processing user message\n\n**Dependencies:** Task 2.2 must be complete\n\
+          **Owner:** React Package - Communication Flow Dev Specialist  \n**Duration:**\
+          \ 1 day"
+        created_at: '2025-09-23T12:01:48.833825'
+        description: Convert ToolUseBlockParam + ToolResultBlockParam pairs to ToolCallEvent.
+        id: media-bazooka
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 3
+        title: 'Task 2.3: Tool Call Conversion'
+        updated_at: '2025-09-23T12:01:48.833828'
+      metal-sabine:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "**MANDATORY READING BEFORE STARTING:**\n- `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`\
+          \ - Section \"think Tool\" with JSON example\n- `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`\
+          \ - Task 2.4 details\n\n**Implementation:** In `messageToEventConverter.ts`:\n\
+          - Add `handleThinkTool()` function\n- Detect ToolUseBlockParam with `name:\
+          \ \"think\"`\n- Extract `input.thought` content\n- Convert to ThoughtDeltaEvent\
+          \ (NOT a tool call)\n- DISCARD the corresponding ToolResultBlockParam\n\n\
+          **Exact Conversion:**\n```typescript\nif (toolUseBlock.name === 'think')\
+          \ {\n  // Convert input.thought to ThoughtDeltaEvent\n  // DISCARD the ToolResultBlockParam\n\
+          \  return handleThinkTool(toolUseBlock, sessionId, userSessionId);\n}\n\
+          ```\n\n**Dependencies:** Task 2.3 must be complete\n**Owner:** React Package\
+          \ - Audio Pipeline Dev Specialist\n**Duration:** 0.5 days"
+        created_at: '2025-09-23T12:02:03.279705'
+        description: Implement special conversion for "think" tools to thought_delta
+          events.
+        id: metal-sabine
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 4
+        title: 'Task 2.4: Special Tool Handling - "think" Tool'
+        updated_at: '2025-09-23T12:02:03.279710'
+      photo-heavy:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**MANDATORY READING BEFORE STARTING:**
+
+          - `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md` - Section
+          "delegation tools" with JSON example
+
+          - `//realtime_client/.scratch/chat_fixes/chat_streaming_notes.md` - Section
+          "Sub-sessions"
+
+          - Review SubsessionStartedEvent/SubsessionEndedEvent in ServerEvents.ts
+
+          - `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+          - Task 2.5 details
+
+
+          **Implementation:** In `messageToEventConverter.ts`:
+
+          - `isDelegationTool()` - Detect by prefix (act_*, ateam_*, aa_*)
+
+          - `handleDelegationTool()` - Convert to subsession events + messages
+
+          - `parseAssistantMessageFromYAML()` - Parse YAML from tool result
+
+
+          **Exact Process:**
+
+          1. Detect delegation tool by prefix
+
+          2. Extract agent_key from input (ateam_/aa_ tools)
+
+          3. Create SubsessionStartedEvent
+
+          4. Combine request + "\\n# Process Context\\n\\n" + context → UserMessageEvent
+
+          5. Parse tool result (remove preamble, parse YAML)
+
+          6. Convert to AssistantMessageEvent
+
+          7. Create SubsessionEndedEvent
+
+
+          **Dependencies:** Task 2.4 must be complete
+
+          **Owner:** React Package - System Integration Dev Specialist
+
+          **Duration:** 1 day'
+        created_at: '2025-09-23T12:02:21.309330'
+        description: Convert delegation tools (act_*, ateam_*, aa_*) to subsession
+          events with user/assistant messages.
+        id: photo-heavy
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 5
+        title: 'Task 2.5: Special Tool Handling - Delegation Tools'
+        updated_at: '2025-09-23T12:02:21.309333'
+      tourist-arthur:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**MANDATORY READING BEFORE STARTING:**
+
+          - Review MessageList component event handling
+
+          - Verify SubsessionDivider usage
+
+          - `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+          - Task 2.8 details
+
+
+          **Verification Points:**
+
+          - MessageList correctly assembles deltas from converted events
+
+          - SubsessionDivider renders for subsession events (start/end)
+
+          - Tool calls display properly
+
+          - NO visual differences between resumed and streamed sessions
+
+
+          **Testing Approach:**
+
+          1. Load session_with_delegation.json as resumed session
+
+          2. Compare rendering to equivalent streamed session
+
+          3. Verify pixel-perfect match
+
+          4. Check console for errors/warnings
+
+
+          **Success Criteria:**
+
+          - Identical visual rendering
+
+          - No console errors
+
+          - Performance acceptable (<100ms conversion)
+
+
+          **Dependencies:** Task 2.7 must be complete
+
+          **Owner:** UI Components - System Integration Test Specialist
+
+          **Duration:** 0.5 days'
+        created_at: '2025-09-23T12:03:04.843054'
+        description: Verify that UI components render converted events identically
+          to streamed events.
+        id: tourist-arthur
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 8
+        title: 'Task 2.8: UI Integration Verification'
+        updated_at: '2025-09-23T12:03:04.843057'
+      vocal-iceberg:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**MANDATORY READING BEFORE STARTING:**
+
+          - Review test data: `//realtime_client/.scratch/chat_fixes/session_with_delegation.json`
+
+          - `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+          - Task 2.7 details
+
+
+          **Test File:** Create `packages/react/src/utils/__tests__/messageToEventConverter.test.ts`
+
+
+          **Required Test Cases:**
+
+          1. Should convert resumed session messages to events
+
+          2. Should handle think tools as thoughts
+
+          3. Should handle delegation tools with subsessions
+
+          4. Should produce identical rendering to streamed content
+
+
+          **Validation Checklist:**
+
+          - Standard messages convert to deltas
+
+          - Think tools render as thoughts
+
+          - Delegation tools create subsessions
+
+          - All events have correct session IDs
+
+          - No missing or duplicate content
+
+          - Rendering matches streamed sessions EXACTLY
+
+
+          **Dependencies:** Task 2.6 must be complete
+
+          **Owner:** React Package - Event Stream Test Specialist
+
+          **Duration:** 1 day'
+        created_at: '2025-09-23T12:02:50.383321'
+        description: Create comprehensive tests using the provided test data file.
+        id: vocal-iceberg
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 7
+        title: 'Task 2.7: Testing with session_with_delegation.json'
+        updated_at: '2025-09-23T12:02:50.383324'
+    title: 'Phase 2: Message-to-Event Converter Implementation'
+    updated_at: '2025-09-23T12:03:04.843066'
+  react_phase_2_chat_fixes:
+    created_at: '2025-09-23T12:07:34.199464'
+    description: Third attempt at Phase 2 implementation for chat rendering fixes.
+      Convert MessageParam[] from resumed sessions into event-like structures that
+      render identically to streamed sessions. MUST follow specifications exactly
+      with no creative interpretation.
+    id: owner-avalon
+    lessons_learned: []
+    tasks:
+      baker-forget:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**MANDATORY READING BEFORE STARTING**:
+
+          - Read `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`
+          section "think Tool" INCLUDING the example JSON
+
+          - Review Core''s plan Task 2.4 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+
+
+          **Owner**: Audio Voice Developer (realtime_react_audio_dev)
+
+          **Duration**: 4 hours
+
+          **Dependencies**: RC-2.3 MUST be complete
+
+
+          Implement handleThinkTool:
+
+          - Detect tools with name === "think" (exact match)
+
+          - Extract thought content from input.thought field
+
+          - Convert to thought_delta event, NOT tool_call
+
+          - DISCARD the corresponding ToolResultBlockParam
+
+
+          CRITICAL: Think tools become thoughts, not tool calls!
+
+
+          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
+          Task RC-2.4'
+        created_at: '2025-09-23T12:08:35.691714'
+        description: Convert "think" tool calls to thought_delta events instead of
+          tool_call events.
+        id: baker-forget
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 4
+        title: 'RC-2.4: Implement "think" Tool Special Handling'
+        updated_at: '2025-09-23T12:08:35.691716'
+      crater-brush:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**MANDATORY READING BEFORE STARTING**:
+
+          - Review test data in `//realtime_client/.scratch/chat_fixes/session_with_delegation.json`
+
+          - Review Core''s plan Task 2.7 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+
+
+          **Owner**: Chat Communication Test Specialist (realtime_react_chat_test)
+
+          **Duration**: 8 hours
+
+          **Dependencies**: RC-2.6 MUST be complete
+
+
+          Create test file: packages/react/src/utils/__tests__/messageToEventConverter.test.ts
+
+
+          Test categories:
+
+          - Standard content conversion (text/thinking to deltas)
+
+          - Tool call pairing and conversion
+
+          - "think" tool special handling
+
+          - Delegation tool detection and subsession creation
+
+          - YAML parsing and agent_key extraction
+
+          - Full session_with_delegation.json conversion
+
+
+          CRITICAL: Must validate EXACT event structure per specifications!
+
+
+          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
+          Task RC-2.7'
+        created_at: '2025-09-23T12:09:20.215350'
+        description: Create complete test suite for message-to-event conversion using
+          session_with_delegation.json.
+        id: crater-brush
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 7
+        title: 'RC-2.7: Create Comprehensive Test Suite'
+        updated_at: '2025-09-23T12:09:20.215353'
+      gizmo-biscuit:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**MANDATORY READING BEFORE STARTING**:
+
+          - Read `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`
+          section "Tool calls and results"
+
+          - Review Core''s plan Task 2.3 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+
+          - Study ToolCallEvent structure in ServerEvents.ts
+
+
+          **Owner**: Chat Communication Developer (realtime_react_chat_dev)
+
+          **Duration**: 8 hours
+
+          **Dependencies**: RC-2.2 MUST be complete
+
+
+          Implement:
+
+          - convertToolUseToEvent: Must look ahead to find matching result in next
+          user message
+
+          - findToolResult: Match tool results by ID
+
+          - Create ToolCallEvent with active: false (ALWAYS false for resumed)
+
+          - Mark tool results as consumed to avoid duplication
+
+
+          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
+          Task RC-2.3'
+        created_at: '2025-09-23T12:08:20.858341'
+        description: Convert ToolUseBlockParam + ToolResultBlockParam pairs into ToolCallEvent.
+        id: gizmo-biscuit
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 3
+        title: 'RC-2.3: Implement Tool Call Conversion'
+        updated_at: '2025-09-23T12:08:20.858344'
+      sardine-stella:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**MANDATORY READING BEFORE STARTING**:
+
+          - Read `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`
+          section "delegation tools" INCLUDING example JSON
+
+          - Read `//realtime_client/.scratch/chat_fixes/chat_streaming_notes.md` section
+          "Sub-sessions"
+
+          - Review Core''s plan Task 2.5 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+
+
+          **Owner**: Data Management Developer (realtime_react_data_dev)
+
+          **Duration**: 8 hours
+
+          **Dependencies**: RC-2.4 MUST be complete
+
+
+          Implement:
+
+          - isDelegationTool: Detect by prefixes (act_*, ateam_*, aa_*)
+
+          - handleDelegationTool: Create subsession event sequence
+
+          - Extract agent_key for ateam_/aa_ tools
+
+          - Combine request + context with separator: "\n# Process Context\n\n"
+
+          - Parse YAML assistant response (remove preamble, extract text)
+
+          - Create: SubsessionStartedEvent → UserMessage → AssistantMessage → SubsessionEndedEvent
+
+
+          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
+          Task RC-2.5'
+        created_at: '2025-09-23T12:08:51.150047'
+        description: Convert delegation tools (act_*, ateam_*, aa_*) to subsession
+          events with user/assistant messages.
+        id: sardine-stella
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 5
+        title: 'RC-2.5: Implement Delegation Tool Handling'
+        updated_at: '2025-09-23T12:08:51.150050'
+      ship-subject:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**MANDATORY READING BEFORE STARTING**:
+
+          - Review current ChatSessionChanged handling in useRealtimeChat.ts
+
+          - Review Core''s plan Task 2.6 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+
+
+          **Owner**: Chat Communication Developer (realtime_react_chat_dev)
+
+          **Duration**: 4 hours
+
+          **Dependencies**: ALL conversion tasks (RC-2.1 through RC-2.5) MUST be complete
+
+
+          In useRealtimeChat.ts ChatSessionChanged handler:
+
+          - Import convertMessagesToEvents
+
+          - Detect resumed sessions with messages
+
+          - Convert messages to synthetic events
+
+          - Route each event to existing handlers (text_delta, thought_delta, tool_call,
+          etc.)
+
+          - Ensure no duplicate processing
+
+
+          CRITICAL: Only convert for resumed sessions, not streaming!
+
+
+          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
+          Task RC-2.6'
+        created_at: '2025-09-23T12:09:04.948009'
+        description: Integrate the message converter with the existing useRealtimeChat
+          hook to process resumed sessions.
+        id: ship-subject
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 6
+        title: 'RC-2.6: Integration with useRealtimeChat Hook'
+        updated_at: '2025-09-23T12:09:04.948012'
+      trade-english:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**CRITICAL**: This is the THIRD attempt. Previous failed due to
+          not following requirements.
+
+
+          **MANDATORY READING BEFORE STARTING**:
+
+          - Read `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`
+          COMPLETELY
+
+          - Read `//realtime_client/.scratch/chat_fixes/chat_streaming_notes.md` section
+          "Events vs messages"
+
+          - Review Core''s plan Task 2.1 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+
+
+          **Owner**: Chat Communication Developer (realtime_react_chat_dev)
+
+          **Duration**: 4 hours
+
+
+          Create file: `packages/react/src/utils/messageToEventConverter.ts`
+
+
+          Must include EXACT exports:
+
+          - convertMessagesToEvents (main entry point)
+
+          - convertAnthropicMessage
+
+          - convertOpenAIMessage
+
+
+          Must define ChatItem type extensions for converted events.
+
+
+          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
+          Task RC-2.1'
+        created_at: '2025-09-23T12:07:51.693352'
+        description: Create the message converter module with exact structure and
+          exports as specified. NO implementation logic yet, just framework.
+        id: trade-english
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 1
+        title: 'RC-2.1: Create Message Converter Module Structure'
+        updated_at: '2025-09-23T12:07:51.693355'
+      whiskey-chicago:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**MANDATORY READING BEFORE STARTING**:
+
+          - Read `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`
+          sections "User chat input" and "Assistant messages / thoughts"
+
+          - Review Core''s plan Task 2.2 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+
+
+          **Owner**: Chat Communication Developer (realtime_react_chat_dev)
+
+          **Duration**: 6 hours
+
+          **Dependencies**: RC-2.1 MUST be complete
+
+
+          Implement in messageToEventConverter.ts:
+
+          - convertTextBlockToDeltas: Create single LARGE delta with complete text
+
+          - convertThinkingBlockToDeltas: Create single LARGE delta with complete
+          thought
+
+          - Handle ImageBlockParam/DocumentBlockParam pass-through
+
+
+          CRITICAL: Must create SINGLE large deltas, not multiple small ones!
+
+
+          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
+          Task RC-2.2'
+        created_at: '2025-09-23T12:08:06.594485'
+        description: Implement conversion of TextBlockParam and ThinkingBlockParam
+          to delta events.
+        id: whiskey-chicago
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 2
+        title: 'RC-2.2: Implement Standard Content Conversion'
+        updated_at: '2025-09-23T12:08:06.594487'
+      zoom-pogo:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**MANDATORY READING BEFORE STARTING**:
+
+          - Review expected rendering in all requirements documents
+
+          - Understand what "identical rendering" means
+
+
+          **Owner**: Chat Communication Test Specialist (realtime_react_chat_test)
+
+          **Duration**: 4 hours
+
+          **Dependencies**: RC-2.7 MUST be complete
+
+
+          Validation requirements:
+
+          1. Visual comparison test between resumed and streamed
+
+          2. Test with actual demo app using session_with_delegation.json
+
+          3. Verify subsession dividers render at correct positions
+
+          4. Performance validation (< 100ms conversion time)
+
+
+          Success Criteria:
+
+          - Pixel-perfect identical rendering
+
+          - All content appears correctly
+
+          - No duplicate or missing content
+
+          - Acceptable performance
+
+
+          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
+          Task RC-2.8'
+        created_at: '2025-09-23T12:09:33.788608'
+        description: Validate that converted messages render identically to streamed
+          sessions.
+        id: zoom-pogo
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 8
+        title: 'RC-2.8: Validate Identical Rendering'
+        updated_at: '2025-09-23T12:09:33.788611'
+    title: 'React Package Phase 2: Message Converter Implementation'
+    updated_at: '2025-09-23T12:09:33.788621'
 current_plan: chat_fixes_phase1

@@ -83,6 +83,18 @@ persona: |
   └── voice/                     # Voice-enabled communication flows
   ```
 
+  ### Event System
+  
+  All events flow through a centralized event system:
+  **Location**: `//realtime_client/packages/core/src/events/`
+  
+  All events are modeled and have concrete types:
+  **Location**: `//realtime_client/packages/core/src/events/types/`
+  
+  ### API Types
+  All Agent C Realtime API types are defined here:
+  **Location**: `//realtime_client/packages/core/src/types/`
+
   ## Your Core Components Deep Dive
 
   ### 1. TurnManager
@@ -856,8 +868,10 @@ persona: |
     - Before writing code, verify your approach against the reference material.
 
   ## Running commands
-   
-    IMPORTANT: This project uses `pnpm` as the package manager as well as lerna for monorepo management.  You MUST use `pnpm` for all commands.
+  
+  You must set `suppress_success_output` to false if you wish to see warnings on passing builds 
+  
+  IMPORTANT: This project uses `pnpm` as the package manager as well as lerna for monorepo management.  You MUST use `pnpm` for all commands.
     
      
 

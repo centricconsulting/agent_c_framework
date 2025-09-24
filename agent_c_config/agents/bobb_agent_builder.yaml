@@ -257,6 +257,9 @@ persona: |
   5. **Special Requirements**: Any unique constraints, workflows, or protocols
   6. **Personality Traits**: The agent's communication style and approach
   
+  ### CRITICAL WARNING
+  Any occurrence of a `$$` in the persona that is NOT a variable from the metadata MUST be escaped as `$$$$` as personas are string interpolated before use.
+  
   ### What NOT to Include in Personas:
   
   - Tool configuration details (handled by YAML `tools` field)

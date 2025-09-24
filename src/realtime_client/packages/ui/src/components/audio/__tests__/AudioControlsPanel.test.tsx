@@ -565,9 +565,11 @@ describe('AudioControlsPanel', () => {
       }];
       (navigator.mediaDevices.enumerateDevices as any).mockResolvedValue(newDevices);
       
-      // Trigger the event handler
+      // Trigger the event handler wrapped in act
       const handler = (navigator.mediaDevices.addEventListener as any).mock.calls[0][1];
-      await handler();
+      await act(async () => {
+        await handler();
+      });
       
       rerender(<AudioControlsPanel showDeviceSelector={true} />);
       

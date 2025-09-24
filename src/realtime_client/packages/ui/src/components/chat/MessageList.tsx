@@ -1,14 +1,25 @@
 'use client'
 
 import * as React from 'react'
-import { useChat, useToolNotifications } from '@agentc/realtime-react'
+import { useChat, useToolNotifications, useErrors } from '@agentc/realtime-react'
+import { 
+  isMessageItem, 
+  isDividerItem, 
+  isMediaItem, 
+  isSystemAlertItem,
+  type ChatItem,
+  type MessageChatItem
+} from '@agentc/realtime-react'
 import { cn } from '../../lib/utils'
 import { Message } from './Message'
 import { TypingIndicator } from './TypingIndicator'
 import { SubsessionDivider } from './SubsessionDivider'
+import { MediaRenderer } from './MediaRenderer'
+import { SystemMessage } from './SystemMessage'
 import { ToolNotificationList } from './ToolNotification'
 import { Loader2, MessageSquare } from 'lucide-react'
 import { Logger } from '../../utils/logger'
+import { toast } from 'sonner'
 
 export interface MessageListProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
@@ -49,11 +60,13 @@ const MessageList = React.forwardRef<HTMLDivElement, MessageListProps>(
     emptyStateComponent,
     ...props 
   }, ref) => {
-    const { messages, isAgentTyping, streamingMessage, isSubSessionMessage, currentSessionId } = useChat()
+    const { messages, isAgentTyping, streamingMessage, currentSessionId } = useChat()
     const { notifications: toolNotifications } = useToolNotifications({
       autoRemoveCompleted: false, // We'll handle removal when tool completes
       maxNotifications: 5
     })
+    const { errors, dismissError } = useErrors()
+    
     const scrollContainerRef = React.useRef<HTMLDivElement>(null)
     const scrollSentinelRef = React.useRef<HTMLDivElement>(null)
     const [isLoading, setIsLoading] = React.useState(false)
@@ -66,17 +79,31 @@ const MessageList = React.forwardRef<HTMLDivElement, MessageListProps>(
     const isInitialMount = React.useRef(true)
     const scrollThreshold = 50 // pixels from bottom to re-enable auto-scroll
     
+    // Handle error toasts
+    React.useEffect(() => {
+      if (errors.length > 0) {
+        // Show the latest error as a toast
+        const latestError = errors[errors.length - 1]
+        if (!latestError.dismissed) {
+          toast.error(latestError.message, {
+            id: latestError.id,
+            description: latestError.source,
+            duration: 5000,
+            onDismiss: () => dismissError(latestError.id)
+          })
+        }
+      }
+    }, [errors, dismissError])
+    
     // Debug logging for messages
     React.useEffect(() => {
-      Logger.debug('[MessageList] Received messages:', messages.length, 'messages')
-      Logger.debug('[MessageList] First 3 messages:', messages.slice(0, 3))
+      Logger.debug('[MessageList] Received messages:', messages.length, 'items')
       if (messages.length > 0) {
-        Logger.debug('[MessageList] Message roles:', messages.map(m => m.role))
-        Logger.debug('[MessageList] Message content types:', messages.map(m => {
-          if (typeof m.content === 'string') return 'string';
-          if (Array.isArray(m.content)) return `array[${m.content.length}]`;
-          return typeof m.content;
-        }))
+        Logger.debug('[MessageList] First 3 items:', messages.slice(0, 3).map(item => ({
+          type: item.type,
+          id: item.id,
+          ...(isMessageItem(item) ? { role: item.role } : {})
+        })))
       }
     }, [messages])
     
@@ -238,13 +265,13 @@ const MessageList = React.forwardRef<HTMLDivElement, MessageListProps>(
     React.useImperativeHandle(ref, () => scrollContainerRef.current as HTMLDivElement)
     
     // Virtual scrolling logic (simplified for now - can be enhanced with react-window)
-    const visibleMessages = React.useMemo(() => {
-      Logger.debug('[MessageList] Computing visible messages');
+    const visibleItems = React.useMemo(() => {
+      Logger.debug('[MessageList] Computing visible items');
       Logger.debug('[MessageList] enableVirtualScroll:', enableVirtualScroll);
       Logger.debug('[MessageList] messages length:', messages.length);
       
       if (!enableVirtualScroll) {
-        Logger.debug('[MessageList] Returning all messages (no virtual scroll)');
+        Logger.debug('[MessageList] Returning all items (no virtual scroll)');
         return messages
       }
       // For now, return all messages - in production, implement windowing
@@ -284,6 +311,69 @@ const MessageList = React.forwardRef<HTMLDivElement, MessageListProps>(
       )
     }
     
+    // Render a chat item based on its type
+    const renderChatItem = (item: ChatItem, index: number) => {
+      // Check for divider items (subsessions)
+      if (isDividerItem(item)) {
+        return (
+          <SubsessionDivider
+            key={item.id}
+            type={item.dividerType}
+            timestamp={item.timestamp}
+            label={item.metadata?.subAgentKey 
+              ? `Agent: ${item.metadata.subAgentKey}` 
+              : undefined}
+            className="my-2"
+          />
+        )
+      }
+      
+      // Check for media items (RenderMedia)
+      if (isMediaItem(item)) {
+        return (
+          <MediaRenderer
+            key={item.id}
+            content={item.content}
+            contentType={item.contentType}
+            metadata={item.metadata}
+            timestamp={item.timestamp}
+            className="animate-in slide-in-from-bottom-2 duration-200"
+          />
+        )
+      }
+      
+      // Check for system alert items
+      if (isSystemAlertItem(item)) {
+        return (
+          <SystemMessage
+            key={item.id}
+            content={item.content}
+            severity={item.severity}
+            format={item.format}
+            timestamp={item.timestamp}
+            className="animate-in slide-in-from-bottom-2 duration-200"
+          />
+        )
+      }
+      
+      // Check for message items (regular messages)
+      if (isMessageItem(item)) {
+        return (
+          <Message
+            key={item.id}
+            message={item}
+            showTimestamp={showTimestamps}
+            isSubSession={item.isSubSession}
+            className="animate-in slide-in-from-bottom-2 duration-200"
+          />
+        )
+      }
+      
+      // Unknown item type - shouldn't happen but handle gracefully
+      Logger.warn('[MessageList] Unknown chat item type:', item)
+      return null
+    }
+    
     return (
       <div
         ref={scrollContainerRef}
@@ -299,60 +389,12 @@ const MessageList = React.forwardRef<HTMLDivElement, MessageListProps>(
       >
         {/* Messages container */}
         <div className="space-y-4">
-          {visibleMessages.length === 0 ? (
+          {visibleItems.length === 0 ? (
             <EmptyState />
           ) : (
             <>
-              {visibleMessages.map((message, index) => {
-                const isSubSession = isSubSessionMessage(message)
-                const previousMessage = index > 0 ? visibleMessages[index - 1] : null
-                const isPreviousSubSession = previousMessage ? isSubSessionMessage(previousMessage) : false
-                
-                // Check for subsession transitions
-                const isSubSessionStart = isSubSession && !isPreviousSubSession
-                const isSubSessionEnd = !isSubSession && isPreviousSubSession
-                
-                return (
-                  <React.Fragment key={`message-${index}-${message.timestamp || index}`}>
-                    {/* Subsession start divider */}
-                    {isSubSessionStart && (
-                      <SubsessionDivider 
-                        type="start"
-                        timestamp={message.timestamp}
-                        className="my-2"
-                      />
-                    )}
-                    
-                    {/* Subsession end divider */}
-                    {isSubSessionEnd && (
-                      <SubsessionDivider 
-                        type="end"
-                        timestamp={previousMessage?.timestamp}
-                        className="my-2"
-                      />
-                    )}
-                    
-                    {/* Message */}
-                    <Message
-                      message={message}
-                      showTimestamp={showTimestamps}
-                      isSubSession={isSubSession}
-                      className="animate-in slide-in-from-bottom-2 duration-200"
-                    />
-                  </React.Fragment>
-                )
-              })}
-              
-              {/* Check if we need an end divider for the last message */}
-              {visibleMessages.length > 0 && 
-               isSubSessionMessage(visibleMessages[visibleMessages.length - 1]) && 
-               !streamingMessage && (
-                <SubsessionDivider 
-                  type="end"
-                  timestamp={visibleMessages[visibleMessages.length - 1].timestamp}
-                  className="my-2"
-                />
-              )}
+              {/* Render all chat items using unified renderer */}
+              {visibleItems.map((item, index) => renderChatItem(item, index))}
               
               {/* Current streaming response */}
               {streamingMessage && (

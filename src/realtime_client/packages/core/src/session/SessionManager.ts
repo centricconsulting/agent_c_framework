@@ -59,10 +59,29 @@ export interface SessionManagerEventMap {
     sessionId: string;
     media: EnhancedMessage;
   };
+  // DEPRECATED: Use 'system_message' instead for API naming consistency
   'system-notification': {
     type: 'system' | 'error';
     severity: 'info' | 'warning' | 'error';
     content: string;
+    source?: string;
+    timestamp: string;
+  };
+  // SystemMessageEvent handler - maintains API naming consistency
+  'system_message': {
+    type: string; // The event type from server
+    session_id: string;
+    role: string;
+    content: string;
+    format: string;
+    severity: 'info' | 'warning' | 'error';
+    parent_session_id?: string;
+    user_session_id?: string;
+  };
+  // ErrorEvent handler - for toast notifications, NOT session events
+  'error': {
+    type: string; // The event type from server
+    message: string;
     source?: string;
     timestamp: string;
   };

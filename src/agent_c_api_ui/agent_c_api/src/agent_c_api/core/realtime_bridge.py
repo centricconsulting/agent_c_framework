@@ -4,6 +4,7 @@ import json
 import os
 import traceback
 from contextlib import suppress
+from datetime import datetime
 from typing import List, Optional, Any, Dict, AsyncIterator
 
 from fastapi import WebSocket, WebSocketDisconnect
@@ -15,7 +16,7 @@ from websockets import State
 from agent_c.chat import ChatSessionManager
 from agent_c.config.agent_config_loader import AgentConfigLoader
 from agent_c.models import ChatSession, ChatUser
-from agent_c.models.events import BaseEvent, TextDeltaEvent, HistoryEvent, RenderMediaEvent
+from agent_c.models.events import BaseEvent, TextDeltaEvent, HistoryEvent, RenderMediaEvent, SystemMessageEvent
 from agent_c.models.events.chat import AudioInputDeltaEvent
 from agent_c.models.heygen import HeygenAvatarSessionData, NewSessionRequest
 from agent_c.toolsets import Toolset
@@ -36,7 +37,7 @@ from agent_c.models.input.image_input import ImageInput
 from agent_c_api.core.voice.models import open_ai_voice_models, AvailableVoiceModel, heygen_avatar_voice_model, no_voice_model
 from agent_c_api.core.voice.voice_io_manager import VoiceIOManager
 from agent_c_tools.tools.think.prompt import ThinkSection
-from agent_c.prompting import PromptBuilder
+from agent_c.prompting import PromptBuilder, EnvironmentInfoSection
 from agent_c.prompting.basic_sections.persona import DynamicPersonaSection
 
 
@@ -103,6 +104,8 @@ class RealtimeBridge(AgentBridge):
     async def cancel_interaction(self) -> None:
         self.client_wants_cancel.set()
         await self.send_event(CancelledEvent())
+        await self.send_event(SystemMessageEvent(content="Interaction cancelled by user, waiting for runtime to exit..", session_id=self.chat_session.session_id,
+                                                 severity="info", role="system"))
 
     @handle_client_event.register
     async def _(self, event: DeleteChatSessionEvent):
@@ -123,6 +126,9 @@ class RealtimeBridge(AgentBridge):
         if session_id == self.chat_session.session_id:
             self.chat_session = None
             await self.new_chat_session()
+
+        await self.send_event(SystemMessageEvent(content=f"Chat Session {session_id} deleted", session_id=self.chat_session.session_id,
+                                                 severity="info", role="system"))
 
 
     @handle_client_event.register
@@ -234,9 +240,16 @@ class RealtimeBridge(AgentBridge):
             return
 
         self.chat_session = session_info
+
+        if 'BridgeTools' not in self.chat_session.agent_config.tools:
+            self.chat_session.agent_config.tools.append('BridgeTools')
+
         await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
         self.logger.info(f"RealtimeBridge resumed chat session {self.chat_session.session_id}")
         await self.send_chat_session()
+        await self.send_event(SystemMessageEvent(content=F"Welcome back! **Session ID:** {self.chat_session.session_id}", session_id=self.chat_session.session_id,
+                                                 severity="info", role="system"))
+
 
     @handle_client_event.register
     async def _(self, event: SetChatSessionNameEvent) -> None:
@@ -335,9 +348,13 @@ class RealtimeBridge(AgentBridge):
                 return
 
             self.chat_session.agent_config = agent_config
+
+            if 'BridgeTools' not in self.chat_session.agent_config.tools:
+                self.chat_session.agent_config.tools.append('BridgeTools')
+
             await self.send_event(AgentConfigurationChangedEvent(agent_config=self.chat_session.agent_config))
             await self.tool_chest.activate_toolset(self.chat_session.agent_config.tools)
-            self.logger.info(f"RealtimeBridge {self.chat_session.session_id}: Agent set to {agent_key}")
+            self.logger.debug(f"RealtimeBridge {self.chat_session.session_id}: Agent set to {agent_key}")
 
     def parse_event(self, data: dict) -> BaseEvent:
         """Parse incoming data into appropriate event type"""
@@ -375,8 +392,8 @@ class RealtimeBridge(AgentBridge):
                 event_str = json.dumps(model_dump)
                 await self.websocket.send_text(event_str)
 
-            if event.type not in ["ping", "pong"]:
-                self.logger.info(f"Sent event {event.type} to {self.chat_session.session_id}")
+            #if event.type not in ["ping", "pong"]:
+            #    self.logger.info(f"Sent event {event.type} to {self.chat_session.session_id}")
                 # self.logger.info(event_str)
         except Exception as e:
             self.logger.exception(f"Failed to send event to {self.chat_session.session_id}: {e}")
@@ -437,8 +454,8 @@ class RealtimeBridge(AgentBridge):
 
     async def runtime_callback(self, event: BaseEvent):
         """Handle runtime events from the agent"""
-        if event.type not in ["ping", "pong"]:
-            self.logger.debug(f"RealtimeBridge {self.chat_session.session_id}: Received runtime event: {event.type}")
+        #if event.type not in ["ping", "pong"]:
+            #self.logger.debug(f"RealtimeBridge {self.chat_session.session_id}: Received runtime event: {event.type}")
         # These are already in model format and don't need parsed.
         await self.handle_runtime_event(event)
         await asyncio.sleep(0)
@@ -578,6 +595,37 @@ class RealtimeBridge(AgentBridge):
                 with suppress(asyncio.CancelledError):
                     await task
 
+    async def _build_prompt_metadata(self) -> Dict[str, Any]:
+        """
+        Build metadata for prompts including user and session information.
+
+        Creates a comprehensive metadata dictionary that provides context
+        for prompt generation, including session details, user information,
+        and system configuration.
+
+        Returns:
+            Dict[str, Any]: Metadata dictionary containing:
+                - session_id: Session ID for the chat session (not UI session ID)
+                - current_user_username: Username of the current user
+                - persona_prompt: Prompt for the persona
+                - agent_config: Complete agent configuration
+                - voice_tools: Voice tools configuration
+                - timestamp: Current timestamp in ISO format
+                - env_name: Environment name (development, production, etc.)
+        """
+        agent_meta = self.chat_session.agent_config.prompt_metadata or {}
+        return {
+            "session_id": self.chat_session.session_id,
+            "current_user_username": self.chat_session.user_id,
+            "persona_prompt": self.chat_session.agent_config.persona,
+            "agent_config": self.chat_session.agent_config,
+            "timestamp": datetime.now().isoformat(),
+            "env_name": os.getenv('ENV_NAME', "development"),
+            "user_session_id": self.chat_session.session_id,
+            "chat_session": self.chat_session,
+            "chat_user": self.chat_user,
+        } | agent_meta
+
     async def interact(self, user_message: str, file_ids: Optional[List[str]] = None, on_event: Optional[callable] = None, send_turn: bool = True) -> None:
         """
         Streams chat responses for a given user message.
@@ -627,9 +675,9 @@ class RealtimeBridge(AgentBridge):
             if self.sections is not None:
                 agent_sections = self.sections
             elif "ThinkTools" in self.chat_session.agent_config.tools:
-                agent_sections = [ThinkSection(), DynamicPersonaSection()]
+                agent_sections = [ThinkSection(), EnvironmentInfoSection(),  DynamicPersonaSection()]
             else:
-                agent_sections = [DynamicPersonaSection()]
+                agent_sections = [EnvironmentInfoSection(), DynamicPersonaSection()]
 
             chat_params: Dict[str, Any] = {
                 "user_id": self.chat_session.user_id,

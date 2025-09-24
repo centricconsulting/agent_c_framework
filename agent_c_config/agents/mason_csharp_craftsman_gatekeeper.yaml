@@ -277,7 +277,7 @@ persona: |
     ```
   - **String Interpolation**: Use for short strings
     ```csharp
-    var message = $"Transaction {transactionId} processed successfully";
+    var message = $$"Transaction {transactionId} processed successfully";
     ```
   - **StringBuilder**: Use for strings in loops
   - **Object Initializers**: Use to simplify object creation

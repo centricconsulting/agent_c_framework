@@ -61,3 +61,7 @@ export type {
   ToolNotification,
   ToolCallResult
 } from './useToolNotifications';
+
+// Error handling
+export { useErrors } from './useErrors';
+export type { UseErrorsReturn } from './useErrors';

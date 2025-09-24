@@ -2,8 +2,10 @@ from typing import Any, Optional, Dict
 import re
 import markdown
 import yaml
+import json
 
 from agent_c.models.agent_config import CurrentAgentConfiguration
+from agent_c.models.events import SystemMessageEvent
 from agent_c.models.events.chat import SubsessionStartedEvent, SubsessionEndedEvent
 from agent_c.toolsets import Toolset, json_schema
 from agent_c.util import MnemonicSlugs
@@ -113,11 +115,13 @@ class AgentAssistTools(AgentAssistToolBase):
             streaming_callback=tool_context['streaming_callback']
         )
 
+        agent_session_id = MnemonicSlugs.generate_slug(2)
+
         messages = await self.agent_oneshot(content, agent_config, user_session_id, tool_context,
                                              process_context=process_context,
                                              client_wants_cancel=tool_context.get('client_wants_cancel', None),
                                              parent_session_id=parent_session_id,
-                                             agent_session_id=MnemonicSlugs.generate_slug(2),
+                                             agent_session_id=agent_session_id,
                                              sub_agent_type="assist", prime_agent_key=calling_agent_config.key)
 
         await self._raise_render_media(
@@ -129,17 +133,19 @@ class AgentAssistTools(AgentAssistToolBase):
             streaming_callback=tool_context['streaming_callback']
         )
 
-        last_message = messages[-1] if messages else None
+        if messages is not None and len(messages) > 0:
+            last_message = messages[-1]
 
-        if last_message is not None:
-            yaml_response = yaml.dump(last_message, allow_unicode=True)
-            agent_response = f"**IMPORTANT**: The following response is also displayed in the UI for the user, you do not need to relay it.\n\nAgent Response:\n{yaml_response}"
-        else:
-            agent_response = "No response received from the agent. This usually means that you overloaded the agent with too many tasks."
+            response = {'notice': 'This response is also displayed in the UI for the user, you do not need to relay it.',
+                        'agent_message': last_message}
 
+            return json.dumps(response, ensure_ascii=False)
 
-        return agent_response
+        await self._raise_event(SystemMessageEvent(content=f"Agent Assist session {agent_session_id} completed with no messages returned.",
+                                                   session_id=agent_session_id, parent_session_id=parent_session_id,
+                                                   user_session_id=user_session_id, ), tool_context['streaming_callback'])
 
+        return f"No messages returned from agent session {agent_session_id}.  This usually means that you overloaded the agent with too many tasks."
 
     @json_schema(
         'Begin or resume a chat session with an agent assistant. The return value will be the final output from the agent along with the agent session ID.',
@@ -187,7 +193,7 @@ class AgentAssistTools(AgentAssistToolBase):
         await self._raise_render_media(
             sent_by_class=self.__class__.__name__,
             sent_by_function='chat',
-            content_type="text/html",
+            content_type="text/markdown",
             content=content,
             tool_context=tool_context
         )
@@ -212,9 +218,15 @@ class AgentAssistTools(AgentAssistToolBase):
 
         if messages is not None and len(messages) > 0:
             last_message = messages[-1]
-            agent_response = yaml.dump(last_message, allow_unicode=True)
 
-            return f"**IMPORTANT**: The following response is also displayed in the UI for the user, you do not need to relay it.\n\nAgent Session ID: {agent_session_id}\n{agent_response}"
+            response = {'notice': 'This response is also displayed in the UI for the user, you do not need to relay it.',
+                        'agent_message': last_message}
+
+            return json.dumps(response, ensure_ascii=False)
+
+        await self._raise_event(SystemMessageEvent(content=f"Agent Assist session {agent_session_id} completed with no messages returned.",
+                                                   session_id=agent_session_id, parent_session_id=parent_session_id,
+                                                   user_session_id=user_session_id,), tool_context['streaming_callback'])
 
         return f"No messages returned from agent session {agent_session_id}.  This usually means that you overloaded the agent with too many tasks."
 

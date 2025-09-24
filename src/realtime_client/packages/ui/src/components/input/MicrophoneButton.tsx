@@ -146,9 +146,9 @@ const MicrophoneButton = forwardRef<HTMLButtonElement, MicrophoneButtonProps>(
           <span
             className="absolute inset-0 rounded-full bg-current opacity-20 animate-ping"
             style={{
-              animationDuration: `${1.5 - audioLevel}s`,
+              animationDuration: `${(1.5 - audioLevel) * 1000}ms`,
               transform: `scale(${animationScale})`
-            }}
+            } as React.CSSProperties}
           />
         )}
         

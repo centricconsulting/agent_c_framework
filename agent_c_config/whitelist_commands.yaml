@@ -192,7 +192,6 @@ pnpm:
         "type-check": { allowed_flags: [], suppress_success_output: false, allow_test_mode: true, deny_args: false }
         "typecheck": { allowed_flags: [ ], suppress_success_output: false, allow_test_mode: true, deny_args: false }
         "type_check": { allowed_flags: [ ], suppress_success_output: false, allow_test_mode: true, deny_args: false }
-        "test:ui": { allowed_flags: [], deny_args: false, allow_test_paths: true, suppress_success_output: true }
         "test:coverage": { allowed_flags: [], deny_args: false, allow_test_paths: true, suppress_success_output: false }
         "clean": { suppress_success_output: false, allow_test_mode: true, deny_args: false }
         "install:clean": { suppress_success_output: false, allow_test_mode: true, deny_args: false }

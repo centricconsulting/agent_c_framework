@@ -16,6 +16,12 @@ export const defaultMockStates = {
     toggleMute: vi.fn(),
     setMuted: vi.fn(),
   },
+  errors: {
+    errors: [],
+    addError: vi.fn(),
+    dismissError: vi.fn(),
+    clearErrors: vi.fn(),
+  },
   connection: {
     isConnected: false,
     connectionState: 'disconnected' as const,
@@ -115,6 +121,7 @@ export const defaultMockStates = {
 
 // Hook mocks
 export const useAudio = vi.fn(() => defaultMockStates.audio);
+export const useErrors = vi.fn(() => defaultMockStates.errors);
 export const useConnection = vi.fn(() => defaultMockStates.connection);
 export const useChat = vi.fn(() => defaultMockStates.chat);
 export const useTurnState = vi.fn(() => defaultMockStates.turnState);
@@ -142,6 +149,48 @@ export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'err
 export type OutputMode = 'voice' | 'text' | 'both';
 export type TurnState = 'idle' | 'user_speaking' | 'agent_speaking' | 'processing';
 
+// ChatItem type exports
+export type ChatItemType = 'message' | 'divider' | 'media' | 'system_alert';
+
+export interface ChatItem {
+  id: string;
+  type: ChatItemType;
+  timestamp?: string;
+}
+
+export interface MessageChatItem extends ChatItem {
+  type: 'message';
+  role: string;
+  content: any;
+  isSubSession?: boolean;
+}
+
+export interface DividerChatItem extends ChatItem {
+  type: 'divider';
+  dividerType: 'start' | 'end';
+  metadata?: any;
+}
+
+export interface MediaChatItem extends ChatItem {
+  type: 'media';
+  content: string;
+  contentType: string;
+  metadata?: any;
+}
+
+export interface SystemAlertChatItem extends ChatItem {
+  type: 'system_alert';
+  content: string;
+  severity: 'info' | 'warning' | 'error';
+  format: 'markdown' | 'text';
+}
+
+// Type guards
+export const isMessageItem = vi.fn((item: ChatItem): item is MessageChatItem => item.type === 'message');
+export const isDividerItem = vi.fn((item: ChatItem): item is DividerChatItem => item.type === 'divider');
+export const isMediaItem = vi.fn((item: ChatItem): item is MediaChatItem => item.type === 'media');
+export const isSystemAlertItem = vi.fn((item: ChatItem): item is SystemAlertChatItem => item.type === 'system_alert');
+
 // Helper function to update mock states
 export function updateMockState(hook: string, newState: any) {
   const hookMap = {
@@ -157,6 +206,7 @@ export function updateMockState(hook: string, newState: any) {
     initializationStatus: useInitializationStatus,
     chatSessionList: useChatSessionList,
     toolNotifications: useToolNotifications,
+    errors: useErrors,
   };
   
   const mockHook = hookMap[hook as keyof typeof hookMap];
@@ -182,4 +232,5 @@ export function resetAllMocks() {
   useInitializationStatus.mockReturnValue(defaultMockStates.initializationStatus);
   useChatSessionList.mockReturnValue(defaultMockStates.chatSessionList);
   useToolNotifications.mockReturnValue(defaultMockStates.toolNotifications);
+  useErrors.mockReturnValue(defaultMockStates.errors);
 }

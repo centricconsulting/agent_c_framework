@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "session_id": "test-simple-chat",
+  "token_count": 0,
+  "context_window_size": 0,
+  "session_name": "Simple Chat Test",
+  "created_at": "2025-01-01T10:00:00.000000",
+  "updated_at": "2025-01-01T10:05:00.000000",
+  "deleted_at": null,
+  "user_id": "test-user",
+  "metadata": {},
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello! Can you help me understand how to use this chat?"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "Hello! I'd be happy to help you understand how to use this chat interface.\n\nThis is a real-time chat system where you can have conversations with me. Here's what you can do:\n\n1. **Send Messages**: Type your message in the input field and press Enter or click Send\n2. **View Responses**: My responses will appear in the chat area as they stream in\n3. **Session Management**: Your conversation is saved in a session that you can resume later\n4. **Voice Mode**: You can switch between text and voice input/output modes\n\nFeel free to ask me any questions you have, and I'll do my best to help!",
+          "citations": null
+        }
+      ]
+    },
+    {
+      "role": "user", 
+      "content": "That's helpful, thank you! Can you tell me more about the voice features?"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "Absolutely! The voice features allow for a more natural conversation experience:\n\n**Voice Input:**\n- Click the microphone button to start recording your message\n- Speak naturally, and your speech will be converted to text\n- The system uses advanced speech recognition for accuracy\n\n**Voice Output:**\n- You can enable voice output to hear my responses spoken aloud\n- Multiple voice models are available to choose from\n- The audio is streamed in real-time for a smooth experience\n\n**Turn Management:**\n- The system manages conversation turns automatically\n- Visual indicators show when it's your turn to speak\n- Audio levels are displayed to confirm your microphone is working\n\nThe voice features are designed to make our interaction feel more like a natural conversation. Would you like to try them out?",
+          "citations": null
+        }
+      ]
+    }
+  ],
+  "agent_config": {
+    "version": 2,
+    "name": "Assistant",
+    "agent_description": "A helpful AI assistant",
+    "key": "default_assistant",
+    "model_id": "claude-sonnet-3-5",
+    "category": ["general", "assistant"]
+  }
+}

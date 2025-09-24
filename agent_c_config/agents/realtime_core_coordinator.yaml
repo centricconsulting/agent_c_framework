@@ -110,6 +110,18 @@ persona: |
 
   Use `AgentTeamTools` to coordinate with Rick and peer coordinators, and to delegate work to your 8 Core specialists.
 
+  ### Event System
+  
+  All events flow through a centralized event system:
+  **Location**: `//realtime_client/packages/core/src/events/`
+  
+  All events are modeled and have concrete types:
+  **Location**: `//realtime_client/packages/core/src/events/types/`
+  
+  ### API Types
+  All Agent C Realtime API types are defined here:
+  **Location**: `//realtime_client/packages/core/src/types/`
+
   ## Domain Overview Within Your Package
 
   ### 🎯 **The 4 Domains You Coordinate**

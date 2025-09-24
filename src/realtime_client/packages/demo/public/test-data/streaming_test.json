@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "session_id": "test-streaming",
+  "token_count": 0,
+  "context_window_size": 0,
+  "session_name": "Streaming Test",
+  "created_at": "2025-01-01T11:00:00.000000",
+  "updated_at": "2025-01-01T11:10:00.000000",
+  "deleted_at": null,
+  "user_id": "test-user",
+  "metadata": {},
+  "messages": [
+    {
+      "role": "user",
+      "content": "Can you write me a longer response to test streaming?"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "Absolutely! I'll provide you with a comprehensive response that demonstrates how streaming messages work in this chat interface.\n\n## Understanding Message Streaming\n\nMessage streaming is a powerful feature that enhances the user experience by displaying responses as they're being generated, rather than waiting for the complete message to be ready. This creates a more dynamic and engaging interaction.\n\n### Key Benefits of Streaming\n\n1. **Immediate Feedback**: Users see that the system is processing their request right away, reducing perceived latency and improving engagement.\n\n2. **Progressive Information Delivery**: Complex responses can be consumed as they're generated, allowing users to start reading and understanding the content before the full response is complete.\n\n3. **Natural Conversation Flow**: Streaming mimics how humans communicate, where thoughts are expressed progressively rather than in complete, pre-formed blocks.\n\n### Technical Implementation\n\nThe streaming system works through several coordinated components:\n\n- **WebSocket Connection**: Maintains a persistent, bidirectional communication channel between the client and server\n- **Event-Based Architecture**: Uses events to signal different stages of message generation\n- **Buffer Management**: Efficiently handles partial content updates without overwhelming the UI\n- **State Synchronization**: Keeps the client and server states aligned throughout the streaming process\n\n### Visual Indicators\n\nDuring streaming, you'll notice several visual cues:\n- A typing indicator or animation showing active generation\n- Gradual text appearance as content streams in\n- Smooth scrolling to keep new content visible\n- A cursor or marker indicating where new text will appear\n\n### Performance Considerations\n\nStreaming is optimized for performance through:\n- Efficient delta updates rather than full message replacements\n- Throttled UI updates to maintain smooth rendering\n- Smart buffering to balance responsiveness and resource usage\n- Automatic connection management with reconnection capabilities\n\n## Conclusion\n\nMessage streaming transforms the chat experience from a series of discrete exchanges into a fluid, continuous conversation. This technology is particularly valuable for longer responses like this one, where users can begin processing information immediately rather than waiting for the entire response to complete.\n\nThe implementation in this chat system showcases modern real-time communication capabilities, providing users with an responsive and engaging interface that feels natural and intuitive to use.",
+          "citations": null
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "That was great! Can you also demonstrate how code blocks look?"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "Of course! Here's a demonstration of how code blocks are rendered in the chat interface:\n\n## Code Block Examples\n\n### TypeScript Example\n\n```typescript\n// Example of a React component with TypeScript\ninterface ChatMessageProps {\n  content: string;\n  role: 'user' | 'assistant';\n  timestamp: Date;\n  isStreaming?: boolean;\n}\n\nconst ChatMessage: React.FC<ChatMessageProps> = ({ \n  content, \n  role, \n  timestamp, \n  isStreaming = false \n}) => {\n  return (\n    <div className={`message ${role} ${isStreaming ? 'streaming' : ''}`}>\n      <div className=\"message-header\">\n        <span className=\"role\">{role}</span>\n        <span className=\"timestamp\">{timestamp.toLocaleTimeString()}</span>\n      </div>\n      <div className=\"message-content\">\n        {content}\n      </div>\n      {isStreaming && <StreamingIndicator />}\n    </div>\n  );\n};\n```\n\n### Python Example\n\n```python\n# WebSocket message handler\nimport asyncio\nimport json\nfrom typing import Dict, Any\n\nclass MessageHandler:\n    def __init__(self, websocket):\n        self.websocket = websocket\n        self.streaming = False\n        \n    async def handle_message(self, message: Dict[str, Any]):\n        \"\"\"Process incoming WebSocket messages\"\"\"\n        msg_type = message.get('type')\n        \n        if msg_type == 'text':\n            await self.handle_text_message(message)\n        elif msg_type == 'stream_start':\n            self.streaming = True\n            await self.send_ack()\n        elif msg_type == 'stream_end':\n            self.streaming = False\n            await self.finalize_stream()\n            \n    async def send_ack(self):\n        \"\"\"Send acknowledgment to client\"\"\"\n        await self.websocket.send(json.dumps({\n            'type': 'ack',\n            'timestamp': time.time()\n        }))\n```\n\n### JSON Configuration\n\n```json\n{\n  \"session\": {\n    \"id\": \"test-session-123\",\n    \"config\": {\n      \"enableStreaming\": true,\n      \"maxMessages\": 100,\n      \"audioSettings\": {\n        \"sampleRate\": 24000,\n        \"channels\": 1,\n        \"format\": \"pcm\"\n      }\n    },\n    \"metadata\": {\n      \"created\": \"2025-01-01T10:00:00Z\",\n      \"lastActive\": \"2025-01-01T11:00:00Z\"\n    }\n  }\n}\n```\n\nThese code blocks should be rendered with:\n- **Syntax highlighting** for better readability\n- **Language indicators** showing the programming language\n- **Copy buttons** for easy code copying\n- **Proper indentation** and formatting preservation\n- **Scrollable containers** for longer code snippets\n\nThe streaming system handles code blocks specially to ensure they render correctly even when received in chunks!",
+          "citations": null
+        }
+      ]
+    }
+  ],
+  "agent_config": {
+    "version": 2,
+    "name": "Technical Assistant",
+    "agent_description": "A technical AI assistant specializing in code examples",
+    "key": "technical_assistant",
+    "model_id": "claude-sonnet-3-5",
+    "category": ["technical", "coding"]
+  }
+}

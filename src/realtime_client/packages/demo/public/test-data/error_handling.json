@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "session_id": "test-error-handling",
+  "token_count": 0,
+  "context_window_size": 0,
+  "session_name": "Error Handling Test",
+  "created_at": "2025-01-01T12:00:00.000000",
+  "updated_at": "2025-01-01T12:15:00.000000",
+  "deleted_at": null,
+  "user_id": "test-user",
+  "metadata": {},
+  "messages": [
+    {
+      "role": "user",
+      "content": "Test error handling scenarios"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "I'll help you understand various error scenarios that might occur in the chat system. Let me demonstrate a few cases.",
+          "citations": null
+        }
+      ]
+    },
+    {
+      "role": "system",
+      "content": "Error: Connection temporarily lost. Attempting to reconnect..."
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "As you can see, the system can handle connection errors gracefully. The chat maintains state and can resume once the connection is restored.\n\nHere are common error scenarios:\n\n1. **Network Errors**: Temporary connection losses are handled with automatic reconnection\n2. **Rate Limiting**: The system respects rate limits and queues messages appropriately\n3. **Invalid Input**: Malformed messages are caught and reported clearly\n4. **Server Errors**: Backend issues are communicated with helpful error messages",
+          "citations": null
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "What happens with very long messages?"
+    },
+    {
+      "role": "system",
+      "content": "Warning: Message approaching maximum length limit (4000/4096 tokens)"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "Great question! The system handles long messages intelligently:\n\n## Message Length Management\n\n- **Token Counting**: Messages are measured in tokens, not just characters\n- **Warnings**: You receive alerts when approaching limits\n- **Truncation Protection**: The system prevents message loss\n- **Chunking**: Very long responses can be split across multiple messages\n\n## Error Recovery Mechanisms\n\nThe chat system includes several recovery features:\n\n### Automatic Retry\nFailed operations are retried with exponential backoff to avoid overwhelming the server.\n\n### State Persistence\nYour conversation state is preserved even if errors occur, allowing seamless continuation.\n\n### Graceful Degradation\nIf certain features fail, the core chat functionality remains operational.\n\n### Clear Error Messages\nErrors are presented in user-friendly language with actionable suggestions when possible.",
+          "citations": null
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "Show me an example with special characters: émojis 😀🎉, symbols ©®™, and unicode 你好世界"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "Excellent test case! The system handles special characters robustly:\n\n## Character Support Demo\n\n### Emojis\n✅ Fully supported: 😀 😎 🎉 🚀 💡 🔥\n❤️ Reactions work: 👍 👎 ❤️ 😂 😮 😢\n🎨 Diverse emojis: 🌈 🦄 🍕 🏆 🌍 📚\n\n### Special Symbols\n- Copyright: © 2025 Test Corporation\n- Registered: Product® is a registered trademark\n- Trademark: Service™ pending approval\n- Mathematical: ∑ ∫ ∂ ∇ ∞ ≈ ≠ ≤ ≥\n- Currency: $ € £ ¥ ₹ ₽ ¢\n\n### Unicode Languages\n- Chinese: 你好世界 (Hello World)\n- Japanese: こんにちは (Konnichiwa)\n- Arabic: مرحبا بالعالم (Hello World)\n- Hebrew: שלום עולם (Shalom Olam)\n- Korean: 안녕하세요 (Annyeonghaseyo)\n- Russian: Привет мир (Privet mir)\n\n### Edge Cases\n- Zero-width characters: (​‌‍) - handled invisibly\n- RTL/LTR mixing: Hello مرحبا שלום World\n- Combining characters: é (e + ́) vs é (single character)\n\nAll these characters are properly:\n1. Stored in the database\n2. Transmitted via WebSocket\n3. Rendered in the UI\n4. Searchable and copyable",
+          "citations": null
+        }
+      ]
+    }
+  ],
+  "agent_config": {
+    "version": 2,
+    "name": "Error Handler Bot",
+    "agent_description": "Specialized assistant for demonstrating error handling",
+    "key": "error_handler",
+    "model_id": "claude-sonnet-3-5",
+    "category": ["testing", "debugging"]
+  }
+}

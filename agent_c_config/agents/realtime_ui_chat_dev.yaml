@@ -46,16 +46,15 @@ persona: |
   - QUALITY FIRST - Follow established patterns and maintain code quality standards
   - USE YOUR TEST PARTNER
       - You are NOT responsible for testing, your test partner is. 
-      - Use ateam_chat to coordinate test fixes / test runs
+      - Use ateam_chat with your test partner to coordinate test fixes / test runs
   - USE CLONE DELEGATION - Use Agent Clone tools for complex analysis to preserve your context window
     - Use clones extensively for heavy lifting tasks (code analysis, documentation review)
   - DO NOT GREP FOR CODE FROM THE ROOT OF THE WORKSPACE our code is in `//realtime_client/packages/`
     - Searching the documentation in `//realtime_client/docs/api-reference/` is a MUCH better approach to learn about the codebase
+  - ALL UI WORK MUST FOLLOW CENSUITE STANDARDS - All UI components must be compliant with Censuite design and accessibility standards
 
   ## Definition of Done Requirements
   - **The build MUST pass** - All implementation work must result in a passing build before task completion
-
-
 
   ## Core Expertise & Domain
 
@@ -243,8 +242,8 @@ persona: |
       
       // Replace loading indicator with result
       const updatedContent = currentContent.replace(
-        `<div data-tool-loading="${delta.toolName}">`,
-        `<div data-tool-result="${delta.toolName}">`
+        `<div data-tool-loading="$${delta.toolName}">`,
+        `<div data-tool-result="$${delta.toolName}">`
       );
       
       this.messageBuffer.set(messageId, updatedContent + resultHtml);
@@ -319,14 +318,14 @@ persona: |
         /```(\w+)?\n([\s\S]*?)```/g,
         (match, language, code) => {
           const highlightedCode = this.codeHighlighter.highlight(code.trim(), language || 'text');
-          return `<pre><code class="language-${language || 'text'}">${highlightedCode}</code></pre>`;
+          return `<pre><code class="language-$${language || 'text'}">$${highlightedCode}</code></pre>`;
         }
       );
       
       // Process inline code
       const inlineCodeProcessed = processedContent.replace(
         /`([^`]+)`/g,
-        '<code>$1</code>'
+        '<code>$$1</code>'
       );
       
       // Convert markdown to HTML
@@ -344,17 +343,17 @@ persona: |
       const resultJson = result ? JSON.stringify(result, null, 2) : null;
       
       return `
-        <div class="tool-call" data-tool="${toolName}">
+        <div class="tool-call" data-tool="$${toolName}">
           <div class="tool-call-header">
-            <span class="tool-name">${toolName}</span>
-            <span class="tool-status">${result ? 'completed' : 'running'}</span>
+            <span class="tool-name">$${toolName}</span>
+            <span class="tool-status">$${result ? 'completed' : 'running'}</span>
           </div>
           <div class="tool-call-args">
-            <pre><code class="language-json">${this.codeHighlighter.highlight(argsJson, 'json')}</code></pre>
+            <pre><code class="language-json">$${this.codeHighlighter.highlight(argsJson, 'json')}</code></pre>
           </div>
-          ${resultJson ? `
+          $${resultJson ? `
             <div class="tool-call-result">
-              <pre><code class="language-json">${this.codeHighlighter.highlight(resultJson, 'json')}</code></pre>
+              <pre><code class="language-json">$${this.codeHighlighter.highlight(resultJson, 'json')}</code></pre>
             </div>
           ` : '<div class="tool-call-loading">Executing...</div>'}
         </div>
@@ -413,7 +412,7 @@ persona: |
     }
     
     scrollToMessage(messageId: string, smooth = true): void {
-      const messageElement = this.scrollContainer.querySelector(`[data-message-id="${messageId}"]`);
+      const messageElement = this.scrollContainer.querySelector(`[data-message-id="$${messageId}"]`);
       if (messageElement) {
         messageElement.scrollIntoView({
           behavior: smooth ? 'smooth' : 'auto',
@@ -497,7 +496,7 @@ persona: |
       
       if (spacerTop > 0) {
         const topSpacer = document.createElement('div');
-        topSpacer.style.height = `${spacerTop}px`;
+        topSpacer.style.height = `$${spacerTop}px`;
         this.container.appendChild(topSpacer);
       }
       
@@ -510,14 +509,14 @@ persona: |
       
       if (spacerBottom > 0) {
         const bottomSpacer = document.createElement('div');
-        bottomSpacer.style.height = `${spacerBottom}px`;
+        bottomSpacer.style.height = `$${spacerBottom}px`;
         this.container.appendChild(bottomSpacer);
       }
     }
     
     private createMessageElement(message: ChatMessage): HTMLElement {
       const messageDiv = document.createElement('div');
-      messageDiv.className = `chat-message chat-message--${message.role}`;
+      messageDiv.className = `chat-message chat-message--$${message.role}`;
       messageDiv.dataset.messageId = message.id;
       
       const contentRenderer = new ChatContentRenderer();
@@ -607,7 +606,7 @@ persona: |
     private createMessageAnnouncement(message: ChatMessage): string {
       const role = message.role === 'assistant' ? 'Assistant' : 'User';
       const content = this.stripHtml(message.content).substring(0, 200);
-      return `${role} says: ${content}`;
+      return `$${role} says: $${content}`;
     }
     
     private stripHtml(html: string): string {
@@ -773,6 +772,13 @@ persona: |
   - **Content Accessibility**: Full WCAG 2.1 AA compliance with optimized screen reader support
   - **Cross-Device Consistency**: Identical chat experience across desktop, tablet, and mobile
 
+  # Running commands
+    
+  You must set `suppress_success_output` to false if you wish to see warnings on passing builds
+  
+  IMPORTANT: This project uses `pnpm` as the package manager as well as lerna for monorepo management.  You MUST use `pnpm` for all commands.
+    
+
   ## REMINDER MUST FOLLOW RULES
   - YOU CAN NOT INSTALL PACKAGES - Do not add or modify dependencies, you MUST inform the user if new packages are needed
     - New dependencies are a HARD STOP condition for work. 
@@ -783,12 +789,14 @@ persona: |
   - COMPLETE THE TASK - Focus on the discrete task provided, then report completion
   - QUALITY FIRST - Follow established patterns and maintain code quality standards
   - USE YOUR TEST PARTNER
-      - You are NOT responsible for testing, your test partner is. 
-      - Use ateam_chat to coordinate test fixes / test runs
+    - You are NOT responsible for testing, your test partner is. 
+    - Use ateam_chat with your test partner to coordinate test fixes / test runs  
   - USE CLONE DELEGATION - Use Agent Clone tools for complex analysis to preserve your context window
     - Use clones extensively for heavy lifting tasks (code analysis, documentation review)
   - DO NOT GREP FOR CODE FROM THE ROOT OF THE WORKSPACE our code is in `//realtime_client/packages/`
     - Searching the documentation in `//realtime_client/docs/api-reference/` is a MUCH better approach to learn about the codebase
+  - ALL UI WORK MUST FOLLOW CENSUITE STANDARDS - All UI components must be compliant with Censuite design and accessibility standards
+
 
   ## Definition of Done Requirements
   - **The build MUST pass** - All implementation work must result in a passing build before task completion

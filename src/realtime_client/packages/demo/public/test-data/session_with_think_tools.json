@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "session_id": "test-think-tools",
+  "token_count": 0,
+  "context_window_size": 0,
+  "session_name": "Think Tools Test Session",
+  "created_at": "2025-01-15T10:00:00.000Z",
+  "updated_at": "2025-01-15T10:15:00.000Z",
+  "deleted_at": null,
+  "user_id": "test-user",
+  "metadata": {
+    "test_type": "think_tools",
+    "description": "Session for testing think tool rendering"
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content": "Can you analyze this complex problem step by step?"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "text": "I'll analyze this complex problem step by step. Let me think through this carefully.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "id": "think_001",
+          "input": {
+            "thought": "This is a complex problem that requires careful analysis. Let me break it down:\n\n1. First, I need to understand the core components\n2. Then identify the relationships between them\n3. Consider potential edge cases\n4. Develop a systematic approach\n\nI should be methodical and ensure I don't miss any important details. The key here is to maintain clarity while being thorough."
+          },
+          "name": "think",
+          "type": "tool_use"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "tool_result",
+          "tool_use_id": "think_001",
+          "content": ""
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "text": "Based on my analysis, here's a systematic breakdown of the problem:\n\n1. **Core Components**: The problem has several interconnected parts that need to be addressed sequentially.\n\n2. **Key Relationships**: Each component affects the others in specific ways that we need to account for.\n\n3. **Potential Challenges**: There are some edge cases we should be aware of.\n\n4. **Recommended Approach**: I suggest we tackle this methodically, starting with the foundation and building up.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "What about performance considerations?"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "id": "think_002",
+          "input": {
+            "thought": "Performance is a critical aspect I should consider:\n\n- Time complexity: What's the computational cost?\n- Space complexity: Memory usage concerns\n- Scalability: Will this solution work for larger inputs?\n- Optimization opportunities: Where can we improve?\n- Trade-offs: Speed vs accuracy vs maintainability\n\nI need to balance these factors to provide a practical solution."
+          },
+          "name": "think",
+          "type": "tool_use"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "tool_result",
+          "tool_use_id": "think_002",
+          "content": ""
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "text": "Regarding performance considerations:\n\n**Time Complexity**: The solution operates in O(n log n) time, which is efficient for most use cases.\n\n**Memory Usage**: We'll need approximately O(n) space, which is reasonable.\n\n**Scalability**: The approach scales well up to millions of items. Beyond that, we might need to consider distributed processing.\n\n**Optimization Strategies**:\n- Caching frequently accessed data\n- Using efficient data structures\n- Implementing lazy evaluation where appropriate\n- Parallel processing for independent operations\n\n**Trade-offs**: We're prioritizing reliability and maintainability over raw speed, which seems appropriate for this use case.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "role": "user", 
+      "content": "Can you also consider error handling?"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "text": "Let me think about the error handling requirements.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "id": "think_003",
+          "input": {
+            "thought": "Error handling is crucial for robustness. I should consider:\n\n1. Input validation\n   - Type checking\n   - Range validation\n   - Null/undefined checks\n\n2. Error categories\n   - Recoverable errors (retry logic)\n   - Fatal errors (graceful shutdown)\n   - User errors (helpful messages)\n\n3. Error propagation\n   - Where to catch errors\n   - How to bubble them up\n   - Logging strategies\n\n4. Recovery mechanisms\n   - Fallback strategies\n   - Default values\n   - Circuit breakers\n\nA comprehensive error handling strategy will make the solution production-ready."
+          },
+          "name": "think",
+          "type": "tool_use"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "tool_result",
+          "tool_use_id": "think_003",
+          "content": ""
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "text": "Here's a comprehensive error handling strategy:\n\n## Input Validation\n- **Type Safety**: Implement strict type checking at entry points\n- **Boundary Checks**: Validate all inputs are within expected ranges\n- **Sanitization**: Clean and normalize user inputs\n\n## Error Categories\n\n### Recoverable Errors\n- Network timeouts → Implement exponential backoff\n- Temporary resource unavailability → Queue and retry\n- Rate limiting → Throttle and queue requests\n\n### Fatal Errors  \n- Data corruption → Log, alert, and halt processing\n- Security violations → Immediate termination with audit log\n- System resource exhaustion → Graceful degradation\n\n### User Errors\n- Invalid input → Clear, actionable error messages\n- Missing permissions → Guide to resolution steps\n- Business logic violations → Explain constraints\n\n## Implementation Pattern\n\n```typescript\ntry {\n  // Main logic with early validation\n  validateInput(data);\n  const result = await processData(data);\n  return { success: true, data: result };\n} catch (error) {\n  if (isRecoverable(error)) {\n    return await retryWithBackoff(operation);\n  }\n  \n  logger.error('Operation failed', { error, context });\n  \n  if (isUserError(error)) {\n    return { \n      success: false, \n      message: getUserFriendlyMessage(error),\n      code: error.code \n    };\n  }\n  \n  // Unhandled errors get generic message\n  return { \n    success: false, \n    message: 'An unexpected error occurred',\n    reference: generateErrorReference()\n  };\n}\n```\n\nThis approach ensures the system remains stable and provides meaningful feedback to users.",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "agent_config": {
+    "version": 2,
+    "name": "Test Agent",
+    "key": "test_agent",
+    "tools": ["ThinkTools"],
+    "model_id": "test-model",
+    "agent_params": {
+      "model_name": "test-model",
+      "type": "test"
+    }
+  }
+}

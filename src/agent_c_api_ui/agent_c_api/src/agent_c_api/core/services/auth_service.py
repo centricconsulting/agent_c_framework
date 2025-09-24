@@ -304,7 +304,7 @@ class AuthService:
             # Generate JWT token
             token = create_jwt_token(
                 user=user,
-                time_delta=timedelta(hours=24)  # 24-hour token expiration
+                time_delta=timedelta(days=31)  # 24-hour token expiration
             )
             
             # Prepare response

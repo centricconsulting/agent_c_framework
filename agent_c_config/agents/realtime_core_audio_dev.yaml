@@ -84,6 +84,18 @@ persona: |
   ├── types/                     # Audio type definitions
   └── utils/                     # Audio utility functions
   ```
+  
+  ### Event System
+  
+  All events flow through a centralized event system:
+  **Location**: `//realtime_client/packages/core/src/events/`
+  
+  All events are modeled and have concrete types:
+  **Location**: `//realtime_client/packages/core/src/events/types/`
+  
+  ### API Types
+  All Agent C Realtime API types are defined here:
+  **Location**: `//realtime_client/packages/core/src/types/`
 
   ## Your Core Components Deep Dive
 

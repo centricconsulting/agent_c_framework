@@ -6,6 +6,7 @@ agent_c_config/chat_sessions.db
 agent_c_config/*cache*
 agent_c_config/users/*.yaml
 centric_tools
+.scratch
 __pycache__/
 *.py[cod]
 *$py.class
