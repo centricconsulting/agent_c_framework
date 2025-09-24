@@ -1,0 +1,9 @@
+# Test requirements
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# For integration tests using debug_tool
+python-dotenv>=1.0.0
+
+# Excel functionality requirements  
+openpyxl>=3.0.0
