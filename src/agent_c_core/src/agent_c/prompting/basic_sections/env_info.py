@@ -52,7 +52,12 @@ class EnvironmentInfoSection(PromptSection):
         groups: str = ", ".join(chat_user.groups) if chat_user.groups else "None"
         user_data = f"User Name: {chat_user.user_name}\nGroups: {groups}\n"
 
-        return  f"### Session Info\n{session_data}\n{user_data}"
+        prefix = ""
+
+        if chat_session.session_name is None:
+            prefix = "ALERT! This session has no name!  Use `bridge_set_session_name` to set a name once you know the topic of the session. BEFORE BEGGING WORK!\nn"
+
+        return  f"{prefix}### Session Info\n{session_data}\n{user_data}"
 
 
     @property_bag_item
