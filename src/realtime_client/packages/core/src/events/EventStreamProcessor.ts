@@ -897,9 +897,10 @@ export class EventStreamProcessor {
    * Task 1.1: Core converter method that processes resumed messages as if they were streamed
    */
   private mapResumedMessagesToEvents(messages: MessageParam[], sessionId: string): void {
-    // Don't clear messages here - let the individual message-added events build the list
-    // This ensures the React hook doesn't clear messages before processing them
-    Logger.debug(`[EventStreamProcessor] Processing ${messages.length} resumed messages as events`);
+    Logger.debug(`[EventStreamProcessor] Processing ${messages.length} resumed messages`);
+    
+    // Collect all processed messages instead of emitting individual events
+    const processedMessages: Message[] = [];
     
     // Process each message
     for (let i = 0; i < messages.length; i++) {
@@ -908,30 +909,78 @@ export class EventStreamProcessor {
       
       // Handle based on role
       if (message.role === 'assistant') {
-        // Process assistant message and check how many messages it consumed
-        const messagesConsumed = this.processAssistantMessage(message, messages[i + 1], sessionId);
+        // Process assistant message and collect the results
+        const result = this.processAssistantMessageForResume(message, messages[i + 1], sessionId);
+        processedMessages.push(...result.messages);
         // Skip the next message if it was consumed as a tool result
-        if (messagesConsumed > 0) {
-          i += messagesConsumed;
+        if (result.messagesConsumed > 0) {
+          i += result.messagesConsumed;
         }
       } else if (message.role === 'user') {
         // Process user message (tool results are handled with their tool use)
-        this.processUserMessage(message, sessionId);
+        const userMessage = this.processUserMessageForResume(message, sessionId);
+        if (userMessage) {
+          processedMessages.push(userMessage);
+        }
       } else if (message.role === 'system') {
-        this.processSystemMessage(message, sessionId);
+        const systemMessage = this.processSystemMessageForResume(message, sessionId);
+        if (systemMessage) {
+          processedMessages.push(systemMessage);
+        }
       }
     }
+    
+    // Emit a single session-messages-loaded event with all processed messages
+    // This ensures the React hook receives all messages at once after clearing
+    this.sessionManager.emit('session-messages-loaded', {
+      sessionId,
+      messages: processedMessages
+    });
+  }
+
+  
+  /**
+   * Check if a tool name is a delegation tool
+   */
+  private isDelegationTool(name: string): boolean {
+    return name.startsWith('act_') || 
+           name.startsWith('ateam_') || 
+           name.startsWith('aa_');
+  }
+
+
+
+
+
+
+
+  
+  /**
+   * Reset the processor state
+   */
+  reset(): void {
+    this.messageBuilder.reset();
+    this.toolCallManager.reset();
+    Logger.info('[EventStreamProcessor] EventStreamProcessor reset');
   }
   
   /**
-   * Process an assistant message and emit appropriate events
-   * Returns the number of additional messages consumed (for tool results)
+   * Clean up resources
    */
-  private processAssistantMessage(
+  destroy(): void {
+    this.reset();
+    Logger.info('[EventStreamProcessor] EventStreamProcessor destroyed');
+  }
+  
+  /**
+   * Process an assistant message for resume and return messages instead of emitting events
+   */
+  private processAssistantMessageForResume(
     message: MessageParam,
-    nextMessage: MessageParam | undefined,
-    sessionId: string
-  ): number {
+    _nextMessage: MessageParam | undefined,
+    _sessionId: string
+  ): { messages: Message[], messagesConsumed: number } {
+    const messages: Message[] = [];
     let messagesConsumed = 0;
     
     // Check for tool use blocks
@@ -944,154 +993,108 @@ export class EventStreamProcessor {
           hasTextContent = true;
           textParts.push(block.text);
         } else if (isToolUseBlockParam(block)) {
-          // Task 1.2: THINK TOOL - Special handling
+          // THINK TOOL - Special handling
           if (block.name === 'think') {
-            // Emit message-added event for think tool as a thought
-            // Use the format that the tests and UI expect
             const thoughtContent = (block.input as any).thought || '';
-            this.sessionManager.emit('message-added', {
-              sessionId,
-              message: {
-                role: 'assistant (thought)', // Special role for thoughts
-                content: thoughtContent,
-                timestamp: new Date().toISOString(),
-                format: 'markdown'
-              } as Message
-            });
-            // Mark that we'll consume the next message (tool result)
-            messagesConsumed = 1;
+            messages.push({
+              role: 'assistant (thought)' as any, // Special role for thoughts
+              content: thoughtContent,
+              timestamp: new Date().toISOString(),
+              format: 'markdown'
+            } as Message);
+            messagesConsumed = 1; // Skip the tool result
             continue;
           }
           
-          // Task 1.3: DELEGATION TOOLS - Special handling
+          // DELEGATION TOOLS - Special handling
           if (this.isDelegationTool(block.name)) {
-            const consumed = this.processDelegationTool(block, nextMessage, sessionId);
-            messagesConsumed = Math.max(messagesConsumed, consumed);
+            // Emit subsession events for UI
+            const subSessionType = block.name.includes('oneshot') ? 'oneshot' : 'chat';
+            const subAgentKey = (block.input as any).agent_key || 'clone';
+            
+            this.sessionManager.emit('subsession-started', {
+              subSessionType,
+              subAgentType: block.name.startsWith('act_') ? 'clone' : 'team',
+              primeAgentKey: 'current_agent',
+              subAgentKey
+            });
+            
+            // Extract user message from tool input
+            const request = (block.input as any).request || (block.input as any).message || '';
+            const processContext = (block.input as any).process_context || '';
+            const userContent = processContext ? 
+              request + '\n# Process Context\n\n' + processContext : 
+              request;
+            
+            messages.push({
+              role: 'user',
+              content: userContent,
+              timestamp: new Date().toISOString(),
+              format: 'text'
+            } as Message);
+            
+            // Extract assistant message from tool result if available
+            if (_nextMessage && _nextMessage.role === 'user' && _nextMessage.content) {
+              let resultContent = '';
+              
+              if (Array.isArray(_nextMessage.content)) {
+                for (const resultBlock of _nextMessage.content) {
+                  if ('type' in resultBlock && resultBlock.type === 'tool_result') {
+                    const content = (resultBlock as any).content || '';
+                    resultContent = this.parseAssistantFromDelegationResult(content);
+                    break;
+                  }
+                }
+              }
+              
+              if (resultContent) {
+                messages.push({
+                  role: 'assistant',
+                  content: resultContent,
+                  timestamp: new Date().toISOString(),
+                  format: 'text'
+                } as Message);
+              }
+            }
+            
+            // Emit subsession ended
+            this.sessionManager.emit('subsession-ended', {});
+            
+            messagesConsumed = 1; // Consumed the tool result message
             continue;
           }
           
-          // Task 1.5: Regular tool calls
-          const consumed = this.processRegularToolCall(block, nextMessage, sessionId);
-          messagesConsumed = Math.max(messagesConsumed, consumed);
+          // Regular tool calls - skip for now in resume
+          messagesConsumed = 1;
         }
       }
       
-      // Emit any text content as a regular message
+      // Add any text content as a regular message
       if (hasTextContent) {
         const combinedText = textParts.join('');
-        this.sessionManager.emit('message-added', {
-          sessionId,
-          message: {
-            role: 'assistant',
-            content: combinedText,
-            timestamp: new Date().toISOString(),
-            format: 'text'
-          } as Message
-        });
+        messages.push({
+          role: 'assistant',
+          content: combinedText,
+          timestamp: new Date().toISOString(),
+          format: 'text'
+        } as Message);
       }
     } else {
-      // Task 1.6: Handle regular text messages
-      this.emitTextMessage(message, sessionId);
-    }
-    
-    return messagesConsumed;
-  }
-  
-  /**
-   * Check if a tool name is a delegation tool
-   */
-  private isDelegationTool(name: string): boolean {
-    return name.startsWith('act_') || 
-           name.startsWith('ateam_') || 
-           name.startsWith('aa_');
-  }
-  
-  /**
-   * Process a delegation tool and emit subsession events
-   * Returns 1 if it consumed the next message (tool result)
-   */
-  private processDelegationTool(
-    toolBlock: any,
-    toolResult: MessageParam | undefined,
-    sessionId: string
-  ): number {
-    // 1. Start subsession
-    const subSessionType = toolBlock.name.includes('oneshot') ? 'oneshot' : 'chat';
-    const subAgentKey = (toolBlock.input as any).agent_key || 'clone';
-    
-    this.sessionManager.emit('subsession-started', {
-      subSessionType,
-      subAgentType: this.getAgentType(toolBlock.name),
-      primeAgentKey: 'current_agent',
-      subAgentKey
-    });
-    
-    // 2. User message from tool input - handle both 'request' and 'message' fields
-    const request = (toolBlock.input as any).request || (toolBlock.input as any).message || '';
-    const processContext = (toolBlock.input as any).process_context || '';
-    const userContent = processContext ? 
-      request + '\n# Process Context\n\n' + processContext : 
-      request;
-    
-    this.sessionManager.emit('message-added', {
-      sessionId,
-      message: {
-        role: 'user',
-        content: userContent,
+      // Simple text message
+      const normalizedContent = this.normalizeMessageContent(message.content);
+      messages.push({
+        role: 'assistant',
+        content: normalizedContent,
         timestamp: new Date().toISOString(),
         format: 'text'
-      } as Message
-    });
-    
-    // 3. Assistant message from tool result
-    if (toolResult && toolResult.role === 'user' && toolResult.content) {
-      // Tool result is in the next user message
-      let resultContent = '';
-      
-      if (Array.isArray(toolResult.content)) {
-        // Find the tool_result block matching this tool use
-        for (const block of toolResult.content) {
-          if ('type' in block && block.type === 'tool_result' && 
-              (block as any).tool_use_id === toolBlock.id) {
-            const rawContent = (block as any).content || '';
-            resultContent = this.parseAssistantFromDelegationResult(rawContent);
-            break;
-          }
-        }
-      }
-      
-      if (resultContent) {
-        this.sessionManager.emit('message-added', {
-          sessionId,
-          message: {
-            role: 'assistant',
-            content: resultContent,
-            timestamp: new Date().toISOString(),
-            format: 'text'
-          } as Message
-        });
-      }
+      } as Message);
     }
     
-    // 4. End subsession
-    this.sessionManager.emit('subsession-ended', {});
-    
-    return 1; // Consumed the tool result message
+    return { messages, messagesConsumed };
   }
   
   /**
-   * Get agent type from tool name
-   */
-  private getAgentType(toolName: string): 'clone' | 'team' | 'assist' | 'tool' {
-    if (toolName.startsWith('act_')) return 'clone';
-    if (toolName.startsWith('ateam_')) return 'team';
-    if (toolName.startsWith('aa_')) return 'assist';
-    return 'tool'; // Default to 'tool' instead of 'unknown'
-  }
-  
-  /**
-   * Parse assistant content from YAML tool result
-   * Task 1.4: YAML parser for delegation results
+   * Parse assistant message from delegation tool result
    */
   private parseAssistantFromDelegationResult(resultContent: string): string {
     // First try JSON parsing (new format)
@@ -1116,7 +1119,10 @@ export class EventStreamProcessor {
     }
     return resultContent;
   }
-
+  
+  /**
+   * Parse assistant message from YAML format (legacy)
+   */
   private parseAssistantFromYaml(yamlContent: string): string {
     // Remove preamble if present
     let content = yamlContent;
@@ -1132,13 +1138,11 @@ export class EventStreamProcessor {
     // Try to parse YAML
     try {
       // Simple YAML parsing for the text field
-      // Look for text: 'content' or text: "content" or text: content
       const textMatch = content.match(/^text:\s*['"]?([\s\S]*?)['"]?$/m);
       if (textMatch && textMatch[1]) {
-        // Handle multi-line YAML strings
         let text = textMatch[1];
         
-        // If it starts with | or >, it's a multi-line string
+        // Handle multi-line YAML strings
         if (text.startsWith('|') || text.startsWith('>')) {
           // Get everything after the indicator
           const lines = content.split('\n');
@@ -1148,7 +1152,7 @@ export class EventStreamProcessor {
             const textLines = [];
             for (let i = textLineIndex + 1; i < lines.length; i++) {
               const line = lines[i];
-              if (!line) continue; // Skip undefined lines
+              if (!line) continue;
               // Stop if we hit another field (not indented)
               if (line.length > 0 && !line.startsWith(' ') && !line.startsWith('\t')) {
                 break;
@@ -1177,122 +1181,45 @@ export class EventStreamProcessor {
   }
   
   /**
-   * Process a regular tool call
-   * Returns 1 if it consumed the next message (tool result)
+   * Process a user message for resume and return the message
    */
-  private processRegularToolCall(
-    toolBlock: any,
-    nextMessage: MessageParam | undefined,
+  private processUserMessageForResume(
+    message: MessageParam,
     _sessionId: string
-  ): number {
-    // Find the corresponding tool result
-    let toolResult = undefined;
-    
-    if (nextMessage && nextMessage.role === 'user' && Array.isArray(nextMessage.content)) {
-      for (const block of nextMessage.content) {
-        if ('type' in block && block.type === 'tool_result' && 
-            (block as any).tool_use_id === toolBlock.id) {
-          toolResult = (block as any).content;
-          break;
-        }
-      }
-    }
-    
-    // Emit tool call event with active=false (completed)
-    this.sessionManager.emit('tool-call-complete', {
-      toolCalls: [{
-        id: toolBlock.id,
-        name: toolBlock.name,
-        input: toolBlock.input
-      }],
-      toolResults: toolResult ? [{
-        tool_use_id: toolBlock.id,
-        content: toolResult,
-        is_error: false
-      }] : undefined
-    });
-    
-    return toolResult ? 1 : 0; // Consume next message if we found a result
-  }
-  
-  /**
-   * Process a user message
-   */
-  private processUserMessage(message: MessageParam | undefined, sessionId: string): void {
-    if (!message) return;
-    
-    // Skip if this is a tool result (those are handled with their tool use)
-    if (Array.isArray(message.content)) {
+  ): Message | null {
+    // Skip tool result messages - they're handled with tool use
+    if (message.content && Array.isArray(message.content)) {
       const hasToolResult = message.content.some(block => 
-        'type' in block && block.type === 'tool_result'
+        typeof block === 'object' && 'type' in block && block.type === 'tool_result'
       );
       if (hasToolResult) {
-        return; // Skip tool results
+        return null; // Skip tool results
       }
     }
     
-    // Task 1.6: Emit regular user message
     const normalizedContent = this.normalizeMessageContent(message.content);
-    this.sessionManager.emit('message-added', {
-      sessionId,
-      message: {
-        role: 'user',
-        content: normalizedContent,
-        timestamp: new Date().toISOString(),
-        format: 'text'
-      } as Message
-    });
+    return {
+      role: 'user',
+      content: normalizedContent,
+      timestamp: new Date().toISOString(),
+      format: 'text'
+    } as Message;
   }
   
   /**
-   * Process a system message  
+   * Process a system message for resume and return the message
    */
-  private processSystemMessage(message: MessageParam | undefined, sessionId: string): void {
-    if (!message) return;
-    
+  private processSystemMessageForResume(
+    message: MessageParam,
+    _sessionId: string  
+  ): Message | null {
     const normalizedContent = this.normalizeMessageContent(message.content);
-    this.sessionManager.emit('system_message', {
-      type: 'system_message',
-      session_id: sessionId,
+    return {
       role: 'system',
       content: typeof normalizedContent === 'string' ? normalizedContent : JSON.stringify(normalizedContent),
+      timestamp: new Date().toISOString(),
       format: 'text',
       severity: 'info'
-    });
-  }
-  
-  /**
-   * Emit a text message event
-   */
-  private emitTextMessage(message: MessageParam | undefined, sessionId: string): void {
-    if (!message) return;
-    
-    const normalizedContent = this.normalizeMessageContent(message.content);
-    this.sessionManager.emit('message-added', {
-      sessionId,
-      message: {
-        role: message.role as Message['role'],
-        content: normalizedContent,
-        timestamp: new Date().toISOString(),
-        format: 'text'
-      } as Message
-    });
-  }
-  
-  /**
-   * Reset the processor state
-   */
-  reset(): void {
-    this.messageBuilder.reset();
-    this.toolCallManager.reset();
-    Logger.info('[EventStreamProcessor] EventStreamProcessor reset');
-  }
-  
-  /**
-   * Clean up resources
-   */
-  destroy(): void {
-    this.reset();
-    Logger.info('[EventStreamProcessor] EventStreamProcessor destroyed');
+    } as Message;
   }
 }

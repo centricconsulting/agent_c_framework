@@ -5,7 +5,6 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import type { ChatSession } from '@agentc/realtime-core';
-import { ensureMessagesFormat } from '@agentc/realtime-core';
 import { Logger } from '../utils/logger';
 import { useRealtimeClientSafe } from '../providers/AgentCContext';
 import { 
@@ -312,59 +311,50 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     // Handle session change events
     const handleSessionChanged = (event: unknown) => {
       const sessionEvent = event as { chat_session?: ChatSession };
+      
+      // CRITICAL: Always clear messages when session changes, NO EXCEPTIONS
+      console.log('[useChat] SESSION CHANGE - CLEARING MESSAGES');
+      setMessages([]);
+      setStreamingMessage(null);
+      streamingMessageIdRef.current = null;
+      setIsAgentTyping(false);
+      
       if (sessionEvent.chat_session) {
         const newSessionId = sessionEvent.chat_session.session_id;
-        Logger.debug('[useChat] Session changed event received');
-        Logger.debug('[useChat] Session ID:', newSessionId);
-        Logger.debug('[useChat] Raw messages from server:', sessionEvent.chat_session.messages?.length || 0, 'messages');
-        
-        // Set loading state to prevent race conditions
-        isLoadingSessionRef.current = true;
-        expectedSessionIdRef.current = newSessionId;
-        messagesLoadedForSessionRef.current = null; // Reset loaded flag for new session
-        
-        // Always clear messages immediately when switching sessions
-        // This prevents old messages from persisting
-        setMessages([]);
+        console.log('[useChat] New session ID:', newSessionId);
+        console.log('[useChat] Has inline messages:', sessionEvent.chat_session.messages?.length || 0);
         
         // Update session state
         setCurrentSession(sessionEvent.chat_session);
         setCurrentSessionId(newSessionId);
         currentSessionIdRef.current = newSessionId;
         
-        // Clear any streaming state when switching sessions
-        setStreamingMessage(null);
-        streamingMessageIdRef.current = null;
-        setIsAgentTyping(false);
+        // Set loading state to block incoming events during transition
+        isLoadingSessionRef.current = true;
+        expectedSessionIdRef.current = newSessionId;
+        messagesLoadedForSessionRef.current = null;
         
-        // If session has embedded messages (backward compatibility), load them
-        // But only if we're not expecting a session-messages-loaded event
+        // CRITICAL CHANGE: Do NOT load inline messages here!
+        // Let the EventStreamProcessor handle ALL message loading via events
+        // This prevents the immediate re-population of messages after clearing
+        
         if (sessionEvent.chat_session.messages && sessionEvent.chat_session.messages.length > 0) {
-          const formattedMessages = ensureMessagesFormat(sessionEvent.chat_session.messages);
-          // Ensure all messages have type field for compatibility
-          const messagesWithType = formattedMessages.map((msg, idx) => {
-            if ('type' in msg) return msg;
-            return { ...msg, type: 'message' as const, id: `session-${idx}` };
-          });
-          const messagesToSet = maxMessages && maxMessages > 0 
-            ? messagesWithType.slice(-maxMessages)
-            : messagesWithType;
-          
-          // Only set messages if we're still loading the same session
-          if (expectedSessionIdRef.current === newSessionId) {
-            setMessages(messagesToSet as ChatItem[]);
-            // Mark messages as loaded for this session
-            messagesLoadedForSessionRef.current = newSessionId;
-            // Clear loading state since we got messages inline
-            isLoadingSessionRef.current = false;
-          }
+          console.log('[useChat] Session has inline messages, but NOT loading them directly');
+          console.log('[useChat] Waiting for EventStreamProcessor to emit events');
+          // EventStreamProcessor will handle these via mapResumedMessagesToEvents or session-messages-loaded
         } else {
-          // No inline messages - wait for session-messages-loaded event
-          // Loading state remains true until that event arrives
-          Logger.debug('[useChat] No inline messages, waiting for session-messages-loaded event');
+          console.log('[useChat] Empty session - waiting for session-messages-loaded event');
         }
+      } else {
+        // No session - clear everything
+        console.log('[useChat] No session provided - clearing all state');
+        setCurrentSession(null);
+        setCurrentSessionId(null);
+        currentSessionIdRef.current = null;
+        isLoadingSessionRef.current = false;
+        expectedSessionIdRef.current = null;
+        messagesLoadedForSessionRef.current = null;
       }
-      // If no chat_session provided, don't update state (maintain existing messages)
     };
     
     // Handle session messages loaded event (from EventStreamProcessor)
