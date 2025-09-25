@@ -408,6 +408,7 @@ class AgentBridge:
             "env_name": os.getenv('ENV_NAME', DEFAULT_ENV_NAME),
             "user_session_id": self.chat_session.session_id,
             "chat_session": self.chat_session,
+            "chat_user": self.chat_user
         } | agent_meta
 
     @staticmethod
@@ -1014,9 +1015,20 @@ class AgentBridge:
                 "output_format": DEFAULT_OUTPUT_FORMAT,
                 "client_wants_cancel": client_wants_cancel,
                 "streaming_callback": self.streaming_callback_with_logging,
-                'tool_context': {'active_agent': self.chat_session.agent_config, 'client_wants_cancel': client_wants_cancel},
                 'prompt_builder': PromptBuilder(sections=agent_sections),
-                'bridge': self
+                'bridge': self,
+                'tool_context': {'active_agent': self.chat_session.agent_config,
+                                 'bridge': self,
+                                 'parent_session_id': None,
+                                 'user_session_id': self.chat_session.session_id,
+                                 'user_id': self.chat_session.user_id,
+                                 'session_id': self.chat_session.session_id,
+                                 "client_wants_cancel": self.client_wants_cancel,
+                                 "env_name": os.getenv('ENV_NAME', 'development'),
+                                 "streaming_callback": self.streaming_callback_with_logging,
+                                 "prompt_metadata": prompt_metadata
+                                 },
+
             }
 
             # Categorize file inputs by type to pass to appropriate parameters
