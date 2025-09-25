@@ -1,2446 +1,1699 @@
 _plans:
-  chat_fixes_phase1:
-    created_at: '2025-09-22T13:29:08.614715'
-    description: Fix missed requirements and incorrect implementations for chat rendering
-      (Items 1-5 from high-level task list). This phase addresses event naming issues,
-      missing UI components, and incorrect logic in subsession handling.
-    id: welcome-antenna
+  chat_rendering_fixes_detailed:
+    created_at: '2025-09-24T20:08:27.387800'
+    description: 'Comprehensive plan to fix all chat rendering issues including role
+      preservation, session clearing, auto-scrolling, and proper event conversion
+      for resumed sessions. This plan follows the principle: DO NOT FUCK WITH STREAMING
+      - only fix event conversion.'
+    id: congo-gordon
     lessons_learned: []
     tasks:
-      average-energy:
+      alert-drink:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: "The Demo package is a CONSUMER of @agentc/realtime-ui components.\
-          \ \n\nIt doesn't implement anything that needs testing - if the UI components\
-          \ work correctly, the demo automatically works.\n\nRole in Phase 1:\n- Provide\
-          \ a place to visually see the fixes working\n- No testing needed (testing\
-          \ happens in Core, React, and UI packages)\n- Simply use the components\
-          \ as they're designed\n\nDependencies: Wait for UI components to be ready,\
-          \ then the demo automatically showcases them."
-        created_at: '2025-09-22T18:42:29.389240'
-        description: Provide a visual environment to see that Phase 1 streaming event
-          fixes are working. The Demo consumes UI components - it doesn't implement
-          or test anything itself.
-        id: average-energy
+        context: '## Event Types to Verify
+
+          Location: `packages/core/src/events/types/`
+
+
+          Required Events for Chat Rendering:
+
+          - `ThoughtDeltaEvent` - for think tool content
+
+          - `SubsessionStartedEvent` - delegation boundaries start
+
+          - `SubsessionEndedEvent` - delegation boundaries end
+
+          - `MessageAddedEvent` - regular messages
+
+          - `ToolCallCompleteEvent` - regular tool calls
+
+          - `SystemMessageEvent` - system messages
+
+          - `ErrorEvent` - error handling
+
+          - `MediaAddedEvent` - media content
+
+
+          ## Special Roles to Document
+
+          Must preserve these roles exactly:
+
+          - `''assistant (thought)''` - Reasoning/thinking content
+
+          - `''system''` - System messages
+
+          - `''tool''` - Tool-generated UI events
+
+          - `''assistant''` - Regular assistant messages
+
+          - `''user''` - User messages
+
+
+          ## Success Criteria
+
+          - [ ] All event types confirmed to exist
+
+          - [ ] Event types properly exported from Core
+
+          - [ ] Role constants documented
+
+          - [ ] Type guards verified for content blocks
+
+          - [ ] Documentation updated if needed
+
+          - [ ] Build passes'
+        created_at: '2025-09-24T20:10:45.124252'
+        description: Ensure all required event types exist in Core and are properly
+          exported for use by React package
+        id: alert-drink
+        parent_id: mimic-active
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 4
+        title: Verify and Document Core Event Type Definitions
+        updated_at: '2025-09-24T20:10:45.124254'
+      alpha-sonar:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Location
+
+          File: `packages/core/src/events/EventStreamProcessor.ts:956`
+
+
+          ## Current Bug
+
+          ```typescript
+
+          role: ''assistant (thought)'' as ''assistant'',
+
+          ```
+
+
+          ## Required Fix
+
+          ```typescript
+
+          role: ''assistant (thought)'' as any, // Preserve the special role
+
+          ```
+
+
+          ## Success Criteria
+
+          - [ ] Role ''assistant (thought)'' preserved through event chain
+
+          - [ ] Thoughts render in specialized UI component, not regular chat bubbles
+
+          - [ ] No TypeScript type errors introduced
+
+          - [ ] All existing tests pass
+
+          - [ ] Build passes successfully
+
+
+          ## Impact
+
+          This is the HIGHEST PRIORITY fix as it directly violates the "DO NOT CHANGE
+          ROLES" rule and breaks thought rendering.'
+        created_at: '2025-09-24T20:10:00.034326'
+        description: Fix the role casting bug that strips '(thought)' from 'assistant
+          (thought)' role, causing thoughts to render as regular chat bubbles
+        id: alpha-sonar
+        parent_id: mimic-active
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 1
+        title: Fix Critical Role Casting Bug in EventStreamProcessor
+        updated_at: '2025-09-24T20:10:00.034328'
+      anita-time:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Test Scenario Requirements
+
+          Create role_preservation.json test data file that includes:
+
+          1. Messages with ''assistant (thought)'' role
+
+          2. System messages
+
+          3. Tool messages
+
+          4. Regular user/assistant messages
+
+          5. Mixed role sequences
+
+
+          ## Validation Points
+
+          - ''assistant (thought)'' roles remain unchanged
+
+          - System messages render with correct styling
+
+          - Tool events display properly
+
+          - No role transformation bugs
+
+
+          ## File Location
+
+          /public/test-data/role_preservation.json
+
+
+          ## Success Criteria
+
+          - [ ] Test file includes all special role types
+
+          - [ ] Roles are preserved exactly as provided
+
+          - [ ] UI components render based on correct roles
+
+          - [ ] No role transformation in the pipeline'
+        created_at: '2025-09-24T20:20:23.434074'
+        description: Create test scenarios specifically for validating that special
+          roles like 'assistant (thought)' and 'system' are preserved correctly.
+        id: anita-time
+        parent_id: banjo-duet
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 4
+        title: Create Role Preservation Test Scenario
+        updated_at: '2025-09-24T20:20:23.434076'
+      avatar-printer:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "**Required Pattern Detection**:\n\n1. **Think Tool Pattern**:\n\
+          \   - If block.name === 'think', emit as ThoughtDeltaEvent (NOT ToolCallEvent)\n\
+          \   - Skip the corresponding tool_result in the conversion\n\n2. **Delegation\
+          \ Tool Pattern** (act_*, ateam_*, aa_*):\n   - Emit SubsessionStartedEvent\
+          \ when detected\n   - Convert tool input to user message\n   - Parse result\
+          \ content (now JSON format, fallback to YAML)\n   - Convert to assistant\
+          \ message\n   - Emit SubsessionEndedEvent\n\n**Success Criteria**:\n- Think\
+          \ tool appears as thought bubble, not tool call\n- Delegation tools show\
+          \ as subsessions with proper dividers\n- Both JSON and YAML formats handled\
+          \ correctly"
+        created_at: '2025-09-24T20:13:40.753563'
+        description: Add pattern detection logic in EventStreamProcessor for think
+          tool and delegation tools (act_*, ateam_*, aa_*) to emit proper events instead
+          of raw tool calls.
+        id: avatar-printer
+        parent_id: cupid-address
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 2
+        title: Implement Special Tool Pattern Detection
+        updated_at: '2025-09-24T20:13:40.753566'
+      banjo-duet:
+        child_tasks:
+        - saga-polygon
+        - lobster-beauty
+        - under-ozone
+        - anita-time
+        - samba-husband
+        - italian-kermit
+        - derby-cowboy
+        - banjo-ibiza
+        - police-confide
+        - phantom-humor
+        - polka-reply
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: Coordinator should review COMPREHENSIVE_TECHNICAL_ANALYSIS.md and
+          demo_report.md to create detailed subtasks
+        created_at: '2025-09-24T20:09:02.901059'
+        description: Create comprehensive test scenarios and validation suite for
+          all chat rendering fixes
+        id: banjo-duet
         parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 4
+        title: Demo Package Testing & Validation
+        updated_at: '2025-09-24T20:09:02.901061'
+      banjo-ibiza:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Problem to Validate
+
+          Messages from previous sessions aren''t clearing when switching, causing
+          accumulation.
+
+
+          ## Test Scenarios
+
+          1. Switch between multiple test sessions rapidly
+
+          2. Load session A → session B → session A again
+
+          3. Switch from long session to short session
+
+          4. Switch from session with errors to clean session
+
+          5. Test empty session loading
+
+
+          ## Validation Points
+
+          - Previous session messages fully cleared
+
+          - No message accumulation
+
+          - Clean state transitions
+
+          - Proper event cleanup
+
+          - Memory management (no leaks)
+
+
+          ## Success Criteria
+
+          - [ ] Messages clear completely on session switch
+
+          - [ ] No ghost messages from previous sessions
+
+          - [ ] State properly reset between sessions
+
+          - [ ] Event listeners cleaned up
+
+          - [ ] No memory leaks with repeated switching'
+        created_at: '2025-09-24T20:21:26.147733'
+        description: Validate that switching between sessions properly clears previous
+          messages and doesn't accumulate messages from multiple sessions.
+        id: banjo-ibiza
+        parent_id: banjo-duet
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 8
+        title: Test Session Switching and Message Clearing
+        updated_at: '2025-09-24T20:21:26.147737'
+      bruce-north:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "**Issue Location**: EventStreamProcessor.ts line 1598\n**Problem**:\
+          \ \n```typescript\nrole: 'assistant (thought)' as 'assistant'  // This casting\
+          \ loses the special role\n```\n\n**Fix Required**:\n- Remove unsafe type\
+          \ casting\n- Use proper union type: `role: 'assistant (thought)' as MessageChatItem['role']`\n\
+          - Ensure all special roles are preserved through event chain\n\n**Success\
+          \ Criteria**:\n- Thought messages display in thought bubbles (not chat bubbles)\n\
+          - All special roles preserved in resumed sessions\n- Type safety maintained"
+        created_at: '2025-09-24T20:13:55.438676'
+        description: Fix the type casting issue that causes 'assistant (thought)'
+          role to be changed to 'assistant', breaking thought bubble rendering.
+        id: bruce-north
+        parent_id: cupid-address
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 3
+        title: Fix Role Preservation in EventStreamProcessor
+        updated_at: '2025-09-24T20:13:55.438681'
+      cupid-address:
+        child_tasks:
+        - nobel-crystal
+        - avatar-printer
+        - bruce-north
+        - forbid-poker
+        - rachel-boston
+        - future-green
+        - pirate-heavy
+        - taboo-field
+        - needle-grand
+        - cupid-inch
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: Coordinator should review COMPREHENSIVE_TECHNICAL_ANALYSIS.md and
+          react_report.md to create detailed subtasks
+        created_at: '2025-09-24T20:08:46.041427'
+        description: All React package related fixes including EventStreamProcessor
+          corrections, hook fixes, and state management issues
+        id: cupid-address
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 2
+        title: React Package Fixes
+        updated_at: '2025-09-24T20:08:46.041430'
+      cupid-inch:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "**Test Coverage Required**:\n\n1. **EventStreamProcessor Tests**:\n\
+          \   - Message-to-event conversion for all message types\n   - Think tool\
+          \ pattern detection\n   - Delegation tool pattern detection (act_*, ateam_*,\
+          \ aa_*)\n   - JSON and YAML parsing\n   - Role preservation\n   - Subsession\
+          \ event generation\n\n2. **useChat Hook Tests**:\n   - Session switching\
+          \ without message pile-up\n   - Auto-scroll functionality\n   - Message\
+          \ deduplication\n   - Streaming state cleanup\n   - Race condition prevention\n\
+          \n3. **Integration Tests**:\n   - Load session_with_delegation.json\n  \
+          \ - Compare resumed vs streaming rendering\n   - Verify all 6 high-level\
+          \ tasks completed\n   - No regression in streaming functionality\n\n**Test\
+          \ Data**:\n- Use provided test sessions from .scratch/chat_fixes/\n- Create\
+          \ edge case scenarios\n- Test empty sessions, tool-only sessions, nested\
+          \ delegations\n\n**Success Criteria**:\n- All tests pass with no warnings\n\
+          - 100% visual parity between streaming and resumed\n- No performance regression\n\
+          - Works with React StrictMode"
+        created_at: '2025-09-24T20:15:38.255271'
+        description: Create comprehensive test suite to validate all EventStreamProcessor
+          and useChat fixes work correctly together, ensuring 100% visual parity between
+          streaming and resumed sessions.
+        id: cupid-inch
+        parent_id: cupid-address
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 10
+        title: Comprehensive Testing of React Package Fixes
+        updated_at: '2025-09-24T20:15:38.255274'
+      derby-cowboy:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Problem to Validate
+
+          MainContentArea is experiencing bouncing/erratic scrolling due to incorrect
+          message state management.
+
+
+          ## Test Scenarios
+
+          1. Load large resumed session (50+ messages)
+
+          2. Load session with mixed content types
+
+          3. Rapid session switching
+
+          4. Sessions with media/images
+
+          5. Sessions with long code blocks
+
+
+          ## Validation Points
+
+          - Smooth scroll to bottom on load
+
+          - No bouncing or jittering
+
+          - Correct scroll position maintenance
+
+          - Proper behavior when user scrolls up
+
+          - Auto-scroll resume when returning to bottom
+
+
+          ## Success Criteria
+
+          - [ ] No scroll bouncing on session load
+
+          - [ ] Smooth animation to latest message
+
+          - [ ] User scroll interrupts auto-scroll correctly
+
+          - [ ] Auto-scroll resumes when user scrolls to bottom
+
+          - [ ] Performance acceptable with large sessions'
+        created_at: '2025-09-24T20:21:11.979165'
+        description: Test and validate that auto-scroll works smoothly without bouncing
+          or erratic behavior when loading resumed sessions.
+        id: derby-cowboy
+        parent_id: banjo-duet
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 7
+        title: Validate Auto-Scroll Behavior
+        updated_at: '2025-09-24T20:21:11.979169'
+      eclipse-prosper:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "## Problem Description\nReports indicate:\n- Auto-scrolling \"bounces\
+          \ everywhere\" \n- Messages don't clear when switching sessions\n- Scroll\
+          \ logic gets confused with incremental message loading\n\n## Root Cause\
+          \ Analysis Needed\n- Review MessageList component's scroll behavior implementation\n\
+          - Check session change detection (currentSessionId tracking)\n- Verify 'session-messages-loaded'\
+          \ event handling\n- Investigate if event-based message loading triggers\
+          \ multiple scrolls\n\n## Areas to Investigate\n1. MessageList scroll-to-bottom\
+          \ logic\n2. Session ID change detection\n3. Message clearing on session\
+          \ switch\n4. Event timing for bulk vs incremental loading\n5. Scroll trigger\
+          \ conditions\n\n## Potential Issues\n- New event-based approach may trigger\
+          \ scroll multiple times\n- Session change detection might be broken if sessionId\
+          \ isn't propagated\n- Mixing bulk loading with incremental events confuses\
+          \ scroll logic\n\n## Success Criteria\n- Auto-scrolling works smoothly without\
+          \ bouncing\n- New messages trigger single scroll to bottom\n- Session switching\
+          \ properly clears old messages\n- Resumed sessions load without scroll issues\n\
+          - No jarring scroll behavior during message loading\n- Scroll position maintained\
+          \ when user manually scrolls up"
+        created_at: '2025-09-24T20:18:05.034394'
+        description: Investigate and fix auto-scrolling bounce issues and ensure messages
+          properly clear when switching sessions.
+        id: eclipse-prosper
+        parent_id: giant-smart
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 5
+        title: Fix Auto-Scrolling and Session Switching Issues
+        updated_at: '2025-09-24T20:18:05.034396'
+      forbid-poker:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '**Issue**: Tool results now return JSON but code expects YAML
+
+          **Location**: EventStreamProcessor.parseAssistantFromYaml() line 1680
+
+
+          **Current Format Expected (YAML)**:
+
+          ```yaml
+
+          text: ''Response text''
+
+          ```
+
+
+          **New Format Received (JSON)**:
+
+          ```json
+
+          {"notice": "...", "agent_message": {"role": "assistant", "content": [...]}}
+
+          ```
+
+
+          **Implementation Required**:
+
+          1. Create parseAssistantFromJSON() method
+
+          2. Try JSON parsing first
+
+          3. Extract text from agent_message.content array
+
+          4. Fall back to YAML parsing for backward compatibility
+
+
+          **Success Criteria**:
+
+          - Both JSON and YAML formats parsed correctly
+
+          - Delegation tool responses display properly
+
+          - No regression for existing YAML-based sessions'
+        created_at: '2025-09-24T20:14:10.236611'
+        description: Update EventStreamProcessor.parseAssistantFromYaml() to handle
+          new JSON format for delegation tool responses while maintaining backward
+          compatibility with YAML.
+        id: forbid-poker
+        parent_id: cupid-address
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 4
+        title: Fix Delegation Tool Response Parsing
+        updated_at: '2025-09-24T20:14:10.236614'
+      future-green:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "**Issue**: Auto-scroll option defined but never implemented\n**Location**:\
+          \ useChat hook line 26\n\n**Implementation Required**:\n```typescript\n\
+          useEffect(() => {\n  if (options.autoScroll && messages.length > 0) {\n\
+          \    // Debounce to avoid bouncing during streaming\n    const timer = setTimeout(()\
+          \ => {\n      scrollToBottomRef.current?.scrollIntoView({ behavior: 'smooth'\
+          \ });\n    }, 100);\n    return () => clearTimeout(timer);\n  }\n}, [messages,\
+          \ options.autoScroll]);\n```\n\n**Considerations**:\n- Debounce scrolling\
+          \ to prevent bouncing during streaming\n- Only scroll when autoScroll option\
+          \ is true\n- Handle both bulk-loaded and streaming messages\n- Provide ref\
+          \ for scroll target\n\n**Success Criteria**:\n- Chat automatically scrolls\
+          \ to bottom for new messages\n- No bouncing during streaming\n- User can\
+          \ disable auto-scroll via option\n- Works for both resumed and streaming\
+          \ messages"
+        created_at: '2025-09-24T20:14:40.475548'
+        description: Implement the missing auto-scroll functionality in useChat hook
+          to automatically scroll to bottom when new messages arrive.
+        id: future-green
+        parent_id: cupid-address
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 6
+        title: Implement Auto-scrolling in useChat Hook
+        updated_at: '2025-09-24T20:14:40.475551'
+      general-jamaica:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Critical Context
+
+          Per the comprehensive analysis: "UI components were already correct - The
+          issue was in data processing". Any changes made to UI components to fix
+          chat rendering should be reverted.
+
+
+          ## Scope
+
+          - Review recent changes to MessageList, SubsessionDivider, MediaRenderer,
+          SystemMessage components
+
+          - Identify any modifications made for chat rendering "fixes"
+
+          - Revert those changes to restore original working state
+
+          - Ensure components maintain their original behavior of rejecting invalid
+          data
+
+
+          ## Key Files to Review
+
+          - packages/ui/src/components/MessageList.tsx
+
+          - packages/ui/src/components/SubsessionDivider.tsx
+
+          - packages/ui/src/components/MediaRenderer.tsx
+
+          - packages/ui/src/components/SystemMessage.tsx
+
+          - Any related component files
+
+
+          ## Success Criteria
+
+          - All inappropriate UI component changes identified and documented
+
+          - Changes reverted via git or manual code restoration
+
+          - Components restored to their original state before "fixes"
+
+          - Build passes with reverted components
+
+          - No functional changes to how components handle valid data'
+        created_at: '2025-09-24T20:17:03.172887'
+        description: Review all recent changes to UI components and revert any modifications
+          that were made to "fix" chat rendering issues, as the components were already
+          correct.
+        id: general-jamaica
+        parent_id: giant-smart
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 1
+        title: Audit and Revert Inappropriate UI Component Changes
+        updated_at: '2025-09-24T20:17:03.172890'
+      giant-smart:
+        child_tasks:
+        - general-jamaica
+        - volume-rubber
+        - western-pattern
+        - herman-benny
+        - eclipse-prosper
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: Coordinator should review COMPREHENSIVE_TECHNICAL_ANALYSIS.md and
+          ui_report.md to create detailed subtasks
+        created_at: '2025-09-24T20:08:54.427354'
+        description: Revert any inappropriate UI component changes and ensure proper
+          handling of chat item types
+        id: giant-smart
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 3
+        title: UI Components Package Fixes
+        updated_at: '2025-09-24T20:08:54.427356'
+      gloria-dallas:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Data Structures to Review
+
+          Location: `packages/core/src/types/`
+
+
+          ## Key Transformations
+
+          1. **MessageParam** (Anthropic format from server) → **Message** (runtime
+          normalized)
+
+          2. **Message** → **ChatItem** (UI display format)
+
+
+          ## Areas to Verify
+
+          - Message normalization functions preserve all metadata
+
+          - Content block type guards work correctly
+
+          - Tool result handling maintains proper structure
+
+          - Media content properly preserved through transformations
+
+
+          ## Specific Checks
+
+          - Ensure `normalizeMessage` preserves special roles
+
+          - Verify content block transformations don''t lose data
+
+          - Check tool_use blocks maintain all properties
+
+          - Validate media blocks handle all formats
+
+
+          ## Success Criteria
+
+          - [ ] All data transformations preserve critical metadata
+
+          - [ ] No data loss in MessageParam → Message conversion
+
+          - [ ] Type guards correctly identify all content types
+
+          - [ ] Documentation updated if changes needed
+
+          - [ ] All existing tests continue to pass
+
+          - [ ] Build passes successfully'
+        created_at: '2025-09-24T20:11:14.282979'
+        description: Review Core's data structure handling for MessageParam, Message,
+          and ChatItem transformations
+        id: gloria-dallas
+        parent_id: mimic-active
+        priority: low
+        requires_completion_signoff: 'true'
+        sequence: 6
+        title: Review and Fix Core Data Structure Handling
+        updated_at: '2025-09-24T20:11:14.282981'
+      herman-benny:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Current Issue
+
+          Test files are importing from scratchpad:
+
+          ```typescript
+
+          import testSession from ''../../../../../.scratch/chat_fixes/session_with_delegation.json'';
+
+          ```
+
+
+          ## Required Changes
+
+          1. Move test data files to proper fixtures location
+
+          2. Update all import paths to use the fixtures location
+
+          3. Ensure test data is properly typed
+
+          4. Add any additional test fixtures needed
+
+
+          ## Files to Move
+
+          - .scratch/chat_fixes/session_with_delegation.json
+
+          - Any other test data in .scratch/chat_fixes/
+
+
+          ## Target Location
+
+          - packages/ui/src/__fixtures__/ (or similar appropriate location)
+
+
+          ## Import Path Updates
+
+          Find and update all imports referencing .scratch test data to use the new
+          fixtures location.
+
+
+          ## Success Criteria
+
+          - All test data moved to proper fixtures location
+
+          - Import paths updated throughout codebase
+
+          - Tests still pass with new import paths
+
+          - No references to .scratch for test data
+
+          - Test data properly organized and typed'
+        created_at: '2025-09-24T20:17:49.143771'
+        description: Move test data from scratchpad to proper fixtures location and
+          update import paths throughout the codebase.
+        id: herman-benny
+        parent_id: giant-smart
         priority: low
         requires_completion_signoff: 'true'
         sequence: 4
-        title: 'Demo Package: Visual verification environment'
-        updated_at: '2025-09-22T18:58:17.341094'
-      benny-balance:
+        title: Clean Up Test Fixtures and Import Paths
+        updated_at: '2025-09-24T20:17:49.143773'
+      italian-kermit:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: '**Requirement**: New component needed to display system_message
-          events as alerts in the chat
+        context: '## Test Focus
 
+          Using session_with_delegation.json, validate:
 
-          **Technical Scope**:
+          1. Subsession dividers appear at correct positions
 
-          - Create SystemMessageBubble component for displaying system notifications
+          2. Tool input converted to user message within subsession
 
-          - Design as an alert/notification style (not a regular chat bubble)
+          3. Tool result parsed and shown as assistant message
 
-          - Support different severity levels if provided by the system message
+          4. Subsession properly closed with end divider
 
-          - Include appropriate icons based on message type
 
-          - Ensure visual distinction from user/agent messages
+          ## Delegation Tools to Test
 
+          - act_* (clone delegation)
 
-          **Visual Design**:
+          - ateam_* (team delegation)
 
-          - Should look like an inline alert/notification, not a chat message
+          - aa_* (agent assist delegation)
 
-          - Use appropriate background colors (info blue, warning yellow, etc.)
 
-          - Include system icon or appropriate indicator
+          ## Validation Steps
 
-          - Center-aligned or full-width design to distinguish from chat messages
+          1. Load session_with_delegation.json
 
+          2. Verify subsession dividers present
 
-          **Location**: packages/ui/src/components/chat/SystemMessageBubble.tsx (new
-          file)
+          3. Confirm tool calls transformed to messages
 
+          4. Check JSON response parsing works
 
-          **Design Requirements**:
+          5. Validate visual hierarchy
 
-          - Follow CenSuite design system patterns for alerts/notifications
 
-          - Visually distinct from regular chat messages
+          ## Success Criteria
 
-          - Support theme switching (light/dark)
+          - [ ] All delegation tools show subsession dividers
 
-          - Include appropriate spacing and typography
+          - [ ] Tool input appears as user message
 
+          - [ ] Tool result appears as assistant message
 
-          **Assigned To**: Chat Interface Dev Specialist (realtime_ui_chat_dev)
+          - [ ] Proper nesting and indentation
 
-
-          **Depends On**: React package task complex-derby (system_message event handler)
-
-
-          **Estimated Time**: 1.5 days
-
-
-          **Definition of Done**:
-
-          - SystemMessageBubble component created and exports properly
-
-          - Visually distinct alert-style design (not chat bubble)
-
-          - Supports different severity levels/types
-
-          - Follows design system alert patterns
-
-          - Accessible (proper ARIA role="alert", etc.)
-
-          - Theme-aware styling
-
-          - TypeScript types fully defined
-
-          - Build passes without errors'
-        created_at: '2025-09-22T18:48:25.676721'
-        description: Create a new component to display system messages as alert-style
-          notifications within the chat stream
-        id: benny-balance
-        parent_id: morning-regard
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 3
-        title: Create SystemMessageBubble component for system messages
-        updated_at: '2025-09-22T18:48:25.676722'
-      bruno-lobster:
-        child_tasks:
-        - complex-derby
-        - gustav-silk
-        - polka-canoe
-        - lotus-finland
-        - iris-orient
-        - mexico-quiet
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: "REQUIREMENTS DOCS TO READ:\n- .scratch/chat_fixes/high_level_task_list.md\n\
-          - .scratch/chat_fixes/chat_streaming_notes.md\n\nYour team identified missing\
-          \ event handlers for:\n- system_message events\n- render_media events  \n\
-          - subsession events\n- error events (should trigger toasts, not add to chat)\n\
-          \nDEPENDENCY: Core package must complete their event fixes first.\n\nDELIVERABLE:\
-          \ Hooks that properly handle all streaming events per requirements."
-        created_at: '2025-09-22T18:42:05.860938'
-        description: React coordinator to update hooks based on Core's corrected event
-          handling.
-        id: bruno-lobster
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 2
-        title: 'React Package: Update hooks for corrected streaming events'
-        updated_at: '2025-09-22T18:42:05.860939'
-      command-perfect:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: "**Issue**: SubsessionDivider currently uses client-side logic to\
-          \ determine when to display, but should only render based on subsession\
-          \ events from the server\n\n**Technical Scope**:\n- Remove any client-side\
-          \ time-based or delegation-state logic from SubsessionDivider\n- Component\
-          \ should be a pure presentation component that renders when instructed by\
-          \ parent\n- Update component props to accept event-based data only\n- Ensure\
-          \ component follows design system patterns (CenSuite)\n\n**Location**: packages/ui/src/components/chat/SubsessionDivider.tsx\
-          \ (if exists) or create new\n\n**Requirements Reference**: \n- .scratch/chat_fixes/chat_streaming_notes.md\
-          \ for event-driven requirements\n- SubsessionDivider should ONLY appear\
-          \ when server sends subsession events\n\n**Assigned To**: Chat Interface\
-          \ Dev Specialist (realtime_ui_chat_dev)\n\n**Depends On**: React package\
-          \ task polka-canoe (subsession event handler)\n\n**Estimated Time**: 1 day\n\
-          \n**Definition of Done**:\n- SubsessionDivider contains no client-side logic\
-          \ for when to display\n- Component renders based purely on props passed\
-          \ from parent\n- Follows CenSuite design patterns for dividers/separators\n\
-          - TypeScript types properly defined\n- Component is accessible (ARIA attributes)\n\
-          - Build passes without errors"
-        created_at: '2025-09-22T18:47:54.113703'
-        description: Remove all client-side logic from SubsessionDivider component
-          and make it render purely based on subsession events from the stream
-        id: command-perfect
-        parent_id: morning-regard
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 1
-        title: Fix SubsessionDivider to use event-driven rendering only
-        updated_at: '2025-09-22T18:47:54.113704'
-      company-parody:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Depends On**: All previous subtasks (tractor-chariot, jet-pinball,
-          salt-address, strong-tulip)
-
-
-          **Validation Scope**:
-
-          - Ensure SystemMessageEvent changes don''t break React hooks
-
-          - Validate ErrorEvent reclassification works with UI components
-
-          - Test event streaming in demo app with all fixes applied
-
-          - Performance validation across the stack
-
-
-          **Assigned To**: System Integration Test Specialist (realtime_core_system_test)
-
-
-          **Coordination Required**: React and UI package coordinators for cross-package
-          testing
-
-
-          **Estimated Time**: 1 day
-
-
-          **Definition of Done**:
-
-          - All packages build successfully with Core changes
-
-          - React hooks properly handle new event emissions
-
-          - UI components display events correctly
-
-          - Demo app functions without issues
-
-          - All cross-package tests pass
-
-          - Zero warnings in any package'
-        created_at: '2025-09-22T18:44:06.948749'
-        description: Validate that all event fixes work correctly with dependent packages
-          (React, UI components)
-        id: company-parody
-        parent_id: suzuki-include
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 5
-        title: Cross-package integration validation for event fixes
-        updated_at: '2025-09-22T18:44:06.948750'
-      complex-derby:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Depends On**: Core package task tractor-chariot (SystemMessageEvent
-          fix)
-
-
-          **Technical Scope**:
-
-          - Update useChat hook to listen for ''system_message'' events from Core
-
-          - Add proper state management for system messages in chat stream
-
-          - Ensure system messages are properly formatted and passed to UI components
-
-          - Maintain existing chat functionality without breaking changes
-
-
-          **Location**: packages/react/src/hooks/useChat.ts
-
-
-          **Assigned To**: Chat Communication Dev Specialist (realtime_react_chat_dev)
-
-
-          **Estimated Time**: 1 day
-
-
-          **Definition of Done**:
-
-          - useChat hook properly handles system_message events
-
-          - System messages are added to the chat stream state
-
-          - Hook provides system messages to consuming components
-
-          - TypeScript types properly defined for system messages
-
-          - Build passes without errors'
-        created_at: '2025-09-22T18:45:26.818411'
-        description: Implement handler for system_message events in the useChat hook
-          to properly handle system messages in the chat stream
-        id: complex-derby
-        parent_id: bruno-lobster
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 1
-        title: Add system_message event handler to useChat hook
-        updated_at: '2025-09-22T18:45:26.818412'
-      crater-tripod:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Requirement**: New component needed to display media content from
-          render_media events
-
-
-          **Technical Scope**:
-
-          - Create RenderMediaBubble component for displaying various media types
-
-          - Support different media formats (images, videos, documents) as specified
-          by Core API
-
-          - Follow chat bubble design patterns consistent with other message components
-
-          - Include loading states and error handling for media content
-
-          - Ensure responsive design and proper aspect ratio handling
-
-          - Implement lazy loading for performance
-
-
-          **Location**: packages/ui/src/components/chat/RenderMediaBubble.tsx (new
-          file)
-
-
-          **Design Requirements**:
-
-          - Follow CenSuite design system patterns for media display
-
-          - Consistent with existing MessageBubble styling
-
-          - Include proper spacing, borders, and shadows
-
-          - Support light/dark theme
-
-
-          **Assigned To**: Chat Interface Dev Specialist (realtime_ui_chat_dev)
-
-
-          **Depends On**: React package task gustav-silk (render_media event handler)
-
-
-          **Estimated Time**: 2 days
-
-
-          **Definition of Done**:
-
-          - RenderMediaBubble component created and exports properly
-
-          - Supports all media types from Core API specification
-
-          - Includes loading and error states
-
-          - Follows design system patterns
-
-          - Accessible (proper ARIA labels, alt text support)
-
-          - Responsive and performant
-
-          - TypeScript types fully defined
-
-          - Build passes without errors'
-        created_at: '2025-09-22T18:48:09.605150'
-        description: Create a new component to display media content from render_media
-          events in the chat stream
-        id: crater-tripod
-        parent_id: morning-regard
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 2
-        title: Create RenderMediaBubble component for media display
-        updated_at: '2025-09-22T18:48:09.605151'
-      gustav-silk:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Technical Scope**:
-
-          - Add event listener for ''render_media'' events in useChat hook
-
-          - Implement state management for media messages in chat stream
-
-          - Ensure proper typing and data structure for media content
-
-          - Support various media types as specified by Core API
-
-
-          **Location**: packages/react/src/hooks/useChat.ts
-
-
-          **Requirements Reference**: Check .scratch/chat_fixes/chat_streaming_notes.md
-          for media event specifications
-
-
-          **Assigned To**: Chat Communication Dev Specialist (realtime_react_chat_dev)
-
-
-          **Estimated Time**: 1 day
-
-
-          **Definition of Done**:
-
-          - useChat hook properly handles render_media events
-
-          - Media messages are correctly added to chat stream state
-
-          - Proper TypeScript types for media content
-
-          - Media data structure matches Core API requirements
-
-          - Build passes without errors'
-        created_at: '2025-09-22T18:45:39.711306'
-        description: Implement handler for render_media events in the useChat hook
-          to support media rendering in chat
-        id: gustav-silk
-        parent_id: bruno-lobster
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 2
-        title: Add render_media event handler to useChat hook
-        updated_at: '2025-09-22T18:45:39.711307'
-      infant-shelter:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Depends On**: Task telecom-garbo (all components tested) and React
-          package task mexico-quiet
-
-
-          **Integration Validation Scope**:
-
-          - Verify SubsessionDivider renders based on subsession events from useChat
-
-          - Verify RenderMediaBubble displays media from render_media events
-
-          - Verify SystemMessageBubble shows system_message events properly
-
-          - Verify ToastNotification triggers from error events (NOT in chat)
-
-          - Test end-to-end streaming event flow from hooks to UI
-
-          - Validate component performance with real streaming data
-
-          - Ensure no memory leaks or unnecessary re-renders
-
-
-          **Coordination Requirements**:
-
-          - Work with React Package Coordinator to ensure hook data format matches
-          component expectations
-
-          - Coordinate with Demo Package for final integration testing
-
-          - May need to adjust component props based on actual hook data structure
-
-
-          **Cross-Package Testing**:
-
-          - Components correctly consume hook data
-
-          - Event-driven updates work smoothly
-
-          - Error boundaries handle component failures gracefully
-
-          - Theme context properly propagates to all components
-
-
-          **Assigned To**: Chat Interface Test Specialist (realtime_ui_chat_test)
-          with cross-team coordination
-
-
-          **Estimated Time**: 1 day
-
-
-          **Definition of Done**:
-
-          - All components integrate seamlessly with React hooks
-
-          - Streaming events display correctly in real-time
-
-          - No console errors or warnings
-
-          - Performance meets requirements (no lag, smooth updates)
-
-          - Ready for demo app consumption
-
-          - Documentation updated for component usage
-
-          - All packages build successfully together'
-        created_at: '2025-09-22T18:49:17.205196'
-        description: Validate that all UI components properly integrate with React
-          hooks for streaming event display
-        id: infant-shelter
-        parent_id: morning-regard
+          - [ ] No raw tool call display'
+        created_at: '2025-09-24T20:20:54.290003'
+        description: Validate that delegation tools (act_*, ateam_*, aa_*) correctly
+          render with subsession dividers in resumed sessions.
+        id: italian-kermit
+        parent_id: banjo-duet
         priority: high
         requires_completion_signoff: 'true'
         sequence: 6
-        title: Cross-package integration validation with React hooks
-        updated_at: '2025-09-22T18:49:17.205197'
-      iris-orient:
+        title: Test Delegation Tool Subsession Rendering
+        updated_at: '2025-09-24T20:20:54.290006'
+      lobster-beauty:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: '**Depends On**: All development tasks (complex-derby, gustav-silk,
-          polka-canoe, lotus-finland)
+        context: '## Problem
+
+          Test files are incorrectly importing from .scratch/chat_fixes/ instead of
+          proper test data locations.
 
 
-          **Test Scope**:
+          ## Required Actions
 
-          - Unit tests for each new event handler
+          1. Move session_with_delegation.json to /public/test-data/
 
-          - Integration tests for event flow from Core to React hooks
+          2. Update all imports referencing .scratch paths
 
-          - Test proper state management for each event type
+          3. Ensure test data is properly version controlled
 
-          - Verify system messages appear in chat stream
-
-          - Verify render_media events are properly handled
-
-          - Verify subsession markers are event-driven only
-
-          - Verify errors trigger notifications, not chat additions
-
-          - Performance testing with high-frequency events
-
-          - StrictMode compatibility testing
+          4. Fix the core package test that imports from scratchpad
 
 
-          **Test Data**: Use test data files created by Core team in .scratch/chat_fixes/
+          ## Files to Update
+
+          - packages/core/src/events/__tests__/EventStreamProcessor.resumed-messages.test.ts
+
+          - Any demo test files importing from .scratch
 
 
-          **Assigned To**: Chat Communication Test Specialist (realtime_react_chat_test)
+          ## Success Criteria
 
+          - [ ] All test data in /public/test-data/ or appropriate fixture directories
 
-          **Estimated Time**: 2 days
+          - [ ] No imports from .scratch directories
 
+          - [ ] Tests run successfully with relocated fixtures
 
-          **Definition of Done**:
-
-          - All unit tests pass for new handlers
-
-          - Integration tests validate event flow
-
-          - Performance benchmarks met
-
-          - StrictMode compatibility confirmed
-
-          - Zero test warnings
-
-          - Test coverage maintained or improved
-
-          - Ready for UI component integration'
-        created_at: '2025-09-22T18:46:21.117989'
-        description: Comprehensive testing of all new event handlers for system_message,
-          render_media, subsession, and error events
-        id: iris-orient
-        parent_id: bruno-lobster
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 5
-        title: Test all new streaming event handlers
-        updated_at: '2025-09-22T18:46:21.117990'
-      jet-pinball:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Depends On**: Task tractor-chariot (SystemMessageEvent fix implementation)
-
-
-          **Test Scope**:
-
-          - Verify SystemMessageEvent emits correct ''system_message'' event name
-
-          - Test event routing and handling with the new event name
-
-          - Validate integration with dependent packages (React, UI components)
-
-          - Performance testing for event emission
-
-
-          **Assigned To**: Event Stream Test Specialist (realtime_core_event_test)
-
-
-          **Estimated Time**: 0.5 days
-
-
-          **Definition of Done**:
-
-          - Unit tests pass for SystemMessageEvent
-
-          - Integration tests validate event routing
-
-          - No regression in existing functionality
-
-          - Test coverage maintained or improved
-
-          - Zero test warnings'
-        created_at: '2025-09-22T18:43:32.618146'
-        description: Validate that SystemMessageEvent correctly emits 'system_message'
-          event name and integrates properly with the event system
-        id: jet-pinball
-        parent_id: suzuki-include
+          - [ ] Test data properly committed to version control'
+        created_at: '2025-09-24T20:19:58.327593'
+        description: Move all test data files from .scratch to proper locations and
+          fix import paths. This resolves the critical test isolation issue.
+        id: lobster-beauty
+        parent_id: banjo-duet
         priority: high
         requires_completion_signoff: 'true'
         sequence: 2
-        title: Test SystemMessageEvent fix and validate event emission
-        updated_at: '2025-09-22T18:43:32.618147'
-      lotus-finland:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Depends On**: Core package task salt-address (ErrorEvent reclassification)
-
-
-          **Technical Scope**:
-
-          - Create error event handler (possibly new hook or in useAgentCData)
-
-          - Implement toast notification trigger mechanism
-
-          - Ensure errors do NOT get added to chat stream
-
-          - Provide error context to UI layer for toast display
-
-          - Support different error severities/types
-
-
-          **Location**: Likely new hook or integration with existing notification
-          patterns
-
-
-          **Coordination Required**: May need coordination with Data Management domain
-          for notification patterns
-
-
-          **Assigned To**: Chat Communication Dev Specialist with Data Management
-          Dev support
-
-
-          **Estimated Time**: 1.5 days
-
-
-          **Definition of Done**:
-
-          - Error events trigger notification system, not chat additions
-
-          - Error context properly passed to UI layer
-
-          - TypeScript types for error notifications
-
-          - Integration with existing notification patterns
-
-          - Build passes without errors'
-        created_at: '2025-09-22T18:46:06.198548'
-        description: Create error event handling that triggers toast notifications
-          instead of adding errors to chat stream
-        id: lotus-finland
-        parent_id: bruno-lobster
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 4
-        title: Implement error event handler for toast notifications
-        updated_at: '2025-09-22T18:46:06.198549'
-      mexico-quiet:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: "**Depends On**: Task iris-orient (all handlers tested) and UI package\
-          \ component development\n\n**Validation Scope**:\n- Ensure hooks provide\
-          \ correct data format for UI components\n- Validate system messages render\
-          \ in SystemMessageBubble\n- Validate media content renders in RenderMediaBubble\
-          \  \n- Validate subsession markers display correctly\n- Validate error toasts\
-          \ trigger properly\n- Test hook-to-component data flow\n- Performance validation\
-          \ with UI rendering\n\n**Coordination Required**: Work with UI Package Coordinator\
-          \ to ensure proper integration\n\n**Assigned To**: Chat Communication Test\
-          \ Specialist with cross-team coordination\n\n**Estimated Time**: 1 day\n\
-          \n**Definition of Done**:\n- All UI components receive correct data from\
-          \ hooks\n- End-to-end streaming event flow works correctly\n- No breaking\
-          \ changes in existing functionality\n- Performance meets requirements\n\
-          - Ready for demo app validation"
-        created_at: '2025-09-22T18:46:34.644533'
-        description: Validate that React hooks properly integrate with UI components
-          for all streaming events
-        id: mexico-quiet
-        parent_id: bruno-lobster
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 6
-        title: Cross-package integration validation with UI components
-        updated_at: '2025-09-22T18:46:34.644534'
-      morning-regard:
+        title: Relocate Test Fixtures from Scratchpad
+        updated_at: '2025-09-24T20:19:58.327596'
+      mimic-active:
         child_tasks:
-        - command-perfect
-        - crater-tripod
-        - benny-balance
-        - news-papa
-        - telecom-garbo
-        - infant-shelter
+        - alpha-sonar
+        - morning-year
+        - product-turbo
+        - alert-drink
+        - system-slogan
+        - gloria-dallas
+        - solar-milk
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: 'REQUIREMENTS DOCS TO READ:
-
-          - .scratch/chat_fixes/high_level_task_list.md
-
-          - .scratch/chat_fixes/chat_streaming_notes.md
-
-
-          Your team identified these needs:
-
-          - Fix SubsessionDivider usage (remove client-side logic)
-
-          - Create RenderMediaBubble component
-
-          - Create SystemMessageBubble component
-
-          - Create ToastNotification component for errors
-
-
-          DEPENDENCY: React hooks must expose the events properly.
-
-
-          DELIVERABLE: UI components that render streaming events correctly per specifications.'
-        created_at: '2025-09-22T18:42:17.083507'
-        description: UI coordinator to create missing components and fix SubsessionDivider
-          usage.
-        id: morning-regard
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 3
-        title: 'UI Components: Create components and fix rendering for streaming events'
-        updated_at: '2025-09-22T18:42:17.083509'
-      news-papa:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Requirement**: Errors should display as toast notifications, NOT
-          in the chat stream
-
-
-          **Technical Scope**:
-
-          - Create ToastNotification component for floating error notifications
-
-          - Implement toast container/provider for managing multiple toasts
-
-          - Support auto-dismiss with configurable duration
-
-          - Include manual dismiss capability (close button)
-
-          - Support stacking multiple notifications
-
-          - Implement entrance/exit animations
-
-
-          **Component Architecture**:
-
-          - ToastNotification: Individual toast component
-
-          - ToastContainer: Manages positioning and stacking
-
-          - ToastProvider: Context provider for triggering toasts from hooks
-
-          - useToast: Hook for triggering notifications (coordinate with React team)
-
-
-          **Visual Design**:
-
-          - Floating notifications (typically top-right or bottom-right)
-
-          - Error styling (red/danger colors from design system)
-
-          - Include error icon
-
-          - Semi-transparent background with backdrop blur
-
-          - Smooth animations for entrance/exit
-
-
-          **Location**: packages/ui/src/components/notifications/ (new directory)
-
-          - ToastNotification.tsx
-
-          - ToastContainer.tsx
-
-          - ToastProvider.tsx
-
-          - index.ts
-
-
-          **Assigned To**: Controls Layout Dev Specialist (realtime_ui_controls_dev)
-          - notification systems fall under controls domain
-
-
-          **Depends On**: React package task lotus-finland (error event handler)
-
-
-          **Estimated Time**: 2 days
-
-
-          **Definition of Done**:
-
-          - Complete toast notification system implemented
-
-          - Supports error display with appropriate styling
-
-          - Auto-dismiss and manual dismiss functionality
-
-          - Smooth animations and transitions
-
-          - Accessible (ARIA live regions, proper roles)
-
-          - Follows design system patterns for notifications
-
-          - TypeScript types fully defined
-
-          - Exports properly for consumption
-
-          - Build passes without errors'
-        created_at: '2025-09-22T18:48:42.989151'
-        description: Create a toast notification component system for displaying errors
-          outside the chat stream
-        id: news-papa
-        parent_id: morning-regard
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 4
-        title: Create ToastNotification component for error display
-        updated_at: '2025-09-22T18:48:42.989152'
-      origami-costume:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: "THIS IS CORE'S RESPONSIBILITY - you own the ChatSession model and\
-          \ event structures!\n\nCreate in .scratch/chat_fixes/:\n1. session_with_subsessions.json\
-          \ - VALID ChatSession with subsession events\n2. session_with_render_media.json\
-          \ - VALID ChatSession with RenderMedia events  \n3. session_with_system_messages.json\
-          \ - VALID ChatSession with SystemMessage events\n4. session_with_errors.json\
-          \ - VALID events including ErrorEvent (NOT a SessionEvent)\n\nUse your ACTUAL\
-          \ models from:\n- packages/core/src/types/ChatTypes.ts (ChatSession, MessageParam,\
-          \ etc.)\n- packages/core/src/events/types/ServerEvents.ts (event structures)\n\
-          - Reference: .scratch/chat_fixes/session_with_delegation.json for correct\
-          \ format\n\nThese must be REAL, VALID data structures that match your actual\
-          \ implementation, NOT fiction!"
-        created_at: '2025-09-22T18:13:06.159496'
-        description: Create VALID test ChatSession JSON files based on the actual
-          Core models and event structures. Use session_with_delegation.json as a
-          reference for the correct format.
-        id: origami-costume
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 4
-        title: 'Core Package: Create valid test data files'
-        updated_at: '2025-09-22T18:13:06.159497'
-      polka-canoe:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Technical Scope**:
-
-          - Add event listener for subsession events in useChat hook
-
-          - Implement logic to add subsession markers to chat stream
-
-          - Ensure subsession events are handled as streaming events (not client-side
-          logic)
-
-          - Maintain proper chronological ordering of events
-
-
-          **Important**: Subsession markers should be based ONLY on events from the
-          server, not client-side logic
-
-
-          **Location**: packages/react/src/hooks/useChat.ts
-
-
-          **Requirements Reference**: Check .scratch/chat_fixes/chat_streaming_notes.md
-          for subsession event specifications
-
-
-          **Assigned To**: Chat Communication Dev Specialist (realtime_react_chat_dev)
-
-
-          **Estimated Time**: 1.5 days
-
-
-          **Definition of Done**:
-
-          - useChat hook properly handles subsession events
-
-          - Subsession markers are added to chat stream based on events only
-
-          - No client-side logic for determining subsession boundaries
-
-          - Proper TypeScript types for subsession events
-
-          - Build passes without errors'
-        created_at: '2025-09-22T18:45:52.241773'
-        description: Implement handler for subsession events to properly mark subsession
-          boundaries in chat stream
-        id: polka-canoe
-        parent_id: bruno-lobster
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 3
-        title: Add subsession event handler to useChat hook
-        updated_at: '2025-09-22T18:45:52.241774'
-      salt-address:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Issue**: ErrorEvent is currently incorrectly treated as a SessionEvent
-          in the type hierarchy
-
-
-          **Requirements**: Error events should be standalone events, not session
-          events per API specification
-
-
-          **Technical Scope**:
-
-          - Update ErrorEvent type definition and inheritance
-
-          - Modify event routing to handle ErrorEvent separately from SessionEvents
-
-          - Update any event handlers that expect ErrorEvent as SessionEvent
-
-          - Ensure proper error propagation and handling
-
-
-          **Assigned To**: Event Stream Dev Specialist (realtime_core_event_dev)
-
-
-          **Estimated Time**: 2 days
-
-
-          **Definition of Done**:
-
-          - ErrorEvent no longer extends or is treated as SessionEvent
-
-          - Event routing correctly handles ErrorEvent as standalone
-
-          - Error handling maintains full functionality
-
-          - All dependent code updated for new classification
-
-          - Build passes without errors'
-        created_at: '2025-09-22T18:43:44.606257'
-        description: Reclassify ErrorEvent to not be treated as a SessionEvent, ensuring
-          proper event type hierarchy per API requirements
-        id: salt-address
-        parent_id: suzuki-include
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 3
-        title: Fix ErrorEvent classification - remove from SessionEvent hierarchy
-        updated_at: '2025-09-22T18:43:44.606258'
-      strong-tulip:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**Depends On**: Task salt-address (ErrorEvent reclassification implementation)
-
-
-          **Test Scope**:
-
-          - Verify ErrorEvent is not treated as SessionEvent
-
-          - Test error event routing and propagation
-
-          - Validate error handling in various scenarios
-
-          - Integration testing with dependent packages
-
-          - Regression testing for existing error flows
-
-
-          **Assigned To**: Event Stream Test Specialist (realtime_core_event_test)
-
-
-          **Estimated Time**: 0.5 days
-
-
-          **Definition of Done**:
-
-          - Unit tests validate ErrorEvent classification
-
-          - Integration tests confirm proper error handling
-
-          - No regression in error reporting functionality
-
-          - Cross-package integration tests pass
-
-          - Zero test warnings
-
-          - Test coverage maintained or improved'
-        created_at: '2025-09-22T18:43:54.858311'
-        description: Comprehensive testing of ErrorEvent as standalone event type
-          and validation of error handling flows
-        id: strong-tulip
-        parent_id: suzuki-include
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 4
-        title: Test ErrorEvent reclassification and error handling flow
-        updated_at: '2025-09-22T18:43:54.858311'
-      suzuki-include:
-        child_tasks:
-        - tractor-chariot
-        - jet-pinball
-        - salt-address
-        - strong-tulip
-        - company-parody
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'REQUIREMENTS DOCS TO READ:
-
-          - .scratch/chat_fixes/high_level_task_list.md
-
-          - .scratch/chat_fixes/chat_streaming_notes.md
-
-
-          Your team identified these issues in the gap analysis:
-
-          - SystemMessageEvent emitting wrong event name
-
-          - ErrorEvent incorrectly treated as SessionEvent
-
-
-          DELIVERABLE: Fix these issues and ensure all streaming events are handled
-          correctly per the requirements.
-
-
-          COORDINATE WITH: React and UI teams who depend on your event emissions.'
-        created_at: '2025-09-22T18:41:54.791447'
-        description: Core coordinator to analyze requirements and fix event handling
-          issues identified in the gap analysis.
-        id: suzuki-include
+        context: Coordinator should review COMPREHENSIVE_TECHNICAL_ANALYSIS.md and
+          core_report.md to create detailed subtasks
+        created_at: '2025-09-24T20:08:36.507133'
+        description: All Core package related fixes including event types, role preservation,
+          and test fixture relocation
+        id: mimic-active
         parent_id: null
         priority: high
         requires_completion_signoff: 'true'
         sequence: 1
-        title: 'Core Package: Analyze and fix streaming event handling (Items 1-5)'
-        updated_at: '2025-09-22T18:41:54.791448'
-      telecom-garbo:
+        title: Core Package Fixes
+        updated_at: '2025-09-24T20:08:36.507136'
+      morning-year:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: '**Depends On**: All development tasks (command-perfect, crater-tripod,
-          benny-balance, news-papa)
-
-
-          **Test Scope**:
-
-          - Unit tests for SubsessionDivider event-driven behavior
-
-          - Unit tests for RenderMediaBubble component with various media types
-
-          - Unit tests for SystemMessageBubble alert styling and behavior
-
-          - Unit tests for ToastNotification system (all components)
-
-          - Integration tests with React hooks providing data
-
-          - Visual regression tests for all components
-
-          - Accessibility testing (screen reader, keyboard navigation)
-
-          - Theme switching tests (light/dark mode)
-
-          - Browser compatibility testing
-
-          - Performance tests for media loading and toast animations
-
-
-          **Component-Specific Tests**:
-
-          1. **SubsessionDivider**: Verify no client-side logic, pure prop-driven
-          rendering
-
-          2. **RenderMediaBubble**: Test media loading, error states, different formats
-
-          3. **SystemMessageBubble**: Test alert styling, severity levels, accessibility
-
-          4. **ToastNotification**: Test stacking, animations, auto-dismiss, manual
-          dismiss
-
-
-          **Test Data**: Use test data files from Core team in .scratch/chat_fixes/
-
-
-          **Assigned To**: Chat Interface Test Specialist (realtime_ui_chat_test)
-          with support from Controls Layout Test Specialist for toast testing
-
-
-          **Estimated Time**: 2 days
-
-
-          **Definition of Done**:
-
-          - All unit tests pass with 80%+ coverage
-
-          - Integration tests validate hook data consumption
-
-          - Visual regression tests capture all component states
-
-          - Accessibility tests pass (WCAG compliance)
-
-          - Browser compatibility verified
-
-          - Performance benchmarks met
-
-          - Zero test warnings
-
-          - Ready for demo app integration'
-        created_at: '2025-09-22T18:49:00.034966'
-        description: Comprehensive testing of all new components and the SubsessionDivider
-          fix for Phase 1
-        id: telecom-garbo
-        parent_id: morning-regard
+        context: "## Location\nFile: `packages/core/src/events/EventStreamProcessor.ts:1095-1152`\n\
+          \n## New JSON Format\n```json\n{\n  \"notice\": \"This response is also\
+          \ displayed in the UI for the user, you do not need to relay it.\",\n  \"\
+          agent_message\": {\n    \"role\": \"assistant\",\n    \"content\": [...]\n\
+          \  }\n}\n```\n\n## Required Implementation\n1. Create new method `parseAssistantFromDelegationResult`\
+          \ that tries JSON first\n2. Fall back to existing YAML parsing for backward\
+          \ compatibility  \n3. Extract text content from JSON agent_message.content\
+          \ array\n4. Update all delegation tool handlers to use new method\n\n##\
+          \ Success Criteria\n- [ ] Correctly parses new JSON format from delegation\
+          \ tools\n- [ ] Maintains backward compatibility with YAML format\n- [ ]\
+          \ Extracts assistant message content properly\n- [ ] All delegation tool\
+          \ types (act_*, ateam_*, aa_*) work correctly\n- [ ] Tests added for both\
+          \ JSON and YAML parsing\n- [ ] Build passes successfully"
+        created_at: '2025-09-24T20:10:15.823941'
+        description: Update parseAssistantFromYaml to handle the new JSON format for
+          delegation tool responses while maintaining backward compatibility with
+          YAML
+        id: morning-year
+        parent_id: mimic-active
         priority: high
         requires_completion_signoff: 'true'
-        sequence: 5
-        title: Test all new chat components and SubsessionDivider fix
-        updated_at: '2025-09-22T18:49:00.034967'
-      tractor-chariot:
+        sequence: 2
+        title: Update Delegation Result Parsing to Handle JSON Format
+        updated_at: '2025-09-24T20:10:15.823944'
+      needle-grand:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: '**Issue**: SystemMessageEvent is currently emitting ''system-notification''
-          but the API spec requires ''system_message''
-
-
-          **Location**: Event Stream Processing domain - likely in EventStreamProcessor
-          or event handlers
-
-
-          **Requirements Reference**: Check .scratch/chat_fixes/chat_streaming_notes.md
-          for exact event name requirements
-
-
-          **Assigned To**: Event Stream Dev Specialist (realtime_core_event_dev)
-
-
-          **Estimated Time**: 1 day
-
-
-          **Definition of Done**:
-
-          - SystemMessageEvent emits ''system_message'' event name
-
-          - Event routing properly handles the renamed event
-
-          - No breaking changes to existing functionality
-
-          - Build passes without errors'
-        created_at: '2025-09-22T18:43:21.399575'
-        description: Fix the SystemMessageEvent to emit 'system_message' instead of
-          'system-notification' to match API requirements
-        id: tractor-chariot
-        parent_id: suzuki-include
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 1
-        title: Fix SystemMessageEvent emitting incorrect event name
-        updated_at: '2025-09-22T18:43:21.399577'
-    title: 'Chat Rendering Fixes - Phase 1: Gap Fixing'
-    updated_at: '2025-09-22T18:58:17.341102'
-  chat_rendering_fixes:
-    created_at: '2025-09-22T19:23:27.161764'
-    description: Three-phase implementation plan to fix chat rendering issues based
-      on user requirements and technical team analysis. Each phase addresses specific
-      gaps identified in the high-level task list.
-    id: velvet-postage
-    lessons_learned:
-    - created_at: '2025-09-22T19:26:15.962218'
-      id: pencil
-      learned_task_id: jaguar-juice
-      lesson: Previous attempt failed because team did not follow the documentation
-        and invented their own solutions. Every implementation MUST exactly match
-        the specifications provided in the .scratch/chat_fixes/ documents. No assumptions
-        or creative interpretations allowed.
-    - created_at: '2025-09-22T19:26:23.515175'
-      id: sleep
-      learned_task_id: jaguar-juice
-      lesson: The Demo app has ZERO priority - it has no code of its own that matters.
-        Everything it does comes from the UI package. Focus efforts on Core, React,
-        and UI Components packages only.
-    tasks:
-      bombay-eclipse:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'MUST READ DOCUMENTATION FIRST:
-
-          - //realtime_client/.scratch/chat_fixes/chat_streaming_notes.md
-
-
-          Critical Fixes Required:
-
-          1. Fix SystemMessage event: Change emission from ''system-notification''
-          to ''system_message'' to match API naming
-
-          2. Fix Error event handling: Remove incorrect SessionEvent treatment, emit
-          as separate ''error'' event for toast display
-
-          3. Verify subsession events are passed through cleanly without modification
-
-          4. Verify RenderMedia events preserve sent_by_class and sent_by_function
-          metadata
-
-
-          Code locations:
-
-          - packages/realtime-core/src/stream/EventStreamProcessor.ts
-
-
-          Timeline: 6 hours'
-        created_at: '2025-09-22T19:23:54.516032'
-        description: Fix critical event naming inconsistencies and error handling
-          bugs in the Core package EventStreamProcessor.
-        id: bombay-eclipse
-        parent_id: jaguar-juice
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 1
-        title: 'Core Package: Event Naming and Handling Fixes'
-        updated_at: '2025-09-22T19:23:54.516033'
-      book-virtual:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'MUST READ DOCUMENTATION FIRST:
-
-          - //realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md
-
-
-          Implementation:
-
-          1. Create utils/specialToolHandlers.ts
-
-          2. Think tool processor - convert to thoughts
-
-          3. Delegation tool processor - handle subsessions
-
-          4. YAML parser for delegation results
-
-          5. Extensible tool registry for future tools
-
-
-          Integrate with messageConverter from Phase 2
-
-
-          Timeline: 2-3 days'
-        created_at: '2025-09-22T19:25:43.704216'
-        description: Create special tool handlers module in React package for think
-          and delegation tools.
-        id: book-virtual
-        parent_id: desire-chicken
+        context: "**Issues to Address**:\n\n1. **streamingMessageIdRef** can retain\
+          \ stale values across sessions\n2. **isAgentTyping** state can get stuck\
+          \ as true\n3. No proper cleanup on session switch or error\n\n**Required\
+          \ Fixes**:\n1. Clear streamingMessageIdRef on session change\n2. Reset isAgentTyping\
+          \ on:\n   - Session change\n   - Streaming completion\n   - Error events\n\
+          3. Add proper cleanup in useEffect return functions\n4. Handle edge cases\
+          \ like connection loss during streaming\n\n**Success Criteria**:\n- No stuck\
+          \ typing indicators\n- Clean state transitions between sessions\n- Proper\
+          \ cleanup on unmount\n- Resilient to connection issues"
+        created_at: '2025-09-24T20:15:22.636520'
+        description: Fix streaming state management in useChat to prevent stuck states
+          like isAgentTyping remaining true or streamingMessageIdRef retaining stale
+          values.
+        id: needle-grand
+        parent_id: cupid-address
         priority: medium
         requires_completion_signoff: 'true'
-        sequence: 2
-        title: 'React Package: Special Tool Processing'
-        updated_at: '2025-09-22T19:25:43.704217'
-      cipher-gregory:
+        sequence: 9
+        title: Clean Up Streaming State Management
+        updated_at: '2025-09-24T20:15:22.636522'
+      nobel-crystal:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: 'MUST READ DOCUMENTATION FIRST:
+        context: '**File**: packages/react/src/events/EventStreamProcessor.ts
 
-          - //realtime_client/.scratch/chat_fixes/chat_streaming_notes.md
+          **Method**: handleChatSessionChanged()
 
-
-          Dependencies: Core package must fix event names first
-
-
-          Required Changes:
-
-          1. Subscribe to ''subsession-started'' and ''subsession-ended'' events
-
-          2. Subscribe to ''media-added'' events for RenderMedia
-
-          3. Subscribe to ''system_message'' events (after Core fixes naming)
-
-          4. Subscribe to ''error'' events for toast notifications
-
-          5. Update chat state to handle all new message types
+          **Current Issue**: Converts MessageParam[] to Message[] with basic normalization
+          only
 
 
-          Code locations:
+          **Required Implementation**:
 
-          - packages/realtime-react/src/hooks/useChat.ts
+          1. Create mapResumedMessagesToEvents() method that iterates through messages
 
-          - packages/realtime-react/src/types/index.ts (may need new types)
+          2. Detect message patterns and emit appropriate events
+
+          3. Use EXACT event names that streaming uses (''subsession-started'', ''subsession-ended'',
+          ''media-added'', ''system_message'', ''thought-delta'', ''message-added'')
 
 
-          Timeline: 3-5 days'
-        created_at: '2025-09-22T19:24:06.698768'
-        description: Add missing event subscriptions in useChat hook for subsession,
-          media, system message, and error events.
-        id: cipher-gregory
-        parent_id: jaguar-juice
+          **DO NOT MODIFY**: Streaming event handlers - they are the reference implementation'
+        created_at: '2025-09-24T20:13:24.858007'
+        description: Modify handleChatSessionChanged() in EventStreamProcessor to
+          properly convert resumed MessageParam[] to events instead of bulk loading.
+          This is the core fix that makes resumed sessions behave like streaming.
+        id: nobel-crystal
+        parent_id: cupid-address
         priority: high
         requires_completion_signoff: 'true'
-        sequence: 2
-        title: 'React Package: Add Missing Event Subscriptions'
-        updated_at: '2025-09-22T19:24:06.698769'
-      desire-chicken:
-        child_tasks:
-        - ibiza-basil
-        - book-virtual
-        - metal-senior
+        sequence: 1
+        title: Fix EventStreamProcessor Message-to-Event Conversion
+        updated_at: '2025-09-24T20:13:24.858009'
+      phantom-humor:
+        child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: 'User Requirements Documents (MUST READ FIRST):
+        context: '## Suite Requirements
 
-          - //realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md
+          Create automated tests that validate:
 
-          - //realtime_client/.scratch/chat_fixes/session_with_delegation.json (test
-          data)
+          1. Event generation from resumed messages
 
+          2. Correct ChatItem type creation
 
-          This phase addresses items 7-8 from the high-level task list:
+          3. Role preservation through the pipeline
 
-          7. Implement special handling of ''think'' tool calls when resuming chat
+          4. Subsession divider placement
 
-          8. Implement special handling of delegation tools when resuming chat
-
-
-          Special Requirements:
-
-          - Think tools: Convert to thought deltas, discard tool results
-
-          - Delegation tools: Parse YAML, create subsession dividers, convert to message
-          sequence
+          5. Think tool rendering
 
 
-          Timeline: 2-3 days total across all packages'
-        created_at: '2025-09-22T19:25:19.815657'
-        description: Implement special handling for 'think' tool calls and delegation
-          tools (act_, ateam_, aa_). This is new functionality that requires parsing
-          and special rendering.
-        id: desire-chicken
-        parent_id: null
+          ## Test Implementation
+
+          - Use Jest/Vitest for unit tests
+
+          - Playwright for E2E visual validation
+
+          - Snapshot testing for rendering consistency
+
+          - Performance benchmarks
+
+
+          ## Coverage Areas
+
+          - EventStreamProcessor message mapping
+
+          - UI component rendering
+
+          - Hook state management
+
+          - Session switching logic
+
+
+          ## Success Criteria
+
+          - [ ] Automated test suite created
+
+          - [ ] All critical paths covered
+
+          - [ ] Visual regression tests in place
+
+          - [ ] Performance benchmarks established
+
+          - [ ] CI/CD integration ready'
+        created_at: '2025-09-24T20:21:56.559720'
+        description: Build an automated test suite that validates all fixes work correctly
+          without manual verification.
+        id: phantom-humor
+        parent_id: banjo-duet
         priority: medium
         requires_completion_signoff: 'true'
-        sequence: 3
-        title: 'PHASE 3: Special Tools Handling (Items 7-8)'
-        updated_at: '2025-09-22T19:25:19.815658'
-      frog-genuine:
+        sequence: 10
+        title: Create Automated Validation Suite
+        updated_at: '2025-09-24T20:21:56.559722'
+      pirate-heavy:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: "MUST READ DOCUMENTATION FIRST:\n- //realtime_client/.scratch/chat_fixes/chat_streaming_notes.md\n\
-          \nNew Components Required:\n1. MediaRenderer component (4 hours)\n   - Distinct\
-          \ bubble without avatar\n   - Display sent_by_class and sent_by_function\
-          \ in footer\n   - Handle all media types\n\n2. SystemMessage component (3\
-          \ hours)\n   - Alert-box style with severity indicators\n   - In-chat display\
-          \ (not just toast)\n   - Support info, warning, error severities\n\n3. Fix\
-          \ SubsessionDivider integration (2 hours)\n   - Remove client-side logic\
-          \ from MessageList\n   - Pure event-driven rendering\n\n4. Ensure error\
-          \ toast routing (1 hour)\n   - Errors go to toast system, not chat\n\nTimeline:\
-          \ 10 hours total"
-        created_at: '2025-09-22T19:24:19.522168'
-        description: Create MediaRenderer and SystemMessage components, fix SubsessionDivider
-          integration, and ensure error toast routing.
-        id: frog-genuine
-        parent_id: jaguar-juice
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 3
-        title: 'UI Components: Create Missing Display Components'
-        updated_at: '2025-09-22T19:24:19.522170'
-      ibiza-basil:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'MUST READ DOCUMENTATION FIRST:
-
-          - //realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md
-
-
-          Think Tool Handling:
-
-          1. Detect tool_use with name=''think''
-
-          2. Convert input.thought to thought_delta event
-
-          3. Skip corresponding tool_result in next message
-
-
-          Delegation Tool Handling:
-
-          1. Detect tools starting with act_, ateam_, aa_
-
-          2. Emit subsession_started with agent_key
-
-          3. Combine request + process_context into USER message
-
-          4. Parse YAML from tool result (after removing preamble)
-
-          5. Emit parsed content as ASSISTANT message
-
-          6. Emit subsession_ended
-
-
-          Timeline: 1-1.5 days'
-        created_at: '2025-09-22T19:25:32.150108'
-        description: Implement detection and special handling for 'think' tools and
-          delegation tools in Core package.
-        id: ibiza-basil
-        parent_id: desire-chicken
+        context: "**Issue**: Messages always append without checking for duplicates\n\
+          **Location**: useChat hook lines 192-204 in handleMessageAdded\n\n**Current\
+          \ Code**:\n```typescript\nsetMessages(prev => {\n  const newMessages = [...prev,\
+          \ messageToAdd];  // Always appends\n  // ...\n});\n```\n\n**Solution Required**:\n\
+          1. Add unique identifier checking (use message ID or content hash)\n2. Check\
+          \ for duplicates before appending\n3. Handle edge cases like updated streaming\
+          \ messages\n4. Consider performance for large message arrays\n\n**Success\
+          \ Criteria**:\n- No duplicate messages in chat display\n- Streaming message\
+          \ updates work correctly\n- Performance remains good with large message\
+          \ arrays\n- Edge cases handled (edited messages, retries)"
+        created_at: '2025-09-24T20:14:56.793092'
+        description: Implement message deduplication logic in useChat hook to prevent
+          duplicate messages from accumulating during event processing.
+        id: pirate-heavy
+        parent_id: cupid-address
         priority: medium
-        requires_completion_signoff: 'true'
-        sequence: 1
-        title: 'Core Package: Special Tool Handlers'
-        updated_at: '2025-09-22T19:25:32.150110'
-      jaguar-juice:
-        child_tasks:
-        - bombay-eclipse
-        - cipher-gregory
-        - frog-genuine
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'User Requirements Documents (MUST READ FIRST):
-
-          - //realtime_client/.scratch/chat_fixes/high_level_task_list.md
-
-          - //realtime_client/.scratch/chat_fixes/chat_streaming_notes.md
-
-          - //realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md
-
-
-          This phase addresses items 1-5 from the high-level task list:
-
-          1. Fix subsessions and markers handling
-
-          2. Fix RenderMedia events handling
-
-          3. Add SystemMessage event display
-
-          4. Fix Error events handling
-
-          5. Add Error event display
-
-
-          Timeline: 3-5 days total across all packages'
-        created_at: '2025-09-22T19:23:41.073968'
-        description: Fix critical issues that were missed or implemented incorrectly
-          in the original development. These are foundational fixes that must be completed
-          before proceeding to more complex changes.
-        id: jaguar-juice
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 1
-        title: 'PHASE 1: Gap Fixing (Items 1-5)'
-        updated_at: '2025-09-22T19:23:41.073969'
-      metal-senior:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'MUST READ DOCUMENTATION FIRST:
-
-          - //realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md
-
-
-          Visual Requirements:
-
-          1. Think tools render as thought bubbles (existing component)
-
-          2. Delegation tools wrapped in subsession dividers
-
-          3. Agent names displayed in dividers
-
-          4. Proper indentation/nesting for delegations
-
-
-          Mostly verification that existing components handle the converted data correctly.
-
-
-          Timeline: 4-5 hours'
-        created_at: '2025-09-22T19:25:55.101937'
-        description: Ensure proper visual treatment for think tools (as thoughts)
-          and delegation tools (with subsession dividers).
-        id: metal-senior
-        parent_id: desire-chicken
-        priority: medium
-        requires_completion_signoff: 'true'
-        sequence: 3
-        title: 'UI Components: Special Tool Visual Treatment'
-        updated_at: '2025-09-22T19:25:55.101938'
-      pioneer-politic:
-        child_tasks:
-        - ultra-humor
-        - story-fruit
-        - ship-humor
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'User Requirements Documents (MUST READ FIRST):
-
-          - //realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md
-
-          - //realtime_client/.scratch/chat_fixes/session_with_delegation.json (test
-          data)
-
-
-          This phase addresses item 6 from the high-level task list:
-
-          - Make the display of chat content from a resumed session match that of
-          streamed chat
-
-
-          Core requirement: Convert MessageParam[] array to stream of events that
-          render identically to live streaming.
-
-
-          Timeline: 3-5 days total across all packages'
-        created_at: '2025-09-22T19:24:31.868253'
-        description: Implement unified rendering so that resumed chat sessions display
-          identically to streamed chat. This is a major architectural change to convert
-          message arrays to events.
-        id: pioneer-politic
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 2
-        title: 'PHASE 2: Message List Unification (Item 6)'
-        updated_at: '2025-09-22T19:24:31.868254'
-      ship-humor:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'MUST READ DOCUMENTATION FIRST:
-
-          - //realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md
-
-
-          Required Changes:
-
-          1. Single rendering pipeline for all content types
-
-          2. Event-driven rendering only (no client-side logic)
-
-          3. Component registry mapping event types to components
-
-          4. Support for all new message types from Phase 1
-
-
-          Components to integrate:
-
-          - MediaRenderer (new from Phase 1)
-
-          - SystemMessage (new from Phase 1)
-
-          - SubsessionDivider (fixed in Phase 1)
-
-          - Existing message components
-
-
-          Timeline: 6-8 hours'
-        created_at: '2025-09-22T19:25:07.521704'
-        description: Refactor MessageList component to handle all event types through
-          a single unified rendering pipeline.
-        id: ship-humor
-        parent_id: pioneer-politic
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 3
-        title: 'UI Components: Unified MessageList Refactor'
-        updated_at: '2025-09-22T19:25:07.521705'
-      story-fruit:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'MUST READ DOCUMENTATION FIRST:
-
-          - //realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md
-
-
-          Required Implementation:
-
-          1. Create utils/messageConverter.ts module
-
-          2. Convert MessageParam[] to ChatItem[] structure
-
-          3. Maintain consistent IDs and ordering
-
-          4. Handle all content block types properly
-
-          5. Ensure resumed sessions match streamed appearance
-
-
-          New Types Required:
-
-          - Extended ChatItem interface for all message types
-
-          - Proper typing for converted events
-
-
-          Dependencies: Coordinates with Core package converter
-
-
-          Timeline: 2-3 days'
-        created_at: '2025-09-22T19:24:56.185189'
-        description: Build message converter module in React package to transform
-          MessageParam[] into unified event-like structure for rendering.
-        id: story-fruit
-        parent_id: pioneer-politic
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 2
-        title: 'React Package: Message Converter Module'
-        updated_at: '2025-09-22T19:24:56.185190'
-      summer-dolphin:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'MUST READ AND USE TEST DATA:
-
-          - //realtime_client/.scratch/chat_fixes/session_with_delegation.json
-
-
-          Testing Requirements:
-
-          1. All 8 items from high-level task list working correctly
-
-          2. Resumed sessions render identically to streamed sessions
-
-          3. All special tools handled properly
-
-          4. No console warnings or errors
-
-          5. Build passes with zero warnings
-
-
-          Success Criteria:
-
-          - Subsession dividers appear from events only
-
-          - Media renders with proper metadata
-
-          - System messages show as alerts in chat
-
-          - Errors show as toasts, not in chat
-
-          - Think tools appear as thoughts
-
-          - Delegation tools show subsessions with agent names'
-        created_at: '2025-09-22T19:26:06.760566'
-        description: Comprehensive testing of all phases using provided test data
-          to ensure requirements are met.
-        id: summer-dolphin
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 4
-        title: Integration Testing & Validation
-        updated_at: '2025-09-22T19:26:06.760567'
-      ultra-humor:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: 'MUST READ DOCUMENTATION FIRST:
-
-          - //realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md
-
-
-          Required Conversions:
-
-          1. User messages → user_message events
-
-          2. Assistant text blocks → text_delta events
-
-          3. Assistant thinking blocks → thought_delta events
-
-          4. Tool use blocks → tool_call events (with active=false for resumed)
-
-          5. Tool result blocks → tool_result events
-
-
-          Implementation:
-
-          - New method: convertMessagesToEvents(messages: MessageParam[])
-
-          - Emit converted events through standard event pipeline
-
-          - Ensure identical rendering to streamed content
-
-
-          Test with: //realtime_client/.scratch/chat_fixes/session_with_delegation.json
-
-
-          Timeline: 1-2 days'
-        created_at: '2025-09-22T19:24:44.006297'
-        description: Create comprehensive message-to-event conversion system in EventStreamProcessor
-          to convert resumed session messages to streaming events.
-        id: ultra-humor
-        parent_id: pioneer-politic
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 1
-        title: 'Core Package: Message-to-Event Converter'
-        updated_at: '2025-09-22T19:24:44.006298'
-    title: Chat Rendering Fixes Implementation Plan
-    updated_at: '2025-09-22T19:26:23.515185'
-  phase_2_message_converter:
-    created_at: '2025-09-23T12:01:06.726123'
-    description: 'THIRD ATTEMPT - Convert resumed chat session messages to streaming
-      events for identical rendering. MANDATORY: All implementers must read requirements
-      documents completely before starting work.'
-    id: virus-book
-    lessons_learned: []
-    tasks:
-      boston-nato:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: "**MANDATORY READING BEFORE STARTING:**\n- `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`\
-          \ - Sections \"User chat input\" and \"Assistant messages / thoughts\"\n\
-          - Review existing delta event handling in EventStreamProcessor\n- `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`\
-          \ - Task 2.2 details\n\n**Implementation:** In `messageToEventConverter.ts`,\
-          \ implement:\n- `convertTextBlockToDeltas()` - Convert TextBlockParam to\
-          \ text_delta event  \n- `convertThinkingBlockToDeltas()` - Convert ThinkingBlockParam\
-          \ to thought_delta event\n- `convertMediaBlocks()` - Handle ImageBlockParam\
-          \ and DocumentBlockParam\n\n**Exact Rules:**\n1. TextBlockParam → Single\
-          \ TextDeltaEvent with complete text\n2. ThinkingBlockParam → Single ThoughtDeltaEvent\
-          \ with complete content\n3. Media blocks → Preserved in UserMessageEvent\n\
-          \n**Dependencies:** Task 2.1 must be complete\n**Owner:** React Package\
-          \ - Communication Flow Dev Specialist\n**Duration:** 1 day"
-        created_at: '2025-09-23T12:01:35.929620'
-        description: Implement conversion of text, thinking blocks, and media to appropriate
-          events.
-        id: boston-nato
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 2
-        title: 'Task 2.2: Standard Content Conversion'
-        updated_at: '2025-09-23T12:01:35.929623'
-      earth-bank:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: "**MANDATORY READING BEFORE STARTING:**\n- `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`\
-          \ - Section \"Mapping chat sessions to events\"  \n- `//realtime_client/.scratch/chat_fixes/chat_streaming_notes.md`\
-          \ - Section \"Events vs messages\"\n- `//realtime_client/.scratch/chat_fixes/gap_analysis_and_implementation_plan.md`\n\
-          \n**Implementation Location:** Create new file `packages/react/src/utils/messageToEventConverter.ts`\n\
-          \n**Required Method Signatures:**\n```typescript\nexport function convertMessagesToEvents(\n\
-          \  messages: MessageParam[] | ChatCompletionMessageParam[],\n  sessionId:\
-          \ string,\n  userSessionId: string,\n  vendorType: 'anthropic' | 'openai'\n\
-          ): SessionEvent[]\n\nfunction convertAnthropicMessage(\n  message: MessageParam,\n\
-          \  sessionId: string,\n  userSessionId: string,\n  messageIndex: number,\n\
-          \  allMessages: MessageParam[]\n): SessionEvent[]\n\nfunction convertOpenAIMessage(\n\
-          \  message: ChatCompletionMessageParam,\n  sessionId: string,\n  userSessionId:\
-          \ string,\n  messageIndex: number,\n  allMessages: ChatCompletionMessageParam[]\n\
-          ): SessionEvent[]\n```\n\n**Owner:** React Package - Event Stream Dev Specialist\n\
-          **Duration:** 1 day"
-        created_at: '2025-09-23T12:01:21.919052'
-        description: Create the foundational message-to-event conversion framework
-          in React package.
-        id: earth-bank
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 1
-        title: 'Task 2.1: Core Message Conversion Infrastructure'
-        updated_at: '2025-09-23T12:01:21.919055'
-      korea-right:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: "**MANDATORY READING BEFORE STARTING:**\n- Review current ChatSessionChanged\
-          \ handling in useRealtimeChat.ts\n- `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`\
-          \ - Task 2.6 details\n\n**Implementation Location:** `packages/react/src/hooks/useRealtimeChat.ts`\n\
-          \n**Required Changes:**\n```typescript\nconst handleChatSessionChanged =\
-          \ (event: ChatSessionChangedEvent) => {\n  // Existing logic...\n  \n  if\
-          \ (event.chat_session.messages && event.chat_session.messages.length > 0)\
-          \ {\n    const syntheticEvents = convertMessagesToEvents(\n      event.chat_session.messages,\n\
-          \      event.session_id,\n      event.user_session_id || event.session_id,\n\
-          \      vendorType\n    );\n    \n    syntheticEvents.forEach(syntheticEvent\
-          \ => {\n      // Route to appropriate existing handler\n    });\n  }\n};\n\
-          ```\n\n**Success Criteria:**\n- Conversion triggered on resumed session\n\
-          - Events routed to existing handlers\n- No duplicate processing\n- Maintains\
-          \ streaming compatibility\n\n**Dependencies:** Tasks 2.1-2.5 must be complete\n\
-          **Owner:** React Package - Event Stream Dev Specialist\n**Duration:** 0.5\
-          \ days"
-        created_at: '2025-09-23T12:02:35.849560'
-        description: Integrate converter with ChatSessionChanged handler in useRealtimeChat
-          hook.
-        id: korea-right
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 6
-        title: 'Task 2.6: Integration with useRealtimeChat Hook'
-        updated_at: '2025-09-23T12:02:35.849562'
-      media-bazooka:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: "**MANDATORY READING BEFORE STARTING:**\n- `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`\
-          \ - Section \"Tool calls and results\"\n- Review ToolCallEvent structure\
-          \ in ServerEvents.ts\n- `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`\
-          \ - Task 2.3 details\n\n**Implementation:** In `messageToEventConverter.ts`,\
-          \ implement:\n- `convertToolUseToEvent()` - Convert tool use + result to\
-          \ ToolCallEvent\n- `findToolResult()` - Match tool use blocks with their\
-          \ results\n\n**Exact Rules:**\n1. Find ToolUseBlockParam in assistant message\n\
-          2. Look ahead to next user message for matching ToolResultBlockParam\n3.\
-          \ Combine into ToolCallEvent with `active: false`\n4. Skip ToolResultBlockParam\
-          \ when processing user message\n\n**Dependencies:** Task 2.2 must be complete\n\
-          **Owner:** React Package - Communication Flow Dev Specialist  \n**Duration:**\
-          \ 1 day"
-        created_at: '2025-09-23T12:01:48.833825'
-        description: Convert ToolUseBlockParam + ToolResultBlockParam pairs to ToolCallEvent.
-        id: media-bazooka
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 3
-        title: 'Task 2.3: Tool Call Conversion'
-        updated_at: '2025-09-23T12:01:48.833828'
-      metal-sabine:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: "**MANDATORY READING BEFORE STARTING:**\n- `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`\
-          \ - Section \"think Tool\" with JSON example\n- `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`\
-          \ - Task 2.4 details\n\n**Implementation:** In `messageToEventConverter.ts`:\n\
-          - Add `handleThinkTool()` function\n- Detect ToolUseBlockParam with `name:\
-          \ \"think\"`\n- Extract `input.thought` content\n- Convert to ThoughtDeltaEvent\
-          \ (NOT a tool call)\n- DISCARD the corresponding ToolResultBlockParam\n\n\
-          **Exact Conversion:**\n```typescript\nif (toolUseBlock.name === 'think')\
-          \ {\n  // Convert input.thought to ThoughtDeltaEvent\n  // DISCARD the ToolResultBlockParam\n\
-          \  return handleThinkTool(toolUseBlock, sessionId, userSessionId);\n}\n\
-          ```\n\n**Dependencies:** Task 2.3 must be complete\n**Owner:** React Package\
-          \ - Audio Pipeline Dev Specialist\n**Duration:** 0.5 days"
-        created_at: '2025-09-23T12:02:03.279705'
-        description: Implement special conversion for "think" tools to thought_delta
-          events.
-        id: metal-sabine
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 4
-        title: 'Task 2.4: Special Tool Handling - "think" Tool'
-        updated_at: '2025-09-23T12:02:03.279710'
-      photo-heavy:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**MANDATORY READING BEFORE STARTING:**
-
-          - `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md` - Section
-          "delegation tools" with JSON example
-
-          - `//realtime_client/.scratch/chat_fixes/chat_streaming_notes.md` - Section
-          "Sub-sessions"
-
-          - Review SubsessionStartedEvent/SubsessionEndedEvent in ServerEvents.ts
-
-          - `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
-          - Task 2.5 details
-
-
-          **Implementation:** In `messageToEventConverter.ts`:
-
-          - `isDelegationTool()` - Detect by prefix (act_*, ateam_*, aa_*)
-
-          - `handleDelegationTool()` - Convert to subsession events + messages
-
-          - `parseAssistantMessageFromYAML()` - Parse YAML from tool result
-
-
-          **Exact Process:**
-
-          1. Detect delegation tool by prefix
-
-          2. Extract agent_key from input (ateam_/aa_ tools)
-
-          3. Create SubsessionStartedEvent
-
-          4. Combine request + "\\n# Process Context\\n\\n" + context → UserMessageEvent
-
-          5. Parse tool result (remove preamble, parse YAML)
-
-          6. Convert to AssistantMessageEvent
-
-          7. Create SubsessionEndedEvent
-
-
-          **Dependencies:** Task 2.4 must be complete
-
-          **Owner:** React Package - System Integration Dev Specialist
-
-          **Duration:** 1 day'
-        created_at: '2025-09-23T12:02:21.309330'
-        description: Convert delegation tools (act_*, ateam_*, aa_*) to subsession
-          events with user/assistant messages.
-        id: photo-heavy
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 5
-        title: 'Task 2.5: Special Tool Handling - Delegation Tools'
-        updated_at: '2025-09-23T12:02:21.309333'
-      tourist-arthur:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**MANDATORY READING BEFORE STARTING:**
-
-          - Review MessageList component event handling
-
-          - Verify SubsessionDivider usage
-
-          - `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
-          - Task 2.8 details
-
-
-          **Verification Points:**
-
-          - MessageList correctly assembles deltas from converted events
-
-          - SubsessionDivider renders for subsession events (start/end)
-
-          - Tool calls display properly
-
-          - NO visual differences between resumed and streamed sessions
-
-
-          **Testing Approach:**
-
-          1. Load session_with_delegation.json as resumed session
-
-          2. Compare rendering to equivalent streamed session
-
-          3. Verify pixel-perfect match
-
-          4. Check console for errors/warnings
-
-
-          **Success Criteria:**
-
-          - Identical visual rendering
-
-          - No console errors
-
-          - Performance acceptable (<100ms conversion)
-
-
-          **Dependencies:** Task 2.7 must be complete
-
-          **Owner:** UI Components - System Integration Test Specialist
-
-          **Duration:** 0.5 days'
-        created_at: '2025-09-23T12:03:04.843054'
-        description: Verify that UI components render converted events identically
-          to streamed events.
-        id: tourist-arthur
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 8
-        title: 'Task 2.8: UI Integration Verification'
-        updated_at: '2025-09-23T12:03:04.843057'
-      vocal-iceberg:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**MANDATORY READING BEFORE STARTING:**
-
-          - Review test data: `//realtime_client/.scratch/chat_fixes/session_with_delegation.json`
-
-          - `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
-          - Task 2.7 details
-
-
-          **Test File:** Create `packages/react/src/utils/__tests__/messageToEventConverter.test.ts`
-
-
-          **Required Test Cases:**
-
-          1. Should convert resumed session messages to events
-
-          2. Should handle think tools as thoughts
-
-          3. Should handle delegation tools with subsessions
-
-          4. Should produce identical rendering to streamed content
-
-
-          **Validation Checklist:**
-
-          - Standard messages convert to deltas
-
-          - Think tools render as thoughts
-
-          - Delegation tools create subsessions
-
-          - All events have correct session IDs
-
-          - No missing or duplicate content
-
-          - Rendering matches streamed sessions EXACTLY
-
-
-          **Dependencies:** Task 2.6 must be complete
-
-          **Owner:** React Package - Event Stream Test Specialist
-
-          **Duration:** 1 day'
-        created_at: '2025-09-23T12:02:50.383321'
-        description: Create comprehensive tests using the provided test data file.
-        id: vocal-iceberg
-        parent_id: null
-        priority: high
         requires_completion_signoff: 'true'
         sequence: 7
-        title: 'Task 2.7: Testing with session_with_delegation.json'
-        updated_at: '2025-09-23T12:02:50.383324'
-    title: 'Phase 2: Message-to-Event Converter Implementation'
-    updated_at: '2025-09-23T12:03:04.843066'
-  react_phase_2_chat_fixes:
-    created_at: '2025-09-23T12:07:34.199464'
-    description: Third attempt at Phase 2 implementation for chat rendering fixes.
-      Convert MessageParam[] from resumed sessions into event-like structures that
-      render identically to streamed sessions. MUST follow specifications exactly
-      with no creative interpretation.
-    id: owner-avalon
-    lessons_learned: []
-    tasks:
-      baker-forget:
+        title: Add Message Deduplication in useChat
+        updated_at: '2025-09-24T20:14:56.793095'
+      police-confide:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: '**MANDATORY READING BEFORE STARTING**:
+        context: '## Known Console Errors to Resolve
 
-          - Read `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`
-          section "think Tool" INCLUDING the example JSON
+          1. "Unknown chat item type" for type "thought"
 
-          - Review Core''s plan Task 2.4 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+          2. Any WebSocket connection errors
 
+          3. Event handler warnings
 
-          **Owner**: Audio Voice Developer (realtime_react_audio_dev)
+          4. React key warnings
 
-          **Duration**: 4 hours
-
-          **Dependencies**: RC-2.3 MUST be complete
+          5. State update warnings
 
 
-          Implement handleThinkTool:
+          ## Validation Approach
 
-          - Detect tools with name === "think" (exact match)
+          1. Enable strict console monitoring
 
-          - Extract thought content from input.thought field
+          2. Load each test scenario
 
-          - Convert to thought_delta event, NOT tool_call
+          3. Check console for any errors/warnings
 
-          - DISCARD the corresponding ToolResultBlockParam
-
-
-          CRITICAL: Think tools become thoughts, not tool calls!
+          4. Document and resolve any found issues
 
 
-          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
-          Task RC-2.4'
-        created_at: '2025-09-23T12:08:35.691714'
-        description: Convert "think" tool calls to thought_delta events instead of
-          tool_call events.
-        id: baker-forget
-        parent_id: null
+          ## Test Coverage
+
+          - All test data files
+
+          - All user interactions
+
+          - Session switching
+
+          - Connection/disconnection cycles
+
+
+          ## Success Criteria
+
+          - [ ] Zero "Unknown chat item type" errors
+
+          - [ ] No React warnings in console
+
+          - [ ] No unhandled promise rejections
+
+          - [ ] Clean console during all operations
+
+          - [ ] Proper error boundaries in place'
+        created_at: '2025-09-24T20:21:40.899372'
+        description: Ensure all console errors are resolved, particularly "Unknown
+          chat item type" errors and any other runtime issues.
+        id: police-confide
+        parent_id: banjo-duet
         priority: high
         requires_completion_signoff: 'true'
-        sequence: 4
-        title: 'RC-2.4: Implement "think" Tool Special Handling'
-        updated_at: '2025-09-23T12:08:35.691716'
-      crater-brush:
+        sequence: 9
+        title: Validate Console Error Resolution
+        updated_at: '2025-09-24T20:21:40.899374'
+      polka-reply:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: '**MANDATORY READING BEFORE STARTING**:
-
-          - Review test data in `//realtime_client/.scratch/chat_fixes/session_with_delegation.json`
-
-          - Review Core''s plan Task 2.7 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+        context: '## Final Validation Checklist
 
 
-          **Owner**: Chat Communication Test Specialist (realtime_react_chat_test)
+          ### All Test Scenarios
 
-          **Duration**: 8 hours
+          1. session_with_delegation.json - Delegation tools with subsessions
 
-          **Dependencies**: RC-2.6 MUST be complete
+          2. session_with_think_tools.json - Think tool thought bubbles
 
+          3. role_preservation.json - Special role handling
 
-          Create test file: packages/react/src/utils/__tests__/messageToEventConverter.test.ts
+          4. Large sessions (50+ messages)
 
+          5. Media/attachment sessions
 
-          Test categories:
-
-          - Standard content conversion (text/thinking to deltas)
-
-          - Tool call pairing and conversion
-
-          - "think" tool special handling
-
-          - Delegation tool detection and subsession creation
-
-          - YAML parsing and agent_key extraction
-
-          - Full session_with_delegation.json conversion
+          6. Error handling sessions
 
 
-          CRITICAL: Must validate EXACT event structure per specifications!
+          ### Validation Matrix
+
+          For EACH test scenario, validate:
+
+          - [ ] Streaming rendering (baseline)
+
+          - [ ] Resumed rendering (must match)
+
+          - [ ] Visual parity (100% identical)
+
+          - [ ] No console errors
+
+          - [ ] Correct auto-scroll
+
+          - [ ] Proper session switching
 
 
-          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
-          Task RC-2.7'
-        created_at: '2025-09-23T12:09:20.215350'
-        description: Create complete test suite for message-to-event conversion using
-          session_with_delegation.json.
-        id: crater-brush
-        parent_id: null
+          ### Regression Testing
+
+          - [ ] Streaming still works (unchanged)
+
+          - [ ] No performance degradation
+
+          - [ ] No memory leaks
+
+          - [ ] WebSocket stability
+
+
+          ### Sign-off Criteria
+
+          - [ ] Product owner visual approval
+
+          - [ ] All test scenarios pass
+
+          - [ ] Zero known issues
+
+          - [ ] Documentation updated
+
+          - [ ] Release notes prepared
+
+
+          ## Success Criteria
+
+          - [ ] 100% visual parity achieved
+
+          - [ ] All test scenarios validated
+
+          - [ ] No regression in streaming
+
+          - [ ] Ready for production deployment'
+        created_at: '2025-09-24T20:22:14.737058'
+        description: Perform final comprehensive validation ensuring 100% visual parity
+          between streaming and resumed sessions with all test scenarios.
+        id: polka-reply
+        parent_id: banjo-duet
         priority: high
         requires_completion_signoff: 'true'
-        sequence: 7
-        title: 'RC-2.7: Create Comprehensive Test Suite'
-        updated_at: '2025-09-23T12:09:20.215353'
-      gizmo-biscuit:
+        sequence: 11
+        title: Execute Comprehensive End-to-End Validation
+        updated_at: '2025-09-24T20:22:14.737061'
+      product-turbo:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: '**MANDATORY READING BEFORE STARTING**:
+        context: '## Current Location Issue
 
-          - Read `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`
-          section "Tool calls and results"
-
-          - Review Core''s plan Task 2.3 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
-
-          - Study ToolCallEvent structure in ServerEvents.ts
+          File: `packages/core/src/events/__tests__/EventStreamProcessor.resumed-messages.test.ts:17`
 
 
-          **Owner**: Chat Communication Developer (realtime_react_chat_dev)
+          Current import:
 
-          **Duration**: 8 hours
+          ```typescript
 
-          **Dependencies**: RC-2.2 MUST be complete
+          import testSession from ''../../../../../.scratch/chat_fixes/session_with_delegation.json'';
 
-
-          Implement:
-
-          - convertToolUseToEvent: Must look ahead to find matching result in next
-          user message
-
-          - findToolResult: Match tool results by ID
-
-          - Create ToolCallEvent with active: false (ALWAYS false for resumed)
-
-          - Mark tool results as consumed to avoid duplication
+          ```
 
 
-          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
-          Task RC-2.3'
-        created_at: '2025-09-23T12:08:20.858341'
-        description: Convert ToolUseBlockParam + ToolResultBlockParam pairs into ToolCallEvent.
-        id: gizmo-biscuit
-        parent_id: null
-        priority: high
+          ## Required Actions
+
+          1. Create fixtures directory: `packages/core/src/events/__tests__/fixtures/`
+
+          2. Copy test data from `.scratch/chat_fixes/` to new fixtures directory
+
+          3. Update all import paths in test files
+
+          4. Ensure git tracking for fixture files
+
+
+          ## Files to Move
+
+          - session_with_delegation.json
+
+          - Any other test session files in scratchpad
+
+
+          ## Success Criteria
+
+          - [ ] Fixtures directory created in proper location
+
+          - [ ] All test fixtures moved from scratchpad
+
+          - [ ] Import paths updated in all test files
+
+          - [ ] Tests run successfully with relocated fixtures
+
+          - [ ] Fixtures tracked in git repository
+
+          - [ ] Build and tests pass'
+        created_at: '2025-09-24T20:10:29.642479'
+        description: Move test fixtures from scratchpad to Core package test fixtures
+          directory and update import paths
+        id: product-turbo
+        parent_id: mimic-active
+        priority: medium
         requires_completion_signoff: 'true'
         sequence: 3
-        title: 'RC-2.3: Implement Tool Call Conversion'
-        updated_at: '2025-09-23T12:08:20.858344'
-      sardine-stella:
+        title: Relocate Test Fixtures from Scratchpad to Proper Location
+        updated_at: '2025-09-24T20:10:29.642481'
+      rachel-boston:
         child_tasks: []
         completed: false
         completion_report: null
         completion_signoff_by: null
-        context: '**MANDATORY READING BEFORE STARTING**:
+        context: '**Issue**: Race condition between event handlers when switching
+          sessions
 
-          - Read `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`
-          section "delegation tools" INCLUDING example JSON
+          **Location**: useChat hook lines 320-350
 
-          - Read `//realtime_client/.scratch/chat_fixes/chat_streaming_notes.md` section
-          "Sub-sessions"
 
-          - Review Core''s plan Task 2.5 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
+          **Problem Flow**:
 
+          1. When switching sessions, both `handleSessionChanged` and `handleSessionMessagesLoaded`
+          fire
 
-          **Owner**: Data Management Developer (realtime_react_data_dev)
+          2. If `handleSessionChanged` fires after `handleSessionMessagesLoaded`,
+          old messages can be restored
 
-          **Duration**: 8 hours
+          3. Messages accumulate instead of being replaced
 
-          **Dependencies**: RC-2.4 MUST be complete
 
+          **Solution Required**:
 
-          Implement:
+          1. Add loading state to prevent race conditions: `const [isLoadingSession,
+          setIsLoadingSession] = useState(false)`
 
-          - isDelegationTool: Detect by prefixes (act_*, ateam_*, aa_*)
+          2. Set loading state when session change starts
 
-          - handleDelegationTool: Create subsession event sequence
+          3. Clear loading state when messages are fully loaded
 
-          - Extract agent_key for ateam_/aa_ tools
+          4. Only update messages when not in loading state
 
-          - Combine request + context with separator: "\n# Process Context\n\n"
 
-          - Parse YAML assistant response (remove preamble, extract text)
+          **Success Criteria**:
 
-          - Create: SubsessionStartedEvent → UserMessage → AssistantMessage → SubsessionEndedEvent
+          - Session switches always clear old messages
 
+          - No message pile-up from previous sessions
 
-          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
-          Task RC-2.5'
-        created_at: '2025-09-23T12:08:51.150047'
-        description: Convert delegation tools (act_*, ateam_*, aa_*) to subsession
-          events with user/assistant messages.
-        id: sardine-stella
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 5
-        title: 'RC-2.5: Implement Delegation Tool Handling'
-        updated_at: '2025-09-23T12:08:51.150050'
-      ship-subject:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**MANDATORY READING BEFORE STARTING**:
-
-          - Review current ChatSessionChanged handling in useRealtimeChat.ts
-
-          - Review Core''s plan Task 2.6 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
-
-
-          **Owner**: Chat Communication Developer (realtime_react_chat_dev)
-
-          **Duration**: 4 hours
-
-          **Dependencies**: ALL conversion tasks (RC-2.1 through RC-2.5) MUST be complete
-
-
-          In useRealtimeChat.ts ChatSessionChanged handler:
-
-          - Import convertMessagesToEvents
-
-          - Detect resumed sessions with messages
-
-          - Convert messages to synthetic events
-
-          - Route each event to existing handlers (text_delta, thought_delta, tool_call,
-          etc.)
-
-          - Ensure no duplicate processing
-
-
-          CRITICAL: Only convert for resumed sessions, not streaming!
-
-
-          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
-          Task RC-2.6'
-        created_at: '2025-09-23T12:09:04.948009'
-        description: Integrate the message converter with the existing useRealtimeChat
-          hook to process resumed sessions.
-        id: ship-subject
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 6
-        title: 'RC-2.6: Integration with useRealtimeChat Hook'
-        updated_at: '2025-09-23T12:09:04.948012'
-      trade-english:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**CRITICAL**: This is the THIRD attempt. Previous failed due to
-          not following requirements.
-
-
-          **MANDATORY READING BEFORE STARTING**:
-
-          - Read `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`
-          COMPLETELY
-
-          - Read `//realtime_client/.scratch/chat_fixes/chat_streaming_notes.md` section
-          "Events vs messages"
-
-          - Review Core''s plan Task 2.1 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
-
-
-          **Owner**: Chat Communication Developer (realtime_react_chat_dev)
-
-          **Duration**: 4 hours
-
-
-          Create file: `packages/react/src/utils/messageToEventConverter.ts`
-
-
-          Must include EXACT exports:
-
-          - convertMessagesToEvents (main entry point)
-
-          - convertAnthropicMessage
-
-          - convertOpenAIMessage
-
-
-          Must define ChatItem type extensions for converted events.
-
-
-          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
-          Task RC-2.1'
-        created_at: '2025-09-23T12:07:51.693352'
-        description: Create the message converter module with exact structure and
-          exports as specified. NO implementation logic yet, just framework.
-        id: trade-english
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 1
-        title: 'RC-2.1: Create Message Converter Module Structure'
-        updated_at: '2025-09-23T12:07:51.693355'
-      whiskey-chicago:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**MANDATORY READING BEFORE STARTING**:
-
-          - Read `//realtime_client/.scratch/chat_fixes/resumed_chat_rendering.md`
-          sections "User chat input" and "Assistant messages / thoughts"
-
-          - Review Core''s plan Task 2.2 in `//realtime_client/.scratch/chat_fixes/phase_2_implementation_plan.md`
-
-
-          **Owner**: Chat Communication Developer (realtime_react_chat_dev)
-
-          **Duration**: 6 hours
-
-          **Dependencies**: RC-2.1 MUST be complete
-
-
-          Implement in messageToEventConverter.ts:
-
-          - convertTextBlockToDeltas: Create single LARGE delta with complete text
-
-          - convertThinkingBlockToDeltas: Create single LARGE delta with complete
-          thought
-
-          - Handle ImageBlockParam/DocumentBlockParam pass-through
-
-
-          CRITICAL: Must create SINGLE large deltas, not multiple small ones!
-
-
-          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
-          Task RC-2.2'
-        created_at: '2025-09-23T12:08:06.594485'
-        description: Implement conversion of TextBlockParam and ThinkingBlockParam
-          to delta events.
-        id: whiskey-chicago
-        parent_id: null
-        priority: high
-        requires_completion_signoff: 'true'
-        sequence: 2
-        title: 'RC-2.2: Implement Standard Content Conversion'
-        updated_at: '2025-09-23T12:08:06.594487'
-      zoom-pogo:
-        child_tasks: []
-        completed: false
-        completion_report: null
-        completion_signoff_by: null
-        context: '**MANDATORY READING BEFORE STARTING**:
-
-          - Review expected rendering in all requirements documents
-
-          - Understand what "identical rendering" means
-
-
-          **Owner**: Chat Communication Test Specialist (realtime_react_chat_test)
-
-          **Duration**: 4 hours
-
-          **Dependencies**: RC-2.7 MUST be complete
-
-
-          Validation requirements:
-
-          1. Visual comparison test between resumed and streamed
-
-          2. Test with actual demo app using session_with_delegation.json
-
-          3. Verify subsession dividers render at correct positions
-
-          4. Performance validation (< 100ms conversion time)
-
-
-          Success Criteria:
-
-          - Pixel-perfect identical rendering
-
-          - All content appears correctly
-
-          - No duplicate or missing content
-
-          - Acceptable performance
-
-
-          See full details in `//realtime_client/.scratch/chat_fixes/react_phase_2_implementation_plan.md`
-          Task RC-2.8'
-        created_at: '2025-09-23T12:09:33.788608'
-        description: Validate that converted messages render identically to streamed
+          - Clean transition between sessions'
+        created_at: '2025-09-24T20:14:25.949412'
+        description: Resolve the race condition in useChat hook where handleSessionMessagesLoaded
+          and handleSessionChanged can cause old messages to persist when switching
           sessions.
-        id: zoom-pogo
-        parent_id: null
+        id: rachel-boston
+        parent_id: cupid-address
         priority: high
         requires_completion_signoff: 'true'
+        sequence: 5
+        title: Fix Session Clearing Race Condition in useChat
+        updated_at: '2025-09-24T20:14:25.949414'
+      saga-polygon:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Current State
+
+          The TestDataLoader.parseDelegationToolResult() currently expects YAML format
+          but delegation tools now return JSON.
+
+
+          ## Required Changes
+
+          1. Update parseDelegationToolResult() to parse JSON instead of YAML
+
+          2. Handle the new JSON structure with "notice" and "agent_message" fields
+
+          3. Ensure backward compatibility if needed
+
+
+          ## Success Criteria
+
+          - [ ] TestDataLoader correctly parses new JSON delegation format
+
+          - [ ] Existing test scenarios continue to work
+
+          - [ ] No errors when loading delegation tool results
+
+          - [ ] Unit tests updated to cover JSON parsing'
+        created_at: '2025-09-24T20:19:45.326671'
+        description: Update TestDataLoader to handle the new JSON delegation tool
+          response format instead of YAML. This is a critical prerequisite for all
+          delegation tool testing.
+        id: saga-polygon
+        parent_id: banjo-duet
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 1
+        title: Update Test Infrastructure for New JSON Format
+        updated_at: '2025-09-24T20:19:45.326674'
+      samba-husband:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Feature Requirements
+
+          Create a comparison view that:
+
+          1. Shows streaming session on the left
+
+          2. Shows resumed session on the right
+
+          3. Allows synchronized scrolling
+
+          4. Highlights any visual differences
+
+          5. Includes controls to load different test scenarios
+
+
+          ## Implementation Details
+
+          - Add comparison mode to demo app
+
+          - Create split-screen layout
+
+          - Implement synchronized scroll behavior
+
+          - Add visual diff highlighting (optional)
+
+
+          ## Key Validation
+
+          This is the PRIMARY validation tool - resumed MUST look IDENTICAL to streaming
+
+
+          ## Success Criteria
+
+          - [ ] Side-by-side view implemented
+
+          - [ ] Can load same session data in both views
+
+          - [ ] Visual parity between streaming and resumed
+
+          - [ ] Easy to spot any rendering differences
+
+          - [ ] Controls for switching test scenarios'
+        created_at: '2025-09-24T20:20:37.111589'
+        description: Create a side-by-side comparison view in the demo app to visually
+          validate that resumed sessions look identical to streamed ones.
+        id: samba-husband
+        parent_id: banjo-duet
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 5
+        title: Build Streaming vs Resumed Comparison View
+        updated_at: '2025-09-24T20:20:37.111593'
+      solar-milk:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "## Integration Points to Verify\nCore exports used by React package:\n\
+          - EventStreamProcessor class\n- Event type definitions  \n- Message/ChatItem\
+          \ types\n- Content block type guards\n\n## Key Validations\n1. **Event Type\
+          \ Compatibility**\n   - Core event types work with React handlers\n   -\
+          \ No breaking changes in event structure\n\n2. **Data Flow Verification**\n\
+          \   - Role preservation from Core to React\n   - Proper event emission through\
+          \ Core → React chain\n\n3. **API Contract Stability**\n   - No breaking\
+          \ changes in Core exports\n   - Backward compatibility maintained\n\n##\
+          \ Testing Approach\n1. Run Core package tests\n2. Run React package tests\
+          \ after Core changes\n3. Verify no regression in streaming functionality\n\
+          4. Test with session_with_delegation.json\n\n## Success Criteria\n- [ ]\
+          \ Core exports unchanged or backward compatible\n- [ ] React package tests\
+          \ pass with Core changes\n- [ ] Integration tests pass\n- [ ] No TypeScript\
+          \ errors in React package\n- [ ] Streaming functionality unchanged\n- [\
+          \ ] Build passes for both packages"
+        created_at: '2025-09-24T20:11:27.980219'
+        description: Ensure Core package fixes integrate properly with React package
+          EventStreamProcessor usage
+        id: solar-milk
+        parent_id: mimic-active
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 7
+        title: Verify Core-React Package Integration
+        updated_at: '2025-09-24T20:11:27.980221'
+      system-slogan:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "## Test Coverage Required\nFile: `packages/core/src/events/__tests__/EventStreamProcessor.test.ts`\n\
+          \n## Test Scenarios\n1. **Thought Role Preservation**\n   - Input: Message\
+          \ with role 'assistant (thought)'\n   - Expected: Role preserved, not cast\
+          \ to 'assistant'\n\n2. **Delegation Tool Handling**\n   - Test JSON format\
+          \ parsing\n   - Test YAML format parsing (backward compatibility)\n   -\
+          \ Verify subsession events generated\n\n3. **Special Tool Detection**\n\
+          \   - Think tool → ThoughtDeltaEvent\n   - Delegation tools (act_*, ateam_*,\
+          \ aa_*) → Subsession events\n   - Regular tools → ToolCallCompleteEvent\n\
+          \n4. **Event Sequencing**\n   - Verify correct order for resumed sessions\n\
+          \   - Compare with streaming event order\n\n## Success Criteria\n- [ ] Test\
+          \ suite covers all role preservation scenarios\n- [ ] Tests for both JSON\
+          \ and YAML delegation parsing\n- [ ] Tests verify event emission order\n\
+          - [ ] Tests confirm no regression in streaming\n- [ ] All tests pass with\
+          \ 100% success rate\n- [ ] Code coverage maintained or improved"
+        created_at: '2025-09-24T20:10:59.663764'
+        description: Create comprehensive test suite to verify role preservation through
+          the entire event chain
+        id: system-slogan
+        parent_id: mimic-active
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 5
+        title: Add Comprehensive Tests for Role Preservation
+        updated_at: '2025-09-24T20:10:59.663767'
+      taboo-field:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: "**Required Event Generation**:\n\n1. **System Messages**:\n   -\
+          \ Detect system message patterns in resumed content\n   - Emit 'system_message'\
+          \ events\n   - Preserve metadata and formatting\n\n2. **Media Events**:\n\
+          \   - Detect media/render_media tool calls\n   - Emit 'media-added' events\n\
+          \   - Note: May require server-side changes for media persistence\n\n3.\
+          \ **Error Events**:\n   - Detect error patterns\n   - Emit appropriate error\
+          \ events\n   - Maintain error context\n\n**Success Criteria**:\n- System\
+          \ messages appear correctly in resumed sessions\n- Media content renders\
+          \ properly (if server provides data)\n- Error states preserved and displayed\n\
+          - Visual parity with streaming for all message types"
+        created_at: '2025-09-24T20:15:10.139860'
+        description: Ensure EventStreamProcessor properly generates system_message
+          and media-added events for resumed sessions to match streaming behavior.
+        id: taboo-field
+        parent_id: cupid-address
+        priority: medium
+        requires_completion_signoff: 'true'
         sequence: 8
-        title: 'RC-2.8: Validate Identical Rendering'
-        updated_at: '2025-09-23T12:09:33.788611'
-    title: 'React Package Phase 2: Message Converter Implementation'
-    updated_at: '2025-09-23T12:09:33.788621'
-current_plan: chat_fixes_phase1
+        title: Handle System Messages and Media Events
+        updated_at: '2025-09-24T20:15:10.139863'
+      under-ozone:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Test Scenario Requirements
+
+          Create session_with_think_tools.json test data file that includes:
+
+          1. Multiple think tool invocations
+
+          2. Mix of think tools and regular messages
+
+          3. Nested think tools within conversations
+
+          4. Think tools with varying content lengths
+
+
+          ## Validation Points
+
+          - Think tools render as thought bubbles with correct styling
+
+          - Tool results are properly skipped (not shown)
+
+          - Role ''assistant (thought)'' is preserved
+
+          - No "Unknown chat item type" errors
+
+
+          ## File Location
+
+          /public/test-data/session_with_think_tools.json
+
+
+          ## Success Criteria
+
+          - [ ] Test file created with comprehensive think tool scenarios
+
+          - [ ] Test validates think tool rendering as thoughts
+
+          - [ ] No console errors when loading test
+
+          - [ ] Visual confirmation of thought bubble styling'
+        created_at: '2025-09-24T20:20:11.617108'
+        description: Create a comprehensive test scenario for validating that think
+          tools render as thought bubbles, not as tool calls.
+        id: under-ozone
+        parent_id: banjo-duet
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 3
+        title: Create Think Tool Test Scenario
+        updated_at: '2025-09-24T20:20:11.617110'
+      volume-rubber:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Problem Statement
+
+          Console shows "Unknown chat item type: thought" errors because EventStreamProcessor
+          is creating invalid ChatItems with type=''thought'' (which doesn''t exist
+          in the ChatItem type union).
+
+
+          ## Current Behavior (Correct)
+
+          MessageList logs a warning and returns null for unknown types, which is
+          the RIGHT behavior - it protects against invalid data.
+
+
+          ## Required Verification
+
+          - Confirm MessageList correctly handles only valid ChatItem types: ''message'',
+          ''divider'', ''media'', ''system_alert''
+
+          - Ensure proper warning logs for invalid types
+
+          - Verify component doesn''t crash on invalid data
+
+          - Confirm type guards are in place
+
+
+          ## Important Note
+
+          The fix for invalid ChatItem types will happen in the React package (EventStreamProcessor).
+          This task is only to verify UI components handle invalid data gracefully.
+
+
+          ## Success Criteria
+
+          - MessageList has proper type checking for ChatItem types
+
+          - Invalid types are logged with descriptive warnings
+
+          - Component gracefully skips rendering invalid items
+
+          - No runtime errors when receiving malformed data
+
+          - Type definitions properly enforce ChatItem union'
+        created_at: '2025-09-24T20:17:18.310837'
+        description: Ensure MessageList component properly handles and logs warnings
+          for invalid ChatItem types while gracefully skipping rendering.
+        id: volume-rubber
+        parent_id: giant-smart
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 2
+        title: Verify MessageList Error Handling for Invalid ChatItem Types
+        updated_at: '2025-09-24T20:17:18.310839'
+      western-pattern:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: '## Dependency
+
+          This task depends on React package fixes to EventStreamProcessor being completed
+          first.
+
+
+          ## Validation Scope
+
+          Once EventStreamProcessor is fixed to emit proper ChatItems:
+
+          - Verify thoughts appear as type=''message'' with role=''assistant (thought)''
+
+          - Confirm subsession dividers render for delegation tool calls
+
+          - Validate system messages display correctly
+
+          - Check media items render when present
+
+          - Ensure auto-scrolling works properly
+
+
+          ## Test Scenarios
+
+          1. Resumed chat sessions with delegation tools
+
+          2. Messages with thought content (role=''assistant (thought)'')
+
+          3. System messages and error alerts
+
+          4. Media content (if available)
+
+          5. Session switching and message clearing
+
+
+          ## Key Components to Validate
+
+          - MessageList: Proper rendering of all ChatItem types
+
+          - SubsessionDivider: Appears for delegation boundaries
+
+          - Message bubbles: Correct styling based on role
+
+          - Auto-scroll: Smooth scrolling without bouncing
+
+          - Session switching: Messages clear and reload properly
+
+
+          ## Success Criteria
+
+          - All ChatItem types render correctly
+
+          - Special roles (''assistant (thought)'') display with proper styling
+
+          - No console errors about unknown types
+
+          - Subsession dividers appear where expected
+
+          - Auto-scrolling works smoothly
+
+          - Session switching clears and loads messages properly'
+        created_at: '2025-09-24T20:17:35.189920'
+        description: Test and validate that UI components render correctly when receiving
+          properly formatted ChatItems from the fixed EventStreamProcessor.
+        id: western-pattern
+        parent_id: giant-smart
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 3
+        title: Validate UI Components with Corrected Event Data
+        updated_at: '2025-09-24T20:17:35.189923'
+    title: Chat Rendering Fixes - Complete Resolution
+    updated_at: '2025-09-24T20:22:14.737074'
