@@ -477,14 +477,16 @@ class RealtimeBridge(AgentBridge):
 
         await self.raise_render_media_markdown(message)
 
-    async def run(self, websocket: WebSocket, chat_session_id: Optional[str] = None):
+    async def run(self, websocket: WebSocket, chat_session_id: Optional[str] = None, agent_key: Optional[str] = None):
         """Main run loop for the bridge"""
         await websocket.accept()
         self.websocket=websocket
         self.is_running = True
 
         if chat_session_id is not None and (self.chat_session is None or self.chat_session.session_id != chat_session_id):
-            self.chat_session = await self._get_or_create_chat_session(session_id=chat_session_id, user_id=self.chat_user.user_id)
+            self.chat_session = await self._get_or_create_chat_session(session_id=chat_session_id,
+                                                                       user_id=self.chat_user.user_id,
+                                                                       agent_key=agent_key)
 
         self.logger.info (f"RealtimeBridge started for session {self.chat_session.session_id}")
         await self.send_client_initial_data()
