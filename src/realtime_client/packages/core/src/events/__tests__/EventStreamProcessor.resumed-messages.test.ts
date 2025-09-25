@@ -15,7 +15,7 @@ import { EventStreamProcessor } from '../EventStreamProcessor';
 import { SessionManager } from '../../session/SessionManager';
 import { ChatSession } from '../types/CommonTypes';
 import { MessageParam } from '../../types/message-params';
-import testSession from '../../../../../.scratch/chat_fixes/session_with_delegation.json';
+import testSession from './fixtures/session_with_delegation.json';
 
 describe('EventStreamProcessor - Resumed Messages Mapping', () => {
   let processor: EventStreamProcessor;
@@ -616,16 +616,16 @@ text: 'Response without preamble'`
       // Verify we have messages
       expect(messageAddedCalls.length).toBeGreaterThan(0);
 
-      // Find the delegation subsession
+      // Find the delegation subsession - ateam_chat to realtime_core_coordinator
       const delegationStart = subsessionStartCalls.find(call =>
-        call[1].subAgentKey === 'clone' || call[1].subSessionType === 'oneshot'
+        call[1].subAgentKey === 'realtime_core_coordinator' || call[1].subSessionType === 'chat'
       );
       expect(delegationStart).toBeDefined();
 
       // Find the think tool thought
       const thoughtMessage = messageAddedCalls.find(call =>
         call[1].message.role === 'assistant (thought)' &&
-        call[1].message.content.includes('API project analysis')
+        call[1].message.content.includes('thought from agent')
       );
       expect(thoughtMessage).toBeDefined();
 
@@ -638,9 +638,9 @@ text: 'Response without preamble'`
       );
       expect(userMessages.length).toBeGreaterThan(0);
 
-      // Check that "hello domo!" is present
+      // Check that delegation user message is present
       const helloDomo = userMessages.find(call =>
-        call[1].message.content.includes('hello domo')
+        call[1].message.content.includes('Hello other agent')
       );
       expect(helloDomo).toBeDefined();
     });

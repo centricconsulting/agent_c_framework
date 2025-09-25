@@ -162,17 +162,8 @@ class MockWebSocket {
 
 global.WebSocket = MockWebSocket as any;
 
-// Mock fetch for API calls
-global.fetch = vi.fn().mockResolvedValue({
-  ok: true,
-  json: async () => ({}),
-  text: async () => '',
-  blob: async () => new Blob(),
-  arrayBuffer: async () => new ArrayBuffer(0),
-  headers: new Headers(),
-  status: 200,
-  statusText: 'OK'
-});
+// Note: fetch is handled by MSW (Mock Service Worker)
+// Do NOT mock global.fetch as it will override MSW handlers
 
 // Mock console methods to reduce test output noise
 const originalConsole = {

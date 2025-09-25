@@ -1,0 +1,1 @@
+// This file is no longer used - ComparisonChatView handles the custom rendering

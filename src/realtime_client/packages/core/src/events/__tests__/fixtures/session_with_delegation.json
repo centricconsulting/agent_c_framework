@@ -1,0 +1,131 @@
+{
+    "version": 1,
+    "session_id": "admin-respond-frozen",
+    "token_count": 0,
+    "context_window_size": 0,
+    "session_name": null,
+    "created_at": "2025-09-24T15:54:27.453012",
+    "updated_at": "2025-09-24T15:59:04.498105",
+    "deleted_at": null,
+    "user_id": "admin",
+    "metadata": {},
+    "messages": [
+        {
+            "role": "user",
+            "content": "Message from user"
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "id": "toolu_0158vm2fXtNzAkX3wPN7og2h",
+                    "input": {
+                        "thought": "thought from agent"
+                    },
+                    "name": "think",
+                    "type": "tool_use"
+                }
+            ]
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_0158vm2fXtNzAkX3wPN7og2h",
+                    "content": ""
+                }
+            ]
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "citations": null,
+                    "text": "I'll delegate this request.",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "id": "toolu_01MLTqXBUqJDJ7br91M43WcM",
+                    "input": {
+                        "agent_key": "realtime_core_coordinator",
+                        "message": "Hello other agent please to the thing\n\nThank you!"
+                    },
+                    "name": "ateam_chat",
+                    "type": "tool_use"
+                }
+            ]
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_01MLTqXBUqJDJ7br91M43WcM",
+                    "content": "{\"notice\": \"This response is also displayed in the UI for the user, you do not need to relay it.\", \"agent_message\": {\"role\": \"assistant\", \"content\": [{\"signature\": \"TRIMMED\", \"thinking\": \"Thoughts from the delgated agent\", \"type\": \"thinking\"}, {\"citations\": null, \"text\": \"REPORT fback to the calling agent\", \"type\": \"text\"}]}}"
+                }
+            ]
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "citations": null,
+                    "text": "response to user?",
+                    "type": "text"
+                }
+            ]
+        }
+    ],
+    "agent_config": {
+        "version": 2,
+        "name": "Rick - Realtime Team Coordinator",
+        "agent_description": "description",
+        "tools": [
+            "ThinkTools",
+            "WorkspaceTools",
+            "WorkspacePlanningTools",
+            "AgentCloneTools",
+            "AgentTeamTools",
+            "DynamicCommandTools",
+            "WebTools"
+        ],
+        "blocked_tool_patterns": [
+            "run_*",
+            "workspace_inspect_code",
+            "ateam_load_agent"
+        ],
+        "allowed_tool_patterns": [
+            "run_pnpm*",
+            "run_lerna*"
+        ],
+        "key": "realtime_rick",
+        "model_id": "claude-opus-4-1-20250805",
+        "agent_params": {
+            "model_name": "claude-opus-4-1-20250805",
+            "max_tokens": null,
+            "user_name": null,
+            "auth": null,
+            "type": "claude_reasoning",
+            "budget_tokens": 20000,
+            "max_searches": null
+        },
+        "prompt_metadata": {
+            "primary_workspace": "realtime_client"
+        },
+        "persona": "instructions.",
+        "uid": "shampoo-jacob-tripod",
+        "category": [
+            "realtime_core_coordinator",
+            "realtime_react_coordinator",
+            "realtime_ui_coordinator",
+            "realtime_demo_coordinator",
+            "domo"
+        ]
+    }
+}

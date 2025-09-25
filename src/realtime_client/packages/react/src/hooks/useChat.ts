@@ -91,12 +91,21 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
   
   // Track the current streaming message ID to avoid duplicates
   const streamingMessageIdRef = useRef<string | null>(null);
+  // Track the expected session ID to validate incoming messages
+  const expectedSessionIdRef = useRef<string | null>(null);
+  // Track if we're currently loading a new session (use ref to avoid stale closures)
+  const isLoadingSessionRef = useRef<boolean>(false);
+  // Track if messages have been loaded for the current session
+  const messagesLoadedForSessionRef = useRef<string | null>(null);
+  // Track current session ID in ref for immediate access in event handlers
+  const currentSessionIdRef = useRef<string | null>(null);
   
   // Update session and messages from client
   const updateChatInfo = useCallback(() => {
     if (!client) {
       setCurrentSession(null);
       setCurrentSessionId(null);
+      currentSessionIdRef.current = null;
       setMessages([]);
       return;
     }
@@ -105,6 +114,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     if (!sessionManager) {
       setCurrentSession(null);
       setCurrentSessionId(null);
+      currentSessionIdRef.current = null;
       setMessages([]);
       return;
     }
@@ -112,7 +122,9 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     try {
       const session = sessionManager.getCurrentSession();
       setCurrentSession(session);
-      setCurrentSessionId(session?.session_id || null);
+      const sessionId = session?.session_id || null;
+      setCurrentSessionId(sessionId);
+      currentSessionIdRef.current = sessionId;
       
       if (session) {
         // SessionManager doesn't have getMessageHistory, we'll track messages ourselves
@@ -191,6 +203,12 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       const messageEvent = event as { sessionId: string; message: ExtendedMessage };
       Logger.debug('[useChat] Message added event:', messageEvent);
       
+      // Don't add messages while loading a new session - wait for session-messages-loaded
+      if (isLoadingSessionRef.current) {
+        Logger.debug('[useChat] Ignoring message-added during session loading');
+        return;
+      }
+      
       setMessages(prev => {
         // Ensure the message has a type and id for compatibility
         const messageToAdd: MessageChatItem = messageEvent.message.type 
@@ -225,6 +243,12 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         messageRole: streamEvent.message?.role
       });
       
+      // Don't update streaming state while loading a new session
+      if (isLoadingSessionRef.current) {
+        Logger.debug('[useChat] Ignoring message-streaming during session loading');
+        return;
+      }
+      
       // Only update if we have a valid message
       if (streamEvent.message) {
         Logger.debug('[useChat] Setting streaming message:', streamEvent.message);
@@ -243,6 +267,12 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const handleMessageComplete = (event: unknown) => {
       const completeEvent = event as { sessionId: string; message: ExtendedMessage };
       Logger.debug('[useChat] Message complete event:', completeEvent);
+      
+      // Don't add messages while loading a new session - wait for session-messages-loaded
+      if (isLoadingSessionRef.current) {
+        Logger.debug('[useChat] Ignoring message-complete during session loading');
+        return;
+      }
       
       // Add the completed message to the messages array
       setMessages(prev => {
@@ -283,14 +313,32 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const handleSessionChanged = (event: unknown) => {
       const sessionEvent = event as { chat_session?: ChatSession };
       if (sessionEvent.chat_session) {
+        const newSessionId = sessionEvent.chat_session.session_id;
         Logger.debug('[useChat] Session changed event received');
-        Logger.debug('[useChat] Session ID:', sessionEvent.chat_session.session_id);
+        Logger.debug('[useChat] Session ID:', newSessionId);
         Logger.debug('[useChat] Raw messages from server:', sessionEvent.chat_session.messages?.length || 0, 'messages');
         
-        setCurrentSession(sessionEvent.chat_session);
-        setCurrentSessionId(sessionEvent.chat_session.session_id);
+        // Set loading state to prevent race conditions
+        isLoadingSessionRef.current = true;
+        expectedSessionIdRef.current = newSessionId;
+        messagesLoadedForSessionRef.current = null; // Reset loaded flag for new session
         
-        // Load messages from the session if present (for backward compatibility)
+        // Always clear messages immediately when switching sessions
+        // This prevents old messages from persisting
+        setMessages([]);
+        
+        // Update session state
+        setCurrentSession(sessionEvent.chat_session);
+        setCurrentSessionId(newSessionId);
+        currentSessionIdRef.current = newSessionId;
+        
+        // Clear any streaming state when switching sessions
+        setStreamingMessage(null);
+        streamingMessageIdRef.current = null;
+        setIsAgentTyping(false);
+        
+        // If session has embedded messages (backward compatibility), load them
+        // But only if we're not expecting a session-messages-loaded event
         if (sessionEvent.chat_session.messages && sessionEvent.chat_session.messages.length > 0) {
           const formattedMessages = ensureMessagesFormat(sessionEvent.chat_session.messages);
           // Ensure all messages have type field for compatibility
@@ -301,16 +349,20 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           const messagesToSet = maxMessages && maxMessages > 0 
             ? messagesWithType.slice(-maxMessages)
             : messagesWithType;
-          setMessages(messagesToSet as ChatItem[]);
+          
+          // Only set messages if we're still loading the same session
+          if (expectedSessionIdRef.current === newSessionId) {
+            setMessages(messagesToSet as ChatItem[]);
+            // Mark messages as loaded for this session
+            messagesLoadedForSessionRef.current = newSessionId;
+            // Clear loading state since we got messages inline
+            isLoadingSessionRef.current = false;
+          }
         } else {
-          // Clear messages if session has no messages
-          setMessages([]);
+          // No inline messages - wait for session-messages-loaded event
+          // Loading state remains true until that event arrives
+          Logger.debug('[useChat] No inline messages, waiting for session-messages-loaded event');
         }
-        
-        // Clear any streaming state when switching sessions
-        setStreamingMessage(null);
-        streamingMessageIdRef.current = null;
-        setIsAgentTyping(false);
       }
       // If no chat_session provided, don't update state (maintain existing messages)
     };
@@ -318,8 +370,53 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     // Handle session messages loaded event (from EventStreamProcessor)
     const handleSessionMessagesLoaded = (event: unknown) => {
       const messagesEvent = event as { sessionId?: string; messages?: ExtendedMessage[] };
+      const eventSessionId = messagesEvent.sessionId;
+      
       Logger.debug('[useChat] Session messages loaded event');
-      Logger.debug('[useChat] Event data:', messagesEvent);
+      Logger.debug('[useChat] Event session ID:', eventSessionId);
+      Logger.debug('[useChat] Expected session ID:', expectedSessionIdRef.current);
+      Logger.debug('[useChat] Is loading session:', isLoadingSessionRef.current);
+      Logger.debug('[useChat] Current session ID:', currentSessionId);
+      
+      // Validation logic for race condition prevention:
+      // 1. During session loading (isLoadingSessionRef.current === true):
+      //    - Accept if no sessionId (backward compat)
+      //    - Accept if sessionId matches expected
+      //    - Reject if sessionId doesn't match expected
+      // 2. Not during session loading (isLoadingSessionRef.current === false):
+      //    - If no current session: accept any (test scenario)
+      //    - If has current session:
+      //      - Check if we already loaded messages for this session (prevent duplicates)
+      //      - With sessionId: must match current
+      //      - Without sessionId: reject if already loaded
+      
+      if (isLoadingSessionRef.current) {
+        // During session transition - validate sessionId if provided
+        if (eventSessionId && eventSessionId !== expectedSessionIdRef.current) {
+          Logger.debug('[useChat] Ignoring messages - wrong session during transition');
+          return;
+        }
+      } else {
+        // Not loading
+        const currentSession = currentSessionIdRef.current;
+        if (!currentSession) {
+          // No current session - accept for test scenarios
+          Logger.debug('[useChat] No current session - accepting messages for test');
+        } else {
+          // Has current session
+          // Check if we already loaded messages for this session
+          if (messagesLoadedForSessionRef.current === currentSession && !eventSessionId) {
+            Logger.debug('[useChat] Ignoring messages - already loaded for current session');
+            return;
+          }
+          
+          // If event has sessionId, it must match current
+          if (eventSessionId && eventSessionId !== currentSession) {
+            Logger.debug('[useChat] Ignoring messages - wrong session ID');
+            return;
+          }
+        }
+      }
       
       // IMPORTANT: Handle both populated and empty message arrays
       // An empty array means we need to clear the chat display
@@ -349,6 +446,19 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setStreamingMessage(null);
         streamingMessageIdRef.current = null;
         setIsAgentTyping(false);
+        
+        // Mark messages as loaded for the appropriate session
+        // During loading, use expectedSessionIdRef; otherwise use currentSessionIdRef
+        const sessionToMark = isLoadingSessionRef.current ? expectedSessionIdRef.current : currentSessionIdRef.current;
+        if (sessionToMark) {
+          messagesLoadedForSessionRef.current = sessionToMark;
+        }
+        
+        // Clear loading state if we were loading
+        if (isLoadingSessionRef.current) {
+          isLoadingSessionRef.current = false;
+          Logger.debug('[useChat] Session loading complete');
+        }
       }
     };
     
@@ -361,6 +471,12 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         subAgentKey?: string;
       };
       Logger.debug('[useChat] Subsession started event:', subsessionEvent);
+      
+      // Don't add dividers while loading a new session
+      if (isLoadingSessionRef.current) {
+        Logger.debug('[useChat] Ignoring subsession-started during session loading');
+        return;
+      }
       
       const divider: DividerChatItem = {
         id: `divider-start-${Date.now()}`,
@@ -387,6 +503,12 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     // Handle subsession ended events
     const handleSubsessionEnded = (_event: unknown) => {
       Logger.debug('[useChat] Subsession ended event');
+      
+      // Don't add dividers while loading a new session
+      if (isLoadingSessionRef.current) {
+        Logger.debug('[useChat] Ignoring subsession-ended during session loading');
+        return;
+      }
       
       const divider: DividerChatItem = {
         id: `divider-end-${Date.now()}`,
@@ -424,6 +546,12 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       };
       Logger.debug('[useChat] Media added event:', mediaEvent);
       
+      // Don't add media while loading a new session
+      if (isLoadingSessionRef.current) {
+        Logger.debug('[useChat] Ignoring media-added during session loading');
+        return;
+      }
+      
       const mediaItem: MediaChatItem = {
         id: mediaEvent.media.id || `media-${Date.now()}`,
         type: 'media',
@@ -457,6 +585,12 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         timestamp?: string;
       };
       Logger.debug('[useChat] System message event:', systemEvent);
+      
+      // Don't add system messages while loading a new session
+      if (isLoadingSessionRef.current) {
+        Logger.debug('[useChat] Ignoring system_message during session loading');
+        return;
+      }
       
       const systemAlert: SystemAlertChatItem = {
         id: `system-${Date.now()}`,

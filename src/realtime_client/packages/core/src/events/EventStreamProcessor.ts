@@ -897,11 +897,9 @@ export class EventStreamProcessor {
    * Task 1.1: Core converter method that processes resumed messages as if they were streamed
    */
   private mapResumedMessagesToEvents(messages: MessageParam[], sessionId: string): void {
-    // Clear existing messages first
-    this.sessionManager.emit('session-messages-loaded', {
-      sessionId,
-      messages: []
-    });
+    // Don't clear messages here - let the individual message-added events build the list
+    // This ensures the React hook doesn't clear messages before processing them
+    Logger.debug(`[EventStreamProcessor] Processing ${messages.length} resumed messages as events`);
     
     // Process each message
     for (let i = 0; i < messages.length; i++) {
@@ -949,15 +947,16 @@ export class EventStreamProcessor {
           // Task 1.2: THINK TOOL - Special handling
           if (block.name === 'think') {
             // Emit message-added event for think tool as a thought
+            // Use the format that the tests and UI expect
             const thoughtContent = (block.input as any).thought || '';
             this.sessionManager.emit('message-added', {
               sessionId,
               message: {
-                role: 'assistant (thought)' as 'assistant',
+                role: 'assistant (thought)', // Special role for thoughts
                 content: thoughtContent,
                 timestamp: new Date().toISOString(),
                 format: 'markdown'
-              }
+              } as Message
             });
             // Mark that we'll consume the next message (tool result)
             messagesConsumed = 1;
@@ -987,7 +986,7 @@ export class EventStreamProcessor {
             content: combinedText,
             timestamp: new Date().toISOString(),
             format: 'text'
-          }
+          } as Message
         });
       }
     } else {
@@ -1027,8 +1026,8 @@ export class EventStreamProcessor {
       subAgentKey
     });
     
-    // 2. User message from tool input
-    const request = (toolBlock.input as any).request || '';
+    // 2. User message from tool input - handle both 'request' and 'message' fields
+    const request = (toolBlock.input as any).request || (toolBlock.input as any).message || '';
     const processContext = (toolBlock.input as any).process_context || '';
     const userContent = processContext ? 
       request + '\n# Process Context\n\n' + processContext : 
@@ -1041,7 +1040,7 @@ export class EventStreamProcessor {
         content: userContent,
         timestamp: new Date().toISOString(),
         format: 'text'
-      }
+      } as Message
     });
     
     // 3. Assistant message from tool result
@@ -1050,11 +1049,12 @@ export class EventStreamProcessor {
       let resultContent = '';
       
       if (Array.isArray(toolResult.content)) {
-        // Find the tool_result block
+        // Find the tool_result block matching this tool use
         for (const block of toolResult.content) {
-          if ('type' in block && block.type === 'tool_result') {
-            const yamlContent = (block as any).content || '';
-            resultContent = this.parseAssistantFromYaml(yamlContent);
+          if ('type' in block && block.type === 'tool_result' && 
+              (block as any).tool_use_id === toolBlock.id) {
+            const rawContent = (block as any).content || '';
+            resultContent = this.parseAssistantFromDelegationResult(rawContent);
             break;
           }
         }
@@ -1068,7 +1068,7 @@ export class EventStreamProcessor {
             content: resultContent,
             timestamp: new Date().toISOString(),
             format: 'text'
-          }
+          } as Message
         });
       }
     }
@@ -1093,6 +1093,30 @@ export class EventStreamProcessor {
    * Parse assistant content from YAML tool result
    * Task 1.4: YAML parser for delegation results
    */
+  private parseAssistantFromDelegationResult(resultContent: string): string {
+    // First try JSON parsing (new format)
+    try {
+      const json = JSON.parse(resultContent);
+      if (json.agent_message && json.agent_message.content) {
+        // Extract text from the agent_message content array
+        if (Array.isArray(json.agent_message.content)) {
+          // Find text blocks in content array
+          for (const block of json.agent_message.content) {
+            if (block.type === 'text') {
+              return block.text || '';
+            }
+          }
+        } else if (typeof json.agent_message.content === 'string') {
+          return json.agent_message.content;
+        }
+      }
+    } catch {
+      // Fall back to YAML parsing for backwards compatibility
+      return this.parseAssistantFromYaml(resultContent);
+    }
+    return resultContent;
+  }
+
   private parseAssistantFromYaml(yamlContent: string): string {
     // Remove preamble if present
     let content = yamlContent;
@@ -1216,7 +1240,7 @@ export class EventStreamProcessor {
         content: normalizedContent,
         timestamp: new Date().toISOString(),
         format: 'text'
-      }
+      } as Message
     });
   }
   
@@ -1227,14 +1251,13 @@ export class EventStreamProcessor {
     if (!message) return;
     
     const normalizedContent = this.normalizeMessageContent(message.content);
-    this.sessionManager.emit('message-added', {
-      sessionId,
-      message: {
-        role: 'system',
-        content: normalizedContent,
-        timestamp: new Date().toISOString(),
-        format: 'text'
-      }
+    this.sessionManager.emit('system_message', {
+      type: 'system_message',
+      session_id: sessionId,
+      role: 'system',
+      content: typeof normalizedContent === 'string' ? normalizedContent : JSON.stringify(normalizedContent),
+      format: 'text',
+      severity: 'info'
     });
   }
   
@@ -1252,7 +1275,7 @@ export class EventStreamProcessor {
         content: normalizedContent,
         timestamp: new Date().toISOString(),
         format: 'text'
-      }
+      } as Message
     });
   }
   

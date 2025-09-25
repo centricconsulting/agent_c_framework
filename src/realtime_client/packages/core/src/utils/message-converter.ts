@@ -208,11 +208,83 @@ export function ensureMessageFormat(message: any): Message {
 
 /**
  * Ensure an array of messages has the correct format for UI rendering
+ * This handles special cases like think tools and delegation tools
  */
 export function ensureMessagesFormat(messages: any[]): Message[] {
   if (!Array.isArray(messages)) {
     return [];
   }
   
-  return messages.map(ensureMessageFormat);
+  const result: Message[] = [];
+  
+  for (let i = 0; i < messages.length; i++) {
+    const message = messages[i];
+    if (!message) continue;
+    
+    // Check if this is an assistant message with tool use blocks
+    if (message.role === 'assistant' && Array.isArray(message.content)) {
+      let hasProcessedContent = false;
+      const textParts: string[] = [];
+      
+      for (const block of message.content) {
+        if (block?.type === 'text') {
+          textParts.push(block.text || '');
+        } else if (block?.type === 'tool_use') {
+          // Special handling for think tools
+          if (block.name === 'think') {
+            // Convert think tool to thought message
+            result.push({
+              role: 'assistant (thought)' as any,
+              content: (block.input as any)?.thought || '',
+              timestamp: new Date().toISOString(),
+              format: 'markdown'
+            });
+            hasProcessedContent = true;
+            // Skip the next message if it's the tool result for this think tool
+            if (i + 1 < messages.length && messages[i + 1]?.role === 'user') {
+              const nextMsg = messages[i + 1];
+              if (Array.isArray(nextMsg.content)) {
+                const hasThinkResult = nextMsg.content.some((b: any) => 
+                  b?.type === 'tool_result' && b?.tool_use_id === block.id
+                );
+                if (hasThinkResult) {
+                  i++; // Skip the tool result message
+                }
+              }
+            }
+          }
+          // Note: Delegation tools are handled differently - they show as regular messages
+          // The subsession dividers are added by the React layer based on events
+        }
+      }
+      
+      // If we have text content that wasn't processed, add it as a regular message
+      if (textParts.length > 0) {
+        result.push({
+          role: 'assistant',
+          content: textParts.join(''),
+          timestamp: new Date().toISOString(),
+          format: 'text'
+        });
+      } else if (!hasProcessedContent) {
+        // No text and no special processing, convert normally
+        result.push(ensureMessageFormat(message));
+      }
+    } else if (message.role === 'user' && Array.isArray(message.content)) {
+      // Check if this is a tool result message that should be skipped
+      const hasOnlyToolResults = message.content.every((block: any) => 
+        block?.type === 'tool_result'
+      );
+      if (!hasOnlyToolResults) {
+        // Convert normally if it has content other than tool results
+        result.push(ensureMessageFormat(message));
+      }
+      // Skip pure tool result messages as they're processed with their tool use
+    } else {
+      // Regular message, convert normally
+      result.push(ensureMessageFormat(message));
+    }
+  }
+  
+  return result;
 }

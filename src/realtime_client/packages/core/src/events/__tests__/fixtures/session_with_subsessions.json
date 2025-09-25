@@ -1,0 +1,154 @@
+{
+  "version": 2,
+  "session_id": "parent-primary-session",
+  "token_count": 4567,
+  "context_window_size": 128000,
+  "session_name": "Session with Subsessions",
+  "created_at": "2025-01-15T10:00:00.000Z",
+  "updated_at": "2025-01-15T12:30:00.000Z",
+  "deleted_at": null,
+  "user_id": "test_user_001",
+  "metadata": {
+    "test_type": "subsession_validation",
+    "has_subsessions": true,
+    "subsession_count": 2,
+    "tags": ["testing", "delegation", "subsessions"]
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content": "I need help analyzing this complex problem that might require delegating to other agents.",
+      "timestamp": "2025-01-15T10:00:00.000Z",
+      "format": "text"
+    },
+    {
+      "role": "assistant",
+      "content": "I'll help you analyze this complex problem. Let me delegate some specific tasks to specialized agents to provide comprehensive assistance.",
+      "timestamp": "2025-01-15T10:00:05.000Z",
+      "format": "text"
+    }
+  ],
+  "agent_config": {
+    "version": 2,
+    "name": "Primary Coordinator",
+    "key": "coordinator_agent",
+    "model_id": "claude-3-5-sonnet-20241022",
+    "agent_description": "Main coordinating agent that can delegate to subsessions",
+    "tools": ["AgentTeamTools", "ThinkTools", "WorkspaceTools"],
+    "blocked_tool_patterns": [],
+    "allowed_tool_patterns": ["*"],
+    "agent_params": {
+      "type": "claude_reasoning",
+      "model_name": "claude-3-5-sonnet-20241022",
+      "max_tokens": 8192,
+      "budget_tokens": 32768
+    },
+    "prompt_metadata": {
+      "delegation_enabled": true,
+      "max_delegation_depth": 3
+    },
+    "persona": "You are a skilled coordinator who can delegate complex tasks to specialized agents.",
+    "uid": "coord_001",
+    "category": ["coordinator", "delegation", "management"]
+  },
+  "vendor": "anthropic",
+  "display_name": "Session with Subsessions",
+  "subsessions": [
+    {
+      "type": "subsession_started",
+      "session_id": "sub-analysis-session-01",
+      "role": "assistant",
+      "parent_session_id": "parent-primary-session",
+      "user_session_id": "parent-primary-session",
+      "sub_session_type": "oneshot",
+      "sub_agent_type": "team",
+      "prime_agent_key": "coordinator_agent",
+      "sub_agent_key": "analysis_specialist",
+      "timestamp": "2025-01-15T10:01:00.000Z"
+    },
+    {
+      "type": "subsession_ended",
+      "session_id": "sub-analysis-session-01",
+      "role": "assistant",
+      "parent_session_id": "parent-primary-session",
+      "user_session_id": "parent-primary-session",
+      "timestamp": "2025-01-15T10:05:00.000Z"
+    },
+    {
+      "type": "subsession_started",
+      "session_id": "sub-implementation-session-02",
+      "role": "assistant",
+      "parent_session_id": "parent-primary-session",
+      "user_session_id": "parent-primary-session",
+      "sub_session_type": "chat",
+      "sub_agent_type": "clone",
+      "prime_agent_key": "coordinator_agent",
+      "sub_agent_key": "implementation_clone",
+      "timestamp": "2025-01-15T10:06:00.000Z"
+    },
+    {
+      "type": "subsession_ended",
+      "session_id": "sub-implementation-session-02",
+      "role": "assistant",
+      "parent_session_id": "parent-primary-session",
+      "user_session_id": "parent-primary-session",
+      "timestamp": "2025-01-15T10:15:00.000Z"
+    }
+  ],
+  "events": [
+    {
+      "type": "subsession_started",
+      "session_id": "sub-analysis-session-01",
+      "role": "assistant",
+      "parent_session_id": "parent-primary-session",
+      "user_session_id": "parent-primary-session",
+      "sub_session_type": "oneshot",
+      "sub_agent_type": "team",
+      "prime_agent_key": "coordinator_agent",
+      "sub_agent_key": "analysis_specialist"
+    },
+    {
+      "type": "text_delta",
+      "session_id": "sub-analysis-session-01",
+      "role": "assistant",
+      "content": "Analyzing the problem components...",
+      "format": "text",
+      "parent_session_id": "parent-primary-session",
+      "user_session_id": "parent-primary-session"
+    },
+    {
+      "type": "subsession_ended",
+      "session_id": "sub-analysis-session-01",
+      "role": "assistant",
+      "parent_session_id": "parent-primary-session",
+      "user_session_id": "parent-primary-session"
+    },
+    {
+      "type": "subsession_started",
+      "session_id": "sub-implementation-session-02",
+      "role": "assistant",
+      "parent_session_id": "parent-primary-session",
+      "user_session_id": "parent-primary-session",
+      "sub_session_type": "chat",
+      "sub_agent_type": "clone",
+      "prime_agent_key": "coordinator_agent",
+      "sub_agent_key": "implementation_clone"
+    },
+    {
+      "type": "text_delta",
+      "session_id": "sub-implementation-session-02",
+      "role": "assistant",
+      "content": "Implementing the solution based on the analysis...",
+      "format": "text",
+      "parent_session_id": "parent-primary-session",
+      "user_session_id": "parent-primary-session"
+    },
+    {
+      "type": "subsession_ended",
+      "session_id": "sub-implementation-session-02",
+      "role": "assistant",
+      "parent_session_id": "parent-primary-session",
+      "user_session_id": "parent-primary-session"
+    }
+  ]
+}
