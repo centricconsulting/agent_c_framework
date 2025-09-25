@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, cast
 import requests
 import yaml
 from agent_c.toolsets.tool_set import Toolset
@@ -25,9 +25,15 @@ class UiPathTools(Toolset):
     def __init__(self, **kwargs):
         super().__init__(**kwargs, name='uipath')
         self._token_cache: Dict[str, str] = {}
+        self.workspace_tools: Optional['WorkspaceTools'] = None
         
     async def post_init(self):
         """Initialize the UiPath toolset after all dependencies are loaded."""
+        # Get reference to workspace tools for file operations
+        from agent_c_tools.tools.workspace.tool import WorkspaceTools
+        self.workspace_tools = cast(WorkspaceTools, self.tool_chest.available_tools.get('WorkspaceTools'))
+        if not self.workspace_tools:
+            self.logger.warning("WorkspaceTools not available - file operations will be limited")
         self.logger.info("UiPath toolset initialized successfully")
     
     def _get_config_value(self, key: str, default: Optional[str] = None) -> Optional[str]:
@@ -460,7 +466,290 @@ class UiPathTools(Toolset):
             error_msg = f"Error getting configuration info: {str(e)}"
             self.logger.error(error_msg)
             return f"ERROR: {error_msg}"
+    
+    @json_schema(
+        description="Test workspace file upload functionality",
+        params={
+            "workspace_path": {
+                "type": "string",
+                "description": "Workspace UNC path to test",
+                "required": True
+            }
+        }
+    )
+    async def test_workspace_upload(self, **kwargs) -> str:
+        """Test workspace file reading for upload."""
+        try:
+            workspace_path = kwargs.get('workspace_path')
+            
+            if not self.workspace_tools:
+                return "ERROR: WorkspaceTools not available"
+            
+            # Parse the UNC path
+            error, workspace, relative_path = self.workspace_tools._parse_unc_path(workspace_path)
+            if error:
+                return f"ERROR: {error}"
+            
+            # Try to read the file as binary
+            file_content = await workspace.read_bytes_internal(relative_path)
+            file_size = len(file_content)
+            
+            result = {
+                "status": "success",
+                "message": f"Successfully read workspace file: {workspace_path}",
+                "file_size_bytes": file_size,
+                "workspace_name": workspace.name,
+                "relative_path": relative_path
+            }
+            
+            return yaml.dump(result, allow_unicode=True)
+            
+        except Exception as e:
+            return f"ERROR: Failed to read workspace file: {str(e)}"
+    
+    @json_schema(
+        description="Upload a UiPath package (.nupkg file) to UiPath Orchestrator. This allows you to deploy automation packages to the Orchestrator for execution by robots. The package file must be a valid .nupkg file created by UiPath Studio.",
+        params={
+            "nupkg_path": {
+                "type": "string",
+                "description": "Full path to the .nupkg package file to upload",
+                "required": True
+            },
+            "extra_fields": {
+                "type": "object",
+                "description": "Optional additional form fields to include with the upload request",
+                "required": False
+            }
+        }
+    )
+    async def upload_package(self, **kwargs) -> str:
+        """Upload a UiPath package to Orchestrator."""
+        try:
+            tool_context = kwargs.get('tool_context')
+            nupkg_path = kwargs.get('nupkg_path')
+            extra_fields = kwargs.get('extra_fields', {})
+            
+            if not nupkg_path:
+                return "ERROR: nupkg_path is required"
+            
+            # Check if it's a workspace UNC path or regular filesystem path
+            is_workspace_path = nupkg_path.startswith('//')
+            
+            # Debug logging
+            self.logger.info(f"Upload package path: '{nupkg_path}'")
+            self.logger.info(f"Path starts with '//': {nupkg_path.startswith('//')}")
+            self.logger.info(f"Is workspace path: {is_workspace_path}")
+            self.logger.info(f"Workspace tools available: {self.workspace_tools is not None}")
+            
+            if is_workspace_path:
+                # Validate workspace path format - we'll validate file existence during read
+                if not self.workspace_tools:
+                    return "ERROR: WorkspaceTools not available for workspace file operations"
+                
+                # Parse the UNC path to validate format
+                try:
+                    error, workspace, relative_path = self.workspace_tools._parse_unc_path(nupkg_path)
+                    if error:
+                        return f"ERROR: Invalid workspace path: {error}"
+                except Exception as e:
+                    return f"ERROR: Failed to parse workspace path {nupkg_path}: {str(e)}"
+            else:
+                # Regular filesystem path validation
+                if not os.path.exists(nupkg_path):
+                    abs_path=os.path.abspath(nupkg_path)
+                    self.logger.info(f"absolute path is : {abs_path}")
+                    return f"ERROR: Package file not found: {nupkg_path}"
+            
+            # Validate that it's a .nupkg file
+            if not nupkg_path.lower().endswith('.nupkg'):
+                return "ERROR: File must be a .nupkg package file"
+            
+            # Get configuration
+            config = self._validate_config()
+            
+            # Get authentication token with execution permissions
+            token = await self._get_auth_token("OR.Execution OR.Execution.Read OR.Execution.Write")
+            
+            # Prepare the upload URL
+            upload_url = (
+                f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}"
+                "/orchestrator_/odata/Processes/UiPath.Server.Configuration.OData.UploadPackage()"
+            )
+            
+            # Prepare headers
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "Accept": "application/json",
+                "X-UIPATH-Orchestrator": "True",
+                "X-UIPATH-OrganizationUnitId": str(config['folder_id'])
+            }
+            
+            # Debug logging
+            self.logger.info(f"UiPath Upload Package URL: {upload_url}")
+            self.logger.info(f"UiPath Upload Headers: {json.dumps({k: v if k != 'Authorization' else 'Bearer ***' for k, v in headers.items()}, indent=2)}")
+            self.logger.info(f"Package file: {nupkg_path}")
+            self.logger.info(f"Extra fields: {extra_fields}")
+            
+            # Upload the package - handle both workspace and filesystem paths
+            if is_workspace_path:
+                # Read file content from workspace
+                try:
+                    self.logger.info(f"Attempting to read workspace file: {nupkg_path}")
+                    
+                    # Read the file as binary data from workspace
+                    error, workspace, relative_path = self.workspace_tools._parse_unc_path(nupkg_path)
+                    if error:
+                        return f"ERROR: Invalid workspace path during upload: {error}"
+                    
+                    self.logger.info(f"Workspace: {workspace}, Relative path: {relative_path}")
+                    
+                    # Read binary content from workspace
+                    file_content = await workspace.read_bytes_internal(relative_path)
+                    filename = os.path.basename(nupkg_path)
+                    
+                    self.logger.info(f"Successfully read {len(file_content)} bytes from workspace file")
+                    
+                    # Create files dict with binary content
+                    files = {
+                        "package": (filename, file_content, "application/octet-stream")
+                    }
+                    response = requests.post(
+                        upload_url, headers=headers, data=extra_fields, files=files
+                    )
+                except Exception as e:
+                    self.logger.exception(f"Exception reading workspace file: {str(e)}")
+                    return f"ERROR: Failed to read workspace file {nupkg_path}: {str(e)}"
+            else:
+                # Regular filesystem path - use original method
+                with open(nupkg_path, "rb") as f:
+                    files = {
+                        "package": (os.path.basename(nupkg_path), f, "application/octet-stream")
+                    }
+                    response = requests.post(
+                        upload_url, headers=headers, data=extra_fields, files=files
+                    )
+            
+            # Debug response
+            self.logger.info(f"UiPath Upload Response Status: {response.status_code}")
+            self.logger.info(f"UiPath Upload Response Body: {response.text}")
+            
+            if response.status_code in [200, 201]:
+                self.logger.info(f"Successfully uploaded UiPath package: {os.path.basename(nupkg_path)}")
+                
+                # Try to parse the response as JSON
+                try:
+                    response_data = response.json()
+                except:
+                    response_data = {"message": "Package uploaded successfully but response was not JSON"}
+                
+                # Return a formatted success response
+                result = {
+                    "status": "success",
+                    "message": f"Package '{os.path.basename(nupkg_path)}' uploaded successfully",
+                    "package_name": os.path.basename(nupkg_path),
+                    "package_path": nupkg_path,
+                    "response_data": response_data
+                }
+                return yaml.dump(result, allow_unicode=True)
+                
+            else:
+                error_msg = f"Failed to upload package. Status code: {response.status_code}, Response: {response.text}"
+                self.logger.error(error_msg)
+                return f"ERROR: {error_msg}"
+                
+        except Exception as e:
+            error_msg = f"Error uploading UiPath package: {str(e)}"
+            self.logger.error(error_msg)
+            return f"ERROR: {error_msg}"
 
 
-# Register the toolset
-Toolset.register(UiPathTools)
+    @json_schema(
+        description="Upload a UiPath package from workspace to Orchestrator (NEW METHOD)",
+        params={
+            "workspace_nupkg_path": {
+                "type": "string",
+                "description": "Workspace UNC path to the .nupkg package file",
+                "required": True
+            }
+        }
+    )
+    async def upload_package_from_workspace(self, **kwargs) -> str:
+        """Upload a UiPath package from workspace to Orchestrator."""
+        try:
+            workspace_path = kwargs.get('workspace_nupkg_path')
+            
+            if not workspace_path:
+                return "ERROR: workspace_nupkg_path is required"
+            
+            if not workspace_path.startswith('//'):
+                return "ERROR: Path must be a workspace UNC path starting with //"
+            
+            if not self.workspace_tools:
+                return "ERROR: WorkspaceTools not available"
+            
+            # Validate file extension
+            if not workspace_path.lower().endswith('.nupkg'):
+                return "ERROR: File must be a .nupkg package file"
+            
+            # Parse the UNC path
+            error, workspace, relative_path = self.workspace_tools._parse_unc_path(workspace_path)
+            if error:
+                return f"ERROR: Invalid workspace path: {error}"
+            
+            # Read the binary file content
+            try:
+                file_content = await workspace.read_bytes_internal(relative_path)
+                filename = os.path.basename(workspace_path)
+            except Exception as e:
+                return f"ERROR: Failed to read workspace file {workspace_path}: {str(e)}"
+            
+            # Get configuration and token
+            config = self._validate_config()
+            token = await self._get_auth_token("OR.Execution OR.Execution.Read OR.Execution.Write")
+            
+            # Prepare upload URL and headers
+            upload_url = (
+                f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}"
+                "/orchestrator_/odata/Processes/UiPath.Server.Configuration.OData.UploadPackage()"
+            )
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "Accept": "application/json",
+                "X-UIPATH-Orchestrator": "True",
+                "X-UIPATH-OrganizationUnitId": str(config['folder_id'])
+            }
+            
+            # Upload the package
+            files = {
+                "package": (filename, file_content, "application/octet-stream")
+            }
+            response = requests.post(upload_url, headers=headers, files=files)
+            
+            # Handle response
+            if response.status_code in [200, 201]:
+                try:
+                    response_data = response.json()
+                except:
+                    response_data = {"message": "Package uploaded successfully"}
+                
+                result = {
+                    "status": "success",
+                    "message": f"Package '{filename}' uploaded successfully from workspace",
+                    "package_name": filename,
+                    "workspace_path": workspace_path,
+                    "file_size_bytes": len(file_content),
+                    "response_data": response_data
+                }
+                return yaml.dump(result, allow_unicode=True)
+            else:
+                return f"ERROR: Upload failed. Status: {response.status_code}, Response: {response.text}"
+                
+        except Exception as e:
+            return f"ERROR: Exception during workspace upload: {str(e)}"
+
+
+# Register the toolset with WorkspaceTools dependency
+Toolset.register(UiPathTools, required_tools=['WorkspaceTools'])
