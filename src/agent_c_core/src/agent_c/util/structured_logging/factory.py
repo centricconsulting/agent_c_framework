@@ -8,12 +8,11 @@ with consistent configuration across the Agent C framework.
 import os
 import logging
 import threading
-from typing import Optional, Protocol, Dict, Any
-from pathlib import Path
+from typing import Optional, Protocol, Dict
 
 import structlog
 
-from ..logging_utils import LoggingManager, ColoredFormatter
+from ..logging_utils import LoggingManager
 
 
 class LoggerProtocol(Protocol):

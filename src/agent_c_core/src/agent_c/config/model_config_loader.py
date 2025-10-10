@@ -7,12 +7,17 @@ and shared caching for optimal performance.
 """
 import json
 import threading
+
 from pathlib import Path
-from typing import Union, Dict, Any, Optional
-from agent_c.config.config_loader import ConfigLoader
-from agent_c.models.model_config.vendors import ModelConfigurationFile
+from typing import Union, Dict, Any, Optional, List
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames
 
+from agent_c.models.config.model_config.vendors import ModelConfigurationFile
+from agent_c.models.config.model_config.models import ModelConfigurationWithVendor
+from agent_c.config.config_loader import ConfigLoader
+
+
+_singleton_instance = None
 
 class ModelConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
     """
@@ -24,6 +29,9 @@ class ModelConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
     
     def __init__(self, config_path: Optional[str] = None):
         super().__init__(config_path)
+        global _singleton_instance
+        if _singleton_instance is None:
+            _singleton_instance = self
 
         self.config_file_path = Path(self.config_path).joinpath("model_configs.json")
         self._cached_config: Optional[ModelConfigurationFile] = None
@@ -31,6 +39,44 @@ class ModelConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
         
         # Load configuration using enhanced caching
         self.load_from_json()
+
+    @classmethod
+    def mock(cls, mock_instance):
+        """
+        Mock the ModelConfigurationLoader instance for testing purposes.
+
+        Args:
+            mock_instance: The mock instance to use for testing
+        """
+        global _singleton_instance
+        _singleton_instance = mock_instance
+
+    @classmethod
+    def instance(cls) -> 'ModelConfigurationLoader':
+        """
+        Get the singleton instance of ModelConfigurationLoader.
+
+        Returns:
+            ModelConfigurationLoader instance
+        """
+        global _singleton_instance
+        if _singleton_instance is None:
+            _singleton_instance = cls()
+
+        return _singleton_instance
+
+    @property
+    def model_configs(self) -> ModelConfigurationFile:
+        """
+        Get the cached model configuration if available, otherwise load it.
+
+        Returns:
+            ModelConfigurationFile instance with the loaded configuration
+        """
+        if self._cached_config is None:
+            self.load_from_json()
+
+        return self._cached_config
 
     def flattened_config(self) -> Dict[str, Any]:
         """
@@ -53,7 +99,41 @@ class ModelConfigurationLoader(ConfigLoader, metaclass=SingletonCacheMeta):
 
         return result
 
-    
+    def default_params_for_model(self, model_id: str) -> Dict[str, Any]:
+        """
+        Get default parameters for a specific model by its ID.
+
+        Args:
+            model_id: ID of the model to get default parameters for
+
+        Returns:
+            Dictionary of default parameters for the specified model
+        """
+        model = self.model_id_map.get(model_id)
+        if not model:
+            raise ValueError(f"Model with ID {model_id} not found in configuration")
+
+        return model.default_completion_params
+
+    @property
+    def model_id_map(self) -> Dict[str, ModelConfigurationWithVendor]:
+        """
+        Get a mapping of model IDs to their configurations with vendor information.
+
+        Returns:
+            Dictionary mapping model IDs to ModelConfigurationWithVendor instances
+        """
+        return {model.id: model for model in self.model_list}
+
+    @property
+    def model_list(self) -> List[ModelConfigurationWithVendor]:
+        models: List[ModelConfigurationWithVendor] = []
+        for vendor in self.model_configs.vendors:
+            models.extend([ModelConfigurationWithVendor(vendor=vendor.vendor, **model.model_dump()) for model in vendor.models])
+
+
+        return models
+
     def load_from_json(self, json_path: Optional[Union[str, Path]] = None) -> ModelConfigurationFile:
         """
         Load model configuration from a JSON file with enhanced caching.

@@ -1,13 +1,9 @@
 import logging
 import os
 import sys
-from typing import Optional, Dict, Any
+from typing import Dict
 import threading
-#
-# import platform
-# if platform.system() == 'Windows':
-#     import colorama
-#     colorama.init()
+
 
 # Global event for debug mode
 _debug_event = threading.Event()

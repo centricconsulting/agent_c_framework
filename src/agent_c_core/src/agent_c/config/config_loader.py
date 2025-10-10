@@ -1,9 +1,10 @@
 import os
+
 from typing import Optional
 
 from agent_c.util.logging_utils import LoggingManager
+from agent_c.registration.configs import locate_config_folder
 from agent_c.util import SingletonCacheMeta, shared_cache_registry, CacheNames
-
 
 class ConfigLoader(metaclass=SingletonCacheMeta):
     def __init__(self, config_path: Optional[str] = None):
@@ -13,7 +14,7 @@ class ConfigLoader(metaclass=SingletonCacheMeta):
         Args:
             config_path: Optional default path to configuration file
         """
-        self.logger = LoggingManager(__name__).get_logger()
+        self.logger = LoggingManager(self.__class__.__name__).get_logger()
         
         # Handle config path resolution with caching
         if config_path is not None:
@@ -27,7 +28,8 @@ class ConfigLoader(metaclass=SingletonCacheMeta):
                 # Use cached path resolution
                 self.config_path = self._get_cached_config_path()
 
-    def _get_cached_config_path(self) -> str:
+    @staticmethod
+    def _get_cached_config_path() -> str:
         """
         Get config path using cached path resolution.
         
@@ -41,33 +43,8 @@ class ConfigLoader(metaclass=SingletonCacheMeta):
         cache_key = f"config_path:{os.getcwd()}"
         path_cache = shared_cache_registry.get_cache(CacheNames.PATH_RESOLUTION, max_size=50, ttl_seconds=300)
         
-        return path_cache.get_or_compute(cache_key, self._locate_config_path)
-    
-    @staticmethod
-    def _locate_config_path() -> str:
-        """
-        Locate configuration path by walking up directory tree.
-        
-        Returns:
-            Path to agent_c_config directory
-            
-        Raises:
-            FileNotFoundError: If configuration folder cannot be found
-        """
-        current_dir = os.getcwd()
-        while True:
-            config_dir = os.path.join(current_dir, "agent_c_config")
-            if os.path.exists(config_dir):
-                return config_dir
-            
-            parent_dir = os.path.dirname(current_dir)
-            if current_dir == parent_dir:  # Reached root directory
-                break
-            current_dir = parent_dir
+        return path_cache.get_or_compute(cache_key, locate_config_folder)
 
-        raise FileNotFoundError(
-            "Configuration folder not found. Please ensure you are in the correct directory or set AGENT_C_CONFIG_PATH."
-        )
     
     @classmethod
     def clear_path_cache(cls) -> int:

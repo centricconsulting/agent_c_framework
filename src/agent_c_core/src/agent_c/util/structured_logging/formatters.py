@@ -8,9 +8,6 @@ building on the existing ColoredFormatter while adding structured capabilities.
 import json
 import logging
 from typing import Any, Dict
-
-import structlog
-
 from ..logging_utils import ColoredFormatter
 
 

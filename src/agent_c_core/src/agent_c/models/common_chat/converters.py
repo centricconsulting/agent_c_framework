@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional, cast
+from typing import Dict, Any, List, cast
 from datetime import datetime
 import json
 

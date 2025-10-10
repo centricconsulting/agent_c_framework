@@ -1,6 +1,6 @@
 import base64
-import logging
 import mimetypes
+
 from pathlib import Path
 from pydantic import Field
 from typing import Optional, Union
@@ -69,7 +69,7 @@ class FileInput(BaseInput):
         except IOError as e:
             logging_manager = LoggingManager(__name__)
             logger = logging_manager.get_logger()
-            logger.error(f"Error reading input file {file_path}: {str(e)}")
+            logger.exception(f"Error reading input file {file_path}: {str(e)}", exc_info=True)
             raise
 
         return cls(content_type=mime_type, content=content, file_name=path.name)

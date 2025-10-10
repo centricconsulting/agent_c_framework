@@ -3,8 +3,11 @@ import logging
 from typing import Optional, List, Any, Tuple
 
 import yaml
+import tempfile
 
 from yaml import FullLoader
+
+from agent_c.util.uncish_path import UNCishPath
 
 
 class BaseWorkspace:
@@ -71,6 +74,22 @@ class BaseWorkspace:
 
     async def walk(self, start_path: str, extensions: List[str] = None) -> Tuple[Optional[str], List[str]]:
         raise NotImplementedError
+
+    async def local_path_for(self, file_path: str) -> str:
+        """
+        Base class method to get the local path for a file within the workspace.
+        Will read the file and write it to a temp file, returning the path to that file.
+        """
+        unc_path: UNCishPath = UNCishPath(file_path)
+        file_bytes= await self.read_bytes_internal(file_path)
+        if file_bytes is None:
+            raise FileNotFoundError(f"File not found in workspace: {file_path}")
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=f".{unc_path.path_parts[-1]}") as temp_file:
+            temp_file.write(file_bytes)
+            temp_file_path = temp_file.name
+
+        return temp_file_path
 
     async def read_bytes_internal(self, file_path: str) -> bytes:
         """

@@ -1,0 +1,3 @@
+from agent_c.util.segmentation.weaviate.weaviate_property import WeaviateProperty
+from agent_c.util.segmentation.weaviate.weaviate_segment import WeaviateSegment
+from agent_c.util.segmentation.weaviate.weaviate_collection import WeaviateCollection

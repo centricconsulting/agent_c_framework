@@ -6,7 +6,7 @@ for automatic context propagation across async boundaries and threads.
 """
 
 import contextvars
-from typing import Optional, Dict, Any, Union, Callable
+from typing import Optional, Dict, Any, Callable
 from dataclasses import dataclass, asdict
 from contextlib import contextmanager
 import threading
