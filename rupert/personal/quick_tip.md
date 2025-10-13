@@ -32,5 +32,11 @@ Alternatively:
 
 **Note:** This script CURRENTLY runs just `git pull` internally. However, the upstream release_1.0-pre branch is currently being worked on due to a couple of bugs causing errors. The script may need to be updated to `git pull upstream release_1.0-pre` when that branch is ready.
 
+### Restarting Server API
+```bash
+# When in the Server API terminal window
+docker stop agent_c-frontend-1 agent_c-api-1 agent_c-redis-1
+```
+
 ---
-*Last Updated: October 7, 2025*
+*Last Updated: October 13, 2025*
