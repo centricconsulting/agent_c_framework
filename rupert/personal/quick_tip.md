@@ -89,5 +89,50 @@ git checkout -b feature/my-new-feature
 git push origin feature/my-new-feature
 ```
 
+### Recovering from Working on the Wrong Branch
+
+If you haven't committed yet (easiest option):
+
+```bash
+# Stash your changes, switch branches, and apply them
+git stash
+git checkout correct-branch
+git stash pop
+
+# Or even simpler, Git will often let you just switch branches directly if there are no conflicts:
+git checkout correct-branch
+# (Git will bring your uncommitted changes with you!)
+```
+
+If you already committed to the wrong branch:
+
+**Option 1 - Cherry-pick (cleaner):**
+```bash
+# Note the commit hash (use git log to find it)
+git log  # copy the commit hash
+
+# Switch to the correct branch
+git checkout correct-branch
+
+# Apply that specific commit
+git cherry-pick <commit-hash>
+
+# Go back to wrong branch and undo the commit
+git checkout wrong-branch
+git reset --hard HEAD~1
+```
+
+**Option 2 - Create a new branch from where you are:**
+```bash
+# Creates a new branch with your current commit
+git checkout -b correct-branch-name
+
+# Then go back to the wrong branch and reset it
+git checkout wrong-branch
+git reset --hard HEAD~1
+```
+
+**Note:** The stash method is definitely the easiest if you catch it before committing! Git is pretty forgiving about moving uncommitted work around between branches.
+
 ---
-*Last Updated: October 13, 2025 - 3:45PM*
+*Last Updated: October 13, 2025 - 3:50PM*
