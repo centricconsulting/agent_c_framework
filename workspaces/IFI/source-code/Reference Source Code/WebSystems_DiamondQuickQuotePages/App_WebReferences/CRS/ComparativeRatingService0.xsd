@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:tns="http://tempuri.org/" elementFormDefault="qualified" targetNamespace="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:import schemaLocation="http://www.ifmig.net/RTRService/ComparativeRatingService.svc?xsd=xsd2" namespace="http://schemas.datacontract.org/2004/07/Diamond.IntegrationServices" />
+  <xs:element name="GetAuthenticationToken">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="originator" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="loginName" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="password" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetAuthenticationTokenResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="GetAuthenticationTokenResult" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetAgencyWorkflowInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="originator" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="loginName" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="password" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="agencyCode" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetAgencyWorkflowInformationResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element xmlns:q1="http://schemas.datacontract.org/2004/07/Diamond.IntegrationServices" minOccurs="0" name="GetAgencyWorkflowInformationResult" nillable="true" type="q1:WorkflowInformation" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetAgencyWorkflowInformationEncrypted">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="originator" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="encryptedToken" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="InsuresoftTokenEncryption" type="xs:boolean" />
+        <xs:element minOccurs="0" name="agencyCode" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetAgencyWorkflowInformationEncryptedResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element xmlns:q2="http://schemas.datacontract.org/2004/07/Diamond.IntegrationServices" minOccurs="0" name="GetAgencyWorkflowInformationEncryptedResult" nillable="true" type="q2:WorkflowInformation" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SubmitAndRateEncrypted">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="encryptedCookie" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="InsuresoftTokenEncryption" type="xs:boolean" />
+        <xs:element minOccurs="0" name="originator" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="companyId" type="xs:int" />
+        <xs:element minOccurs="0" name="stateId" type="xs:int" />
+        <xs:element minOccurs="0" name="LOBId" type="xs:int" />
+        <xs:element minOccurs="0" name="transactionEffectiveDate" type="xs:dateTime" />
+        <xs:element minOccurs="0" name="guaranteedRatePeriodEffectiveDate" type="xs:dateTime" />
+        <xs:element minOccurs="0" name="transTypeId" type="xs:int" />
+        <xs:element minOccurs="0" name="isQuote" type="xs:boolean" />
+        <xs:element minOccurs="0" name="persistQuote" type="xs:boolean" />
+        <xs:element minOccurs="0" name="autoCreateAdditionalInterest" type="xs:boolean" />
+        <xs:element minOccurs="0" name="saveAncillaryChoicePointData" type="xs:boolean" />
+        <xs:element minOccurs="0" name="xmlData" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SubmitAndRateEncryptedResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="SubmitAndRateEncryptedResult" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SubmitAndRate">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="integrationUser" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="integrationPassword" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="userName" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="originator" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="companyId" type="xs:int" />
+        <xs:element minOccurs="0" name="stateId" type="xs:int" />
+        <xs:element minOccurs="0" name="LOBId" type="xs:int" />
+        <xs:element minOccurs="0" name="transactionEffectiveDate" type="xs:dateTime" />
+        <xs:element minOccurs="0" name="guaranteedRatePeriodEffectiveDate" type="xs:dateTime" />
+        <xs:element minOccurs="0" name="transTypeId" type="xs:int" />
+        <xs:element minOccurs="0" name="isQuote" type="xs:boolean" />
+        <xs:element minOccurs="0" name="persistQuote" type="xs:boolean" />
+        <xs:element minOccurs="0" name="autoCreateAdditionalInterest" type="xs:boolean" />
+        <xs:element minOccurs="0" name="saveAncillaryChoicePointData" type="xs:boolean" />
+        <xs:element minOccurs="0" name="xmlData" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SubmitAndRateResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="SubmitAndRateResult" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="VehicleInformationLookupEncrypted">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="encryptedCookie" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="InsuresoftTokenEncryption" type="xs:boolean" />
+        <xs:element minOccurs="0" name="originator" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="lookupSource" type="xs:int" />
+        <xs:element minOccurs="0" name="lookupType" type="xs:int" />
+        <xs:element minOccurs="0" name="year" type="xs:int" />
+        <xs:element minOccurs="0" name="make" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="model" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="vin" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="serialNumber" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="VehicleInformationLookupEncryptedResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="VehicleInformationLookupEncryptedResult" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="VehicleInformationLookup">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="integrationUser" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="integrationPassword" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="userName" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="originator" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="lookupSource" type="xs:int" />
+        <xs:element minOccurs="0" name="lookupType" type="xs:int" />
+        <xs:element minOccurs="0" name="year" type="xs:int" />
+        <xs:element minOccurs="0" name="make" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="model" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="vin" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="serialNumber" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="VehicleInformationLookupResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="VehicleInformationLookupResult" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

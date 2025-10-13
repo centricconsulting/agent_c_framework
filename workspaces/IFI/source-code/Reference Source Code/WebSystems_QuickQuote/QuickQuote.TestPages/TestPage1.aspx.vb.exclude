@@ -1,0 +1,26 @@
+﻿
+Partial Class TestPage1
+    Inherits System.Web.UI.Page
+
+    Private Sub btnRedirectToDestinationPage_Click(sender As Object, e As EventArgs) Handles btnRedirectToDestinationPage.Click
+        RedirectToDestinationPage()
+    End Sub
+
+    Private Sub btnRedirectToDestinationPageViaPage2_Click(sender As Object, e As EventArgs) Handles btnRedirectToDestinationPageViaPage2.Click
+        Response.Redirect("TestPage2.aspx?GoToDestination=Yes")
+    End Sub
+
+    Private Sub TestPage1_Load(sender As Object, e As EventArgs) Handles Me.Load
+        If Page.IsPostBack = False Then
+
+        End If
+    End Sub
+
+    Private Sub RedirectToDestinationPage()
+        Response.Redirect("DestinationPage.aspx")
+    End Sub
+
+    Private Sub btnRedirectToDestinationPageViaPage2EndResponse_Click(sender As Object, e As EventArgs) Handles btnRedirectToDestinationPageViaPage2EndResponse.Click
+        Response.Redirect("TestPage2.aspx?GoToDestination=Yes", True)
+    End Sub
+End Class

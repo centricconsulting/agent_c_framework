@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<config>
+  <add key="Endorsements_UseFullTermPremiumAsVisibleRate" value="False" />
+  <add key="Endorsements_AddThenDeleteVehicleOnEdits" value="True" /> <!-- If TRUE, will Add a vehicle and then remove the desired vehicle. Alternatively, if FALSE, it will replace the vehicle in question with the new information -->
+  <add key="Endorsements_TransactionDate_DaysForwardAllowed" value="200" />
+  <add key="Endorsements_TransactionDate_DaysBackAllowed" value="14" />
+  <add key="Endorsements_GaragingOutOfState_ValidateCounty" value="false" />
+  <add key="Endorsements_CopyRiskLevelCoveragesToNewVehicleWithVehiclePriority" value="true"/>
+</config>

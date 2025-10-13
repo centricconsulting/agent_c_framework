@@ -1,0 +1,88 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32616.157
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFMDataServices", "IFMDataServices\IFMDataServices.csproj", "{2C00AE25-74BA-453B-8ED2-550FD0C4B355}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFMDataServices.Tests", "IFMDataServices.Tests\IFMDataServices.Tests.csproj", "{59AD143B-3DC4-4676-8C86-93FA66061505}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFMDataServicesCore", "IFMDataServicesCore\IFMDataServicesCore.csproj", "{628DA979-609B-4685-80F5-D05FECDB01AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFMDataServicesClientModels", "IFMDataServicesClientModels\IFMDataServicesClientModels.csproj", "{B9431C8E-69B3-417A-B33F-46470919B2D8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		EOMTEST2|Any CPU = EOMTEST2|Any CPU
+		PATCH|Any CPU = PATCH|Any CPU
+		PROD|Any CPU = PROD|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2C00AE25-74BA-453B-8ED2-550FD0C4B355}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C00AE25-74BA-453B-8ED2-550FD0C4B355}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C00AE25-74BA-453B-8ED2-550FD0C4B355}.EOMTEST2|Any CPU.ActiveCfg = EOMTEST2|Any CPU
+		{2C00AE25-74BA-453B-8ED2-550FD0C4B355}.EOMTEST2|Any CPU.Build.0 = EOMTEST2|Any CPU
+		{2C00AE25-74BA-453B-8ED2-550FD0C4B355}.PATCH|Any CPU.ActiveCfg = PATCH|Any CPU
+		{2C00AE25-74BA-453B-8ED2-550FD0C4B355}.PATCH|Any CPU.Build.0 = PATCH|Any CPU
+		{2C00AE25-74BA-453B-8ED2-550FD0C4B355}.PROD|Any CPU.ActiveCfg = PROD|Any CPU
+		{2C00AE25-74BA-453B-8ED2-550FD0C4B355}.PROD|Any CPU.Build.0 = PROD|Any CPU
+		{2C00AE25-74BA-453B-8ED2-550FD0C4B355}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C00AE25-74BA-453B-8ED2-550FD0C4B355}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59AD143B-3DC4-4676-8C86-93FA66061505}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59AD143B-3DC4-4676-8C86-93FA66061505}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59AD143B-3DC4-4676-8C86-93FA66061505}.EOMTEST2|Any CPU.ActiveCfg = EOMTEST2|Any CPU
+		{59AD143B-3DC4-4676-8C86-93FA66061505}.EOMTEST2|Any CPU.Build.0 = EOMTEST2|Any CPU
+		{59AD143B-3DC4-4676-8C86-93FA66061505}.PATCH|Any CPU.ActiveCfg = PATCH|Any CPU
+		{59AD143B-3DC4-4676-8C86-93FA66061505}.PATCH|Any CPU.Build.0 = PATCH|Any CPU
+		{59AD143B-3DC4-4676-8C86-93FA66061505}.PROD|Any CPU.ActiveCfg = PROD|Any CPU
+		{59AD143B-3DC4-4676-8C86-93FA66061505}.PROD|Any CPU.Build.0 = PROD|Any CPU
+		{59AD143B-3DC4-4676-8C86-93FA66061505}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59AD143B-3DC4-4676-8C86-93FA66061505}.Release|Any CPU.Build.0 = Release|Any CPU
+		{628DA979-609B-4685-80F5-D05FECDB01AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{628DA979-609B-4685-80F5-D05FECDB01AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{628DA979-609B-4685-80F5-D05FECDB01AB}.EOMTEST2|Any CPU.ActiveCfg = EOMTEST2|Any CPU
+		{628DA979-609B-4685-80F5-D05FECDB01AB}.EOMTEST2|Any CPU.Build.0 = EOMTEST2|Any CPU
+		{628DA979-609B-4685-80F5-D05FECDB01AB}.PATCH|Any CPU.ActiveCfg = PATCH|Any CPU
+		{628DA979-609B-4685-80F5-D05FECDB01AB}.PATCH|Any CPU.Build.0 = PATCH|Any CPU
+		{628DA979-609B-4685-80F5-D05FECDB01AB}.PROD|Any CPU.ActiveCfg = PROD|Any CPU
+		{628DA979-609B-4685-80F5-D05FECDB01AB}.PROD|Any CPU.Build.0 = PROD|Any CPU
+		{628DA979-609B-4685-80F5-D05FECDB01AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{628DA979-609B-4685-80F5-D05FECDB01AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9431C8E-69B3-417A-B33F-46470919B2D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9431C8E-69B3-417A-B33F-46470919B2D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9431C8E-69B3-417A-B33F-46470919B2D8}.EOMTEST2|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9431C8E-69B3-417A-B33F-46470919B2D8}.EOMTEST2|Any CPU.Build.0 = Debug|Any CPU
+		{B9431C8E-69B3-417A-B33F-46470919B2D8}.PATCH|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9431C8E-69B3-417A-B33F-46470919B2D8}.PATCH|Any CPU.Build.0 = Debug|Any CPU
+		{B9431C8E-69B3-417A-B33F-46470919B2D8}.PROD|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9431C8E-69B3-417A-B33F-46470919B2D8}.PROD|Any CPU.Build.0 = Debug|Any CPU
+		{B9431C8E-69B3-417A-B33F-46470919B2D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9431C8E-69B3-417A-B33F-46470919B2D8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {01993A05-13A8-4EE6-8F92-0AE58172641D}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 5
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://ifmtfs:8080/tfs/ifmdevelopment
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = IFMDataServices.Tests\\IFMDataServices.Tests.csproj
+		SccProjectName1 = IFMDataServices.Tests
+		SccLocalPath1 = IFMDataServices.Tests
+		SccProjectUniqueName2 = IFMDataServices\\IFMDataServices.csproj
+		SccProjectName2 = IFMDataServices
+		SccLocalPath2 = IFMDataServices
+		SccProjectUniqueName3 = IFMDataServicesCore\\IFMDataServicesCore.csproj
+		SccProjectName3 = IFMDataServicesCore
+		SccLocalPath3 = IFMDataServicesCore
+		SccProjectUniqueName4 = IFMDataServicesClientModels\\IFMDataServicesClientModels.csproj
+		SccProjectName4 = IFMDataServicesClientModels
+		SccLocalPath4 = IFMDataServicesClientModels
+	EndGlobalSection
+EndGlobal

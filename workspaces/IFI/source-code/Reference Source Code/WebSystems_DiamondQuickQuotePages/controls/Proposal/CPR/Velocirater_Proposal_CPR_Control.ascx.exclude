@@ -1,0 +1,37 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CPR_Velocirater_Proposal_CPR_Control, VR_CGL_CPP_CPR_deploy" %>
+<%@ Register src="VR_Proposal_CPR_Location_List_Control.ascx" tagname="VR_Proposal_CPR_Location_List_Control" tagprefix="uc1" %>
+
+<%@ Register src="VR_Proposal_CPR_General_Control.ascx" tagname="VR_Proposal_CPR_General_Control" tagprefix="uc2" %>
+
+<%@ Register src="VR_Proposal_CPR_Blanket_Control.ascx" tagname="VR_Proposal_CPR_Blanket_Control" tagprefix="uc3" %>
+
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc4" %>
+
+<uc4:VR_PageBreakControl ID="VR_PageBreakControl1" runat="server" />
+<div style="text-align:left" class="p_ListItem">
+<div class="p_ControlTitle" style="width:100%; text-align:center; margin-bottom: 15px;">
+    
+    <asp:Label ID="lblLob" runat="server" Text="CPR - Commercial Property"></asp:Label>
+    </div>
+
+    <uc3:VR_Proposal_CPR_Blanket_Control ID="VR_Proposal_CPR_Blanket_Control1" 
+    runat="server" />
+    
+<uc2:VR_Proposal_CPR_General_Control ID="VR_Proposal_CPR_General_Control1" 
+    runat="server" />
+
+<uc1:VR_Proposal_CPR_Location_List_Control ID="VR_Proposal_CPR_Location_List_Control1" 
+    runat="server" />
+
+    <asp:Label runat="server" ID="lblCPR_Comments" Visible="false"></asp:Label>
+    </div>
+
+
+
+
+
+
+
+
+
+

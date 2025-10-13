@@ -1,0 +1,542 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1"><meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    
+    <!--removed 2/25/2013-->
+    <link href="DiamondQuickQuoteStyles.css?dt=20130528x2" rel="stylesheet" type="text/css" /><!--added 2/22/2013; updated for CSS 7/12/2013 (was 20130513)-->
+    
+    <title>Diamond Quote Proposal</title>
+<script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
+    <reference path="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2-vsdoc.js"/>
+    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.9.0/jquery-ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.9.0/themes/smoothness/jquery-ui.css" />
+    <script type="text/javascript" src="js/CGL-general.js"></script>    
+    <link rel="stylesheet" type="text/css" href="Styles/CGLStyle.css" />
+     <link rel="stylesheet" type="text/css" href="Styles/Vr_NearMono.css" />
+     <!--[if lt IE 9]>
+	    <link rel="stylesheet" type="text/css" href="Styles/Vr_NearMono_Legacy.css" />
+    <![endif]-->
+    
+    <!--[if gte IE 9]>
+        <link rel="stylesheet" type="text/css" href="Styles/Vr_NearMono_IE_9_Only.css" />
+    <![endif]-->
+    <script type="text/javascript">
+        //changed = to #; need Page.Header.DataBind() on Page_Load
+        var hdnPdfFilePath = 'Application_hdnPdfFilePath';
+        var pdfButtonArea = 'Application_pdfButtonArea';
+
+//        function openPdf() {
+//            if (document.getElementById(hdnPdfFilePath)) {
+//                var PdfFilePath = document.getElementById(hdnPdfFilePath).value;
+//                if (PdfFilePath == (0 || "0" || "")) {
+//                    return;
+//                } else {
+//                    if (UrlExists(PdfFilePath)) {
+//                        //if (fileExists(PdfFilePath)) {
+//                        window.open(PdfFilePath);
+//                    } else {
+//                        return;
+//                    }
+//                }
+//            }
+//        }
+        //function openPdf() {
+        //renamed 5/30/2013
+        function showButtonToOpenPdfWindow() {
+            if (document.getElementById(pdfButtonArea)) {
+                if (document.getElementById(hdnPdfFilePath)) {
+                    var PdfFilePath = document.getElementById(hdnPdfFilePath).value;
+                    if (PdfFilePath == (0 || "0" || "")) {
+                        return;
+                    } else {
+                        if (UrlExists(PdfFilePath)) {
+                            //if (fileExists(PdfFilePath)) {
+                            //window.open(PdfFilePath);
+                            document.getElementById(pdfButtonArea).style.display = "table";
+                        } else {
+                            return;
+                        }
+                    }
+                }                
+            }
+        }
+        function openPdfWindow() {
+            if (document.getElementById(hdnPdfFilePath)) {
+                var PdfFilePath = document.getElementById(hdnPdfFilePath).value;
+                if (PdfFilePath == (0 || "0" || "")) {
+                    return;
+                } else {
+                    if (UrlExists(PdfFilePath)) {
+                        //if (fileExists(PdfFilePath)) {
+                        window.open(PdfFilePath);
+                    } else {
+                        return;
+                    }
+                }
+            }
+        }
+        function openPdf() {
+            if (document.getElementById(hdnPdfFilePath)) {
+                var PdfFilePath = document.getElementById(hdnPdfFilePath).value;
+                if (PdfFilePath == (0 || "0" || "")) {
+                    return;
+                } else {
+                    if (UrlExists(PdfFilePath)) {
+                        //if (fileExists(PdfFilePath)) {
+                        window.location = PdfFilePath;
+                    } else {
+                        return;
+                    }
+                }
+            }
+        }
+
+        function UrlExists(url) {
+            var http = new XMLHttpRequest();
+            http.open('HEAD', url, false);
+            http.send();
+            return http.status != 404;
+        }
+        function fileExists(url) {
+            if (url) {
+                var req = new XMLHttpRequest();
+                req.open('GET', url, false);
+                req.send();
+                return req.status == 200;
+            } else {
+                return false;
+            }
+        }
+    </script>
+       
+
+<title>
+
+</title></head>
+<body id="bodytag" onkeydown="if(event.keyCode==8 &amp;&amp; !event.srcElement.value) {window.event.returnValue=false;}">
+    <center><form method="post" action="./DiamondQuoteProposal.aspx?printerFriendlyDiamondProposalId=100" id="form1" class="formPortal" style="background-color:White;">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJMjkwODAyODYwD2QWAmYPZBYEAgEPZBYCAgYPZBYCZg8VAhpBcHBsaWNhdGlvbl9oZG5QZGZGaWxlUGF0aBlBcHBsaWNhdGlvbl9wZGZCdXR0b25BcmVhZAIDD2QWAgIBD2QWAgIDD2QWAmYPZBYCAgIPZBYGZg9kFgICAQ8WAh4Dc3JjBSF+L2ltYWdlcy9JRk1JbnRyYW5ldExvZ28tMjAxMy5qcGdkAgMPZBYEAgEPFgIfAAUhfi9pbWFnZXMvSUZNSW50cmFuZXRMb2dvLTIwMTMuanBnZAIKD2QWAgICDw8WAh4EVGV4dAUVRnJpZGF5LCBKdW5lIDMwLCAyMDE3ZGQCBw9kFgICbQ9kFgICAg8PFgIfAQUVRnJpZGF5LCBKdW5lIDMwLCAyMDE3ZGRkZPi4/S34fhCErDzg0vPV/Ut48hSC8UhckjuJMhG/7s8=" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['form1'];
+if (!theForm) {
+    theForm = document.form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=T8XDPKOBbHHoP_oqAbVh3bvTdinKcAGBVYPz7MRicKFKVXNUcxGYVJvSm2jq_gqk1lUh5QC2WDi7ivdEtkXdtF1hk9ws28gFQEzDfDpuei81&amp;t=636255676860000000" type="text/javascript"></script>
+
+
+<script src="/ScriptResource.axd?d=dvgiC82SISj0F3GWsUXGi24H5kVVNrjR_e8zryvnDA6NDtx8KPGxx9Du266br2Ep94jdjPoV5PR5Uw_41XP9H_XJWbAGyz0ubDnygWFdfKIlFUmJb2lg4ewOOpj7GX5ac_tuk5tuhzGrcYjLTOW59LdEUk-gBBuEJkF8PAFV3UEnrU1NVAt2QfO0BbBRwD180&amp;t=ffffffff8ce90d1e" type="text/javascript"></script>
+<script type="text/javascript">
+//<![CDATA[
+if (typeof(Sys) === 'undefined') throw new Error('ASP.NET Ajax client-side framework failed to load.');
+//]]>
+</script>
+
+<script src="/ScriptResource.axd?d=PEm9FcSwOAJhhOs3ZOpt17-OEALUG34Aj4FS18H7vU4oA9H1mIokz_10vPue9G9ZbiptZG1O-TVKGGO259VrpQ8mIAGiUTLlRh8z-0wrcZGv0ZeVIMYYrv7RIuFNJwj4Sm0M4LhGDnXwj8DXRC5fJb0_MAFBFXsCLPX2eDzUzsFAHoN3t1p0aeEYiAizbooK0&amp;t=ffffffff8ce90d1e" type="text/javascript"></script>
+    <script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ctl00$ScriptManager1', 'form1', [], [], [], 90, 'ctl00');
+//]]>
+</script>
+
+    
+    <table class="layout" cellspacing="0" align="center" width="100%">
+            <tr>
+                <td valign="top" align="left">
+                    <div id="app" class="applicationPortal">
+
+<div class="tableField" style="width:900px; margin-left:auto; margin-right:auto;">
+
+    
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td align="left">
+            <img src="images/IFMIntranetLogo-2013.jpg" id="Application_ctl00_HeaderLogo" class="QuickQuoteProposalHeaderLogo" />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+        </td>
+    </tr>
+    <tr style="border-top: 2px solid black; border-bottom: 2px solid black; border-left: 2px solid black; border-right: 2px solid black;">
+        <td align="center">
+            <br />
+            <span class="tableRowHeaderLarger">Commercial Insurance Proposal</span>
+            <br />
+            <br />
+            <br />
+            <span class="tableRowHeader">Prepared For:</span>
+            <br />
+            
+            <span id="Application_ctl00_lblClientInfo" class="tableFieldHeaderLarger">ANGIE TEST<br />106 N. MERIDIAN<br />CARMEL, IN 46032-0000</span>
+            <br />
+            <br />
+            <span id="Application_ctl00_lblDateText">Monday, May 01, 2017</span>
+            <br /><br />
+        </td>
+    </tr>
+    <tr>
+        
+        <td align="center">
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            
+            <span id="Application_ctl00_lblAgencyInfo" class="tableFieldHeaderLarger">BREWTON INSURANCE<br />21797 OMEGA COURT<br />GOSHEN, IN 46528-0000<br />(574)875-8506 0</span>
+        </td>
+    </tr>
+    <tr>
+        <td align="center">
+            <br />
+            <br />
+            <span id="Application_ctl00_lblLogo"><img src="http://ifmwebtest/AgentsOnly/images/QuickQuoteProposal/Logo_1840.jpg" class="QuickQuoteProposalAgencyLogoSection" /></span>
+        </td>
+    </tr>
+</table>
+<br /><div class="pdf_page-break">
+
+</div><div class="pdf_page-break-section">
+
+</div>
+
+<br />
+<div class="tableField">
+<img src="images/IFMIntranetLogo-2013.jpg" id="Application_ctl03_HeaderLogo" class="QuickQuoteProposalHeaderLogo" />
+<br />
+<br />
+<p width="100%" align="center" class="tableRowHeaderLarger">
+    Commercial Insurance Quote Summary
+</p>
+
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td width="50%" valign="top">
+            <span id="Application_ctl03_VRProposal_ClientAndAgencyInfo1_lblClientInfo">ANGIE TEST<br />106 N. MERIDIAN<br />CARMEL, IN 46032-0000</span>
+        </td>
+        <td width="50%" valign="top">
+            <span id="Application_ctl03_VRProposal_ClientAndAgencyInfo1_lblAgencyInfo">BREWTON INSURANCE<br />21797 OMEGA COURT<br />GOSHEN, IN 46528-0000<br />(574)875-8506 0</span>
+        </td>
+    </tr>
+</table>
+<br />
+<p width="100%" align="center" class="tableRowHeader">
+    Total Quote Premiums
+</p>
+
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td colspan="2" class="tableFieldHeaderLarger">
+            <span id="Application_ctl03_ctl00_LobNameSection"><span id="Application_ctl03_ctl00_lblLobName">Commercial Umbrella</span> - </span><span id="Application_ctl03_ctl00_lblPolicyNumber">CUP1002171</span>
+        </td>
+    </tr>
+    <tr id="Application_ctl03_ctl00_CommentsRow">
+	<td colspan="2" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblComments"><br /><table width=""100%"" class=""quickQuoteSectionTable""><tr><td align=""left"" class=""tableFieldValue"">test comment 1</td></tr><tr><td align=""left"" class=""tableFieldValue"">test comment 2</td></tr><tr><td align=""left"" class=""tableFieldValue"">test comment 3</td></tr><tr><td align=""left"" class=""tableFieldValue"">test comment 4</td></tr></table></span>
+        </td>
+</tr>
+
+    <tr style="border-top: 1px solid black;">
+        <td class="tableFieldHeader">
+            Total Premium Due
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblTotalPremium">$650.00</span>
+        </td>
+    </tr>
+</table>
+<br />
+
+</div>
+<p width="100%" align="center" class="tableRowHeader">
+    Total Combined Premium:  <span id="Application_ctl03_lblCombinedPremium">$650.00</span>
+</p>
+<br />
+<br />
+
+<br />
+<div class="tableField">
+
+    <div class="pdf_DisclaimerHolder"><div class="pdf_QuickQuoteProposalDisclaimer">
+        <ul>
+            <li>This quotation has been developed based on the information provided to Indiana Farmers Mutual Insurance Company and does not bind or provide actual coverage. It is subject to final underwriting approval, acceptable loss experience and favorable loss control inspection.</li>
+            <li>This quotation is valid for 60 days, until <span id="Application_ctl03_VRProposal_Disclaimer1_lblValidQuoteDate">Friday, June 30, 2017</span></li>
+            <li>Additional coverages, exposures, or increased limits may be added for additional premium.</li>
+        </ul>
+    </div></div>
+</div>
+<br />
+<br /><div class="pdf_page-break">
+
+</div><div class="pdf_page-break-section">
+
+</div>
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td width="50%" valign="top">
+            <span id="Application_ctl06_lblClientInfo">ANGIE TEST<br />106 N. MERIDIAN<br />CARMEL, IN 46032-0000</span>
+        </td>
+        <td width="50%" valign="top">
+            <span id="Application_ctl06_lblAgencyInfo">BREWTON INSURANCE<br />21797 OMEGA COURT<br />GOSHEN, IN 46528-0000<br />(574)875-8506 0</span>
+        </td>
+    </tr>
+</table>
+<br />
+
+<br />
+<p width="100%" align="center" class="tableRowHeader">
+    Payment Schedule
+</p>
+<table width="100%" class="quickQuoteSectionTable">
+    <tr style="border-bottom: 1px solid black;">
+        <td class="tableFieldHeader">
+            <b>Plan</b>
+        </td>
+        
+        
+        <td class="tableFieldHeader">
+            <b>Down Payment</b>
+        </td>
+        
+        <td class="tableFieldHeader">
+            <b>Remaining Installments</b>
+        </td>
+        
+        <td class="tableFieldHeader">
+            <b>Installment Amount</b>
+        </td>
+        
+    </tr>            
+    <tr>
+        <td class="tableFieldValue">
+            Simple Pay (EFT)*
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblEftMonthly_BasicDownPayment">$54.17</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblEftMonthly_RemainingInstallments">11</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblEftMonthly_BasicInstallmentAmount">$54.17</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct Bill Monthly**
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblMonthly_BasicDownPayment">$54.17</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblMonthly_RemainingInstallments">11</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblMonthly_BasicInstallmentAmount">$57.17</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct/Agent Bill Quarterly
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblQuarterly_BasicDownPayment">$162.50</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblQuarterly_RemainingInstallments">3</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblQuarterly_BasicInstallmentAmount">$162.50</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct/Agent Bill Semi Annual
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblSemiAnnual_BasicDownPayment">$325.00</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblSemiAnnual_RemainingInstallments">1</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblSemiAnnual_BasicInstallmentAmount">$325.00</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct/Agent Bill Annual
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblAnnual_BasicDownPayment">$650.00</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblAnnual_RemainingInstallments">N/A</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblAnnual_BasicInstallmentAmount">N/A</span>
+        </td>
+        
+    </tr>    
+    
+    
+    
+    
+</table>
+<div class="tableFieldHeader">
+<br />
+The payment plan options listed above are a summary of all policies quoted and are displayed for evaluation purposes only. Currently all policies are separately billed.
+<br />
+*If down payment is not collected, the annual premium will be spread amongst the remaining payments.
+<br />
+**$3 Service fee applies to installments
+</div>
+<br />
+<br />
+
+<br />
+<div class="tableField">
+
+    <div class="pdf_DisclaimerHolder"><div class="pdf_QuickQuoteProposalDisclaimer">
+        <ul>
+            <li>This quotation has been developed based on the information provided to Indiana Farmers Mutual Insurance Company and does not bind or provide actual coverage. It is subject to final underwriting approval, acceptable loss experience and favorable loss control inspection.</li>
+            <li>This quotation is valid for 60 days, until <span id="Application_ctl07_VRProposal_Disclaimer1_lblValidQuoteDate">Friday, June 30, 2017</span></li>
+            <li>Additional coverages, exposures, or increased limits may be added for additional premium.</li>
+        </ul>
+    </div></div>
+</div>
+<br />
+<br />
+    <input name="ctl00$Application$hdnPdfFilePath" type="hidden" id="Application_hdnPdfFilePath" value="/Proposals/Proposal_100_05012017 83128 AM.pdf" />
+    <div id="Application_pdfButtonArea" style="display:none; width:100%;" class="hideFromPrinter">
+        <br />
+        <center><input type="button" value="Open as PDF" onclick="openPdfWindow()" class="quickQuoteButton hideFromPrinter" /></center>
+    </div>
+<!--using styles here to overwrite css file-->
+<style type="text/css">
+.tableFieldValue
+{
+font-family: Calibri;
+font-size: 13pt;/*normally 10pt*/
+font-weight: normal;
+}
+table.quickQuoteSectionTable 
+{
+font-family: Calibri;
+font-size: 13pt;/*normally 10pt*/
+/*font-weight: normal;*//*not needed*/
+border-collapse: collapse;
+}
+.tableFieldHeader
+{
+font-family: Calibri;
+/*font-size: 14pt;*//*normally 10pt*/
+font-size: 13pt;/*changed*/
+font-weight: bold;
+}
+.tableFieldHeaderLarger
+{
+font-family: Calibri;
+font-size: 14pt;/*normally 12pt*/
+font-weight: bold;
+}
+.tableRowHeader
+{
+font-family: Calibri;
+font-size: 14pt;/*normally 12pt*/
+font-weight: bolder;
+}
+.tableField
+{
+font-family: Calibri;
+font-size: 13pt;/*normally 10pt*/
+}
+
+/*added*/
+.tableRowHeaderLarger
+{
+    font-family:Calibri;
+    font-size:15pt;/*normally 14pt*/
+    font-weight:bolder;
+}
+</style>
+</div>
+</div>
+                </td>
+            </tr>                      
+        </table>
+    
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="30EC6DE8" />
+	<input type="hidden" name="__SCROLLPOSITIONX" id="__SCROLLPOSITIONX" value="0" />
+	<input type="hidden" name="__SCROLLPOSITIONY" id="__SCROLLPOSITIONY" value="0" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAALFmwk6Eqq+MHOqWhHAHcQFrNkF9pwI6b3TXTjy5uP8UdHCGtLcz2dG9npYpD9nziGuGmWSmR0MRXNbXJkAXmEl" />
+</div>
+<script language=JavaScript> openPdf();</script><script language=JavaScript>alert("The following errors were encountered:\nNothing is currently available for quote number .");</script>
+<script type="text/javascript">
+//<![CDATA[
+
+theForm.oldSubmit = theForm.submit;
+theForm.submit = WebForm_SaveScrollPositionSubmit;
+
+theForm.oldOnSubmit = theForm.onsubmit;
+theForm.onsubmit = WebForm_SaveScrollPositionOnSubmit;
+//]]>
+</script>
+</form></center>
+</body>
+</html>

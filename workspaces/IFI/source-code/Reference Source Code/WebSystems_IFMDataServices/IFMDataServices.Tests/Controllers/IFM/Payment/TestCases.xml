@@ -1,0 +1,290 @@
+﻿<tests>
+  <testPaymentData>
+    <description>Expect no errors. Testing a staff EFT payment.</description>
+    <policyNumber>BOP1007924</policyNumber>
+    <policyId>2284227</policyId>
+    <imageNumber>1</imageNumber>
+    <paymentinterface>2</paymentinterface>
+    <accountNumber></accountNumber>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress></emailAddress>
+    <userID>11162</userID>
+    <username>dgugenheim@indianafarmers.com</username>
+    <usertype>0</usertype>
+    <paymentamount>8</paymentamount>
+    <cashinsource>10024</cashinsource>
+
+    <echeckUseData>true</echeckUseData>
+    <echeckAccountNumber>6#2G7w$I</echeckAccountNumber>
+    <echeckAccountType>1</echeckAccountType>
+    <echeckRoutingNumber>6w+Q6wtD6wxD</echeckRoutingNumber>
+
+    <ccUseData>false</ccUseData>
+    <ccNumber>5416892016030402</ccNumber>
+    <ccExpireMonth>12</ccExpireMonth>
+    <ccExpireYear>2022</ccExpireYear>
+    <ccSecurityCode>222</ccSecurityCode>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testPaymentData>
+
+  <testMakePayment>
+    <description>Expect no errors. Testing a staff EFT payment.</description>
+    <policyNumber>BOP1007924</policyNumber>
+    <policyId>2284227</policyId>
+    <imageNumber>1</imageNumber>
+    <paymentinterface>2</paymentinterface>
+    <accountNumber></accountNumber>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress></emailAddress>
+    <userID>11162</userID>
+    <username>dgugenheim@indianafarmers.com</username>
+    <usertype>0</usertype>
+    <paymentamount>8</paymentamount>
+    <cashinsource>10024</cashinsource>
+
+    <echeckUseData>true</echeckUseData>
+    <echeckAccountNumber>6#2G7w$I</echeckAccountNumber>
+    <echeckAccountType>1</echeckAccountType>
+    <echeckRoutingNumber>6w+Q6wtD6wxD</echeckRoutingNumber>
+
+    <eftUseData>false</eftUseData>
+    <eftAccountId>0</eftAccountId>
+    <eftLegacyUserId>0</eftLegacyUserId>
+    <eftLegacyAgencyId>0</eftLegacyAgencyId>
+
+    <ccUseData>false</ccUseData>
+    <ccNumber>5416892016030402</ccNumber>
+    <ccExpireMonth>12</ccExpireMonth>
+    <ccExpireYear>2022</ccExpireYear>
+    <ccSecurityCode>222</ccSecurityCode>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testMakePayment>
+
+  <testPostPayment>
+    <description>Expect no errors. Testing a staff EFT payment.</description>
+    <policyNumber>HOM2122421</policyNumber>
+    <policyId></policyId>
+    <imageNumber></imageNumber>
+    <paymentamount>16</paymentamount>
+    <cashSource>10029</cashSource>
+    
+    <accountNumber></accountNumber>
+    <userID>272</userID>
+    <!--<username>dgugenheim</username>-->
+    <usertype>1</usertype>
+    
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testPostPayment>
+  
+  <!--<testMakePayment>
+    <description>Expect no errors. Testing a staff EFT payment.</description>
+    <policyNumber>DFR1019207</policyNumber>
+    <policyId>2162767</policyId>
+    <imageNumber>2</imageNumber>
+    <accountNumber></accountNumber>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>dgugenheim@indianafarmers.com</emailAddress>
+    <username>dgugenheim@indianafarmers.com</username>
+    <usertype>1</usertype>
+    --><!--1=policyholder,2=agent, 3=staff--><!--
+    <paymentamount>22</paymentamount>
+
+    <eftUseData>true</eftUseData>
+    <eftAccountNumber>1234567</eftAccountNumber>
+    <eftAccountType>1</eftAccountType>
+    <eftRoutingNumber>074000010</eftRoutingNumber>
+
+    <ccUseData>false</ccUseData>
+    <ccNumber>5416892016030402</ccNumber>
+    <ccExpireMonth>12</ccExpireMonth>
+    <ccExpireYear>2022</ccExpireYear>
+    <ccSecurityCode>222</ccSecurityCode>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testMakePayment>-->
+
+  <!--<testMakePayment>
+    <description>Expect errors. Testing a credit card payment.</description>
+    <policyNumber>PPA2127887</policyNumber>
+    <policyId>1593066</policyId>
+    <imageNumber>2</imageNumber>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>mamonett@indianafarmers.com</emailAddress>
+    <username>test123</username>
+    <paymentamount>25</paymentamount>
+
+    <eftUseData>false</eftUseData>
+    <eftAccountNumber></eftAccountNumber>
+    <eftAccountType></eftAccountType>
+    <eftRoutingNumber></eftRoutingNumber>
+
+
+    <ccUseData>true</ccUseData>
+    <ccNumber>5413330089010681</ccNumber>
+    <ccExpireMonth>12</ccExpireMonth>
+    <ccExpireYear>2022</ccExpireYear>
+
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </testMakePayment>
+  
+  <testMakePayment>
+    <description>Expect no errors. Testing a eCheck payment.</description>
+    <policyNumber>HOM2123314</policyNumber>    
+    <policyId>1592761</policyId>
+    <imageNumber>1</imageNumber>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>mamonett@indianafarmers.com</emailAddress>
+    <username>test123</username>
+    <usertype>3</usertype>
+    <paymentamount>200</paymentamount>
+
+    <eftUseData>true</eftUseData>
+    <eftAccountNumber>12345</eftAccountNumber>
+    <eftAccountType>1</eftAccountType>
+    <eftRoutingNumber>011000015</eftRoutingNumber>
+
+
+    <ccUseData>false</ccUseData>
+    <ccNumber>5413330089010681</ccNumber>
+    <ccExpireMonth>12</ccExpireMonth>
+    <ccExpireYear>2022</ccExpireYear>
+
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testMakePayment>-->
+
+  
+  <!--<testMakePayment>
+    <description>Expect no errors. Testing a echeck payment.</description>    
+   <policyNumber>BOP1005687</policyNumber>    
+    <policyId>1342824</policyId>
+    <imageNumber>1</imageNumber>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>mamonett@indianafarmers.com</emailAddress>
+    <username>test123</username>
+    <paymentamount>25</paymentamount>
+
+    <eftUseData>true</eftUseData>
+    <eftAccountNumber>12345</eftAccountNumber>
+    <eftAccountType>1</eftAccountType>
+    <eftRoutingNumber>011000015</eftRoutingNumber>
+    
+
+    <ccUseData>false</ccUseData>
+    <ccNumber>5454545454545454</ccNumber>
+    <ccExpireMonth>10</ccExpireMonth>
+    <ccExpireYear>2040</ccExpireYear>
+    
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testMakePayment>-->
+
+  
+
+  <!--
+
+  <testMakePayment>
+    <description>Expect errors. Testing a eCheck payment.</description>
+    <policyNumber>HOM2114384 </policyNumber>    
+    <policyId>1340787</policyId>
+    <imageNumber>3</imageNumber>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>mamonett@indianafarmers.com</emailAddress>
+    <username>test123</username>
+    <paymentamount>25</paymentamount>
+
+    <eftUseData>true</eftUseData>
+    <eftAccountNumber></eftAccountNumber>
+    <eftAccountType></eftAccountType>
+    <eftRoutingNumber></eftRoutingNumber>
+
+
+    <ccUseData>false</ccUseData>
+    <ccNumber></ccNumber>
+    <ccExpireMonth></ccExpireMonth>
+    <ccExpireYear></ccExpireYear>
+
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </testMakePayment>
+  
+  
+
+  <testMakePayment>
+    <description>Expect no errors. Testing a credit card payment.</description>    
+   <policyNumber>HOM2114384 </policyNumber>    
+    <policyId>1340787</policyId>
+    <imageNumber>3</imageNumber>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>mamonett@indianafarmers.com</emailAddress>
+    <username>test123</username>
+    <paymentamount>25</paymentamount>
+
+    <eftUseData>false</eftUseData>
+    <eftAccountNumber>12345</eftAccountNumber>
+    <eftAccountType>1</eftAccountType>
+    <eftRoutingNumber>011000015</eftRoutingNumber>
+    
+
+    <ccUseData>true</ccUseData>
+    <ccNumber>5454545454545454</ccNumber>
+    <ccExpireMonth>10</ccExpireMonth>
+    <ccExpireYear>2040</ccExpireYear>
+    
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testMakePayment>
+
+  <testMakePayment>
+    <description>Expect no errors. Testing a eCheck payment.</description>
+    <policyNumber>HOM2114384 </policyNumber>    
+    <policyId>1340787</policyId>
+    <imageNumber>3</imageNumber>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>mamonett@indianafarmers.com</emailAddress>
+    <username>test123</username>
+    <paymentamount>25</paymentamount>
+
+    <eftUseData>true</eftUseData>
+    <eftAccountNumber>12345</eftAccountNumber>
+    <eftAccountType>1</eftAccountType>
+    <eftRoutingNumber>011000015</eftRoutingNumber>
+
+
+    <ccUseData>false</ccUseData>
+    <ccNumber>5454545454545454</ccNumber>
+    <ccExpireMonth>10</ccExpireMonth>
+    <ccExpireYear>2040</ccExpireYear>
+
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testMakePayment>-->
+
+
+
+
+</tests>

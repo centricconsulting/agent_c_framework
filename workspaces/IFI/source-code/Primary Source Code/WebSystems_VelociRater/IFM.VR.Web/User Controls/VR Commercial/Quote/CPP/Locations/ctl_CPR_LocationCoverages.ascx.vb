@@ -1,0 +1,149 @@
+﻿Imports IFM.PrimativeExtensions
+Imports QuickQuote.CommonObjects.QuickQuoteStaticDataOption
+Imports QuickQuote.CommonMethods.QuickQuoteHelperClass
+Public Class ctl_CPR_LocationCoverages
+    Inherits VRControlBase
+
+    Public Property MyLocationIndex As Int32
+        Get
+            Return ViewState.GetInt32("vs_locationIndex")
+        End Get
+        Set(value As Int32)
+            ViewState("vs_locationIndex") = value
+        End Set
+    End Property
+
+    Public ReadOnly Property MyLocation As QuickQuote.CommonObjects.QuickQuoteLocation
+        Get
+            If Me.Quote.IsNotNull Then
+                Return Me.Quote.Locations.GetItemAtIndex(MyLocationIndex)
+            End If
+            Return Nothing
+        End Get
+    End Property
+
+    Protected Overrides ReadOnly Property MyAccordionIndex As Integer
+        Get
+            Return MyLocationIndex
+        End Get
+    End Property
+
+
+    Public Overrides Sub AddScriptAlways()
+
+    End Sub
+
+    Public Overrides Sub AddScriptWhenRendered()
+        Me.VRScript.StopEventPropagation(Me.lnkClear.ClientID)
+        Me.VRScript.StopEventPropagation(Me.lnkSave.ClientID)
+        Me.VRScript.CreateAccordion(Me.divCPRLocationCoverages.ClientID, hdnAccord, 0)
+    End Sub
+
+    Public Overrides Sub LoadStaticData()
+        If ddWindHailDeductible.Items Is Nothing OrElse ddWindHailDeductible.Items.Count <= 0 Then
+            QQHelper.LoadStaticDataOptionsDropDown(Me.ddWindHailDeductible, QuickQuoteClassName.QuickQuoteLocation, QuickQuotePropertyName.WindHailDeductibleLimitId, SortBy.None, Me.Quote.LobType)
+        End If
+    End Sub
+
+    Protected Sub HandlePropertyClear()
+        Me.lblAccordHeader.Text = "Location"
+    End Sub
+
+    Public Overrides Sub Populate()
+        LoadStaticData()
+        If Quote IsNot Nothing Then
+            If MyLocation IsNot Nothing Then
+                ' Wind/Hail
+                SetFromValue(ddWindHailDeductible, MyLocation.WindHailDeductibleLimitId, "0")
+                ' Equipment Breakdown
+                If RiskGradeEligibleForEquipmentBreakdown() Then
+                    If MyLocation.EquipmentBreakdownDeductible <> "" Then
+                        chkEquipmentBreakdown.Checked = True
+                    Else
+                        chkEquipmentBreakdown.Checked = True
+                    End If
+                End If
+            End If
+        End If
+        Me.PopulateChildControls()
+    End Sub
+
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+    End Sub
+
+    Public Overrides Function Save() As Boolean
+        ' Wind/Hail deductible
+        If Quote IsNot Nothing AndAlso MyLocation IsNot Nothing Then
+            MyLocation.WindHailDeductibleLimitId = ddWindHailDeductible.SelectedValue
+        End If
+        ' Set the Equipment Breakdown value
+        If chkEquipmentBreakdown.Checked Then
+            MyLocation.EquipmentBreakdownDeductibleId = QQHelper.DefaultMBREquipmentBreakdownDeductibleId().ToString
+        Else
+            MyLocation.EquipmentBreakdownDeductibleId = ""
+        End If
+        Me.SaveChildControls()
+        Return True
+    End Function
+
+    Private Function RiskGradeEligibleForEquipmentBreakdown() As Boolean
+        Dim ccs As String = "97220, 59977, 59975, 59973, 59970, 59941, 59923, 59915, 59914, 59892, 59889, 59806, 59798, 59790, 59784, 59783, 59782, 59781, 59701, 59695, 59661, 59660, 59058, 59057, 58922, 58904, 58903, 58813, 58713, 58663, 58627, 58575, 58561, 58560, 58559, 58532, 58009, 57999, 57998, 57625, 57600, 57572, 57401, 57257, 57202, 56919, 56918, 56917, 56916, 56915, 56913, 56912, 56911, 56910, 56900, 56808, 56807, 56806, 56805, 56690, 56654, 56653, 56652, 56651, 56650, 56391, 56390, 56171, 56042, 56041, 55802, 55649, 55648, 55647, 55013, 55012, 55011, 55010, 54444, 53803, 53425, 53403, 53333, 53271, 53229, 53147, 52744, 52619, 52581, 52547, 52505, 52469, 52467, 52440, 52435, 52433, 52432, 52401, 52137, 51999, 51941, 51927, 51926, 51900, 51889, 51767, 51734, 51703, 51702, 51666, 51625, 51613, 51500, 51401, 51400, 51380, 51370, 51333, 51330, 51255, 51254, 51253, 51252, 51251, 51250, 51224, 51222, 51221, 51220, 51211, 51206, 51205, 51201, 51116, 51001, 56170, 59932, 59931, 59867, 59223, 58837, 58756, 58056, 57690, 56920, 56567, 55426, 53905, 53904, 53903, 53902, 53901, 53077, 52876, 52343, 52342, 52341, 52076, 52075, 51970, 51919, 51909, 51857, 51856, 51855, 51854, 51853, 51852, 51851, 51850, 51833, 51790, 51241, 51240, 50045, 15733, 59482, 59481, 56980, 56427, 55715, 55214, 51959, 51958, 51957, 51956, 51934, 51877, 51869, 51809, 51808, 51600, 50017, 50017, 50015, 50010, 59751, 59750, 59257, 59005, 58759, 58096, 58095, 58058, 58057, 58020, 58010, 56040, 55918, 55718, 55717, 55597, 52402, 51554, 51553, 51340, 49239, 99303, 53121, 98710, 98555, 98430, 98429, 98428, 98427, 98162, 98161, 98160, 98159, 98158, 98157, 98156, 98155, 98154, 98153, 98151, 98150, 98003, 98002, 97111, 95358, 95357, 95306, 95305, 95233, 92453, 92445, 92102, 92101, 92055, 92054, 92053, 91210, 59985, 59984, 59947, 59647, 59537, 59189, 59188, 58873, 58503, 58302, 58301, 57726, 57611, 54077, 54012, 52967, 52150, 51552, 51551, 51550, 51230, 47147, 47146, 44010, 43991, 43990, 43946, 43945, 43822"
+        Dim ccarray As String() = ccs.Split(",")
+
+        ' Default to show all the specific rates rows with the checkboxes checked
+        chkEquipmentBreakdown.Enabled = True
+
+        ' Get the quote's risk grade class code
+        Dim cc As String = GetRiskGradeClassCode(Quote.RiskGradeLookupId)
+
+        ' If the quote risk grade class code is one in the list above then disable and uncheck equipment breakdown
+        For Each c As String In ccarray
+            If cc = c.Trim Then
+                Return False
+            End If
+        Next
+
+        ' Risk grade class code not in list - eligible for EB
+        Return True
+    End Function
+    Private Function GetRiskGradeClassCode(ByVal riskId As String) As String
+        Dim conn As New System.Data.SqlClient.SqlConnection
+        Dim cmd As New System.Data.SqlClient.SqlCommand
+        Dim rtn As Object = Nothing
+
+        Try
+            conn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("connDiamond")
+            conn.Open()
+            cmd.Connection = conn
+            cmd.CommandType = CommandType.Text
+            cmd.CommandText = "SELECT glclasscode FROM RiskGradeLookup WHERE riskgradelookup_id = " & riskId
+            rtn = cmd.ExecuteScalar()
+            If rtn IsNot Nothing Then Return rtn.ToString() Else Return ""
+        Catch ex As Exception
+            Return ""
+        Finally
+            If conn.State = ConnectionState.Open Then conn.Close()
+            conn.Dispose()
+            cmd.Dispose()
+        End Try
+    End Function
+
+
+    Protected Sub lnkSave_Click(sender As Object, e As EventArgs) Handles lnkSave.Click
+        Me.Save_FireSaveEvent()
+    End Sub
+
+    Protected Sub lnkClear_Click(sender As Object, e As EventArgs) Handles lnkClear.Click
+        If ddWindHailDeductible.Items IsNot Nothing AndAlso ddWindHailDeductible.Items.Count > 0 Then
+            ddWindHailDeductible.SelectedIndex = 0
+        End If
+        chkEquipmentBreakdown.Checked = False
+    End Sub
+
+    Public Overrides Sub ValidateControl(valArgs As VRValidationArgs)
+        MyBase.ValidateControl(valArgs)
+        Me.ValidateChildControls(valArgs)
+    End Sub
+
+
+End Class

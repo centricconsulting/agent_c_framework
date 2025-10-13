@@ -1,0 +1,251 @@
+﻿
+<div ng-controller="CtrlQuoteSearchMaster as vm">
+    <div class="row">
+        <div class="col-md-3">
+
+            <div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <img alt="" src="images/VR-Search.png" />
+                        <label>Search My Quotes</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 col-md-12">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+                                    <label>Quote #</label>
+                                    <input type="text" ng-model="vm.quoteNumber" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+                                    <label>Customer Name</label>
+                                    <input type="text" ng-model="vm.customerName" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+                                    <label>Status</label>
+                                    <select class="form-control" ng-model="vm.status">
+                                        <option value="">All Statuses</option>
+                                        <option value="7,8">App</option>
+                                        <option value="9,10,11">App Error</option>
+                                        <option value="12">Archive</option>
+                                        <option value="14">Finalized</option>
+                                        <option value="2,3">Quote</option>
+                                        <option value="4,5,6">Quote Error</option>
+                                        <option value="13">Referred to Underwriter</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-12">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+                                    <label>LOB</label>
+                                    <select class="form-control" ng-model="vm.lob">
+                                        <option value="All LOBs" selected="selected">All LOBs</option>
+                                        <option value="1001" style="font-weight: bold;">All Personal Lines</option>
+                                        <option value="1">Personal Auto</option>
+                                        <option value="2">Personal Home</option>
+                                        <option value="3">Personal Dwelling Fire</option>
+                                        <option value="1002" style="font-weight: bold;">All Commercial Lines</option>
+                                        <option value="20">Commercial Auto</option>
+                                        <option value="25">Commercial BOP</option>
+                                        <option value="9">Commercial General Liability</option>
+                                        <option value="23">Commercial Package</option>
+                                        <option value="28">Commercial Property</option>
+                                        <option value="21">Workers Comp</option>
+                                        <option value="1003" style="font-weight: bold;">All Farm Lines</option>
+                                        <option value="17">Farm</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+                                    <label>Agent User</label>
+                                    <select class="form-control" ng-model="vm.agentUser">
+                                        <option>All Users</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+                                    <label>Time Frame</label>
+                                    <select class="form-control" ng-model="vm.timeFrame">
+                                        <option value="0">All</option>
+                                        <option value="30">Last 30 Days</option>
+                                        <option value="60">Last 60 Days</option>
+                                        <option value="90">Last 90 Days</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-primary pull-right" ng-click="vm.performSearch()">Search</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-9">
+
+            <div ng-repeat="section in vm.sections">                
+                <div class="panel panel-default">
+                    <div class="panel-heading clickable" onclick="$(this).next().toggle();">
+                        <div class="pull-right" style="margin-top:-7px">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    New {{vm.sectionName}}
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#">Home</a></li>
+                                    <li><a href="#">Dwelling Fire</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <img style="width:25px;height:25px;" src="images/dark_auto.png" /> {{vm.sectionName}}
+                    </div>
+                    <div class="panel-body">
+                        <div ng-if="vm.performingQuoteSearch">
+                            Performing Search...
+                            <span class="fa-stack fa-lg" style="color:black;">
+                                <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+                            </span>
+                        </div>
+                        <div ng-if="vm.performingQuoteSearch == false && (!vm.resultsData.Results || vm.resultsData.Results == null)">
+                            No quotes found. Try changing your search criteria and search again.
+                        </div>
+
+                        <div ng-if="vm.resultsData.Results && vm.resultsData.Results != null">
+                            <table class="table table-striped table-bordered ">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width:120px;">Actions</th>
+                                        <th>Quote #</th>
+                                        <th>Customer</th>
+                                        <th>Premium</th>
+                                        <th>Status</th>
+                                        <th>Last Modified</th>
+                                        <!--<th>Agency Code</th>
+                                        <th>Quote Id</th>-->
+                                    </tr>
+                                </thead>
+
+                                <tr ng-repeat="record in vm.resultsData.Results">
+                                    <td>
+                                        <select class="form-control">
+                                            <option ng-repeat="option in record.AvilableActions" value="{{option.value}}">{{option.label}}</option>
+                                            <!--<option>-- Select --</option>
+                                            <option>View</option>
+                                            <option>Copy</option>
+                                            <option>Archive</option>
+                                            <option>Undelete</option>
+                                            <option>Quote XML</option>-->
+                                        </select>
+                                    </td>
+                                    <td>
+                                        {{record.QuoteNumAndDescription}}
+                                    </td>
+                                    <td>
+                                        {{record.ClientName}}
+                                    </td>
+                                    <td class="text-right">{{record.Premium | currency }}</td>
+                                    <td>{{record.FriendlyStatus}}</td>
+                                    <td><span ng-bind-html="record.LastModified_FriendlyDate"></span></td>
+
+
+                                </tr>
+                                <!--
+                                <tr>
+                                    <td>
+                                        <select class="form-control">
+                                            <option>-- Select --</option>
+                                            <option>View</option>
+                                            <option>Copy</option>
+                                            <option>Archive</option>
+                                            <option>Undelete</option>
+                                            <option>Quote XML</option>
+                                        </select>
+                                    </td>
+                                    <td>QPPA337183 - kblann 8/31/2016 2:36:59 PM</td>
+                                    <td>
+                                        <span class="glyphicon glyphicon-search clickable" aria-hidden="true" onclick="$(this).parent().closest('tr').next('tr').toggle()"></span>
+                                        HELEN D FLOYD
+                                    </td>
+                                    <td>$1,028.00</td>
+                                    <td>App</td>
+                                    <td>Sunday 6:38 PM</td>
+                                </tr>
+                                <tr style="display:none;">
+                                    <td colspan="10">
+                                        <ul>
+                                            <li>
+                                                QPPA10235652
+                                            </li>
+                                            <li>
+                                                QPPA10235652
+                                            </li>
+                                            <li>
+                                                QPPA10235652
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                -->
+                            </table>
+
+
+                            <!--Page Index {{vm.resultsData.PageIndex+1}}-->
+
+                            Results: {{vm.resultsData.QueryFullCount}}
+                            <div class="pull-right">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination">
+                                        <li>
+                                            <a href="#" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="active"><a href="#">1</a></li>
+                                        <li><a href="#">2</a></li>
+                                        <li><a href="#">3</a></li>
+                                        <li><a href="#">4</a></li>
+                                        <li><a href="#">5</a></li>
+                                        <li>
+                                            <a href="#" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                                
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

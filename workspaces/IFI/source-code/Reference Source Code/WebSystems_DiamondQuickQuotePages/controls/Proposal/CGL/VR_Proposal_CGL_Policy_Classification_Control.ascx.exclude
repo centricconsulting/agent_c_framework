@@ -1,0 +1,15 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CGL_VR_Proposal_CGL_Policy_Classification_Control, VR_CGL_CPP_CPR_deploy" %>
+<%@ Register src="VR_Proposal_CGL_ClassificationControl.ascx" tagname="VR_Proposal_CGL_ClassificationControl" tagprefix="uc1" %>
+
+
+    <%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc2" %>
+
+    <uc2:VR_PageBreakControl ID="VR_PageBreakControl1" Visible="false"  runat="server" />
+    <span class="p_SectionHead">
+Policy Classifications</span>
+<br />
+<div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+    <uc1:VR_Proposal_CGL_ClassificationControl ID="VR_Proposal_CGL_ClassificationControl1" UsedToDisplayPolicyLevelClassifications="true"
+        runat="server" />
+</div>
+

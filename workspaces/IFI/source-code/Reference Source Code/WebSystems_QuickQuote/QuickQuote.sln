@@ -1,0 +1,99 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33414.496
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "QuickQuote_Site", "QuickQuote_Site", "{C486CF58-1C58-4C48-9885-12F82455CCA5}"
+	ProjectSection(WebsiteProperties) = preProject
+		SccProjectName = "SAK"
+		SccAuxPath = "SAK"
+		SccLocalPath = "SAK"
+		SccProvider = "SAK"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
+		Debug.AspNetCompiler.VirtualPath = "/QuickQuote_Site"
+		Debug.AspNetCompiler.PhysicalPath = "QuickQuote_Site\"
+		Debug.AspNetCompiler.TargetPath = "Output\QuickQuote_Site\"
+		Debug.AspNetCompiler.Updateable = "false"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/QuickQuote_Site"
+		Release.AspNetCompiler.PhysicalPath = "QuickQuote_Site\"
+		Release.AspNetCompiler.TargetPath = "Output\QuickQuote_Site\"
+		Release.AspNetCompiler.Updateable = "false"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "56208"
+		SlnRelativePath = "QuickQuote_Site\"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFM.PolicyLoader", "IFM.PolicyLoader\IFM.PolicyLoader.csproj", "{1EF24D4E-1C60-4F81-88E5-9D409981CB30}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "QuickQuote", "QuickQuote\QuickQuote.vbproj", "{B762EB60-45A7-4D99-8397-748F0212AD8A}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "QuickQuote.TestPages", "QuickQuote.TestPages\QuickQuote.TestPages.vbproj", "{3C79BCEA-89A9-45B4-AC56-836B82BB8A91}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7A9BC4AF-25C1-4A12-AB1F-16EDEE88B044}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFM.PolicyLoader.Tests", "IFM.PolicyLoader.Tests\IFM.PolicyLoader.Tests.csproj", "{35A9D42E-75EA-48D3-888D-F469592101AE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C486CF58-1C58-4C48-9885-12F82455CCA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C486CF58-1C58-4C48-9885-12F82455CCA5}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EF24D4E-1C60-4F81-88E5-9D409981CB30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EF24D4E-1C60-4F81-88E5-9D409981CB30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EF24D4E-1C60-4F81-88E5-9D409981CB30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EF24D4E-1C60-4F81-88E5-9D409981CB30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B762EB60-45A7-4D99-8397-748F0212AD8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B762EB60-45A7-4D99-8397-748F0212AD8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B762EB60-45A7-4D99-8397-748F0212AD8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B762EB60-45A7-4D99-8397-748F0212AD8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C79BCEA-89A9-45B4-AC56-836B82BB8A91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C79BCEA-89A9-45B4-AC56-836B82BB8A91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C79BCEA-89A9-45B4-AC56-836B82BB8A91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C79BCEA-89A9-45B4-AC56-836B82BB8A91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35A9D42E-75EA-48D3-888D-F469592101AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35A9D42E-75EA-48D3-888D-F469592101AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35A9D42E-75EA-48D3-888D-F469592101AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35A9D42E-75EA-48D3-888D-F469592101AE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EAAFEF3F-8C82-418B-A0D3-5A0AF7739D42}
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.0\lib\NET35;packages\Unity.Interception.2.1.505.0\lib\NET35;packages\EnterpriseLibrary.Common.5.0.505.0\lib\NET35;packages\EnterpriseLibrary.Logging.5.0.505.0\lib\NET35;packages\Unity.2.1.505.2\lib\NET35;packages\Unity.Interception.2.1.505.2\lib\NET35
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 6
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://ifmtfs1:8080/tfs/ifmdevelopment
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = IFM.PolicyLoader\\IFM.PolicyLoader.csproj
+		SccProjectName1 = IFM.PolicyLoader
+		SccLocalPath1 = IFM.PolicyLoader
+		SccProjectUniqueName2 = QuickQuote\\QuickQuote.vbproj
+		SccProjectName2 = QuickQuote
+		SccLocalPath2 = QuickQuote
+		SccProjectUniqueName3 = QuickQuote.TestPages\\QuickQuote.TestPages.vbproj
+		SccProjectName3 = QuickQuote.TestPages
+		SccLocalPath3 = QuickQuote.TestPages
+		SccProjectUniqueName4 = IFM.PolicyLoader.Tests\\IFM.PolicyLoader.Tests.csproj
+		SccProjectName4 = IFM.PolicyLoader.Tests
+		SccLocalPath4 = IFM.PolicyLoader.Tests
+		SccWebProject5 = true
+		SccProjectUniqueName5 = QuickQuote_Site
+		SccProjectName5 = QuickQuote_Site
+		SccLocalPath5 = QuickQuote_Site
+		SccProjectEnlistmentChoice5 = 2
+	EndGlobalSection
+EndGlobal

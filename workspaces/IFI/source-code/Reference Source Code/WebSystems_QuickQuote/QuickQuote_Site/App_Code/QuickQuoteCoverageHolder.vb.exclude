@@ -1,0 +1,113 @@
+﻿Imports Microsoft.VisualBasic
+Imports QuickQuote.CommonMethods
+
+Namespace QuickQuote.CommonObjects
+    ''' <summary>
+    ''' objects used to store coverage information
+    ''' </summary>
+    ''' <remarks>typically found under QuickQuoteObject object (<see cref="QuickQuoteObject"/>) as a list</remarks>
+    <Serializable()> _
+    Public MustInherit Class QuickQuoteCoverageHolder 'added 3/3/2015 for testing
+        Implements IDisposable
+        Implements IQuickQuoteCoverage
+
+        Dim qqHelper As New QuickQuoteHelperClass
+
+        Private _Coverage As QuickQuoteCoverage
+        Private _CoverageCodeId As String
+        Private _QuotedPremium As String
+
+        Public ReadOnly Property CoverageCodeId As String
+            Get
+                Return _CoverageCodeId
+            End Get
+        End Property
+        Public ReadOnly Property QuotedPremium As String
+            Get
+                Return _QuotedPremium
+            End Get
+        End Property
+
+        Public Sub New()
+            _Coverage = Nothing
+            _CoverageCodeId = ""
+            _QuotedPremium = ""
+        End Sub
+
+
+#Region "IDisposable Support"
+        Private disposedValue As Boolean ' To detect redundant calls
+
+        ' IDisposable
+        Protected Overridable Sub Dispose(disposing As Boolean)
+            If Not Me.disposedValue Then
+                If disposing Then
+                    ' TODO: dispose managed state (managed objects).
+                    qqHelper.DisposeCoverage(_Coverage)
+                    qqHelper.DisposeString(_CoverageCodeId)
+                    qqHelper.DisposeString(_QuotedPremium)
+                End If
+
+                ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
+                ' TODO: set large fields to null.
+            End If
+            Me.disposedValue = True
+        End Sub
+
+        ' TODO: override Finalize() only if Dispose(ByVal disposing As Boolean) above has code to free unmanaged resources.
+        'Protected Overrides Sub Finalize()
+        '    ' Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
+        '    Dispose(False)
+        '    MyBase.Finalize()
+        'End Sub
+
+        ' This code added by Visual Basic to correctly implement the disposable pattern.
+        Public Sub Dispose() Implements IDisposable.Dispose
+            ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.
+            Dispose(True)
+            GC.SuppressFinalize(Me)
+        End Sub
+#End Region
+
+        Public ReadOnly Property Coverage As QuickQuoteCoverage Implements IQuickQuoteCoverage.Coverage
+            Get
+                Return _Coverage
+            End Get
+        End Property
+
+        Public Overridable Function HasCoverage() As Boolean Implements IQuickQuoteCoverage.HasCoverage
+            'should add method to Coverage object to look at props like HasCoverageDetail functionality... would check HasCoverageDetail if no props have valid values
+            If _Coverage IsNot Nothing Then
+                Return True
+            Else
+                Return False
+            End If
+        End Function
+
+        Public Overridable Function HasCoverageDetail() As Boolean Implements IQuickQuoteCoverage.HasCoverageDetail
+            'If HasCoverage() = True Then
+            If _Coverage IsNot Nothing Then
+                Return _Coverage.HasCoverageDetail
+            Else
+                Return False
+            End If
+        End Function
+
+        Public Overridable Sub SetCoverageFromProperties() Implements IQuickQuoteCoverage.SetCoverageFromProperties
+
+        End Sub
+
+        Public Sub SetPropertiesFromCoverage(cov As QuickQuoteCoverage) Implements IQuickQuoteCoverage.SetPropertiesFromCoverage
+            If cov IsNot Nothing Then
+                _QuotedPremium = cov.FullTermPremium
+            Else
+                _QuotedPremium = ""
+            End If
+            _Coverage = qqHelper.CloneObject(cov)
+            SetPropertiesFromCoverage()
+
+        End Sub
+        Protected MustOverride Sub SetPropertiesFromCoverage()
+
+    End Class
+End Namespace

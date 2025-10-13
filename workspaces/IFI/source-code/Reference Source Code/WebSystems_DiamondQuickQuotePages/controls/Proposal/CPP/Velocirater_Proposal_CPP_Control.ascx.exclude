@@ -1,0 +1,37 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CPP_Velocirater_Proposal_CPP_Control, VR_CGL_CPP_CPR_deploy" %>
+<%@ Register Src="../CPR/Velocirater_Proposal_CPR_Control.ascx" TagName="Velocirater_Proposal_CPR_Control" TagPrefix="uc1" %>
+<%@ Register Src="../CGL/Velocirater_Proposal_CGL_Control.ascx" TagName="Velocirater_Proposal_CGL_Control" TagPrefix="uc2" %>
+<%@ Register Src="~/Controls/Proposal/CRM/Velocirater_Proposal_CRM_Control.ascx" TagPrefix="uc1" TagName="Velocirater_Proposal_CRM_Control" %>
+<%@ Register Src="~/Controls/Proposal/CIM/Velocirater_Proposal_CIM_Control.ascx" TagPrefix="uc1" TagName="Velocirater_Proposal_CIM_Control" %>
+<%@ Register Src="~/Controls/Proposal/GAR/uc_VRProposal_GAR.ascx" TagPrefix="uc1" TagName="uc_VRProposal_GAR" %>
+<%@ Register Src="~/Controls/Proposal/VR_PageBreakControl.ascx" TagPrefix="uc1" TagName="VR_PageBreakControl" %>
+
+
+
+<div class="p_ListItem">
+    <uc1:Velocirater_Proposal_CPR_Control ID="Velocirater_Proposal_CPR_Control1"
+        runat="server" />
+
+    <div class="page-break"></div>
+    <div class="page-break-section"></div>
+
+    <uc1:uc_VRProposal_GAR runat="server" ID="uc_VRProposal_GAR" />
+
+    <uc2:Velocirater_Proposal_CGL_Control ID="Velocirater_Proposal_CGL_Control1"
+        runat="server" />
+
+    <div id="divCRMCIMPageBreak" runat="server" class="page-break"></div>
+    <div id="divCRMCIMPageBreakSection" runat="server" class="page-break-section"></div>
+
+    <uc1:Velocirater_Proposal_CRM_Control ID="ctlCrimeProposal" runat="server" />
+
+    <div id="divCRMCIMPageBreakBetween" runat="server" class="page-break"></div>
+    <div id="divCRMCIMPageBreakBetweenSection" runat="server" class="page-break-section"></div>
+
+    <uc1:Velocirater_Proposal_CIM_Control ID="ctlInlandMarineProposal" runat="server" />
+
+    
+    
+
+</div>
+

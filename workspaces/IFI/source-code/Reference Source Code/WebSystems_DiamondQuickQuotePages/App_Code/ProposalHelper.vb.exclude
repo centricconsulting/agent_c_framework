@@ -1,0 +1,94 @@
+﻿Imports Microsoft.VisualBasic
+
+Public Class ProposalHelper
+
+    Public Enum ComparisonOperation
+        None = 0
+        GreaterThan = 1
+        LessThan = 2
+        Equals = 3
+        NotEquals = 4
+    End Enum
+
+    Public Shared Function isValidString(myString As String, Optional checkComparison As ComparisonOperation = ComparisonOperation.None, Optional comparisonString As String = Nothing, Optional isCaseSensitive As Boolean = False) As Boolean
+        If myString.ToString().Trim() IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(myString.ToString().Trim()) Then
+            If (checkComparison = ComparisonOperation.Equals OrElse checkComparison = ComparisonOperation.NotEquals) AndAlso isValidString(comparisonString) Then
+                If checkComparison = ComparisonOperation.Equals Then
+                    Return StringCompare(myString, comparisonString, isCaseSensitive)
+                Else
+                    Return Not StringCompare(myString, comparisonString, isCaseSensitive)
+                End If
+            Else
+                Return True
+            End If
+        Else
+            Return False
+        End If
+    End Function
+
+    Public Shared Function isValidNumberString(myString As String, Optional checkComparison As ComparisonOperation = ComparisonOperation.None, Optional numberToCompare As Integer = 0) As Boolean
+        Dim returnVar As Boolean = False
+        If myString IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(myString) Then
+            If IsNumeric(myString) Then
+                Select Case checkComparison
+                    Case ComparisonOperation.None
+                        returnVar = True
+                    Case ComparisonOperation.Equals
+                        If CInt(myString) = numberToCompare Then
+                            returnVar = True
+                        End If
+                    Case ComparisonOperation.NotEquals
+                        If CInt(myString) <> numberToCompare Then
+                            returnVar = True
+                        End If
+                    Case ComparisonOperation.GreaterThan
+                        If CInt(myString) > numberToCompare Then
+                            returnVar = True
+                        End If
+                    Case ComparisonOperation.LessThan
+                        If CInt(myString) < numberToCompare Then
+                            returnVar = True
+                        End If
+                End Select
+            End If
+        End If
+        Return returnVar
+    End Function
+
+    Public Shared Function StringCompare(str1 As String, str2 As String, Optional isCaseSensitive As Boolean = False) As Boolean
+        If isCaseSensitive = True Then
+            Return str1.Equals(str2, StringComparison.Ordinal)
+        Else
+            Return str1.Equals(str2, StringComparison.OrdinalIgnoreCase)
+        End If
+    End Function
+
+    Public Shared Function FormatAsPremium(premium As String) As String
+        Const FormatStringCurrency = "$###,###,##0"
+        If isValidNumberString(premium) Then
+            Return Format(CDec(premium), FormatStringCurrency)
+        Else
+            Return "$0"
+        End If
+    End Function
+
+    Public Shared Function GetNewBOPVersionEffectiveDate() As String
+        If Not String.IsNullOrWhiteSpace(ConfigurationManager.AppSettings("NewBOPEffectiveDate")) Then
+            Return ConfigurationManager.AppSettings("NewBOPEffectiveDate")
+        Else
+            Return "12/01/2016"
+        End If
+    End Function
+
+    Public Shared Function doUseNewBOPVersion(effectiveDate As Date) As Boolean
+        If Not String.IsNullOrWhiteSpace(effectiveDate) AndAlso IsDate(effectiveDate) Then
+            If effectiveDate >= CDate(GetNewBOPVersionEffectiveDate()) Then
+                Return True
+            Else
+                Return False
+            End If
+        Else
+            Return False
+        End If
+    End Function
+End Class

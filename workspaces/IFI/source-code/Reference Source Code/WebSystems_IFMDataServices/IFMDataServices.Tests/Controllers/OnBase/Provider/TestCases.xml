@@ -1,0 +1,22 @@
+﻿<tests>
+
+
+  <!--test not found provider-->
+  <TestGetProviderInfo>
+    <providerName>DFJKLDFKJLDF</providerName>
+    <expectPayload>false</expectPayload>
+    <expectedResult>404</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetProviderInfo>
+
+  <!--testing pulling a provider-->
+  <TestGetProviderInfo>
+    <providerName>TWIN CITY COLLISION REPAIR, INC.</providerName>
+    <expectProviderFein>351857073</expectProviderFein>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetProviderInfo>
+  
+  
+</tests>

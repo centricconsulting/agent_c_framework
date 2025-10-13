@@ -1,0 +1,24 @@
+﻿<tests>  
+  <zipLookup>
+    <description>Expect no errors.</description>
+    <zipCode>46071</zipCode>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>    
+    <expectErrors>false</expectErrors>
+  </zipLookup>
+  <zipLookup>
+    <description>Expect errors because of too many digits.</description>
+    <zipCode>123456</zipCode>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </zipLookup>
+  <zipLookup>
+    <description>Expect errors because of a negative number.</description>
+    <zipCode>-12</zipCode>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </zipLookup>
+ 
+</tests>

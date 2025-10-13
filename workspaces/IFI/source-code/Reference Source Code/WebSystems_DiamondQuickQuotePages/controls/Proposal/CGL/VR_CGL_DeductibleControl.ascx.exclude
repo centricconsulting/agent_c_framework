@@ -1,0 +1,35 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CGL_VR_CGL_DeductibleControl, VR_CGL_CPP_CPR_deploy" %>
+
+
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc1" %>
+
+<uc1:VR_PageBreakControl ID="VR_PageBreakControl1" Visible="false"  runat="server" />
+<span class="p_SectionHead">Deductible</span>
+<div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+<table class="basictbl" style="margin-bottom:15px;">
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Type</td>
+        <td class="tblcellLeftSide">
+            <asp:Label ID="lblDeductibleType" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Amount</td>
+        <td class="tblcellLeftSide">
+            <asp:Label ID="lbldeductibleAmount" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Basis</td>
+        <td class="tblcellLeftSide">
+            <asp:Label ID="lblDeductibleBasis" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    </table>
+    </div>

@@ -1,0 +1,282 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CPR_VR_Proposal_CPR_Building_Control, VR_CGL_CPP_CPR_deploy" %>
+
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc1" %>
+
+<uc1:VR_PageBreakControl ID="VR_PageBreakControl1" Visible="false" runat="server" />
+<div>
+
+    
+
+    <asp:Label ID="lblLocationTitle" CssClass="p_SectionHead panelIndentationSmall" runat="server" Text=""></asp:Label><%--updated 12/18/2017 w/ new panelIndentation class--%>
+    <div runat="server" id="divMain" style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+        <table class="basictbl" style="margin-top: 15px;" >
+<tr runat="server" id="tr2" style="border-bottom: 1px solid black;">
+        <td class="p_ListHead" style="width:30%; text-align:left;"><!--no style previously-->
+            Coverage</td>
+        <td class="p_ListHead" style="width:23%; text-align:right;"><!--220px-->
+            Cause of Loss</td>
+        <td class="p_ListHead" style="width:23%; text-align:right;"><!--220px-->
+            Valuation</td>
+     <td class="p_ListHead" style="width:12%; text-align:right;"><!--220px-->
+            Agreed Amount</td>
+            <td class="p_ListHead" style="width:12%; text-align:right;"><!--120px-->
+            Coinsurance</td>
+    </tr>
+    <tr runat="server" id="trBuildingCov">
+    <td id="tdBuilding1" runat="server"> Building</td>
+    <td style="text-align:right;">
+        <asp:Label ID="lblCovBuildingCause" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovBuildingVal" runat="server" Text=""></asp:Label>
+    </td>    
+        <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovBuildingAgreed" runat="server" Text=""></asp:Label>
+    </td> 
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovBuildingCoIn" runat="server" Text=""></asp:Label>
+    </td>    
+    </tr>
+    <tr runat="server" id="trBICov">
+    <td> 
+        <asp:Label ID="lblCovBICName1" runat="server" Text="Business Income"></asp:Label>
+        </td>
+    <td style="text-align:right;">
+        <asp:Label ID="lblCovBICause" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovBIVal" runat="server" Text=""></asp:Label>
+    </td>    
+        <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovBiAgreed" runat="server" Text=""></asp:Label>
+    </td> 
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovBICoIn" runat="server" Text=""></asp:Label>
+    </td>    
+    </tr>
+    <tr runat="server" id="trPPCov">
+    <td> Personal Property</td>
+    <td style="text-align:right;">
+        <asp:Label ID="lblCovPPCause" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovPPVal" runat="server" Text=""></asp:Label>
+    </td>    
+         <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovPPAgreed" runat="server" Text=""></asp:Label>
+    </td>  
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovPPCoIn" runat="server" Text=""></asp:Label>
+    </td>    
+    </tr>
+    <tr runat="server" id="trPPOCov">
+    <td> Personal Property of Others</td>
+    <td style="text-align:right;">
+        <asp:Label ID="lblCovPPOCause" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovPPOVal" runat="server" Text=""></asp:Label>
+    </td>   
+        <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovPPOAgreed" runat="server" Text=""></asp:Label>
+    </td>  
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovPPOCoIn" runat="server" Text=""></asp:Label>
+    </td>    
+    </tr>
+         <!--added 7/18/2017-->
+         <tr runat="server" id="trPersonalPropertyCauseOfLossEtc" visible="false">
+             <td colspan="5">
+                 <asp:Repeater runat="server" ID="rptPersonalPropertyCauseOfLossEtc">
+                     <HeaderTemplate>
+                         <table width="100%" style="border-collapse:collapse;">
+                     </HeaderTemplate>
+                     <ItemTemplate>
+                            <tr>
+                                <td style="width:30%; text-align:left;"><!--no style previously-->
+                                    <asp:Label runat="server" ID="lblpersPropType" Text='<%# DataBinder.Eval(Container.DataItem, "persPropType") %>'></asp:Label>
+                                </td>
+                                <td style="width:23%; text-align:right;"><!--220px-->
+                                    <asp:Label runat="server" ID="lblpersPropCauseOfLoss" Text='<%# DataBinder.Eval(Container.DataItem, "persPropCauseOfLoss") %>'></asp:Label>
+                                </td>
+                                <td style="width:23%; text-align:right;"><!--220px-->
+                                    <asp:Label runat="server" ID="lblpersPropVal" Text='<%# DataBinder.Eval(Container.DataItem, "persPropVal") %>'></asp:Label>
+                                </td>
+                                <td style="width:12%; text-align:right;"><!--220px-->
+                                    <asp:Label runat="server" ID="lblpersPropAgreedAmt" Text='<%# DataBinder.Eval(Container.DataItem, "persPropAgreedAmt") %>'></asp:Label>
+                                </td>
+                                <td style="width:12%; text-align:right;"><!--120px-->
+                                    <asp:Label runat="server" ID="lblpersPropCoin" Text='<%# DataBinder.Eval(Container.DataItem, "persPropCoin") %>'></asp:Label>
+                                </td>
+                            </tr>
+                     </ItemTemplate>
+                     <FooterTemplate>
+                         </table>
+                     </FooterTemplate>
+                 </asp:Repeater>
+             </td>
+         </tr>
+
+    </table>
+
+     <table class="basictbl" style="margin-top: 15px;" >
+<tr runat="server" id="tr1" style="border-bottom: 1px solid black;">
+        <td class="p_ListHead" style="width:30%; text-align:left;"><!--no style previously-->
+            Coverage</td>
+        <td class="p_ListHead" style="width:23%; text-align:right;"><!--220px-->
+            Limit</td>
+        <td class="p_ListHead" style="width:23%; text-align:right;"><!--220px-->
+            Deductible</td>
+    <td class="p_ListHead" style="width:12%; text-align:right;"><!--added 7/21/2017--><!--220px-->
+            Earthquake</td>
+            <td class="p_ListHead" style="width:12%; text-align:right;"><!--120px-->
+            Premium</td>
+            
+    </tr>
+    <tr runat="server" id="trBuildingCovDetails">
+    <td> 
+        <asp:Label ID="lblBuilding" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->
+        <asp:Label ID="lblCovBuildingLimit" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovBuildingDeduc" runat="server" Text=""></asp:Label>
+    </td>    
+        <td style="text-align:right;"><!--added 7/21/2017--><!--width:120px-->        
+        <asp:Label ID="lblCovBuildingEQ" runat="server" Text=""></asp:Label>
+    </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovBuildingPrem" runat="server" Text=""></asp:Label>
+    </td>
+    </tr>
+
+    <tr runat="server" id="trCovMineSubsidenceDetails">
+    <td> 
+        <asp:Label ID="lblMineSubsidence" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->
+        <asp:Label ID="lblCovMineSubsidenceLimit" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovMineSubsidenceDeduc" runat="server" Text=""></asp:Label>
+    </td>    
+        <td style="text-align:right;"><!--added 7/21/2017--><!--width:120px-->        
+        <asp:Label ID="lblCovMineSubsidenceEQ" runat="server" Text=""></asp:Label>
+    </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovMineSubsidencePrem" runat="server" Text=""></asp:Label>
+    </td>    
+    </tr>
+
+    <tr runat="server" id="trBICovDetails">
+    <td> 
+        <asp:Label ID="lblCovBICName2" runat="server" Text="Business Income"></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->
+        <asp:Label ID="lblCovBILimit" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovBIDeduc" runat="server" Text=""></asp:Label>
+    </td>    
+        <td style="text-align:right;"><!--added 7/21/2017--><!--width:120px-->        
+        <asp:Label ID="lblCovBIEQ" runat="server" Text=""></asp:Label>
+    </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovBIPrem" runat="server" Text=""></asp:Label>
+    </td>    
+    </tr>
+
+    <tr runat="server" id="trPPCovDetails">
+    <td> Personal Property</td>
+    <td style="text-align:right;"><!--width:120px-->
+        <asp:Label ID="lblCovPPLimit" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovPPDeduc" runat="server" Text=""></asp:Label>
+    </td>    
+        <td style="text-align:right;"><!--added 7/21/2017--><!--width:120px-->        
+        <asp:Label ID="lblCovPPEQ" runat="server" Text=""></asp:Label>
+    </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovPPPrem" runat="server" Text=""></asp:Label>
+    </td>    
+    </tr>
+
+    <tr runat="server" id="trPPOCovDetails">
+    <td> Personal Property of Others</td>
+    <td style="text-align:right;"><!--width:120px-->
+        <asp:Label ID="lblCovPPOLimit" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovPPODeduc" runat="server" Text=""></asp:Label>
+    </td>    
+        <td style="text-align:right;"><!--added 7/21/2017--><!--width:120px-->        
+        <asp:Label ID="lblCovPPOEQ" runat="server" Text=""></asp:Label>
+    </td>
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblCovPPOPrem" runat="server" Text=""></asp:Label>
+    </td>    
+    </tr>
+         <!--added 7/18/2017-->
+         <tr runat="server" id="trPersonalPropertyLimitsAndPrems" visible="false">
+             <td colspan="5"><!--changed 7/21/2017 from 4-->
+                 <asp:Repeater runat="server" ID="rptPersonalPropertyLimitsAndPrems">
+                     <HeaderTemplate>
+                         <table width="100%" style="border-collapse:collapse;">
+                     </HeaderTemplate>
+                     <ItemTemplate>
+                            <tr>
+                                <td style="width:30%; text-align:left;"><!--no style previously-->
+                                    <asp:Label runat="server" ID="lblpersPropType" Text='<%# DataBinder.Eval(Container.DataItem, "persPropType") %>'></asp:Label>
+                                </td>
+                                <td style="width:23%; text-align:right;"><!--220px-->
+                                    <asp:Label runat="server" ID="lblpersPropLimit" Text='<%# DataBinder.Eval(Container.DataItem, "persPropLimit") %>'></asp:Label>
+                                </td>
+                                <td style="width:23%; text-align:right;"><!--220px-->
+                                    <asp:Label runat="server" ID="lblpersPropDed" Text='<%# DataBinder.Eval(Container.DataItem, "persPropDed") %>'></asp:Label>
+                                </td>
+                                <td style="width:12%; text-align:right;"><!--added 7/21/2017--><!--220px-->
+                                    <asp:Label runat="server" ID="lblpersPropEQ" Text='<%# DataBinder.Eval(Container.DataItem, "persPropEQ") %>'></asp:Label>
+                                </td>
+                                <td style="width:12%; text-align:right;"><!--120px-->
+                                    <asp:Label runat="server" ID="lblpersPropPrem" Text='<%# DataBinder.Eval(Container.DataItem, "persPropPrem") %>'></asp:Label>
+                                </td>
+                            </tr>
+                     </ItemTemplate>
+                     <FooterTemplate>
+                         </table>
+                     </FooterTemplate>
+                 </asp:Repeater>
+             </td>
+         </tr>
+
+         <tr runat="server" id="trMinPremium" visible="false">
+             <td colspan="4"><!--changed 7/21/2017 from 3-->
+                 Amount to Equal Minimum Premium
+             </td>
+            <td style="text-align:right;"><!--width:120px-->
+                <asp:Label ID="lblMinPremium" runat="server" ></asp:Label></td>
+         </tr>
+
+    <tr style="border-top: 1px solid black;font-weight:bold;">
+    <td> Total</td>
+    <td style="text-align:right;"></td><!--width:120px-->
+    <td style="text-align:right;"><!--width:120px-->     
+    </td>    
+        <td style="text-align:right;"></td><!--added 7/21/2017--><!--width:120px-->
+    <td style="text-align:right;"><!--width:120px-->        
+        <asp:Label ID="lblTotalPrem" runat="server" Text=""></asp:Label>
+    </td>    
+    </tr>
+    </table>
+        <br />
+        * Included in blanket limit
+
+        </div>
+        <div runat="server" id="divNoCovApplied" style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+        <asp:Label ID="lblnoBuildingCoverageApplied" runat="server" Text="No coverages applied to building."></asp:Label>
+        </div>
+        
+</div>
+

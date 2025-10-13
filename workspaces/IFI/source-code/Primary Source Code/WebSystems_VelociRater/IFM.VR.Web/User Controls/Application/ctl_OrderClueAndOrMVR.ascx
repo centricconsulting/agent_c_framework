@@ -1,0 +1,1 @@
+﻿<%@ Control Language="vb" AutoEventWireup="false" CodeBehind="ctl_OrderClueAndOrMVR.ascx.vb" Inherits="IFM.VR.Web.ctl_OrderClueAndOrMVR" %>

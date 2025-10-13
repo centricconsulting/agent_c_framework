@@ -1,0 +1,712 @@
+﻿Imports System.Data
+Imports System.Data.SqlClient
+
+Partial Class VrLogin
+    Inherits System.Web.UI.Page
+
+    Dim dr As SqlDataReader
+    Dim rtnString As String
+    Dim arCookie, arLogin, arToday As Array
+    Dim conn As SqlConnection
+    Dim strConn As String = System.Configuration.ConfigurationManager.AppSettings("conn")
+
+    Private Sub Page_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        If Page.IsPostBack = False Then
+            If Request.QueryString("action") = "logout" Then
+                'dispose of Today's login cookie if present
+                'If Not Request.Cookies("TodaysLogin") Is Nothing Then
+                '    SetTodaysLoginCookie("Y")
+                'End If
+                Session.Abandon()
+                Using diaWeb As New DiamondWebClass.DiamondSecurity()
+                    diaWeb.LogoutDiamond()
+                End Using
+                FormsAuthentication.SignOut() 'added 6/13/2014; for AgentsOnly site, this is happening in Session_Start of global.asax (If User.Identity.IsAuthenticated = True)
+                Response.Redirect(System.Configuration.ConfigurationManager.AppSettings("HomeLink"))
+
+                '--add functionality for TStation passthru
+                '--also NxTech and test NxTech (3/29/2011)
+                'ElseIf ((Request.QueryString("user") IsNot Nothing AndAlso Request.QueryString("user") <> "") OrElse (Request.QueryString("TStationUser") IsNot Nothing AndAlso Request.QueryString("TStationUser") <> "") OrElse (Request.QueryString("NxTechUser") IsNot Nothing AndAlso Request.QueryString("NxTechUser") <> "") OrElse (Request.QueryString("TestNxTechUser") IsNot Nothing AndAlso Request.QueryString("TestNxTechUser") <> "")) AndAlso Request.QueryString("pass") IsNot Nothing AndAlso Request.QueryString("pass") <> "" AndAlso Request.QueryString("page") IsNot Nothing AndAlso Request.QueryString("page") <> "" Then
+                '    If Request.QueryString("TStationUser") IsNot Nothing AndAlso Request.QueryString("TStationUser") <> "" Then
+                '        Me.txtUsername.Text = Request.QueryString("TStationUser")
+                '        Me.lblTStation.Text = "YES"
+                '        Me.lblNxTech.Text = "NO"
+                '        Me.lblTestNxTech.Text = "NO"
+                '    ElseIf Request.QueryString("NxTechUser") IsNot Nothing AndAlso Request.QueryString("NxTechUser") <> "" Then
+                '        Me.txtUsername.Text = Request.QueryString("NxTechUser")
+                '        Me.lblNxTech.Text = "YES"
+                '        Me.lblTStation.Text = "NO"
+                '        Me.lblTestNxTech.Text = "NO"
+                '    ElseIf Request.QueryString("TestNxTechUser") IsNot Nothing AndAlso Request.QueryString("TestNxTechUser") <> "" Then
+                '        Me.txtUsername.Text = Request.QueryString("TestNxTechUser")
+                '        Me.lblTestNxTech.Text = "YES"
+                '        Me.lblNxTech.Text = "NO"
+                '        Me.lblTStation.Text = "NO"
+                '    Else
+                '        Me.txtUsername.Text = Request.QueryString("user")
+                '        Me.lblTStation.Text = "NO"
+                '        Me.lblNxTech.Text = "NO"
+                '        Me.lblTestNxTech.Text = "NO"
+                '    End If
+
+                '    If Request.QueryString("PassThruSystem") IsNot Nothing AndAlso Request.QueryString("PassThruSystem") <> "" Then
+                '        Me.lblPassThruSystem.Text = Request.QueryString("PassThruSystem")
+                '    End If
+
+                '    Me.txtPassword.Text = Request.QueryString("pass")
+                '    If Request.QueryString("EncryptionType") IsNot Nothing AndAlso UCase(Request.QueryString("EncryptionType")) = "BASE64" Then
+                '        Me.txtPassword.Text = DecodeFromBase64(Me.txtPassword.Text)
+                '    End If
+                '    Me.lblPage.Text = Request.QueryString("page")
+                '    btnLogin_Click(sender, e)
+                'ElseIf Request.QueryString("NxTechValues") IsNot Nothing AndAlso Request.QueryString("NxTechValues") <> "" Then
+                '    Me.lblNxTech.Text = "YES"
+                '    Me.lblTStation.Text = "NO"
+                '    Me.lblTestNxTech.Text = "NO"
+                '    SplitNxTechValues(Request.QueryString("NxTechValues"))
+                '    btnLogin_Click(sender, e)
+                'ElseIf Request.QueryString("TestNxTechValues") IsNot Nothing AndAlso Request.QueryString("TestNxTechValues") <> "" Then
+                '    Me.lblTestNxTech.Text = "YES"
+                '    Me.lblNxTech.Text = "NO"
+                '    Me.lblTStation.Text = "NO"
+                '    SplitNxTechValues(Request.QueryString("TestNxTechValues"))
+                '    btnLogin_Click(sender, e)
+            Else
+                'see if browser supports cookies
+                'If Request.Browser.Cookies = True Then
+                '    'see if client PC has IFMCookie
+                '    If Not Request.Cookies("AgentLogin") Is Nothing Then
+                '        arCookie = Split(CryptoUtil.Decrypt(Request.Cookies("AgentLogin").Value), "|")
+
+                '        Me.txtUsername.Text = arCookie(0).ToString.Trim
+                '        Me.txtPassword.Attributes.Add("value", arCookie(1).ToString.Trim)
+                '        'updated 11/27/2012 to store password in viewstate (since it can't be read from textbox until next load)
+                '        If ViewState.Item("password") Is Nothing Then
+                '            ViewState.Add("password", arCookie(1).ToString.Trim)
+                '        Else
+                '            ViewState.Item("password") = arCookie(1).ToString.Trim
+                '        End If
+                '        Me.DontRememberRow.Visible = True
+
+                '        'check for Today's login cookie
+                '        checkForTimeout(arCookie(0).ToString.Trim, arCookie(1).ToString.Trim)
+                '    Else
+                '        Me.RememberRow.Visible = True
+                '    End If
+                'End If
+            End If
+            SetFocus(Me.txtUsername)
+            'ElseIf (Me.lblPassThruSystem.Text = "" AndAlso Request.QueryString("PassThruSystem") IsNot Nothing AndAlso Request.QueryString("PassThruSystem") <> "") OrElse (Me.lblPage.Text = "" AndAlso Request.QueryString("page") IsNot Nothing AndAlso Request.QueryString("page") <> "") Then
+            '    If Me.lblPassThruSystem.Text = "" AndAlso Request.QueryString("PassThruSystem") IsNot Nothing AndAlso Request.QueryString("PassThruSystem") <> "" Then
+            '        Me.lblPassThruSystem.Text = Request.QueryString("PassThruSystem")
+            '    End If
+            '    If Me.lblPage.Text = "" AndAlso Request.QueryString("page") IsNot Nothing AndAlso Request.QueryString("page") <> "" Then
+            '        Me.lblPage.Text = Request.QueryString("page")
+            '    End If
+        End If
+        'Me.hlForgotPass.NavigateUrl = ConfigurationManager.AppSettings("forgotPassword")
+    End Sub
+
+    Public Sub SetSession(ByVal userObject As DiamondWebClass.WebUser)
+        With userObject
+            Session("username") = .legacy_Username
+            Session("password") = .legacy_Password
+            Session("auth") = .legacy_AuthType
+            Session("agencyID") = .legacy_AgencyID.ToString
+            Session("agencyCode") = .legacy_PrimaryAgencyCode.ToString
+            Session("userID") = .legacy_UserID.ToString
+            Session("role") = .legacy_Role
+            Session("agencyTerr") = .legacy_Territory.ToString
+            Session("Access6000") = If(.legacy_6000Access = True, "Y", "N")
+            Session("completedSurvey") = If(.legacy_CompletedSurvey = True, "Y", "N")
+            Session("agencyName") = .legacy_AgencyName
+            Session("DiamondUsername") = .diamond_LoginName
+            Session("DiamondUserID") = .diamond_UserID
+            'added 7/25/2012 for QuickQuote
+            If Session("DiamondUsername") IsNot Nothing AndAlso Session("DiamondUsername").ToString <> "" Then
+                Session("DiamondPassword") = Me.txtPassword.Text
+                'updated 11/27/2012 to also check for password in viewstate
+                If Me.txtPassword.Text = "" AndAlso ViewState.Item("password") IsNot Nothing Then
+                    Session("DiamondPassword") = ViewState.Item("password").ToString
+                End If
+                'added more 7/27/2012
+                'Session("DiamondAgencyCode") = .diamond_PrimaryAgencyCode'doesn't work
+                'Session("DiamondAgencyId") = .diamond_PrimaryAgencyID'doesn't work
+                If Session("DiamondUserID") IsNot Nothing AndAlso Session("DiamondUserID").ToString <> "" Then
+                    SetDiamondAgencyCodeAndId(Session("DiamondUserID").ToString, Session("DiamondAgencyCode"), Session("DiamondAgencyId"))
+                End If
+            End If
+        End With
+
+        Session("guid") = Guid.NewGuid.ToString
+        'Using Sql As New SQLexecuteObject(ConfigurationManager.AppSettings("conn"))
+        '    Sql.queryOrStoredProc = "Insert into tbl_sessionInfo (guid, username, password, auth, userid, role, agencycode, agencyid, agencyterr) values " & _
+        '        "('" & Session("guid").ToString.Trim & "', '" & Session("username").ToString.Trim & "', '" & Session("password").ToString.Trim & "', '" & Session("auth").ToString.Trim & "', " & _
+        '        "'" & Session("userID").ToString.Trim & "', '" & Session("role").ToString.Trim & "', '" & Session("AgencyCode").ToString.Trim & "', '" & Session("AgencyID").ToString.Trim & "', " & _
+        '        "'" & Session("agencyTerr").ToString.Trim & "')"
+        '    Sql.ExecuteStatement()
+        'End Using
+
+        'If UCase(Me.lblTStation.Text) = "YES" Then
+        '    Session("TStation") = "yes"
+        'End If
+    End Sub
+
+    Public Sub CompleteLogin(ByVal updatedForDiamond As Boolean, ByVal mustChangePW As Boolean, Optional ByVal SetTodaysCookie As Boolean = True)
+        'If Me.cbRemember.Checked = True Then
+        '    Dim aCookie As New HttpCookie("AgentLogin")
+        '    aCookie.Value = CryptoUtil.Encrypt(Me.txtUsername.Text & "|" & Me.txtPassword.Text)
+        '    aCookie.Expires = DateTime.Now.AddYears(50)
+        '    If UCase(ConfigurationManager.AppSettings("TestOrProd")) = "PROD" Then
+        '        aCookie.Secure = True 'only allow over SSL if production
+        '        'aCookie.Domain = "www.indianafarmers.com"'defaults to current domain if left blank
+        '        'aCookie.Path = "https://www.indianafarmers.com/agentsonly/alogin.aspx" 'path is case sensitive
+        '    End If
+        '    Response.Cookies.Add(aCookie)
+        'End If
+
+        ''set Today's login cookie
+        'If SetTodaysCookie = True Then
+        '    SetTodaysLoginCookie("N")
+        'End If
+
+        'InsertAuthLog("s", Me.txtUsername.Text)
+
+        'set session variables for associated agencies
+        'TODO: get from user object
+        'Using Sql As New SQLselectObject(ConfigurationManager.AppSettings("conn"))
+        '    Sql.queryOrStoredProc = "Select agencycodes from tbl_users where username = '" & Session("username") & "'"
+        '    Using dr As SqlDataReader = Sql.GetDataReader
+        '        If dr IsNot Nothing AndAlso dr.HasRows Then
+        '            dr.Read()
+        '            If dr.Item("agencycodes").ToString.Trim <> String.Empty Then Session("agencyCodes") = dr.Item("agencycodes").ToString.Trim
+        '        End If
+        '    End Using
+        'End Using
+
+        'Dim wac As New AssociateCodeWebSubs
+        'wac.SetAssociateCodesStringForLoggedInUser()
+
+        'If Session("agencyCodes") Is Nothing OrElse Session("agencyCodes") = String.Empty Then
+        '    If UCase(Session("Access6000")) = "Y" Then
+        '        Get6000Codes()
+        '    Else
+        '        GetCodes()
+        '    End If
+        'End If
+
+        RedirectFromLogin(updatedForDiamond, mustChangePW)
+    End Sub
+
+    Public Sub failLogin(ByVal failureMsg As String)
+        'InsertAuthLog("f", Me.txtUsername.Text)
+        Me.lblError.Visible = True
+        Me.lblError.Text = failureMsg
+        SetFocus(Me.txtUsername)
+        ShowError(Me.lblError.Text)
+    End Sub
+
+    Protected Sub btnLogin_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles btnLogin.Click
+        'If Me.cbDontRemember.Checked = True Then
+        '    'dispose cookie
+        '    Dim aCookie As New HttpCookie("AgentLogin")
+        '    aCookie.Expires = DateTime.Now.AddDays(-1)
+        '    Response.Cookies.Add(aCookie)
+        'End If
+        If Me.txtUsername.Text = "" Then
+            Me.lblError.Visible = True
+            Me.lblError.Text = "Please enter your username."
+            SetFocus(Me.txtUsername)
+            ShowError(Me.lblError.Text)
+        ElseIf Me.txtPassword.Text = "" Then
+            Me.lblError.Visible = True
+            Me.lblError.Text = "Please enter your password."
+            SetFocus(Me.txtPassword)
+            ShowError(Me.lblError.Text)
+        Else
+            Me.lblError.Visible = False
+            Me.lblError.Text = ""
+            'process login info
+            'try diamond login here
+            Using diaWeb As New DiamondWebClass.DiamondSecurity(Me.txtUsername.Text, Me.txtPassword.Text)
+                If Diamond.Web.BaseControls.SignedOnUserID > 0 Then
+                    diaWeb.Lookup_GetExistingUserInfo(DiamondWebClass.Enums.UserLocation.AllSystems)
+                    If diaWeb.ExistingUser.diamond_Active = False Then
+                        failLogin("<font color='red'>--Your login attempt has failed.--</font><br>This Diamond user is currently in a deactivated state (" & Diamond.Web.BaseControls.SignedOnUserID & ").  Please talk to your agency administrator to have this corrected.  If you feel this is incorrect, please contact the Indiana Farmers Mutual I.T. Department at (800) 666-6460.")
+                        diaWeb.LogoutDiamond()
+                    Else
+                        diaWeb.fillLinkData(diaWeb.ExistingUser)
+                        SetSession(diaWeb.ExistingUser)
+                        If Session("agencyCode") = "" Or Session("agencyCode") = "-1" Then
+                            failLogin("<font color='red'>--Your login attempt has failed.--</font><br>This user has no legacy information, which is required for a successful login to this site.  If you feel this is incorrect, please contact the Indiana Farmers Mutual I.T. Department at (800) 666-6460.")
+                            diaWeb.LogoutDiamond()
+                            Exit Sub
+                        Else
+                            If diaWeb.ExistingUser.diamond_MustChangePassword = True Then CompleteLogin(True, True) Else CompleteLogin(True, False)
+                        End If
+                    End If
+                Else
+                    'loginLegacy()
+                    failLogin("<font color='red'>--Your login attempt has failed.--</font>")
+                End If
+            End Using
+        End If
+    End Sub
+
+    'Public Sub loginLegacy(Optional ByVal cookiePass As String = "", Optional ByVal SetTodaysCookie As Boolean = True)
+    '    If cookiePass = String.Empty Then cookiePass = Me.txtPassword.Text
+    '    Using diaWeb As New DiamondWebClass.DiamondSecurity()
+    '        diaWeb.LegacyUserLogin = Me.txtUsername.Text
+    '        diaWeb.LegacyUserPassword = cookiePass
+    '        diaWeb.Lookup_GetExistingUserInfo(DiamondWebClass.Enums.UserLocation.AllSystems, True)
+    '        If diaWeb.ExistingUser.legacy_UserID > 0 Then
+    '            If diaWeb.ExistingUser.legacy_AuthType.ToLower = "a" AndAlso diaWeb.linkExists(diaWeb.ExistingUser.legacy_UserID) = True Then
+    '                failLogin("<font color='red'>--Your login attempt has failed.--</font><br>This administrative user has already been upgraded to Diamond, which may only be completed once per admin user. If you feel this is incorrect, please contact the Indiana Farmers Mutual I.T. Department at (800) 666-6460.")
+    '                diaWeb.LogoutDiamond()
+    '                Exit Sub
+    '            End If
+    '            SetSession(diaWeb.ExistingUser)
+    '            CompleteLogin(False, False, SetTodaysCookie)
+    '        Else
+    '            failLogin("<font color='red'>--Your login attempt has failed.--</font><br>The most likely cause is an invalid username or password, but it is also possible that this user has been deactivated by your agency administrator. If you feel the information you entered is correct, please contact the Indiana Farmers Mutual I.T. Department at (800) 666-6460.")
+    '            diaWeb.LogoutDiamond()
+    '            SetFocus(Me.txtUsername)
+    '            ShowError(Me.lblError.Text)
+    '        End If
+    '    End Using
+    'End Sub
+
+    Public Sub ShowError(ByVal message As String)
+        message = Replace(message, "<font color='red'>", "")
+        message = Replace(message, "</font>", "")
+        message = Replace(message, "<br>", "\n")
+        Dim strScript As String = "<script language=JavaScript>"
+        strScript += "alert(""" & message & """);"
+        strScript += "</script>"
+        'Page.RegisterStartupScript("clientScript", strScript)
+        ClientScript.RegisterStartupScript(Me.GetType(), "clientScript", strScript)
+    End Sub
+
+    'insert auth log for successful/failed login
+    'Public Sub InsertAuthLog(ByVal type As String, ByVal user As String)
+    '    Using Sql As New SQLexecuteObject(strConn)
+    '        Sql.queryOrStoredProc = "sp_Insert_Auth_Log"
+
+    '        Sql.inputParameters = New ArrayList
+    '        Sql.inputParameters.Add(New SqlParameter("@type", type))
+    '        Sql.inputParameters.Add(New SqlParameter("@user", user))
+
+    '        If UCase(Me.lblTStation.Text) = "YES" Then
+    '            Sql.inputParameters.Add(New SqlParameter("@passthru", "TStation"))
+    '        ElseIf UCase(Me.lblNxTech.Text) = "YES" Then
+    '            Sql.inputParameters.Add(New SqlParameter("@passthru", "NxTech"))
+    '        ElseIf UCase(Me.lblTestNxTech.Text) = "YES" Then
+    '            Sql.inputParameters.Add(New SqlParameter("@passthru", "TestNxTech"))
+    '        ElseIf Me.lblPassThruSystem.Text <> "" Then
+    '            Sql.inputParameters.Add(New SqlParameter("@passthru", Me.lblPassThruSystem.Text))
+    '        End If
+
+    '        Sql.ExecuteStatement()
+    '    End Using
+    'End Sub
+
+    'Public Sub checkForTimeout(ByVal user As String, ByVal pass As String)
+    '    If Not Request.Cookies("TodaysLogin") Is Nothing Then
+    '        Using diaWeb As New DiamondWebClass.DiamondSecurity(user, pass)
+    '            If Diamond.Web.BaseControls.SignedOnUserID > 0 Then
+    '                diaWeb.Lookup_GetExistingUserInfo(DiamondWebClass.Enums.UserLocation.AllSystems)
+    '                If diaWeb.ExistingUser.diamond_Active = False Then
+    '                    failLogin("<font color='red'>--Your login attempt has failed.--</font><br>This Diamond user is currently in a deactivated state (" & Diamond.Web.BaseControls.SignedOnUserID & ").  Please talk to your agency administrator to have this corrected.  If you feel this is incorrect, please contact the Indiana Farmers Mutual I.T. Department at (800) 666-6460.")
+    '                    diaWeb.LogoutDiamond()
+    '                Else
+    '                    diaWeb.fillLinkData(diaWeb.ExistingUser)
+    '                    SetSession(diaWeb.ExistingUser)
+    '                    If Session("agencyCode") = "" Or Session("agencyCode") = "-1" Then
+    '                        failLogin("<font color='red'>--Your login attempt has failed.--</font><br>This user has no legacy information, which is required for a successful login to this site.  If you feel this is incorrect, please contact the Indiana Farmers Mutual I.T. Department at (800) 666-6460.")
+    '                        diaWeb.LogoutDiamond()
+    '                        Exit Sub
+    '                    Else
+    '                        Me.lblAutoReLoginFlag.Text = "YES"
+    '                        If diaWeb.ExistingUser.diamond_MustChangePassword = True Then CompleteLogin(True, True, False) Else CompleteLogin(True, False, False)
+    '                    End If
+    '                End If
+    '            Else
+    '                loginLegacy(arCookie(1).ToString.Trim, False)
+    '            End If
+    '        End Using
+    '    End If
+    'End Sub
+
+    'Public Sub SetTodaysLoginCookie(ByVal dispose As String)
+    '    Dim aCookie As New HttpCookie("TodaysLogin")
+
+    '    If dispose = "Y" Then
+    '        aCookie.Expires = DateTime.Now.AddDays(-1)
+    '    Else
+    '        aCookie.Value = "Yes"
+    '        aCookie.Expires = DateTime.Now.AddDays(1)
+    '    End If
+
+    '    Response.Cookies.Add(aCookie)
+    'End Sub
+
+    'Public Sub Get6000Codes()
+    '    Dim agencyIDs As String = ""
+    '    Dim agencyCodes As String = ""
+    '    Dim HasCodes As String = ""
+    '    Try
+    '        Dim pCode As New SqlParameter("@agCode", Session("agencyCode"))
+    '        Using conn As SqlConnection = New SqlConnection(strConn)
+    '            Using cmdSql As SqlCommand = New SqlCommand("sp_Get6000Agencies", conn)
+    '                cmdSql.CommandType = CommandType.StoredProcedure
+    '                cmdSql.Parameters.Add(pCode)
+    '                conn.Open()
+    '                Using dr As SqlDataReader = cmdSql.ExecuteReader
+    '                    If dr.HasRows Then
+    '                        HasCodes = "yes"
+    '                        While dr.Read
+    '                            If agencyIDs = "" Then
+    '                                agencyIDs = dr.Item("agency_id").ToString.Trim
+    '                                agencyCodes = dr.Item("AgencyCode").ToString.Trim
+    '                            Else
+    '                                agencyIDs = agencyIDs & "," & dr.Item("agency_id").ToString.Trim
+    '                                agencyCodes = agencyCodes & "," & dr.Item("AgencyCode").ToString.Trim
+    '                            End If
+    '                        End While
+    '                        Session("agencyIDs") = agencyIDs
+    '                        Session("agencyCodes") = agencyCodes
+    '                    Else
+    '                        HasCodes = "no"
+    '                        'rtnString = ""
+    '                    End If
+    '                End Using
+    '            End Using
+    '        End Using
+    '    Catch ex As Exception
+    '        'rtnString = ""
+    '    Finally
+    '        'conn.Close()'being handled by the using command
+    '    End Try
+
+    '    'check for regular associate codes if there are no 6000 ties
+    '    If HasCodes = "no" Then
+    '        GetCodes()
+    '    End If
+    'End Sub
+
+    'Public Sub GetCodes()
+    '    Dim agencyIDs As String = ""
+    '    Dim agencyCodes As String = ""
+    '    Try
+    '        Dim pCode As New SqlParameter("@agCode", Session("agencyCode"))
+    '        Using conn As SqlConnection = New SqlConnection(strConn)
+    '            Using cmdSql As SqlCommand = New SqlCommand("sp_GetAssociateAgencies", conn)
+    '                cmdSql.CommandType = CommandType.StoredProcedure
+    '                cmdSql.Parameters.Add(pCode)
+    '                conn.Open()
+    '                Using dr As SqlDataReader = cmdSql.ExecuteReader
+    '                    If dr.HasRows Then
+    '                        While dr.Read
+    '                            If agencyIDs = "" Then
+    '                                agencyIDs = dr.Item("agency_id").ToString.Trim
+    '                                agencyCodes = dr.Item("agency_code").ToString.Trim
+    '                            Else
+    '                                agencyIDs = agencyIDs & "," & dr.Item("agency_id").ToString.Trim
+    '                                agencyCodes = agencyCodes & "," & dr.Item("agency_code").ToString.Trim
+    '                            End If
+    '                        End While
+    '                        Session("agencyIDs") = agencyIDs
+    '                        Session("agencyCodes") = agencyCodes
+    '                    Else
+    '                        'rtnString = ""
+    '                    End If
+    '                End Using
+    '            End Using
+    '        End Using
+    '    Catch ex As Exception
+    '        'rtnString = ""
+    '    Finally
+    '        'conn.Close()'being handled by the using command
+    '    End Try
+    'End Sub
+
+    Private Sub RedirectFromLogin(ByVal updatedForDiamond As Boolean, ByVal mustChangePW As Boolean)
+        '--for setting auth cookie and redirecting (redirect has some flaws... sometimes duplicates query string)--
+        'FormsAuthentication.RedirectFromLoginPage(Session("username"), False)
+
+        '--set auth cookie first and then redirect after
+        'FormsAuthentication.SetAuthCookie(Session("username"), False)
+        FormsAuthentication.SetAuthCookie("VR_" & Session("username"), False) 'updated 6/13/2014 so auth ticket wouldn't get confused w/ one being used in AgentsOnly site... since username is the same
+
+        Dim redirectPage As String = ""
+
+        'Dim shouldUpgradeToDiamond As Boolean = False
+
+        'Dim isAutoReloginDiamondPortal As Boolean = False
+
+        'Dim isStaffUser As Boolean = False
+        'If Session("agencyCode") IsNot Nothing AndAlso Session("auth") IsNot Nothing AndAlso (UCase(Session("auth")) = "U" OrElse Session("agencyCode") = "9999" OrElse Session("agencyCode") = "1111") Then
+        '    isStaffUser = True
+        'End If
+
+        'Dim isRolloverTeam As Boolean = False
+        'If Session("password") = "RT" AndAlso Session("auth") IsNot Nothing AndAlso UCase(Session("auth")) <> "U" AndAlso UCase(Session("auth")) <> "A" Then
+        '    isRolloverTeam = True
+        'End If
+
+        'Dim ByPassDiamondUpgrade As Boolean = False
+        ''allow back door so staff can test legacy agency usernames
+        'If Request.QueryString("ByPassDiamondUpgrade") IsNot Nothing AndAlso UCase(Request.QueryString("ByPassDiamondUpgrade")) = "YES" Then
+        '    ByPassDiamondUpgrade = True
+        'End If
+        'If isStaffUser = True AndAlso ConfigurationManager.AppSettings("IgnoreAllStaffForDiamondUpgrade") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("IgnoreAllStaffForDiamondUpgrade")) = "YES" Then
+        '    ByPassDiamondUpgrade = True
+        'End If
+
+        'If (System.Configuration.ConfigurationManager.AppSettings("GuardianGlassUsername") Is Nothing AndAlso UCase(Session("username")) = "IFMVENDOR") OrElse (System.Configuration.ConfigurationManager.AppSettings("GuardianGlassUsername") IsNot Nothing AndAlso UCase(System.Configuration.ConfigurationManager.AppSettings("GuardianGlassUsername")) = UCase(Session("username"))) Then
+        '    '--guardian glass CSR
+        '    If System.Configuration.ConfigurationManager.AppSettings("GuardianGlassLink") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("GuardianGlassLink") <> "" Then
+        '        redirectPage = System.Configuration.ConfigurationManager.AppSettings("GuardianGlassLink")
+        '    Else
+        '        redirectPage = "guardglassreporting.aspx"
+        '    End If
+        '    'ElseIf (System.Configuration.ConfigurationManager.AppSettings("OptimalClaimsUsername") Is Nothing AndAlso UCase(Session("username")) = "OPTIMALCLAIMS") OrElse (System.Configuration.ConfigurationManager.AppSettings("OptimalClaimsUsername") IsNot Nothing AndAlso UCase(System.Configuration.ConfigurationManager.AppSettings("OptimalClaimsUsername")) = UCase(Session("username"))) Then
+        '    '    '--optimal claims CSR
+        '    '    If System.Configuration.ConfigurationManager.AppSettings("OptimalClaimsLink") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("OptimalClaimsLink") <> "" Then
+        '    '        redirectPage = System.Configuration.ConfigurationManager.AppSettings("OptimalClaimsLink")
+        '    '    Else
+        '    '        redirectPage = "guardglassreporting.aspx"
+        '    '    End If
+        'ElseIf ConfigurationManager.AppSettings("AdditionalClaimsVendorLink") IsNot Nothing AndAlso ConfigurationManager.AppSettings("AdditionalClaimsVendorLink") <> "" AndAlso ConfigurationManager.AppSettings("AdditionalClaimsVendorUsername") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("AdditionalClaimsVendorUsername")) = UCase(Session("username")) Then
+        '    '--additional claims vendor            
+        '    redirectPage = ConfigurationManager.AppSettings("AdditionalClaimsVendorLink")
+        'ElseIf ConfigurationManager.AppSettings("ReinsuranceVendorLink") IsNot Nothing AndAlso ConfigurationManager.AppSettings("ReinsuranceVendorLink") <> "" AndAlso ConfigurationManager.AppSettings("ReinsuranceVendorUsername") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("ReinsuranceVendorUsername")) = UCase(Session("username")) Then
+        '    '--Reinsurance vendor
+        '    If ConfigurationManager.AppSettings("OnlyAllowReinsuranceAccessInBuilding") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("OnlyAllowReinsuranceAccessInBuilding")) = "YES" AndAlso Request.ServerVariables("REMOTE_ADDR") IsNot Nothing AndAlso Left(Request.ServerVariables("REMOTE_ADDR"), 3) <> "192" AndAlso Left(Request.ServerVariables("REMOTE_ADDR"), 3) <> "172" Then '172 (test-no proxy) or 192 (prod-with proxy)
+        '        Session.Abandon()
+        '        Throw New HttpException(403, "Not Authorized")
+        '    Else
+        '        redirectPage = ConfigurationManager.AppSettings("ReinsuranceVendorLink")
+        '    End If
+        'ElseIf Me.lblPage.Text <> "" Then
+        '    '--for passthru (i.e. TStation)
+        '    redirectPage = Me.lblPage.Text
+        'ElseIf updatedForDiamond = False AndAlso Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("webPortalIsLive")) AndAlso ConfigurationManager.AppSettings("webPortalIsLive").ToLower = "true" AndAlso (ConfigurationManager.AppSettings("portalCodes").Contains(Session("agencyCode")) OrElse ConfigurationManager.AppSettings("portalTerritories").Contains(Session("agencyTerr"))) AndAlso ByPassDiamondUpgrade = False Then
+        '    redirectPage = ConfigurationManager.AppSettings("upgradeForDiamond")
+
+        '    'not staff/rollover or staff/rollover and required
+        '    If (isStaffUser = False AndAlso isRolloverTeam = False) OrElse (isStaffUser = True AndAlso ConfigurationManager.AppSettings("RequireStaffDiamondUpgradeWhenNeeded") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("RequireStaffDiamondUpgradeWhenNeeded")) = "YES") OrElse (isRolloverTeam = True AndAlso ConfigurationManager.AppSettings("RequireRTstaffDiamondUpgradeWhenNeeded") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("RequireRTstaffDiamondUpgradeWhenNeeded")) = "YES") Then
+        '        shouldUpgradeToDiamond = True
+        '    End If
+        'ElseIf updatedForDiamond = True AndAlso mustChangePW = True AndAlso Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("webPortalIsLive")) AndAlso ConfigurationManager.AppSettings("webPortalIsLive").ToLower = "true" AndAlso (ConfigurationManager.AppSettings("portalCodes").Contains(Session("agencyCode")) OrElse ConfigurationManager.AppSettings("portalTerritories").Contains(Session("agencyTerr"))) AndAlso ByPassDiamondUpgrade = False Then
+        '    redirectPage = "changepassword.aspx"
+        'ElseIf Session("auth") = "a" Then
+        '    '--agency admin
+        '    If System.Configuration.ConfigurationManager.AppSettings("AgencyAdminLink") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("AgencyAdminLink") <> "" Then
+        '        redirectPage = System.Configuration.ConfigurationManager.AppSettings("AgencyAdminLink")
+        '    Else
+        '        redirectPage = "admin.aspx"
+        '    End If
+        'ElseIf Session("auth") = "u" Then
+        '    '--staff
+        '    If (System.Configuration.ConfigurationManager.AppSettings("UseStaffRedirectLink") Is Nothing OrElse (System.Configuration.ConfigurationManager.AppSettings("UseStaffRedirectLink") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("UseStaffRedirectLink") <> "" AndAlso UCase(System.Configuration.ConfigurationManager.AppSettings("UseStaffRedirectLink")) = "YES")) AndAlso Request.QueryString("ReturnUrl") IsNot Nothing AndAlso Request.QueryString("ReturnUrl") <> "" AndAlso UCase(Request.QueryString("ReturnUrl")).Contains("AGENTS.ASPX") Then
+        '        If System.Configuration.ConfigurationManager.AppSettings("StaffRedirectLink") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("StaffRedirectLink") <> "" Then
+        '            redirectPage = System.Configuration.ConfigurationManager.AppSettings("StaffRedirectLink")
+        '        Else
+        '            redirectPage = "AgencySearch.aspx"
+        '        End If
+        '    End If
+        'ElseIf (System.Configuration.ConfigurationManager.AppSettings("UseAgentSurvey") Is Nothing OrElse (System.Configuration.ConfigurationManager.AppSettings("UseAgentSurvey") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("UseAgentSurvey") <> "" AndAlso UCase(System.Configuration.ConfigurationManager.AppSettings("UseAgentSurvey")) = "YES")) AndAlso Session("completedSurvey") <> "Y" AndAlso isRolloverTeam = False Then
+        '    '--user who hasn't completed survey
+        '    If System.Configuration.ConfigurationManager.AppSettings("AgentSurveyLink") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("AgentSurveyLink") <> "" Then
+        '        redirectPage = System.Configuration.ConfigurationManager.AppSettings("AgentSurveyLink")
+        '    Else
+        '        redirectPage = "AgentSurvey.aspx?ReturnUrl="
+        '    End If
+
+        '    If UCase(redirectPage).Contains("?RETURNURL=") = False Then
+        '        redirectPage &= "?ReturnUrl="
+        '    End If
+
+        '    If Request.QueryString("ReturnUrl") IsNot Nothing AndAlso Request.QueryString("ReturnUrl") <> "" Then
+        '        redirectPage &= Request.QueryString("ReturnUrl")
+        '    Else
+        '        redirectPage &= System.Configuration.ConfigurationManager.AppSettings("AgentsLink")
+        '    End If
+        '    'ElseIf System.Configuration.ConfigurationManager.AppSettings("UseDiamondPortalSurvey") IsNot Nothing AndAlso UCase(System.Configuration.ConfigurationManager.AppSettings("UseDiamondPortalSurvey")) = "YES" AndAlso (Session("password")) <> "RT" AndAlso ((System.Configuration.ConfigurationManager.AppSettings("allowAllCodesInPortal") IsNot Nothing AndAlso UCase(System.Configuration.ConfigurationManager.AppSettings("allowAllCodesInPortal")) = "YES") OrElse (System.Configuration.ConfigurationManager.AppSettings("portalPilotCodes") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("portalPilotCodes").ToString.Contains(Session("agencyCode")) = True)) Then
+        'ElseIf System.Configuration.ConfigurationManager.AppSettings("UseDiamondPortalSurvey") IsNot Nothing AndAlso UCase(System.Configuration.ConfigurationManager.AppSettings("UseDiamondPortalSurvey")) = "YES" AndAlso isRolloverTeam = False AndAlso ((System.Configuration.ConfigurationManager.AppSettings("allowAllCodesInPortal") IsNot Nothing AndAlso UCase(System.Configuration.ConfigurationManager.AppSettings("allowAllCodesInPortal")) = "YES") OrElse (System.Configuration.ConfigurationManager.AppSettings("portalPilotCodes") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("portalPilotCodes").ToString.Contains(Session("agencyCode")) = True)) Then
+        '    'redirect to Diamond Portal survey (validated there = by agency code and username)
+        '    If System.Configuration.ConfigurationManager.AppSettings("DiamondPortalSurveyLink") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("DiamondPortalSurveyLink") <> "" Then
+        '        redirectPage = System.Configuration.ConfigurationManager.AppSettings("DiamondPortalSurveyLink")
+        '    Else
+        '        redirectPage = "portalsurvey.aspx?ReturnUrl="
+        '    End If
+
+        '    If UCase(redirectPage).Contains("?RETURNURL=") = False Then
+        '        redirectPage &= "?ReturnUrl="
+        '    End If
+
+        '    If Request.QueryString("ReturnUrl") IsNot Nothing AndAlso Request.QueryString("ReturnUrl") <> "" Then
+        '        redirectPage &= Request.QueryString("ReturnUrl")
+        '    Else
+        '        redirectPage &= System.Configuration.ConfigurationManager.AppSettings("AgentsLink")
+        '    End If
+        'ElseIf System.Configuration.ConfigurationManager.AppSettings("UseDynamicSurvey") IsNot Nothing AndAlso UCase(System.Configuration.ConfigurationManager.AppSettings("UseDynamicSurvey")) = "YES" AndAlso System.Configuration.ConfigurationManager.AppSettings("DynamicSurveyPage") IsNot Nothing AndAlso System.Configuration.ConfigurationManager.AppSettings("DynamicSurveyPage") <> "" Then
+        '    Using Sql As New SQLselectObject(System.Configuration.ConfigurationManager.AppSettings("conn"))
+        '        Sql.queryOrStoredProc = "usp_Get_Available_Surveys_For_User"
+        '        Sql.parameters = New ArrayList
+        '        Sql.parameters.Add(New SqlClient.SqlParameter("@siteId", 2))
+        '        Sql.parameters.Add(New SqlParameter("@IPAddress", Request.ServerVariables("REMOTE_ADDR")))
+        '        If Session("DiamondUsername") IsNot Nothing AndAlso Session("DiamondUsername") <> "" Then
+        '            Sql.parameters.Add(New SqlClient.SqlParameter("@UserName", Session("DiamondUsername")))
+        '            Sql.parameters.Add(New SqlClient.SqlParameter("@DiamondUserName", Session("DiamondUsername")))
+        '        Else
+        '            Sql.parameters.Add(New SqlClient.SqlParameter("@UserName", Session("userName")))
+        '        End If
+        '        Sql.parameters.Add(New SqlClient.SqlParameter("@LegacyUserName", Session("userName")))
+
+        '        Dim dr As SqlDataReader = Sql.GetDataReader
+        '        If dr IsNot Nothing AndAlso dr.HasRows = True Then
+        '            dr.Read()
+        '            redirectPage = System.Configuration.ConfigurationManager.AppSettings("DynamicSurveyPage") & "?SurveyId=" & dr.Item("surveyId").ToString.Trim & "&UserKeyId=" & dr.Item("userKeyId").ToString.Trim
+        '            If Request.QueryString("ReturnUrl") IsNot Nothing AndAlso Request.QueryString("ReturnUrl") <> "" Then
+        '                redirectPage &= "&RedirectPage=" & Request.QueryString("ReturnUrl")
+        '            End If
+        '        End If
+        '    End Using
+        'End If
+
+        If redirectPage = "" Then
+            If Request.QueryString("ReturnUrl") IsNot Nothing AndAlso Request.QueryString("ReturnUrl") <> "" Then
+                redirectPage = Request.QueryString("ReturnUrl")
+
+                'If ConfigurationManager.AppSettings("DiamondPortalPages") IsNot Nothing AndAlso ConfigurationManager.AppSettings("DiamondPortalPages") <> "" Then
+                '    Dim diaPortalPgs As String = ConfigurationManager.AppSettings("DiamondPortalPages")
+                '    If diaPortalPgs.Contains("|") = True Then
+                '        Dim arPgs As String() = Split(diaPortalPgs, "|")
+                '        For Each pg As String In arPgs
+                '            If Trim(pg) <> "" AndAlso UCase(redirectPage).Contains(UCase(Trim(pg))) = True Then
+                '                isAutoReloginDiamondPortal = True
+                '                Exit For
+                '            End If
+                '        Next
+                '    ElseIf UCase(redirectPage).Contains(UCase(diaPortalPgs)) = True Then
+                '        isAutoReloginDiamondPortal = True
+                '    End If
+                'ElseIf UCase(redirectPage).Contains("CONTROLLOADER") = True Then
+                '    isAutoReloginDiamondPortal = True
+                'End If
+                ''updated 12/9/2013 for NxTech passthru
+                ''If isAutoReloginDiamondPortal = True AndAlso UCase(redirectPage).Contains("?POLICYNUMBER=") = True AndAlso (UCase(redirectPage).Contains("&AT=") = True OrElse Request.QueryString("AT") IsNot Nothing) Then
+                ''updated later on 12/9/2013 to also check for the html representation for & to get the 2nd querystring param
+                'If isAutoReloginDiamondPortal = True AndAlso UCase(redirectPage).Contains("?POLICYNUMBER=") = True AndAlso (UCase(redirectPage).Contains("&AT=") = True OrElse UCase(redirectPage).Contains("&AMP;AT=") = True OrElse Request.QueryString("AT") IsNot Nothing OrElse Request.QueryString("amp;AT") IsNot Nothing) Then
+                '    isAutoReloginDiamondPortal = False
+                'End If
+            Else
+                'redirectPage = System.Configuration.ConfigurationManager.AppSettings("AgentsLink")
+                redirectPage = "MyVelociRater.aspx"
+            End If
+        End If
+
+        'If ConfigurationManager.AppSettings("RequireDiamondUpgradeWhenNeeded") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("RequireDiamondUpgradeWhenNeeded")) = "YES" AndAlso shouldUpgradeToDiamond = True Then
+        '    Session("shouldUpgradeToDiamond") = "YES"
+        'End If
+
+        'If isAutoReloginDiamondPortal = True Then
+        '    If ConfigurationManager.AppSettings("DiamondPortalAutoReloginPage") IsNot Nothing AndAlso ConfigurationManager.AppSettings("DiamondPortalAutoReloginPage") <> "" Then
+        '        redirectPage = ConfigurationManager.AppSettings("DiamondPortalAutoReloginPage")
+        '    Else
+        '        redirectPage = System.Configuration.ConfigurationManager.AppSettings("AgentsLink")
+        '    End If
+        'End If
+
+        'If isAutoReloginDiamondPortal = True AndAlso ConfigurationManager.AppSettings("ShowDiamondPortalAutoReloginMessage") IsNot Nothing AndAlso ConfigurationManager.AppSettings("ShowDiamondPortalAutoReloginMessage") <> "" AndAlso UCase(ConfigurationManager.AppSettings("ShowDiamondPortalAutoReloginMessage")) = "YES" Then
+        '    Dim msg As String = ""
+        '    If ConfigurationManager.AppSettings("DiamondPortalAutoReloginMessage") IsNot Nothing AndAlso ConfigurationManager.AppSettings("DiamondPortalAutoReloginMessage") <> "" Then
+        '        msg = ConfigurationManager.AppSettings("DiamondPortalAutoReloginMessage")
+        '    Else
+        '        msg = "It appears that your session timed out while you were in the Diamond Portal. You will need to reload the policy/quote in order to continue with the workflow you were in."
+        '    End If
+        '    ShowMessageAndRedirect(msg, redirectPage)
+        'Else
+        Response.Redirect(redirectPage)
+        'End If
+
+    End Sub
+    Private Sub ShowMessageAndRedirect(ByVal message As String, ByVal redirectPage As String)
+        message = Replace(message, "\", "\\")
+        message = Replace(message, "<br>", "\n")
+        message = Replace(message, vbCrLf, "\n")
+
+        If message = "" Then
+            message = "Click below to continue."
+        End If
+
+        Dim strScript As String = "<script language=JavaScript>"
+        strScript &= "alert(""" & message & """);"
+        If redirectPage = "" Then
+            redirectPage = System.Configuration.ConfigurationManager.AppSettings("AgentsLink")
+        End If
+        strScript &= " window.location.href='" & redirectPage & "';"
+        strScript &= "</script>"
+
+        Page.RegisterStartupScript("clientScript", strScript)
+
+    End Sub
+
+    'Private Function DecodeFromBase64(ByVal strToDecode As String) As String
+    '    Dim b As Byte() = Convert.FromBase64String(strToDecode)
+    '    DecodeFromBase64 = System.Text.Encoding.UTF8.GetString(b)
+    'End Function
+
+    'Private Sub SplitNxTechValues(ByVal NxTechValueString As String)
+    '    '?NxTechValues=user=*=testUser|*|pass=*=dGVzdFBhc3N3b3Jk|*|encryptionType=*=Base64|*|page=*=policyinquiry.aspx?polnum=0103421256
+    '    '?NxTechValues=user=*=testUser|*|pass=*=testPassword|*|encryptionType=*=None|*|page=*=policyinquiry.aspx?polnum=0103421256
+    '    If NxTechValueString <> "" AndAlso NxTechValueString.Contains("=*=") = True Then
+    '        Dim isBase64 As Boolean = False
+    '        Dim arNameValuePair As Array
+    '        If NxTechValueString.Contains("|*|") = True Then
+    '            'multiple values
+    '            Dim arNxTechString As String()
+    '            arNxTechString = Split(NxTechValueString, "|*|")
+    '            For Each nameValuePair As String In arNxTechString
+    '                If nameValuePair.Contains("=*=") = True Then
+    '                    arNameValuePair = Split(nameValuePair, "=*=")
+    '                    Select Case UCase(arNameValuePair(0).ToString.Trim)
+    '                        Case "USER"
+    '                            Me.txtUsername.Text = arNameValuePair(1).ToString.Trim
+    '                        Case "PASS"
+    '                            Me.txtPassword.Text = arNameValuePair(1).ToString.Trim
+    '                        Case "ENCRYPTIONTYPE"
+    '                            If arNameValuePair(1).ToString.Trim <> "" AndAlso UCase(arNameValuePair(1).ToString.Trim) = "BASE64" Then
+    '                                isBase64 = True
+    '                            End If
+    '                        Case "PAGE"
+    '                            Me.lblPage.Text = arNameValuePair(1).ToString.Trim
+    '                    End Select
+    '                End If
+    '            Next
+    '        End If
+    '        If isBase64 = True Then
+    '            Me.txtPassword.Text = DecodeFromBase64(Me.txtPassword.Text)
+    '        End If
+    '    End If
+    'End Sub
+
+    
+    Private Sub SetDiamondAgencyCodeAndId(ByVal userId As String, ByRef agencyCode As String, ByRef agencyId As String)
+        agencyCode = ""
+        agencyId = ""
+        If userId <> "" AndAlso IsNumeric(userId) = True Then
+            Using Sql As New SQLselectObject(ConfigurationManager.AppSettings("connDiamond"))
+                Sql.queryOrStoredProc = "select A.agency_id, A.code from UserAgencyLink as L with (nolock) inner join Agency as A with (nolock) on A.agency_id = L.agency_id where L.users_id = " & CInt(userId) & " and L.useragencyrelationtype_id = 1"
+                Dim dr As SqlDataReader = Sql.GetDataReader
+                If dr IsNot Nothing AndAlso dr.HasRows = True Then
+                    dr.Read()
+                    agencyCode = dr.Item("code").ToString.Trim
+                    agencyId = dr.Item("agency_id").ToString.Trim
+                End If
+            End Using
+        End If
+    End Sub
+End Class

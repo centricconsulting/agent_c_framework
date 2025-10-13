@@ -1,0 +1,108 @@
+﻿<tests>
+
+  <!-- Test Bad Request - NOT Possible-->
+
+  <!--test claim not found-->
+  <TestGetClaimantList>
+    <claimNumber>1070573-6</claimNumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>404</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetClaimantList>
+
+  <!--testing pulling a claim with a po box-->
+  <TestGetClaimantList>
+    <claimNumber>1000004</claimNumber>
+    <expectClaimantName_1>JODY TERWISKE</expectClaimantName_1>
+    <expectAddress1_1>918 PATTON HILL ROAD</expectAddress1_1>
+    <expectAddress2_1></expectAddress2_1>
+    <expectCity_1>BEDFORD</expectCity_1>
+    <expectState_1>IN</expectState_1>
+    <expectZip_1>47421</expectZip_1>
+    
+    <expectClaimantName_2>JAMES STRAW</expectClaimantName_2>
+    <expectAddress1_2>11675 N US HWY 231</expectAddress1_2>
+    <expectAddress2_2></expectAddress2_2>
+    <expectCity_2>CHRISNEY</expectCity_2>
+    <expectState_2>IN</expectState_2>
+    <expectZip_2>47611</expectZip_2>
+    
+    <expectClaimantName_3>Sonia Straw</expectClaimantName_3>
+    <expectAddress1_3></expectAddress1_3>
+    <expectAddress2_3>P.O. Box 93</expectAddress2_3>
+    <expectCity_3>Tennyson</expectCity_3>
+    <expectState_3>IN</expectState_3>
+    <expectZip_3>47637</expectZip_3>
+    
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetClaimantList>
+
+  <!--testing pulling a claim with individual claimant-->
+  <TestGetClaimantList>
+    <claimNumber>1070573</claimNumber>
+    <expectClaimantName_1>LARRY MILLER</expectClaimantName_1>
+    <expectAddress1_1>2558 S 1050 W</expectAddress1_1>
+    <expectAddress2_1></expectAddress2_1>
+    <expectCity_1>RUSSIAVILLE</expectCity_1>
+    <expectState_1>IN</expectState_1>
+    <expectZip_1>46979</expectZip_1>
+    
+    <expectClaimantName_2>L MILLER</expectClaimantName_2>
+    <expectAddress1_2>2558 S 1050 W</expectAddress1_2>
+    <expectAddress2_2></expectAddress2_2>
+    <expectCity_2>RUSSIAVILLE</expectCity_2>
+    <expectState_2>IN</expectState_2>
+    <expectZip_2>46979</expectZip_2>
+    
+    <expectClaimantName_3>MICHELLE MILLER</expectClaimantName_3>
+    <expectAddress1_3>2558 S 1050 W</expectAddress1_3>
+    <expectAddress2_3></expectAddress2_3>
+    <expectCity_3>RUSSIAVILLE</expectCity_3>
+    <expectState_3>IN</expectState_3>
+    <expectZip_3>46979</expectZip_3>
+    
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetClaimantList>
+
+  <!--testing pulling a claim with commercial claimant-->
+  <TestGetClaimantList>
+    <claimNumber>1000001</claimNumber>
+    <expectClaimantName_1>MARIE HENDRIX</expectClaimantName_1>
+    <expectAddress1_1>3375 W CR 850 S</expectAddress1_1>
+    <expectAddress2_1></expectAddress2_1>
+    <expectCity_1>COMMISKEY</expectCity_1>
+    <expectState_1>IN</expectState_1>
+    <expectZip_1>47227</expectZip_1>
+    
+    <expectClaimantName_2>HECTOR BURTON</expectClaimantName_2>
+    <expectAddress1_2>3395 W CO RD 850 S</expectAddress1_2>
+    <expectAddress2_2></expectAddress2_2>
+    <expectCity_2>COMMISKEY</expectCity_2>
+    <expectState_2>IN</expectState_2>
+    <expectZip_2>47227</expectZip_2>
+    
+    <expectClaimantName_3>Loyd &amp; Sandra Fletcher DBA Lucas Wrecker</expectClaimantName_3>
+    <expectAddress1_3>546 East O and M Avenue</expectAddress1_3>
+    <expectAddress2_3></expectAddress2_3>
+    <expectCity_3>North Vernon</expectCity_3>
+    <expectState_3>IN</expectState_3>
+    <expectZip_3>47265</expectZip_3>
+    
+    <expectClaimantName_4>ARNOLD HENDRIX</expectClaimantName_4>
+    <expectAddress1_4>3375 W CR 850 S</expectAddress1_4>
+    <expectAddress2_4></expectAddress2_4>
+    <expectCity_4>COMMISKEY</expectCity_4>
+    <expectState_4>IN</expectState_4>
+    <expectZip_4>47227</expectZip_4>
+    
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetClaimantList>
+
+
+</tests>

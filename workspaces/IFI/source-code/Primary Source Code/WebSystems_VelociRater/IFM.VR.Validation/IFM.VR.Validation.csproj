@@ -1,0 +1,310 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{1BF73C1E-5BE4-43B4-A12C-FF360FB4C462}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IFM.VR.Validation</RootNamespace>
+    <AssemblyName>IFM.VR.Validation</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+    <SccProjectName>%24/Internet/Velocirater/VR_Personal/Staging/IFM.VR.Validation</SccProjectName>
+    <SccLocalPath>.</SccLocalPath>
+    <SccAuxPath>http://ifmtfs1:8080/tfs/ifmdevelopment</SccAuxPath>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
+    <TargetFrameworkProfile />
+    <Use64BitIISExpress />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\IFM.VR.Validation.XML</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CommonClasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CommonClassesDeploy.2023.6.14-beta\lib\CommonClasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Business.ThirdParty, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Business.ThirdParty.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.ChoicePoint.Library, Version=4.2.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.ChoicePoint.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Diagnostics, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Diagnostics.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Objects.538.12.2000.1\lib\Diamond.Common.Objects.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects.ConfigurableBook, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Objects.ConfigurableBook.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Rules.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Services.538.12.2000.1\lib\Diamond.Common.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.StaticDataManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Utility.538.12.2000.1\lib\Diamond.Common.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.Rules.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.StaticDataManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.BaseControls, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Web.Items.536.12.2100.1\lib\Diamond.Web.BaseControls.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Web.Items.536.12.2100.1\lib\Diamond.Web.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="DiamondWebClass, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.DiamondWebClass.2024.12.23.100\lib\DiamondWebClass.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.Common.InputValidation, Version=2020.9.14.100, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CommonInputValidation.2021.7.8.100\lib\net45\IFM.Common.InputValidation.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.PolicyLoader, Version=2023.8.28.1044, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PolicyLoader.2023.8.28.1044-beta\lib\net48\IFM.PolicyLoader.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.PrimativeExtensions, Version=2019.4.24.100, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PrimativeExtensions.2021.7.23.400\lib\net45\IFM.PrimativeExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMDiamondServices, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.IFMDiamondServices.2014.4.17.100\lib\IFMDiamondServices.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMErrorLogging, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.IFMErrorLogging.2017.9.4.100\lib\IFMErrorLogging.dll</HintPath>
+    </Reference>
+    <Reference Include="Insuresoft.RuleEngine.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Insuresoft.RuleEngine.Common.538.12.2000.1\lib\Insuresoft.RuleEngine.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PopupMessageClass, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PopupMessageClass.2021.2.4\lib\PopupMessageClass.dll</HintPath>
+    </Reference>
+    <Reference Include="QuickQuote_deploy, Version=2025.9.15.1550, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.QuickQuoteDeploy.2025.9.15.1550-beta\lib\net48\QuickQuote_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="SQLclasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.SQLClassesDeploy.2020.3.6.100\lib\SQLclasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Configuration.ConfigurationManager, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Configuration.ConfigurationManager.6.0.0\lib\net461\System.Configuration.ConfigurationManager.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.IdentityModel.Tokens.Jwt, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IdentityModel.Tokens.Jwt.4.0.10819.1000\lib\System.IdentityModel.Tokens.Jwt.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Security.AccessControl, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.AccessControl.6.0.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Permissions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Permissions.6.0.0\lib\net461\System.Security.Permissions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.5.0.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ObjectValidation\AllLines\AddressValidator.cs" />
+    <Compile Include="ObjectValidation\AllLines\EmailValidator.cs" />
+    <Compile Include="ObjectValidation\AllLines\EndorsementValidator.cs" />
+    <Compile Include="ObjectValidation\AllLines\NameValidator.cs" />
+    <Compile Include="ObjectValidation\AllLines\PhonesValidator.cs" />
+    <Compile Include="ObjectValidation\CommLines\LOB\BOP\PolicyLevelValidations.cs" />
+    <Compile Include="ObjectValidation\CommLines\LOB\CAP\AdditionalInterestListValidator.cs" />
+    <Compile Include="ObjectValidation\CommLines\LOB\CAP\PolicyLevelValidations.cs" />
+    <Compile Include="ObjectValidation\CommLines\LOB\CAP\VINValidator.cs" />
+    <Compile Include="ObjectValidation\CommLines\LOB\CGL\CGL_PolicyCoveragesValidator.cs" />
+    <Compile Include="ObjectValidation\CommLines\LOB\CGL\GeneralInformationValidator.cs" />
+    <Compile Include="ObjectValidation\CommLines\LOB\CGL\PolicyLevelValidations.cs" />
+    <Compile Include="ObjectValidation\CommLines\LOB\CPP\PolicyLevelValidations.cs" />
+    <Compile Include="ObjectValidation\CommLines\LOB\CPR\PolicyLevelValidations.cs" />
+    <Compile Include="ObjectValidation\CommLines\LOB\WC\PolicyLevelValidations.cs" />
+    <Compile Include="ObjectValidation\FarmLines\AcreageOnlyValidator.cs" />
+    <Compile Include="ObjectValidation\FarmLines\Buildings\FarmBuildingCoveragesValidator.cs" />
+    <Compile Include="ObjectValidation\FarmLines\Buildings\FarmBuildingValidator.cs" />
+    <Compile Include="ObjectValidation\FarmLines\IRPM_FarmValidator.cs" />
+    <Compile Include="ObjectValidation\FarmLines\LocationCoverageValidator.cs" />
+    <Compile Include="ObjectValidation\FarmLines\PersonalPropertyValidator.cs" />
+    <Compile Include="ObjectValidation\FarmLines\PolicyCoverageValidator.cs" />
+    <Compile Include="ObjectValidation\FarmLines\PolicyLevelValidation.cs" />
+    <Compile Include="ObjectValidation\FarmLines\ResidentNameValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\Common\AdditionalInterestListValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\Common\AdditionalInterestValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\Common\ApplicantListValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\Common\ApplicantValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\Common\BillingInformationValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\Common\EsignatureValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\Common\InsuredValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\Common\LossListValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\Common\LossValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\Common\PriorCarrierValidator.cs" />
+    <Compile Include="ObjectValidation\FarmLines\CanineExclusion.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\DFR\ResidenceCoverageValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\DFR\UnderwritingQuestionValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\AIRelativeValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\AITrustValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\AppGapCoveragesValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\CoveragesAddressValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\Coverages_Hom_Validator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\FarmInfoValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\HOMEmailValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\IncreasedLimitValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\InlandMarineListValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\InlandMarineValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\LocationAddressValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\LocationMobileHomeValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\LocationProtectionClassValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\LocationResidenceValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\Optional_Coverages_Hom_Validator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\PropertyUpdatesValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\PropertyValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\RVWatercraftBoatMotorValidtor.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\RVWatercraftOperatorsValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\RvWaterCraftValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\SectionCoverageValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\SectionIAddressValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\HOM\SectionIIAddressValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\PPA\DriverListValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\PPA\DriverValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\PPA\PolicyCoverageValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\PPA\PolicyDriverLossesAndViolationValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\PPA\ScheduledItemValidator_PPA.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\PPA\VehicleCoverageValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\PPA\VehicleGaragingValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\PPA\VehicleListValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\PPA\VehicleValidator.cs" />
+    <Compile Include="ObjectValidation\PersLines\LOB\PPA\ViolationValidator.cs" />
+    <Compile Include="ObjectValidation\PolicyLevelValidator.cs" />
+    <Compile Include="ObjectValidation\Umbrella\PolicyLevelValidations.cs" />
+    <Compile Include="ObjectValidation\ValidationItem.cs" />
+    <Compile Include="ObjectValidation\ValidationItemList.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ValidationBreadCrum.cs" />
+    <Compile Include="VRGeneralValidations.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="libman.json" />
+    <None Include="packages.config" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ObjectValidation\CommLines\LOB\Common\" />
+    <Folder Include="WorkflowValidation\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IFM.VR.Common\IFM.VR.Common.vbproj">
+      <Project>{7cae39c0-50c2-4f23-a11a-4fd7057b94e7}</Project>
+      <Name>IFM.VR.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ghjg|AnyCPU'">
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:64255/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

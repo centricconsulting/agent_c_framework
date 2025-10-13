@@ -1,0 +1,263 @@
+﻿/* File Created: February 11, 2013 */
+
+        a, a:hover, a:active, a:visited { color: white; }
+        
+        body
+        {
+            font-family:Calibri;
+            font-size: 14px;    
+        }
+        
+        .lobTitle {
+	        text-align: left;
+	        font-size: 17px;
+	        font-weight: bold;
+        }
+        
+        .standardBackColor {
+	        background-color: #797777;
+        }
+        
+        .sectionHeaderBar1 
+        {            
+            text-align: left;
+            padding-left: 15px;
+	        color: White;	        
+	        font-size: 15px;	
+	        width: 100%;       
+        }
+        
+        
+        .basictbl
+        {            
+            text-align: left;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .requiredText {
+	        color: red;
+        }        
+        
+        .informationalText {
+	        color: Blue;
+        }     
+        
+        .informationalTextGrey {
+	        color: #4c4c4e;
+        }   
+        
+        .tblcellLeftSide
+        {
+            text-align:right;
+        }
+        .tblcellRightSide
+        {
+            text-align:left;
+        }      
+        .formStandardLeftWidthForIndented {
+	        width: 380px;
+        }        
+         .formStandardLeftWidth {
+	        width: 400px;
+        }        
+        .formStandardMargin {
+	        margin-left: 400px;
+        }
+        .panelIndentation {
+	        margin-left: 20px;
+        }
+        
+        .panelDoubleIndentation {
+	        margin-left: 40px;
+        }
+        
+        .panelStandardTopMargin {
+	        margin-top:15px;
+        }
+        
+        .panelStandardBottomMargin {
+	        margin-bottom:15px;
+        }
+         .Hidden
+        {
+            display:none;
+        }
+       
+        .gradient 
+        {
+           background-color: #797777;                       
+/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzdkN2U3ZCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwZTBlMGUiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+background: -moz-linear-gradient(top,  #7d7e7d 0%, #0e0e0e 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#7d7e7d), color-stop(100%,#0e0e0e)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #7d7e7d 0%,#0e0e0e 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #7d7e7d 0%,#0e0e0e 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #7d7e7d 0%,#0e0e0e 100%); /* IE10+ */
+background: linear-gradient(to bottom,  #7d7e7d 0%,#0e0e0e 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7d7e7d', endColorstr='#0e0e0e',GradientType=0 ); /* IE6-8 */
+
+        }
+
+        
+        
+        .roundedContainer {
+	        -moz-border-radius: 4px;
+           -webkit-border-radius: 4px;
+           border-radius: 4px;    
+        }
+        
+        .standardShadow {
+	        moz-box-shadow: 1px 1px 2px #2d2c2b;
+            -webkit-box-shadow: 1px 1px 2px #2d2c2b;
+            box-shadow: 1px 1px 2px #2d2c2b;
+        }
+        
+        .innerShadow {
+	-moz-box-shadow: 3px -3px 4px #2d2c2b;
+            -webkit-box-shadow: 3px -3px 4px #2d2c2b;
+            box-shadow: 3px -3px 4px #2d2c2b;
+        
+}
+        
+        
+        
+        input[type="submit"][disabled] {
+            color: #c2bcbc;
+	        background-color:#c0bbbb;
+	        text-decoration: none;
+        }
+        
+        
+        
+        .StandardButton 
+        {            
+            border: 1px solid #797777;
+            color: White;
+	        background-color:#797777;	        
+	        -moz-border-radius: 4px;
+           -webkit-border-radius: 4px;
+           border-radius: 4px;   height: 20px;                            
+        
+        }
+        
+        .StandardButton:Hover
+        {
+            color: White;
+	        background-color:#504c4c;
+	        cursor: pointer;         
+        }
+
+        .StandardButtonOneHalf 
+        {            
+            border: 1px solid #797777;
+            color: White;
+	        background-color:#797777;	        
+	        -moz-border-radius: 4px;
+           -webkit-border-radius: 4px;
+           border-radius: 4px; height: 30px;                               
+        
+        }
+        
+        .StandardButtonDouble:Hover
+        {
+            color: White;
+	        background-color:#504c4c;
+	        cursor: pointer;         
+        }
+
+        .StandardButtonOneHalf 
+        {            
+            border: 1px solid #797777;
+            color: White;
+	        background-color:#797777;	        
+	        -moz-border-radius: 4px;
+           -webkit-border-radius: 4px;
+           border-radius: 4px; height: 40px;                               
+        
+        }
+        
+        .StandardButtonOneHalf:Hover
+        {
+            color: White;
+	        background-color:#504c4c;
+	        cursor: pointer;         
+        }        
+
+        
+        .SubSectionDoneButton {
+	        width: 140px;
+        }
+        
+        .AttentionButton1
+        {
+            border: 1.5px dotted blue;
+            color: white;
+	        background-color:#797777;
+	        font-size: 15px;
+	        font-weight: bold;
+        }
+        
+        .AttentionButton1:Hover
+        {
+            color: white;
+	    background-color:#504c4c;
+	    cursor: pointer;
+        }
+        
+        .GridStandardOuter 
+        {
+            border-collapse:collapse;	     
+	        color: Black;	     
+        }
+        .GridHeaderStyle 
+        {
+            color: white;
+	        background-color: #797777;                       
+            
+        }
+        .GridAlternatingRowStyle {
+	        background-color:#CCCCCC;
+        }   
+        .GridSelectedRow {
+	        font-weight:bold;
+	        color: Black;	        
+	        font-size: large;
+        }
+        .GridSorted_Asc_Cell {
+	      
+	        color: White;
+	        text-decoration: none:
+        }
+        .GridSorted_Desc_Cell {
+	       
+	        color: White;
+	        text-decoration: none:
+        }
+        .GridSorted_Asc_Header {
+	      
+	        color: White;
+	        text-decoration: none:
+        }
+        .GridSorted_Desc_Header {
+	       
+	        color: White;
+	        text-decoration: none:
+        }
+        .GridPagerStyle {	        
+	        color: Black;
+	        vertical-align: middle;
+        }
+        .GridFooterStyle {
+	       background-color: White;
+        }
+        
+        .GridHeaderStyle a{ color:White;}
+        
+        
+        
+        
+        
+        
+        
+        

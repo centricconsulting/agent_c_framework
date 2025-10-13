@@ -1,0 +1,665 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<LookupLists>
+  <QuickQuoteAccidentViolation>
+  </QuickQuoteAccidentViolation>
+  <QuickQuoteAdditionalInsured>
+  </QuickQuoteAdditionalInsured>
+  <QuickQuoteAdditionalInterest>
+  </QuickQuoteAdditionalInterest>
+  <QuickQuoteAddress>
+  </QuickQuoteAddress>
+  <QuickQuoteApplicant>
+  </QuickQuoteApplicant>
+  <QuickQuoteAutoSymbol>
+  </QuickQuoteAutoSymbol>
+  <QuickQuoteBuilding>
+  </QuickQuoteBuilding>
+  <QuickQuoteClassification>
+  </QuickQuoteClassification>
+  <QuickQuoteContractorsEquipmentScheduledItem>
+  </QuickQuoteContractorsEquipmentScheduledItem>
+  <QuickQuoteCoverage>
+  </QuickQuoteCoverage>
+  <QuickQuoteCreditScore>
+  </QuickQuoteCreditScore>
+  <QuickQuoteDriver>
+  </QuickQuoteDriver>
+  <QuickQuoteEmail>
+  </QuickQuoteEmail>
+  <QuickQuoteEmploymentInfo>
+  </QuickQuoteEmploymentInfo>
+  <QuickQuoteExclusion>
+  </QuickQuoteExclusion>
+  <QuickQuoteExclusionOfAmishWorkerRecord>
+  </QuickQuoteExclusionOfAmishWorkerRecord>
+  <QuickQuoteExclusionOfSoleProprietorRecord>
+  </QuickQuoteExclusionOfSoleProprietorRecord>
+  <QuickQuoteFarmIncidentalLimit>
+  </QuickQuoteFarmIncidentalLimit>
+  <QuickQuoteGLClassification>
+  </QuickQuoteGLClassification>
+  <QuickQuoteHouseholdMember>
+  </QuickQuoteHouseholdMember>
+  <QuickQuoteInclusionExclusion>
+  </QuickQuoteInclusionExclusion>
+  <QuickQuoteInclusionExclusionScheduledItem>
+  </QuickQuoteInclusionExclusionScheduledItem>
+  <QuickQuoteInclusionOfSoleProprietorRecord>
+  </QuickQuoteInclusionOfSoleProprietorRecord>
+  <QuickQuoteIncomeLoss>
+  </QuickQuoteIncomeLoss>
+  <QuickQuoteInlandMarine>
+  </QuickQuoteInlandMarine>
+  <QuickQuoteLocation>
+  </QuickQuoteLocation>
+  <QuickQuoteLossHistoryDetailRecord>
+  </QuickQuoteLossHistoryDetailRecord>
+  <QuickQuoteLossHistoryRecord>
+  </QuickQuoteLossHistoryRecord>
+  <QuickQuoteModifier>
+  </QuickQuoteModifier>
+  <QuickQuoteName>
+  </QuickQuoteName>
+  <QuickQuoteObject>
+    <LobId><!--as-of 5/30/2018-->
+      <Option>
+        <LobType>None</LobType>
+        <Text>Not Assigned</Text><!--Lob-->
+        <Text2>Not Assigned</Text2><!--LOBCategory-->
+        <Value>0</Value><!--Lob-->
+        <Value2>0</Value2><!--LOBCategory-->
+        <VersionId>0</VersionId>
+      </Option>
+      <Option>
+        <LobType>AutoPersonal</LobType>
+        <Text>Auto Personal</Text><!--Lob-->
+        <Text2>Auto Personal</Text2><!--LOBCategory-->
+        <Value>1</Value><!--Lob-->
+        <Value2>1</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>HomePersonal</LobType>
+        <Text>Home Personal</Text><!--Lob-->
+        <Text2>Home Personal</Text2><!--LOBCategory-->
+        <Value>2</Value><!--Lob-->
+        <Value2>2</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>DwellingFirePersonal</LobType>
+        <Text>Dwelling Fire Personal</Text><!--Lob-->
+        <Text2>Dwelling Fire Personal</Text2><!--LOBCategory-->
+        <Value>3</Value><!--Lob-->
+        <Value2>3</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Watercraft Personal</Text><!--Lob-->
+        <Text2>Watercraft Personal</Text2><!--LOBCategory-->
+        <Value>4</Value><!--Lob-->
+        <Value2>4</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Specialty Auto</Text><!--Lob-->
+        <Text2>Specialty Auto</Text2><!--LOBCategory-->
+        <Value>6</Value><!--Lob-->
+        <Value2>20</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Personal Snowmobile</Text><!--Lob-->
+        <Text2>Not Assigned</Text2><!--LOBCategory-->
+        <Value>7</Value><!--Lob-->
+        <Value2>0</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Mobile Home</Text><!--Lob-->
+        <Text2>Mobile home</Text2><!--LOBCategory-->
+        <Value>8</Value><!--Lob-->
+        <Value2>16</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>CommercialGeneralLiability</LobType>
+        <Text>Commercial General Liability</Text><!--Lob-->
+        <Text2>Commercial General Liability</Text2><!--LOBCategory-->
+        <Value>9</Value><!--Lob-->
+        <Value2>9</Value2><!--LOBCategory-->
+        <VersionId>180</VersionId>
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Commercial Directors and Officers</Text><!--Lob-->
+        <Text2>Commercial Directors Officers</Text2><!--LOBCategory-->
+        <Value>10</Value><!--Lob-->
+        <Value2>10</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Commercial General Partner</Text><!--Lob-->
+        <Text2>Commercial General Partner</Text2><!--LOBCategory-->
+        <Value>11</Value><!--Lob-->
+        <Value2>11</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Commercial Combined Lines</Text><!--Lob-->
+        <Text2>Commercial Combined Lines</Text2><!--LOBCategory-->
+        <Value>12</Value><!--Lob-->
+        <Value2>12</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Specialty Home</Text><!--Lob-->
+        <Text2>Specialty Home</Text2><!--LOBCategory-->
+        <Value>13</Value><!--Lob-->
+        <Value2>21</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Umbrella Personal</Text><!--Lob-->
+        <Text2>Umbrella Personal</Text2><!--LOBCategory-->
+        <Value>14</Value><!--Lob-->
+        <Value2>5</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Commercial NonTraditional</Text><!--Lob-->
+        <Text2>Commercial Non-Traditional</Text2><!--LOBCategory-->
+        <Value>15</Value><!--Lob-->
+        <Value2>13</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Inland Marine Personal</Text><!--Lob-->
+        <Text2>Inland Marine Personal</Text2><!--LOBCategory-->
+        <Value>16</Value><!--Lob-->
+        <Value2>6</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>Farm</LobType>
+        <Text>Farm</Text><!--Lob-->
+        <Text2>Commercial Farm</Text2><!--LOBCategory-->
+        <Value>17</Value><!--Lob-->
+        <Value2>7</Value2><!--LOBCategory-->
+        <VersionId>176</VersionId>
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Personal Condominium</Text><!--Lob-->
+        <Text2>Not Assigned</Text2><!--LOBCategory-->
+        <Value>18</Value><!--Lob-->
+        <Value2>0</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Personal Tenant</Text><!--Lob-->
+        <Text2>Not Assigned</Text2><!--LOBCategory-->
+        <Value>19</Value><!--Lob-->
+        <Value2>0</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>CommercialAuto</LobType>
+        <Text>Commercial Auto</Text><!--Lob-->
+        <Text2>Commercial Auto</Text2><!--LOBCategory-->
+        <Value>20</Value><!--Lob-->
+        <Value2>14</Value2><!--LOBCategory-->
+        <VersionId>182</VersionId>
+      </Option>
+      <Option>
+        <LobType>WorkersCompensation</LobType>
+        <Text>Workers Comp</Text><!--Lob-->
+        <Text2>Workers Compensation</Text2><!--LOBCategory-->
+        <Value>21</Value><!--Lob-->
+        <Value2>15</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Complete Auto</Text><!--Lob-->
+        <Text2>Auto Personal</Text2><!--LOBCategory-->
+        <Value>22</Value><!--Lob-->
+        <Value2>1</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--never used-->
+      </Option>
+      <Option>
+        <LobType>CommercialPackage</LobType>
+        <Text>Commercial Package</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>23</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId>196</VersionId>
+      </Option>
+      <Option>
+        <LobType>CommercialGarage</LobType>
+        <Text>Commercial Garage</Text><!--Lob-->
+        <Text2>Commercial Garage</Text2><!--LOBCategory-->
+        <Value>24</Value><!--Lob-->
+        <Value2>23</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>CommercialBOP</LobType>
+        <Text>Commercial BOP</Text><!--Lob-->
+        <Text2>Commercial BOP</Text2><!--LOBCategory-->
+        <Value>25</Value><!--Lob-->
+        <Value2>8</Value2><!--LOBCategory-->
+        <VersionId>191</VersionId>
+      </Option>
+      <Option>
+        <LobType>CommercialCrime</LobType>
+        <Text>Commercial Crime</Text><!--Lob-->
+        <Text2>Commercial Crime</Text2><!--LOBCategory-->
+        <Value>26</Value><!--Lob-->
+        <Value2>25</Value2><!--LOBCategory-->
+        <VersionId>178</VersionId>
+      </Option>
+      <Option>
+        <LobType>CommercialUmbrella</LobType>
+        <Text>Commercial Umbrella</Text><!--Lob-->
+        <Text2>Commercial Umbrella</Text2><!--LOBCategory-->
+        <Value>27</Value><!--Lob-->
+        <Value2>26</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>CommercialProperty</LobType>
+        <Text>Commercial Property</Text><!--Lob-->
+        <Text2>Commercial Property</Text2><!--LOBCategory-->
+        <Value>28</Value><!--Lob-->
+        <Value2>24</Value2><!--LOBCategory-->
+        <VersionId>189</VersionId>
+      </Option>
+      <Option>
+        <LobType>CommercialInlandMarine</LobType>
+        <Text>Commercial Inland Marine</Text><!--Lob-->
+        <Text2>Commercial Inland Marine</Text2><!--LOBCategory-->
+        <Value>29</Value><!--Lob-->
+        <Value2>22</Value2><!--LOBCategory-->
+        <VersionId>184</VersionId>
+      </Option>
+      <Option>
+        <LobType>CommercialGeneralLiability</LobType>
+        <Text>Multi-State Commercial General Liability</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>43</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId>181</VersionId>
+      </Option>
+      <Option>
+        <LobType>CommercialAuto</LobType>
+        <Text>Multi-State Commercial Auto</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>44</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId>183</VersionId>
+      </Option>
+      <Option>
+        <LobType>CommercialProperty</LobType>
+        <Text>Multi-State Commercial Property</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>45</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId>190</VersionId>
+      </Option>
+      <Option>
+        <LobType>CommercialInlandMarine</LobType>
+        <Text>Multi-State Commercial Inland Marine</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>46</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId>185</VersionId>
+      </Option>
+      <Option>
+        <LobType>CommercialCrime</LobType>
+        <Text>Multi-State Commercial Crime</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>47</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId>179</VersionId>
+      </Option>
+      <Option>
+        <LobType>CommercialBOP</LobType>
+        <Text>Multi-State Commercial BOP</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>48</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId>192</VersionId>
+      </Option>
+      <Option>
+        <LobType>WorkersCompensation</LobType>
+        <Text>Multi-State Workers Comp</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>49</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>CommercialUmbrella</LobType>
+        <Text>Multi-State Commercial Umbrella</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>50</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>AutoPersonal</LobType>
+        <Text>Multi-State Auto Personal</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>51</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+      <Option>
+        <LobType>Farm</LobType>
+        <Text>Multi-State Farm</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>52</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId>177</VersionId>
+      </Option>
+      <Option>
+        <LobType>None</LobType>
+        <Text>Multi-State Umbrella Personal</Text><!--Lob-->
+        <Text2>Commercial Policy Package</Text2><!--LOBCategory-->
+        <Value>53</Value><!--Lob-->
+        <Value2>27</Value2><!--LOBCategory-->
+        <VersionId></VersionId><!--no OH version-->
+      </Option>
+    </LobId>
+    <LobType>
+      <Option>
+        <LobId></LobId>
+        <Text>None</Text>
+        <Value>None</Value>
+      </Option>
+      <Option>
+        <LobId>1</LobId>
+        <Text>AutoPersonal</Text>
+        <Value>AutoPersonal</Value>
+      </Option>
+      <Option>
+        <LobId>20</LobId>
+        <Text>CommercialAuto</Text>
+        <Value>CommercialAuto</Value>
+      </Option>
+      <Option>
+        <LobId>25</LobId>
+        <Text>CommercialBOP</Text>
+        <Value>CommercialBOP</Value>
+      </Option>
+      <Option>
+        <LobId>26</LobId>
+        <Text>CommercialCrime</Text>
+        <Value>CommercialCrime</Value>
+      </Option>
+      <Option>
+        <LobId>9</LobId>
+        <Text>CommercialGeneralLiability</Text>
+        <Value>CommercialGeneralLiability</Value>
+      </Option>
+      <Option>
+        <LobId>29</LobId>
+        <Text>CommercialInlandMarine</Text>
+        <Value>CommercialInlandMarine</Value>
+      </Option>
+      <Option>
+        <LobId>23</LobId>
+        <Text>CommercialPackage</Text>
+        <Value>CommercialPackage</Value>
+      </Option>
+      <Option>
+        <LobId>28</LobId>
+        <Text>CommercialProperty</Text>
+        <Value>CommercialProperty</Value>
+      </Option>
+      <Option>
+        <LobId>3</LobId>
+        <Text>DwellingFirePersonal</Text>
+        <Value>DwellingFirePersonal</Value>
+      </Option>
+      <Option>
+        <LobId>17</LobId>
+        <Text>Farm</Text>
+        <Value>Farm</Value>
+      </Option>
+      <Option>
+        <LobId>2</LobId>
+        <Text>HomePersonal</Text>
+        <Value>HomePersonal</Value>
+      </Option>
+      <Option>
+        <LobId>21</LobId>
+        <Text>WorkersCompensation</Text>
+        <Value>WorkersCompensation</Value>
+      </Option>
+      <Option>
+        <LobId>24</LobId>
+        <Text>CommercialGarage</Text>
+        <Value>CommercialGarage</Value>
+      </Option>
+      <Option>
+        <LobId>27</LobId>
+        <Text>CommercialUmbrella</Text>
+        <Value>CommercialUmbrella</Value>
+      </Option>
+    </LobType>
+    <VersionId>
+      <Option>
+        <LobId>17</LobId>
+        <!--Farm-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>176</Value>
+      </Option>
+      <Option>
+        <LobId>52</LobId>
+        <!--Multi-State Farm-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>177</Value>
+      </Option>
+      <Option>
+        <LobId>26</LobId>
+        <!--Commercial Crime-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>178</Value>
+      </Option>
+      <Option>
+        <LobId>47</LobId>
+        <!--Multi-State Commercial Crime-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>179</Value>
+      </Option>
+      <Option>
+        <LobId>9</LobId>
+        <!--Commercial General Liability-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>180</Value>
+      </Option>
+      <Option>
+        <LobId>43</LobId>
+        <!--Multi-State Commercial General Liability-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>181</Value>
+      </Option>
+      <Option>
+        <LobId>20</LobId>
+        <!--Commercial Auto-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>182</Value>
+      </Option>
+      <Option>
+        <LobId>44</LobId>
+        <!--Multi-State Commercial Auto-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>183</Value>
+      </Option>
+      <Option>
+        <LobId>29</LobId>
+        <!--Commercial Inland Marine-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>184</Value>
+      </Option>
+      <Option>
+        <LobId>46</LobId>
+        <!--Multi-State Commercial Inland Marine-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>185</Value>
+      </Option>
+      <Option>
+        <LobId>28</LobId>
+        <!--Commercial Property-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>189</Value>
+      </Option>
+      <Option>
+        <LobId>45</LobId>
+        <!--Multi-State Commercial Property-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>190</Value>
+      </Option>
+      <Option>
+        <LobId>25</LobId>
+        <!--Commercial BOP-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>191</Value>
+      </Option>
+      <Option>
+        <LobId>48</LobId>
+        <!--Multi-State Commercial BOP-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>192</Value>
+      </Option>
+      <Option>
+        <LobId>23</LobId>
+        <!--Commercial Package-->
+        <StateId>36</StateId>
+        <!--Ohio-->
+        <Text>10/01/2020 (start_date) - 01/01/2100 (end_date)</Text>
+        <Text2>10/01/2020 (ren_eff_date) - 01/01/2100 (ren_exp_date)</Text2>
+        <Value>196</Value>
+      </Option>
+    </VersionId>
+  </QuickQuoteObject>
+  <QuickQuoteOperator>
+  </QuickQuoteOperator>
+  <QuickQuoteOptionalCoverage>
+  </QuickQuoteOptionalCoverage>
+  <QuickQuoteOptionalCoverageE>
+  </QuickQuoteOptionalCoverageE>
+  <QuickQuotePackagePart>
+  </QuickQuotePackagePart>
+  <QuickQuotePhone>
+  </QuickQuotePhone>
+  <QuickQuotePolicyUnderwriting>
+  </QuickQuotePolicyUnderwriting>
+  <QuickQuotePriorCarrier>
+  </QuickQuotePriorCarrier>
+  <QuickQuotePropertyInTheOpenRecord>
+  </QuickQuotePropertyInTheOpenRecord>
+  <QuickQuotePropertyValuation>
+  </QuickQuotePropertyValuation>
+  <QuickQuotePropertyValuationRequest>
+  </QuickQuotePropertyValuationRequest>
+  <QuickQuotePropertyValuationResponse>
+  </QuickQuotePropertyValuationResponse>
+  <QuickQuoteResidenceInfo>
+  </QuickQuoteResidenceInfo>
+  <QuickQuoteResidenceInfoDetail>
+  </QuickQuoteResidenceInfoDetail>
+  <QuickQuoteRvWatercraft>
+  </QuickQuoteRvWatercraft>
+  <QuickQuoteRvWatercraftMotor>
+  </QuickQuoteRvWatercraftMotor>
+  <QuickQuoteScheduledCoverage>
+  </QuickQuoteScheduledCoverage>
+  <QuickQuoteScheduledItem>
+  </QuickQuoteScheduledItem>
+  <QuickQuoteScheduledPersonalPropertyCoverage>
+  </QuickQuoteScheduledPersonalPropertyCoverage>
+  <QuickQuoteScheduledRating>
+  </QuickQuoteScheduledRating>
+  <QuickQuoteSectionCoverage>
+  </QuickQuoteSectionCoverage>
+  <QuickQuoteSectionIAndIICoverage>
+  </QuickQuoteSectionIAndIICoverage>
+  <QuickQuoteSectionICoverage>
+    <!--Property-->
+  </QuickQuoteSectionICoverage>
+  <QuickQuoteSectionIICoverage>
+    <!--Liability-->
+  </QuickQuoteSectionIICoverage>
+  <QuickQuoteThirdPartyData>
+  </QuickQuoteThirdPartyData>
+  <QuickQuoteThirdPartyDataAddress>
+  </QuickQuoteThirdPartyDataAddress>
+  <QuickQuoteUpdatesRecord>
+  </QuickQuoteUpdatesRecord>
+  <QuickQuoteUserAgency>
+  </QuickQuoteUserAgency>
+  <QuickQuoteValidationItem>
+  </QuickQuoteValidationItem>
+  <QuickQuoteVehicle>
+  </QuickQuoteVehicle>
+  <QuickQuoteVehicleSymbol>
+  </QuickQuoteVehicleSymbol>
+  <QuickQuoteWaiverOfSubrogationRecord>
+  </QuickQuoteWaiverOfSubrogationRecord>
+</LookupLists>

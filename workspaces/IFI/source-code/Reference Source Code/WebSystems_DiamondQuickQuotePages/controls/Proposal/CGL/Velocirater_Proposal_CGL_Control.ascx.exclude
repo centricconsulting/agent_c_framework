@@ -1,0 +1,83 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CGL_Velocirater_Proposal_CGL_Control, VR_CGL_CPP_CPR_deploy" %>
+<%@ Register src="VR_Proposal_CGL_LocationListControl.ascx" tagname="VR_Proposal_CGL_LocationListControl" tagprefix="uc1" %>
+
+
+<%@ Register src="VR_Proposal_CGL_General_Control.ascx" tagname="VR_Proposal_CGL_General_Control" tagprefix="uc2" %>
+
+
+<%@ Register src="VR_Proposal_CGL_ClassificationControl.ascx" tagname="VR_Proposal_CGL_ClassificationControl" tagprefix="uc3" %>
+
+
+<%@ Register src="VR_Proposal_CGL_Policy_Classification_Control.ascx" tagname="VR_Proposal_CGL_Policy_Classification_Control" tagprefix="uc4" %>
+
+
+<%@ Register src="VR_Proposal_CGL_Coverages_Control.ascx" tagname="VR_Proposal_CGL_Coverages_Control" tagprefix="uc5" %>
+
+
+<%@ Register src="VR_CGL_DeductibleControl.ascx" tagname="VR_CGL_DeductibleControl" tagprefix="uc6" %>
+
+
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc7" %>
+
+<uc7:VR_PageBreakControl ID="VR_PageBreakControl1" runat="server" Visible="false" />
+<div style="text-align:left" class="p_ListItem">
+<div class="p_ControlTitle" style="width:100%; text-align:center; margin-bottom: 15px;">
+    
+    <asp:Label ID="lblLob" runat="server" Text="CGL - Commercial General Liability"></asp:Label></div>
+
+    
+
+<uc2:VR_Proposal_CGL_General_Control ID="VR_Proposal_CGL_General_Control1" 
+    runat="server" />
+    <uc6:VR_CGL_DeductibleControl ID="VR_CGL_DeductibleControl1" runat="server" />
+    <uc5:VR_Proposal_CGL_Coverages_Control ID="VR_Proposal_CGL_Coverages_Control1" 
+    runat="server" />
+
+    <uc4:VR_Proposal_CGL_Policy_Classification_Control ID="VR_Proposal_CGL_Policy_Classification_Control1" 
+    runat="server" />
+    
+<uc1:VR_Proposal_CGL_LocationListControl ID="VR_Proposal_CGL_LocationListControl1" 
+    runat="server" />
+
+    <asp:Label runat="server" ID="lblCGL_Comments" Visible="false"></asp:Label>
+
+    
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

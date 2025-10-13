@@ -1,0 +1,118 @@
+{
+  "database_queries_identified": [
+    {
+      "query_id": "static_data_position_titles",
+      "query_type": "Static Data Loading",
+      "location": "LoadStaticData method, line 124",
+      "query_logic": "Load position/title types for dropdown population",
+      "method_call": "QQHelper.LoadStaticDataOptionsDropDown(Me.ddlType, QuickQuoteClassName.QuickQuoteInclusionExclusionScheduledItem, QuickQuotePropertyName.PositionTitleTypeId, SortBy.TextDescending, Me.Quote.LobType)",
+      "parameters": [
+        {
+          "name": "control",
+          "value": "Me.ddlType",
+          "purpose": "Target dropdown control for binding"
+        },
+        {
+          "name": "className", 
+          "value": "QuickQuoteClassName.QuickQuoteInclusionExclusionScheduledItem",
+          "purpose": "Database table/entity identifier"
+        },
+        {
+          "name": "propertyName",
+          "value": "QuickQuotePropertyName.PositionTitleTypeId", 
+          "purpose": "Field/column for dropdown values"
+        },
+        {
+          "name": "sortBy",
+          "value": "SortBy.TextDescending",
+          "purpose": "Sort order for dropdown items"
+        },
+        {
+          "name": "lobType",
+          "value": "Me.Quote.LobType",
+          "purpose": "Filter by Line of Business"
+        }
+      ],
+      "purpose": "Load available position/title types for Named Individual inclusion/exclusion",
+      "tables_entities": ["QuickQuoteInclusionExclusionScheduledItem"],
+      "filter_criteria": ["LOB Type filtering"],
+      "content_status": "⚠️ External method - actual SQL requires QQHelper analysis",
+      "estimated_records": "Unknown - depends on static data configuration",
+      "business_purpose": "Provide dropdown options for position/title selection in Inclusion of Sole Proprietors"
+    }
+  ],
+  "data_access_patterns": [
+    {
+      "pattern_id": "quickquote_object_access",
+      "pattern_type": "Object-based Data Access",
+      "locations": [
+        "MyNamedIndividual property (lines 25-75)",
+        "lnkNew_Click method (lines 380-440)",
+        "lnkDelete_Click method (lines 450-520)"
+      ],
+      "access_methods": [
+        "GoverningStateQuote() property access",
+        "SubQuoteForState(QuickQuoteState.Indiana/Illinois/Kentucky)",
+        "Collection property access (InclusionOfSoleProprietorRecords, etc.)"
+      ],
+      "data_operations": [
+        "Read: Collection.HasItemAtIndex(index)",
+        "Read: Collection(index) item access", 
+        "Create: Collection.AddNew()",
+        "Delete: Collection.RemoveAt(index)"
+      ],
+      "content_status": "✅ Object-based - no direct SQL",
+      "business_purpose": "Access state-specific Named Individual records through QuickQuote object hierarchy"
+    }
+  ],
+  "external_data_dependencies": [
+    {
+      "dependency_id": "qqhelper_static_data_loader",
+      "dependency_type": "External Helper Class",
+      "class_name": "QQHelper",
+      "method_name": "LoadStaticDataOptionsDropDown", 
+      "location": "LoadStaticData method, line 124",
+      "purpose": "Load static dropdown data from database",
+      "content_status": "⚠️ Requires QQHelper class analysis for complete data flow",
+      "estimated_impact": "Provides all position/title options for dropdown",
+      "follow_up_needed": "Analyze QQHelper.LoadStaticDataOptionsDropDown implementation"
+    },
+    {
+      "dependency_id": "quote_object_hierarchy",
+      "dependency_type": "QuickQuote Object System",
+      "access_points": [
+        "Me.Quote (base quote object)",
+        "GoverningStateQuote() method",
+        "SubQuoteForState() method"
+      ],
+      "collections_accessed": [
+        "InclusionOfSoleProprietorRecords",
+        "WaiverOfSubrogationRecords", 
+        "ExclusionOfAmishWorkerRecords",
+        "ExclusionOfSoleProprietorRecords",
+        "ExclusionOfSoleProprietorRecords_IL",
+        "KentuckyRejectionOfCoverageEndorsementRecords"
+      ],
+      "content_status": "✅ Object-based access - data loaded via other mechanisms",
+      "business_purpose": "Store and retrieve Named Individual records by state and type",
+      "follow_up_needed": "Understand QuickQuote object loading/persistence mechanisms"
+    }
+  ],
+  "database_query_completeness": {
+    "direct_queries_found": 0,
+    "external_method_queries": 1,
+    "object_access_patterns": 2,
+    "total_data_access_points": 3,
+    "analysis_confidence": "Medium",
+    "gaps_identified": [
+      "QQHelper.LoadStaticDataOptionsDropDown actual SQL implementation unknown",
+      "QuickQuote object persistence/loading mechanisms not visible in this file",
+      "Database schema for QuickQuoteInclusionExclusionScheduledItem unknown"
+    ],
+    "follow_up_required": [
+      "Analyze QQHelper class for static data loading queries",
+      "Analyze QuickQuote object persistence layer", 
+      "Map database schema for static data tables"
+    ]
+  }
+}

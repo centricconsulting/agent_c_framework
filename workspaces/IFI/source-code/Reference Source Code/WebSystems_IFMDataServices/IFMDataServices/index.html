@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link href="JS_TESTONLY/jquery.json-viewer.css" rel="stylesheet" />
+    <script src="JS_TESTONLY/jquery-2.1.3.min.js"></script>
+    <script src="JS_TESTONLY/jquery.json-viewer.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0 100px;
+            font-family: sans-serif;
+        }
+
+        textarea#json-input {
+            width: 100%;
+            height: 200px;
+        }
+
+        pre#json-renderer {
+            border: 1px solid #aaa;
+            padding: 0.5em 1.5em;
+        }
+    </style>
+   
+</head>
+<body>
+    <h2>Web Services have started!</h2>
+
+    <p>
+        <select id="ajaxMethod">
+    <option>Get</option>
+            <option>Post</option>
+</select>
+        URL: <input type="text" id="txtUrl" value="http://localhost:63482/omp/account/accountpolicies" style="width:70%" /> <input type="button" id="btnFetch" value="GET" />
+    </p>
+
+    <textarea id="json-input" style="" autocomplete="off"></textarea>
+    <p>
+        Options:
+        <label><input type="checkbox" id="collapsed">Collapse nodes</label>
+        <label><input type="checkbox" id="with-quotes">Keys with quotes</label>
+    </p>
+    <button id="btn-json-viewer" title="run jsonViewer()">Transform to HTML</button>
+    <p>
+        http://localhost:63482/ifm/address/zipcodes/46071 (GET)
+    </p>
+    <p>
+        http://localhost:63482/omp/account/accountpolicies (POST - array of MemberAccountPolicy) Returns AccountRegistedPolicy[]
+    </p>    
+    <p>
+        http://localhost:63482/omp/account/policies/{policyId}/{imageNumber} (GET - Returns BasicPolicyInformation)
+    </p>
+    <p>
+        http://localhost:63482/omp/account/policyverification (POST - PolicyAccessVerification) Return Bool indicating Valid
+    </p>
+
+    <p>
+        http://localhost:63482/ifm/payment/processor/paymentdata (POST) 
+    </p>
+
+    <p>
+        http://localhost:63482/ifm/recurringpayments/processor/payplan (POST)
+    </p>
+
+    
+
+    
+
+
+    <pre id="json-renderer"><a href="" class="json-toggle"></a>{<ul class="json-dict"><li>id: <span class="json-literal">1001</span>,</li><li>type: <span class="json-string">"donut"</span>,</li><li>name: <span class="json-string">"Cake"</span>,</li><li>description: <a href="http://en.wikipedia.org/wiki/Doughnut" class="json-string">http://en.wikipedia.org/wiki/Doughnut</a>,</li><li>price: <span class="json-literal">2.55</span>,</li><li><a href="" class="json-toggle">available</a>: {<ul class="json-dict"><li>store: <span class="json-literal">42</span>,</li><li>warehouse: <span class="json-literal">600</span></li></ul>},</li><li><a href="" class="json-toggle">topping</a>: [<ol class="json-array"><li><a href="" class="json-toggle"></a>{<ul class="json-dict"><li>id: <span class="json-literal">5001</span>,</li><li>type: <span class="json-string">"None"</span></li></ul>},</li><li><a href="" class="json-toggle"></a>{<ul class="json-dict"><li>id: <span class="json-literal">5002</span>,</li><li>type: <span class="json-string">"Glazed"</span></li></ul>},</li><li><a href="" class="json-toggle"></a>{<ul class="json-dict"><li>id: <span class="json-literal">5005</span>,</li><li>type: <span class="json-string">"Sugar"</span></li></ul>},</li><li><a href="" class="json-toggle"></a>{<ul class="json-dict"><li>id: <span class="json-literal">5003</span>,</li><li>type: <span class="json-string">"Chocolate"</span></li></ul>},</li><li><a href="" class="json-toggle"></a>{<ul class="json-dict"><li>id: <span class="json-literal">5004</span>,</li><li>type: <span class="json-string">"Maple"</span></li></ul>}</li></ol>]</li></ul>}</pre>
+    <textarea id="json-output" style="" autocomplete="off"></textarea>
+</body>
+<script>
+    var lastFetch = null;
+     $(function () {
+         $('#btn-json-viewer').click(function () {
+             
+             var options = {
+                 collapsed: $('#collapsed').is(':checked'),
+                 withQuotes: $('#with-quotes').is(':checked')
+             };
+             $('#json-renderer').jsonViewer(lastFetch, options);
+         });
+                  
+
+         $("#btnFetch").click(function () {
+             $('#json-renderer').jsonViewer();
+             $("#btnFetch").attr("disabled", "disabled");
+             var url = $("#txtUrl").val();
+             var method = $('#ajaxMethod').find(":selected").text();
+             var data = $("#json-input").val();
+             $.ajax({
+                 method:method,
+                 dataType: "json",
+                 url: url,
+                 data: data,
+                 success: function (json) {
+                     lastFetch = json;
+                     $("#btnFetch").removeAttr("disabled");
+                     if (json)
+                     {
+                         var options = {
+                             collapsed: $('#collapsed').is(':checked'),
+                             withQuotes: $('#with-quotes').is(':checked')
+                         };
+                         $('#json-renderer').jsonViewer(json, options);
+                         $('#json-output').val(JSON.stringify(json));
+                     }
+                 }
+                 , error: function (json, status) {       
+                     //alert(status);                     
+                     $("#btnFetch").removeAttr("disabled");
+                     astFetch = json;
+                     $("#btnFetch").removeAttr("disabled");
+                     if (json) {
+                         var options = {
+                             collapsed: $('#collapsed').is(':checked'),
+                             withQuotes: $('#with-quotes').is(':checked')
+                         };
+                         $('#json-renderer').jsonViewer(json, options);
+                         $('#json-output').val(JSON.stringify(json));
+                     }
+                 }
+             });
+         });
+
+
+         // Display JSON sample on load        
+         //$('#btnFetch').click();
+
+    });
+</script>
+
+<script>
+     function EndPointItem()
+     {
+         this.url = "";
+         this.description = "";
+         this.verb = ""; 
+         this.postData = "";
+         this.result = "";
+     }
+
+     var i = new EndPointItem();
+    
+
+</script>
+
+</html>

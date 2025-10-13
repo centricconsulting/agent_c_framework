@@ -1,0 +1,16271 @@
+﻿Imports Microsoft.VisualBasic
+Imports System.Web
+Imports QuickQuote.CommonMethods
+Imports QuickQuote.CommonObjects.Umbrella
+
+Namespace QuickQuote.CommonObjects
+    ''' <summary>
+    ''' object used to store version and lob-specific information for a quote; also includes properties that were previously on QuickQuote only
+    ''' </summary>
+    ''' <remarks></remarks>
+    <Serializable()>
+    Public Class QuickQuoteVersionAndLobInfo 'added 6/27/2018
+        Inherits QuickQuoteBaseGenericObject(Of Object) 'updated 7/24/2018 from Inherits QuickQuoteLobInfo since it will have PolicyLevelExtended and RiskLevelExtended Properties that have Properties with the same 'updated to inherit from QuickQuoteLobInfo instead of QuickQuoteBaseGenericObject(Of QuickQuoteVersionAndLobInfo); typically used as QuickQuoteBaseGenericObject(Of Object)
+        Implements IDisposable
+
+        '8/6/2018 note: added script tags to old properties for Serialization since it will already be in another object
+
+        Dim qqHelper As New QuickQuoteHelperClass
+
+        'Private _LobInfo As QuickQuoteLobInfo 'removed w/ inheritance change to QuickQuoteLobInfo
+
+        'added 6/28/2018
+        Private _AddFormsVersionId As String
+        Private _RatingVersionId As String
+        Private _UnderwritingVersionId As String
+        Private _VersionId As String
+        'these next ones aren't really stored; just determined by VersionId
+        Private _LobId As String
+        Private _ActualLobId As String 'added 7/31/2018
+        Private _LobType As QuickQuoteObject.QuickQuoteLobType
+        Private _StateId As String
+        Private _CompanyId As String 'added 11/26/2022; previously at TopLevelQuoteInfo.QuoteBase.CommonInfo
+        'added 7/10/2018
+        Private _CPP_CPR_PackagePart_VersionId As String
+        Private _CPP_CPR_PackagePart_AddFormsVersionId As String
+        Private _CPP_CPR_PackagePart_RatingVersionId As String
+        Private _CPP_CPR_PackagePart_UnderwritingVersionId As String
+        Private _CPP_CGL_PackagePart_VersionId As String
+        Private _CPP_CGL_PackagePart_AddFormsVersionId As String
+        Private _CPP_CGL_PackagePart_RatingVersionId As String
+        Private _CPP_CGL_PackagePart_UnderwritingVersionId As String
+        Private _CPP_Main_PackagePart_VersionId As String
+        Private _CPP_Main_PackagePart_AddFormsVersionId As String
+        Private _CPP_Main_PackagePart_RatingVersionId As String
+        Private _CPP_Main_PackagePart_UnderwritingVersionId As String
+        Private _CPP_CRM_PackagePart_VersionId As String
+        Private _CPP_CRM_PackagePart_AddFormsVersionId As String
+        Private _CPP_CRM_PackagePart_RatingVersionId As String
+        Private _CPP_CRM_PackagePart_UnderwritingVersionId As String
+        Private _CPP_CIM_PackagePart_VersionId As String
+        Private _CPP_CIM_PackagePart_AddFormsVersionId As String
+        Private _CPP_CIM_PackagePart_RatingVersionId As String
+        Private _CPP_CIM_PackagePart_UnderwritingVersionId As String
+        'added 7/11/2018
+        Private _AdditionalInterestNamesAndAddresses As Generic.List(Of QuickQuoteGenericNameAddress) 'this isn't used w/ new look/feel, but would possibly need here if there could be separate lists per state
+        Private _CPP_GL_PackagePart_QuotedPremium As String
+        Private _CPP_CPR_PackagePart_QuotedPremium As String
+        Private _CPP_CIM_PackagePart_QuotedPremium As String
+        Private _CPP_CRM_PackagePart_QuotedPremium As String
+        Private _CPP_GAR_PackagePart_QuotedPremium As String
+        'added 7/13/2018
+        Private _CPP_Has_InlandMarine_PackagePart As Boolean
+        Private _CPP_Has_Crime_PackagePart As Boolean
+        Private _CPP_Has_Garage_PackagePart As Boolean
+        Private _CPP_Has_Property_PackagePart As Boolean 'will likely always be on CPP
+        Private _CPP_Has_GeneralLiability_PackagePart As Boolean 'typically on CPP but shouldn't be when Garage PackagePart is there
+        'added 7/17/2018
+        Private _QuoteEffectiveDate As String
+        Private _QuoteTransactionType As QuickQuoteObject.QuickQuoteTransactionType
+
+        'removed 7/24/2018
+        ''PolicyLevel
+        ''added 7/11/2018
+        'Private _CPP_CRM_ProgramTypeId As String
+        'Private _CPP_GAR_ProgramTypeId As String
+        'Private _RiskGradeLookupId_Original As String
+        'Private _CPP_CGL_RiskGrade As String
+        'Private _CPP_CGL_RiskGradeLookupId As String
+        'Private _CPP_CPR_RiskGrade As String
+        'Private _CPP_CPR_RiskGradeLookupId As String
+        'Private _ErrorRiskGradeLookupId As String
+        'Private _ReplacementRiskGradeLookupId As String
+        'Private _CPP_CGL_ErrorRiskGradeLookupId As String
+        'Private _CPP_CGL_ReplacementRiskGradeLookupId As String
+        'Private _CPP_CPR_ErrorRiskGradeLookupId As String
+        'Private _CPP_CPR_ReplacementRiskGradeLookupId As String
+        'Private _CPP_CIM_RiskGrade As String
+        'Private _CPP_CIM_RiskGradeLookupId As String
+        'Private _CPP_CIM_ErrorRiskGradeLookupId As String
+        'Private _CPP_CIM_ReplacementRiskGradeLookupId As String
+        'Private _CPP_CRM_RiskGrade As String
+        'Private _CPP_CRM_RiskGradeLookupId As String
+        'Private _CPP_CRM_ErrorRiskGradeLookupId As String
+        'Private _CPP_CRM_ReplacementRiskGradeLookupId As String
+        ''added 7/5/2018
+        'Private _OccurrenceLiabilityLimit As String
+        'Private _OccurrenceLiabilityLimitId As String
+        'Private _OccurrencyLiabilityQuotedPremium As String
+        'Private _TenantsFireLiability As String
+        'Private _TenantsFireLiabilityId As String
+        'Private _TenantsFireLiabilityQuotedPremium As String
+        'Private _PropertyDamageLiabilityDeductible As String
+        'Private _PropertyDamageLiabilityDeductibleId As String
+        'Private _BlanketRatingQuotedPremium As String
+        'Private _HasEnhancementEndorsement As Boolean 'BusinessMasterEnhancement in QuickQuoteObject
+        'Private _EnhancementEndorsementQuotedPremium As String 'BusinessMasterEnhancement in QuickQuoteObject
+        ''added 7/11/2018
+        'Private _Has_PackageGL_EnhancementEndorsement As Boolean
+        'Private _PackageGL_EnhancementEndorsementQuotedPremium As String
+        'Private _Has_PackageCPR_EnhancementEndorsement As Boolean
+        'Private _PackageCPR_EnhancementEndorsementQuotedPremium As String
+        ''added 7/6/2018
+        'Private _AdditionalInsuredsCount As Integer
+        'Private _AdditionalInsuredsCheckboxBOP As List(Of QuickQuoteAdditionalInsured)
+        'Private _HasAdditionalInsuredsCheckboxBOP As Boolean
+        'Private _AdditionalInsuredsManualCharge As String
+        'Private _AdditionalInsuredsQuotedPremium As String
+        'Private _AdditionalInsureds As Generic.List(Of QuickQuoteAdditionalInsured)
+        'Private _AdditionalInsuredsBackup As List(Of QuickQuoteAdditionalInsured)
+        'Private _EmployeeBenefitsLiabilityText As String
+        'Private _EmployeeBenefitsLiabilityOccurrenceLimit As String
+        'Private _EmployeeBenefitsLiabilityOccurrenceLimitId As String
+        'Private _EmployeeBenefitsLiabilityQuotedPremium As String
+        'Private _EmployeeBenefitsLiabilityRetroactiveDate As String
+        'Private _EmployeeBenefitsLiabilityAggregateLimit As String
+        'Private _EmployeeBenefitsLiabilityDeductible As String
+        'Private _HasElectronicData As Boolean
+        'Private _ElectronicDataLimit As String
+        'Private _ElectronicDataQuotedPremium As String
+        'Private _ContractorsEquipmentInstallationLimit As String
+        'Private _ContractorsEquipmentInstallationLimitId As String
+        'Private _ContractorsEquipmentInstallationLimitQuotedPremium As String
+        'Private _ContractorsToolsEquipmentBlanket As String
+        'Private _ContractorsToolsEquipmentBlanketSubLimitId As String
+        'Private _ContractorsToolsEquipmentBlanketQuotedPremium As String
+        'Private _ContractorsToolsEquipmentScheduled As String
+        'Private _ContractorsToolsEquipmentScheduledQuotedPremium As String
+        'Private _ContractorsToolsEquipmentRented As String
+        'Private _ContractorsToolsEquipmentRentedQuotedPremium As String
+        'Private _ContractorsEquipmentScheduledItems As Generic.List(Of QuickQuoteContractorsEquipmentScheduledItem)
+        'Private _ContractorsEquipmentScheduledItemsBackup As Generic.List(Of QuickQuoteContractorsEquipmentScheduledItem)
+        'Private _ContractorsEmployeeTools As String
+        'Private _ContractorsEmployeeToolsQuotedPremium As String
+        'Private _CrimeEmpDisEmployeeText As String
+        'Private _CrimeEmpDisLocationText As String
+        'Private _CrimeEmpDisLimit As String
+        'Private _CrimeEmpDisLimitId As String
+        'Private _CrimeEmpDisQuotedPremium As String
+        'Private _CrimeForgeryLimit As String
+        'Private _CrimeForgeryLimitId As String
+        'Private _CrimeForgeryQuotedPremium As String
+        'Private _HasEarthquake As Boolean
+        'Private _EarthquakeQuotedPremium As String
+        'Private _HasHiredAuto As Boolean
+        'Private _HiredAutoQuotedPremium As String
+        'Private _HasNonOwnedAuto As Boolean
+        'Private _NonOwnedAutoWithDelivery As Boolean
+        'Private _NonOwnedAutoQuotedPremium As String
+        'Private _PropertyDeductibleId As String
+        'Private _EmployersLiability As String
+        'Private _EmployersLiabilityId As String
+        'Private _EmployersLiabilityQuotedPremium As String
+        ''added 7/9/2018
+        'Private _GeneralAggregateLimit As String
+        'Private _GeneralAggregateLimitId As String
+        'Private _GeneralAggregateQuotedPremium As String
+        'Private _ProductsCompletedOperationsAggregateLimit As String
+        'Private _ProductsCompletedOperationsAggregateLimitId As String
+        'Private _ProductsCompletedOperationsAggregateQuotedPremium As String
+        'Private _PersonalAndAdvertisingInjuryLimit As String
+        'Private _PersonalAndAdvertisingInjuryLimitId As String
+        'Private _PersonalAndAdvertisingInjuryQuotedPremium As String
+        'Private _DamageToPremisesRentedLimit As String
+        'Private _DamageToPremisesRentedLimitId As String
+        'Private _DamageToPremisesRentedQuotedPremium As String
+        'Private _MedicalExpensesLimit As String
+        'Private _MedicalExpensesLimitId As String
+        'Private _MedicalExpensesQuotedPremium As String
+        'Private _HasExclusionOfAmishWorkers As Boolean
+        'Private _HasExclusionOfSoleProprietorsPartnersOfficersAndOthers As Boolean
+        'Private _HasInclusionOfSoleProprietorsPartnersOfficersAndOthers As Boolean
+        'Private _HasWaiverOfSubrogation As Boolean
+        'Private _WaiverOfSubrogationNumberOfWaivers As Integer
+        'Private _WaiverOfSubrogationPremium As String
+        'Private _WaiverOfSubrogationPremiumId As String
+        'Private _NeedsToUpdateWaiverOfSubrogationPremiumId As Boolean
+        'Private _ExclusionOfAmishWorkerRecords As Generic.List(Of QuickQuoteExclusionOfAmishWorkerRecord)
+        'Private _ExclusionOfSoleProprietorRecords As Generic.List(Of QuickQuoteExclusionOfSoleProprietorRecord)
+        'Private _InclusionOfSoleProprietorRecords As Generic.List(Of QuickQuoteInclusionOfSoleProprietorRecord)
+        'Private _WaiverOfSubrogationRecords As Generic.List(Of QuickQuoteWaiverOfSubrogationRecord)
+        'Private _ExclusionOfAmishWorkerRecordsBackup As Generic.List(Of QuickQuoteExclusionOfAmishWorkerRecord)
+        'Private _ExclusionOfSoleProprietorRecordsBackup As Generic.List(Of QuickQuoteExclusionOfSoleProprietorRecord)
+        'Private _InclusionOfSoleProprietorRecordsBackup As Generic.List(Of QuickQuoteInclusionOfSoleProprietorRecord)
+        'Private _WaiverOfSubrogationRecordsBackup As Generic.List(Of QuickQuoteWaiverOfSubrogationRecord)
+        'Private _HasBarbersProfessionalLiability As Boolean
+        'Private _BarbersProfessionalLiabiltyQuotedPremium As String
+        'Private _BarbersProfessionalLiabilityFullTimeEmpNum As String
+        'Private _BarbersProfessionalLiabilityPartTimeEmpNum As String
+        'Private _BarbersProfessionalLiabilityDescription As String
+        'Private _HasBeauticiansProfessionalLiability As Boolean
+        'Private _BeauticiansProfessionalLiabilityQuotedPremium As String
+        'Private _BeauticiansProfessionalLiabilityFullTimeEmpNum As String
+        'Private _BeauticiansProfessionalLiabilityPartTimeEmpNum As String
+        'Private _BeauticiansProfessionalLiabilityDescription As String
+        'Private _HasFuneralDirectorsProfessionalLiability As Boolean
+        'Private _FuneralDirectorsProfessionalLiabilityQuotedPremium As String
+        'Private _FuneralDirectorsProfessionalLiabilityEmpNum As String
+        'Private _HasPrintersProfessionalLiability As Boolean
+        'Private _PrintersProfessionalLiabilityQuotedPremium As String
+        'Private _PrintersProfessionalLiabilityLocNum As String
+        'Private _HasSelfStorageFacility As Boolean
+        'Private _SelfStorageFacilityQuotedPremium As String
+        'Private _SelfStorageFacilityLimit As String
+        'Private _HasVeterinariansProfessionalLiability As Boolean
+        'Private _VeterinariansProfessionalLiabilityEmpNum As String
+        'Private _VeterinariansProfessionalLiabilityQuotedPremium As String
+        'Private _HasPharmacistProfessionalLiability As Boolean
+        'Private _PharmacistAnnualGrossSales As String
+        'Private _PharmacistQuotedPremium As String
+        'Private _HasOpticalAndHearingAidProfessionalLiability As Boolean
+        'Private _OpticalAndHearingAidProfessionalLiabilityEmpNum As String
+        'Private _OpticalAndHearingAidProfessionalLiabilityQuotedPremium As String
+        'Private _HasMotelCoverage As Boolean
+        'Private _MotelCoveragePerGuestLimitId As String
+        'Private _MotelCoveragePerGuestLimit As String
+        'Private _MotelCoveragePerGuestQuotedPremium As String
+        'Private _MotelCoverageSafeDepositLimitId As String
+        'Private _MotelCoverageSafeDepositDeductibleId As String
+        'Private _MotelCoverageSafeDepositLimit As String
+        'Private _MotelCoverageSafeDepositDeductible As String
+        'Private _MotelCoverageQuotedPremium As String
+        'Private _MotelCoverageSafeDepositQuotedPremium As String
+        'Private _HasPhotographyCoverage As Boolean
+        'Private _HasPhotographyCoverageScheduledCoverages As Boolean
+        'Private _PhotographyScheduledCoverages As List(Of QuickQuoteCoverage)
+        'Private _HasPhotographyMakeupAndHair As Boolean
+        'Private _PhotographyMakeupAndHairQuotedPremium As String
+        'Private _PhotographyCoverageQuotedPremium As String
+        'Private _HasLiquorLiability As Boolean
+        'Private _LiquorLiabilityClassCodeTypeId As String '12 = 58161 - Restaurant Includes Package Sales, 13 = 59211 - Package Sales for Consumption Off Premises
+        'Private _LiquorLiabilityAnnualGrossPackageSalesReceipts As String
+        'Private _LiquorLiabilityAnnualGrossAlcoholSalesReceipts As String
+        'Private _HasResidentialCleaning As Boolean
+        'Private _ResidentialCleaningQuotedPremium As String
+        'Private _LiquorLiabilityOccurrenceLimit As String
+        'Private _LiquorLiabilityOccurrenceLimitId As String
+        'Private _LiquorLiabilityClassification As String
+        'Private _LiquorLiabilityClassificationId As String
+        'Private _LiquorSales As String
+        'Private _LiquorLiabilityQuotedPremium As String
+        'Private _ProfessionalLiabilityCemetaryNumberOfBurials As String
+        'Private _ProfessionalLiabilityCemetaryQuotedPremium As String
+        'Private _ProfessionalLiabilityFuneralDirectorsNumberOfBodies As String
+        'Private _ProfessionalLiabilityPastoralNumberOfClergy As String
+        'Private _ProfessionalLiabilityPastoralQuotedPremium As String
+        'Private _IRPM_ManagementCooperation As String
+        'Private _IRPM_ManagementCooperationDesc As String
+        'Private _IRPM_Location As String
+        'Private _IRPM_LocationDesc As String
+        'Private _IRPM_BuildingFeatures As String
+        'Private _IRPM_BuildingFeaturesDesc As String
+        'Private _IRPM_Premises As String
+        'Private _IRPM_PremisesDesc As String
+        'Private _IRPM_Employees As String
+        'Private _IRPM_EmployeesDesc As String
+        'Private _IRPM_Protection As String
+        'Private _IRPM_ProtectionDesc As String
+        'Private _IRPM_CatostrophicHazards As String
+        'Private _IRPM_CatostrophicHazardsDesc As String
+        'Private _IRPM_ManagementExperience As String
+        'Private _IRPM_ManagementExperienceDesc As String
+        'Private _IRPM_Equipment As String
+        'Private _IRPM_EquipmentDesc As String
+        'Private _IRPM_MedicalFacilities As String
+        'Private _IRPM_MedicalFacilitiesDesc As String
+        'Private _IRPM_ClassificationPeculiarities As String
+        'Private _IRPM_ClassificationPeculiaritiesDesc As String
+        'Private _IRPM_GL_ManagementCooperation As String
+        'Private _IRPM_GL_ManagementCooperationDesc As String
+        'Private _IRPM_GL_Location As String
+        'Private _IRPM_GL_LocationDesc As String
+        'Private _IRPM_GL_Premises As String
+        'Private _IRPM_GL_PremisesDesc As String
+        'Private _IRPM_GL_Equipment As String
+        'Private _IRPM_GL_EquipmentDesc As String
+        'Private _IRPM_GL_Employees As String
+        'Private _IRPM_GL_EmployeesDesc As String
+        'Private _IRPM_GL_ClassificationPeculiarities As String
+        'Private _IRPM_GL_ClassificationPeculiaritiesDesc As String
+        'Private _IRPM_CAP_Management As String
+        'Private _IRPM_CAP_ManagementDesc As String
+        'Private _IRPM_CAP_Employees As String
+        'Private _IRPM_CAP_EmployeesDesc As String
+        'Private _IRPM_CAP_Equipment As String
+        'Private _IRPM_CAP_EquipmentDesc As String
+        'Private _IRPM_CAP_SafetyOrganization As String
+        'Private _IRPM_CAP_SafetyOrganizationDesc As String
+        'Private _IRPM_CPR_Management As String
+        'Private _IRPM_CPR_ManagementDesc As String
+        'Private _IRPM_CPR_PremisesAndEquipment As String
+        'Private _IRPM_CPR_PremisesAndEquipmentDesc As String
+        'Private _IRPM_FAR_CareConditionOfEquipPremises As String
+        'Private _IRPM_FAR_CareConditionOfEquipPremisesDesc As String
+        'Private _IRPM_FAR_Cooperation As String
+        'Private _IRPM_FAR_CooperationDesc As String
+        'Private _IRPM_FAR_DamageSusceptibility As String
+        'Private _IRPM_FAR_DamageSusceptibilityDesc As String
+        'Private _IRPM_FAR_DispersionOrConcentration As String
+        'Private _IRPM_FAR_DispersionOrConcentrationDesc As String
+        'Private _IRPM_FAR_SuperiorOrInferiorStructureFeatures As String
+        'Private _IRPM_FAR_SuperiorOrInferiorStructureFeaturesDesc As String
+        'Private _IRPM_FAR_UseOfRiceHullsOrFlameRetardantBedding As String
+        'Private _IRPM_FAR_UseOfRiceHullsOrFlameRetardantBeddingDesc As String
+        'Private _IRPM_FAR_Location As String
+        'Private _IRPM_FAR_LocationDesc As String
+        'Private _IRPM_FAR_MiscProtectFeaturesOrHazards As String
+        'Private _IRPM_FAR_MiscProtectFeaturesOrHazardsDesc As String
+        'Private _IRPM_FAR_RoofCondition As String
+        'Private _IRPM_FAR_RoofConditionDesc As String
+        'Private _IRPM_FAR_StoragePracticesAndHazardousOperations As String
+        'Private _IRPM_FAR_StoragePracticesAndHazardousOperationsDesc As String
+        'Private _IRPM_FAR_PastLosses As String
+        'Private _IRPM_FAR_PastLossesDesc As String
+        'Private _IRPM_FAR_SupportingBusiness As String
+        'Private _IRPM_FAR_SupportingBusinessDesc As String
+        'Private _IRPM_FAR_RegularOnsiteInspections As String
+        'Private _IRPM_FAR_RegularOnsiteInspectionsDesc As String
+        ''added 7/10/2018
+        'Private _Dec_BOP_OptCovs_Premium As String
+        'Private _ExpModQuotedPremium As String
+        'Private _ScheduleModQuotedPremium As String
+        'Private _TerrorismQuotedPremium As String
+        'Private _PremDiscountQuotedPremium As String
+        'Private _MinimumQuotedPremium As String
+        'Private _MinimumPremiumAdjustment As String
+        'Private _TotalEstimatedPlanPremium As String
+        'Private _SecondInjuryFundQuotedPremium As String
+        'Private _Dec_LossConstantPremium As String
+        'Private _Dec_ExpenseConstantPremium As String
+        'Private _Dec_WC_TotalPremiumDue As String
+        'Private _GL_PremisesAndProducts_Deductible As String
+        'Private _GL_PremisesAndProducts_DeductibleId As String
+        'Private _GL_PremisesAndProducts_Description As String
+        'Private _GL_PremisesAndProducts_DeductibleCategoryType As String
+        'Private _GL_PremisesAndProducts_DeductibleCategoryTypeId As String
+        'Private _GL_PremisesAndProducts_DeductiblePerType As String
+        'Private _GL_PremisesAndProducts_DeductiblePerTypeId As String
+        'Private _Has_GL_PremisesAndProducts As Boolean
+        'Private _GL_PremisesTotalQuotedPremium As String
+        'Private _GL_ProductsTotalQuotedPremium As String
+        'Private _GL_PremisesPolicyLevelQuotedPremium As String
+        'Private _GL_ProductsPolicyLevelQuotedPremium As String
+        'Private _GL_PremisesMinimumQuotedPremium As String
+        'Private _GL_PremisesMinimumPremiumAdjustment As String
+        'Private _GL_ProductsMinimumQuotedPremium As String
+        'Private _GL_ProductsMinimumPremiumAdjustment As String
+        'Private _Dec_GL_OptCovs_Premium As String
+        'Private _HasFarmPollutionLiability As Boolean
+        'Private _FarmPollutionLiabilityQuotedPremium As String
+        'Private _HasHiredBorrowedNonOwned As Boolean
+        'Private _HasNonOwnershipLiability As Boolean
+        'Private _NonOwnershipLiabilityNumberOfEmployees As String
+        'Private _NonOwnership_ENO_RatingTypeId As String
+        'Private _NonOwnership_ENO_RatingType As String
+        'Private _NonOwnershipLiabilityQuotedPremium As String
+        'Private _HasHiredBorrowedLiability As Boolean
+        'Private _HiredBorrowedLiabilityQuotedPremium As String
+        'Private _HasHiredCarPhysicalDamage As Boolean 'in HiredBorrowedLossOfUse section
+        'Private _HiredBorrowedLossOfUseQuotedPremium As String
+        'Private _ComprehensiveDeductible As String
+        'Private _ComprehensiveDeductibleId As String
+        'Private _ComprehensiveQuotedPremium As String
+        'Private _CollisionDeductible As String
+        'Private _CollisionDeductibleId As String
+        'Private _CollisionQuotedPremium As String
+        'Private _Liability_UM_UIM_Limit As String
+        'Private _Liability_UM_UIM_LimitId As String
+        'Private _Liability_UM_UIM_QuotedPremium As String
+        'Private _MedicalPaymentsLimit As String
+        'Private _MedicalPaymentsLimitId As String
+        'Private _MedicalPaymentsQuotedPremium As String
+        'Private _QuoteOrIssueBound As QuickQuoteObject.QuickQuoteQuoteOrIssueBound
+        'Private _IssueBoundEffectiveDate As String
+        'Private _LiabilityAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+        'Private _MedicalPaymentsAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+        'Private _UninsuredMotoristAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+        'Private _UnderinsuredMotoristAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+        'Private _ComprehensiveCoverageAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+        'Private _CollisionCoverageAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+        'Private _NonOwnershipAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+        'Private _HiredBorrowedAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+        'Private _UseDeveloperAutoSymbols As Boolean
+        'Private _TowingAndLaborAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+        'Private _Dec_CAP_OptCovs_Premium As String
+        'Private _Dec_CAP_OptCovs_Premium_Without_GarageKeepers As String
+        ''added 7/11/2018
+        'Private _CAP_Liability_WouldHaveSymbol8 As Boolean
+        'Private _CAP_Liability_WouldHaveSymbol9 As Boolean
+        'Private _CAP_Comprehensive_WouldHaveSymbol8 As Boolean
+        'Private _CAP_Collision_WouldHaveSymbol8 As Boolean
+        'Private _HasBlanketBuilding As Boolean
+        'Private _HasBlanketContents As Boolean
+        'Private _HasBlanketBuildingAndContents As Boolean
+        'Private _HasBlanketBusinessIncome As Boolean
+        'Private _BlanketBuildingQuotedPremium As String
+        'Private _BlanketContentsQuotedPremium As String
+        'Private _BlanketBuildingAndContentsQuotedPremium As String
+        'Private _BlanketBusinessIncomeQuotedPremium As String
+        'Private _BlanketBuildingCauseOfLossTypeId As String
+        'Private _BlanketBuildingCauseOfLossType As String
+        'Private _BlanketContentsCauseOfLossTypeId As String
+        'Private _BlanketContentsCauseOfLossType As String
+        'Private _BlanketBuildingAndContentsCauseOfLossTypeId As String
+        'Private _BlanketBuildingAndContentsCauseOfLossType As String
+        'Private _BlanketBusinessIncomeCauseOfLossTypeId As String
+        'Private _BlanketBusinessIncomeCauseOfLossType As String
+        'Private _BlanketBuildingLimit As String
+        'Private _BlanketBuildingCoinsuranceTypeId As String
+        'Private _BlanketBuildingCoinsuranceType As String
+        'Private _BlanketBuildingValuationId As String
+        'Private _BlanketBuildingValuation As String
+        'Private _BlanketContentsLimit As String
+        'Private _BlanketContentsCoinsuranceTypeId As String
+        'Private _BlanketContentsCoinsuranceType As String
+        'Private _BlanketContentsValuationId As String
+        'Private _BlanketContentsValuation As String
+        'Private _BlanketBuildingAndContentsLimit As String
+        'Private _BlanketBuildingAndContentsCoinsuranceTypeId As String
+        'Private _BlanketBuildingAndContentsCoinsuranceType As String
+        'Private _BlanketBuildingAndContentsValuationId As String
+        'Private _BlanketBuildingAndContentsValuation As String
+        'Private _BlanketBusinessIncomeLimit As String
+        'Private _BlanketBusinessIncomeCoinsuranceTypeId As String
+        'Private _BlanketBusinessIncomeCoinsuranceType As String
+        'Private _BlanketBusinessIncomeValuationId As String
+        'Private _BlanketBusinessIncomeValuation As String
+        'Private _CPR_BlanketCoverages_TotalPremium As String
+        'Private _BlanketCombinedEarthquake_QuotedPremium As String
+        'Private _BlanketBuildingIsAgreedValue As Boolean
+        'Private _BlanketContentsIsAgreedValue As Boolean
+        'Private _BlanketBuildingAndContentsIsAgreedValue As Boolean
+        'Private _BlanketBusinessIncomeIsAgreedValue As Boolean
+        'Private _UseTierOverride As Boolean
+        'Private _TierAdjustmentTypeId As String
+        'Private _PersonalLiabilityLimitId As String
+        'Private _PersonalLiabilityQuotedPremium As String
+        'Private _HasConvertedCoverages As Boolean
+        'Private _HasConvertedInclusionsExclusions As Boolean
+        'Private _HasConvertedModifiers As Boolean
+        'Private _HasConvertedScheduledRatings As Boolean
+        'Private _CanUseExclusionNumForExclusionReconciliation As Boolean
+        'Private _CanUseLossHistoryNumForLossHistoryReconciliation As Boolean
+        'Private _HasEPLI As Boolean
+        'Private _EPLI_Applied As Boolean
+        'Private _EPLIPremium As String
+        'Private _EPLICoverageLimitId As String
+        'Private _EPLIDeductibleId As String
+        'Private _EPLICoverageTypeId As String
+        'Private _BlanketWaiverOfSubrogation As String
+        'Private _BlanketWaiverOfSubrogationQuotedPremium As String
+        'Private _HasCondoDandO As Boolean
+        'Private _CondoDandOAssociatedName As String
+        'Private _CondoDandODeductibleId As String
+        'Private _CondoDandOPremium As String
+        'Private _CondoDandOManualLimit As String
+        'Private _CanUsePolicyUnderwritingNumForPolicyUnderwritingReconciliation As Boolean
+        ''added 7/12/2018
+        'Private _HasConvertedScheduledCoverages As Boolean
+        'Private _CanUseScheduledCoverageNumForScheduledCoverageReconciliation As Boolean
+        'Private _ContractorsEquipmentScheduledCoverages As List(Of QuickQuoteContractorsEquipmentScheduledCoverage)
+        'Private _ContractorsEquipmentScheduleCoinsuranceTypeId As String 'may need static data placeholder; may be defaulted as there's just one value in dropdown (1 = per 100); note: previous comment is likely talking about CoverageBasisTypeId
+        'Private _ContractorsEquipmentScheduleDeductibleId As String 'may need static data placeholder
+        'Private _ContractorsEquipmentScheduleRate As String
+        'Private _ContractorsEquipmentScheduleQuotedPremium As String
+        'Private _ContractorsEquipmentLeasedRentedFromOthersLimit As String
+        'Private _ContractorsEquipmentLeasedRentedFromOthersCoverageLimitId As String 'may not need this; unable to see where value in xml came from when looking at the UI
+        'Private _ContractorsEquipmentLeasedRentedFromOthersRate As String
+        'Private _ContractorsEquipmentLeasedRentedFromOthersQuotedPremium As String
+        'Private _ContractorsEquipmentRentalReimbursementLimit As String
+        'Private _ContractorsEquipmentRentalReimbursementRate As String
+        'Private _ContractorsEquipmentRentalReimbursementQuotedPremium As String
+        'Private _ContractorsEquipmentSmallToolsEndorsementPerOccurrenceLimit As String
+        'Private _ContractorsEquipmentSmallToolsEndorsementPerOccurrenceRate As String
+        'Private _ContractorsEquipmentSmallToolsEndorsementPerOccurrenceDeductibleId As String 'static data
+        'Private _ContractorsEquipmentSmallToolsEndorsementPerOccurrenceQuotedPremium As String
+        'Private _ContractorsEquipmentSmallToolsEndorsementPerToolLimit As String
+        'Private _ContractorsEquipmentSmallToolsEndorsementPerToolQuotedPremium As String
+        'Private _SmallToolsLimit As String
+        'Private _SmallToolsRate As String
+        'Private _SmallToolsDeductibleId As String 'static data
+        'Private _SmallToolsAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+        'Private _SmallToolsCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _SmallToolsQuotedPremium As String
+        'Private _SmallToolsIsEmployeeTools As Boolean 'small tools floater
+        'Private _SmallToolsIsToolsLeasedOrRented As Boolean 'small tools floater
+        'Private _SmallToolsAnyOneLossCatastropheLimit As String
+        'Private _SmallToolsAnyOneLossCatastropheQuotedPremium As String
+        'Private _InstallationScheduledLocations As List(Of QuickQuoteInstallationScheduledLocation)
+        'Private _InstallationQuotedPremium As String
+        'Private _InstallationAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+        'Private _InstallationCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _InstallationBlanketLimit As String
+        'Private _InstallationBlanketCoinsuranceTypeId As String 'may need static data placeholder; may be defaulted as there's just one value in dropdown (1 = per 100); note: previous comment is likely talking about CoverageBasisTypeId
+        'Private _InstallationBlanketDeductibleId As String 'may need static data placeholder
+        'Private _InstallationBlanketRate As String
+        'Private _InstallationBlanketQuotedPremium As String
+        'Private _InstallationBlanketAnyOneLossCatastropheLimit As String
+        'Private _InstallationBlanketAnyOneLossCatastropheQuotedPremium As String
+        'Private _InstallationAdditionalDebrisRemovalExpenseLimit As String 'cov also has CoverageBasisTypeId set to 1
+        'Private _InstallationAdditionalDebrisRemovalExpenseQuotedPremium As String
+        'Private _InstallationStorageLocationsLimit As String 'cov also has CoverageBasisTypeId set to 1
+        'Private _InstallationStorageLocationsQuotedPremium As String
+        'Private _InstallationTransitLimit As String 'cov also has CoverageBasisTypeId set to 1
+        'Private _InstallationTransitQuotedPremium As String
+        'Private _InstallationTestingLimit As String 'cov also has CoverageBasisTypeId set to 1
+        'Private _InstallationTestingQuotedPremium As String
+        'Private _InstallationSewerBackupLimit As String 'cov also has CoverageBasisTypeId set to 1
+        'Private _InstallationSewerBackupDeductible As String
+        'Private _InstallationSewerBackupQuotedPremium As String
+        'Private _InstallationSewerBackupCatastropheLimit As String 'cov also has CoverageBasisTypeId set to 1
+        'Private _InstallationSewerBackupCatastropheQuotedPremium As String
+        'Private _InstallationEarthquakeLimit As String 'cov also has CoverageBasisTypeId set to 1
+        'Private _InstallationEarthquakeDeductible As String
+        'Private _InstallationEarthquakeQuotedPremium As String
+        'Private _InstallationEarthquakeCatastropheLimit As String 'cov also has CoverageBasisTypeId set to 1
+        'Private _InstallationEarthquakeCatastropheQuotedPremium As String
+        'Private _BusinessPersonalPropertyLimit As String 'cov also has CoverageBasisTypeId set to 1; shown in UI Installation Coverage Extensions section, but may not be specific to Installation
+        'Private _BusinessPersonalPropertyQuotedPremium As String
+        'Private _ScheduledPropertyItems As List(Of QuickQuoteScheduledPropertyItem) 'cov also has CoverageBasisTypeId set to 1
+        'Private _ScheduledPropertyAdditionalInterests As List(Of QuickQuoteAdditionalInterest) 'cov also has CoverageBasisTypeId set to 1
+        'Private _ScheduledPropertyCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _ScheduledPropertyCoinsuranceTypeId As String 'may need static data placeholder
+        'Private _ScheduledPropertyDeductibleId As String 'may need static data placeholder
+        'Private _ScheduledPropertyRate As String
+        'Private _ScheduledPropertyNamedPerils As Boolean
+        'Private _ScheduledPropertyQuotedPremium As String
+        'Private _ComputerCoinsuranceTypeId As String 'cov also has CoverageBasisTypeId set to 1
+        'Private _ComputerExcludeEarthquake As Boolean
+        'Private _ComputerValuationMethodTypeId As String 'static data
+        'Private _ComputerAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+        'Private _ComputerCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _ComputerQuotedPremium As String
+        'Private _ComputerAllPerilsDeductibleId As String 'cov also has CoverageBasisTypeId set to 1; may also need boolean prop for hasCoverage; static data
+        'Private _ComputerAllPerilsQuotedPremium As String
+        'Private _ComputerEarthquakeVolcanicEruptionDeductible As String 'cov also has CoverageBasisTypeId set to 1; example also has ApplyToWrittenPremiuim set to true; may also need boolean prop for hasCoverage
+        'Private _ComputerEarthquakeVolcanicEruptionQuotedPremium As String
+        'Private _ComputerMechanicalBreakdownDeductible As String 'cov also has CoverageBasisTypeId set to 1; example also has ApplyToWrittenPremiuim set to true; may also need boolean prop for hasCoverage
+        'Private _ComputerMechanicalBreakdownQuotedPremium As String
+        'Private _BuildersRiskDeductibleId As String 'cov also has CoverageBasisTypeId set to 1; static data
+        'Private _BuildersRiskRate As String
+        'Private _BuildersRiskAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+        'Private _BuildersRiskCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _BuildersRiskQuotedPremium As String
+        'Private _BuildersRiskScheduledLocations As List(Of QuickQuoteBuildersRiskScheduledLocation) 'ScheduledCoverage cov also has CoverageBasisTypeId set to 1
+        'Private _BuildersRiskScheduleStorageLocationsLimit As String
+        'Private _BuildersRiskScheduleStorageLocationsQuotedPremium As String
+        'Private _BuildersRiskScheduleTransitLimit As String
+        'Private _BuildersRiskScheduleTransitQuotedPremium As String
+        'Private _BuildersRiskScheduleTestingLimit As String
+        'Private _BuildersRiskScheduleTestingQuotedPremium As String
+        'Private _FineArtsDeductibleCategoryTypeId As String 'static data; note: cov also has CoverageBasisTypeId set to 1
+        'Private _FineArtsRate As String
+        'Private _FineArtsDeductibleId As String 'static data
+        'Private _FineArtsQuotedPremium As String
+        'Private _FineArtsAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+        'Private _FineArtsCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _FineArtsBreakageMarringOrScratching As Boolean 'renamed 3/17/2015 from _HasFineArtsBreakageMarringOrScratching; note: cov also has CoverageBasisTypeId set to 1
+        'Private _FineArtsBreakageMarringOrScratchingQuotedPremium As String
+        'Private _OwnersCargoAnyOneOwnedVehicleLimit As String 'note: cov also has CoverageBasisTypeId set to 1
+        'Private _OwnersCargoAnyOneOwnedVehicleDeductibleId As String 'static data
+        'Private _OwnersCargoAnyOneOwnedVehicleRate As String
+        'Private _OwnersCargoAnyOneOwnedVehicleDescription As String
+        'Private _OwnersCargoAnyOneOwnedVehicleAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+        'Private _OwnersCargoAnyOneOwnedVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _OwnersCargoAnyOneOwnedVehicleLoadingUnloading As Boolean 'CoverageDetail
+        'Private _OwnersCargoAnyOneOwnedVehicleNamedPerils As Boolean 'CoverageDetail
+        'Private _OwnersCargoAnyOneOwnedVehicleQuotedPremium As String
+        'Private _OwnersCargoCatastropheLimit As String 'note: cov also has CoverageBasisTypeId set to 1
+        'Private _OwnersCargoCatastropheQuotedPremium As String
+        'Private _TransportationCatastropheLimit As String 'note: cov also has CoverageBasisTypeId set to 1
+        'Private _TransportationCatastropheDeductibleId As String 'static data
+        'Private _TransportationCatastropheDescription As String
+        'Private _TransportationCatastropheAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+        'Private _TransportationCatastropheCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _TransportationCatastropheLoadingUnloading As Boolean 'CoverageDetail
+        'Private _TransportationCatastropheNamedPerils As Boolean 'CoverageDetail
+        'Private _TransportationCatastropheQuotedPremium As String
+        'Private _TransportationAnyOneOwnedVehicleLimit As String 'note: cov also has CoverageBasisTypeId set to 1
+        'Private _TransportationAnyOneOwnedVehicleNumberOfVehicles As String 'CoverageDetail
+        'Private _TransportationAnyOneOwnedVehicleRate As String
+        'Private _TransportationAnyOneOwnedVehicleQuotedPremium As String
+        'Private _MotorTruckCargoScheduledVehicles As List(Of QuickQuoteScheduledVehicle) 'note: cov also has CoverageBasisTypeId set to 1
+        'Private _MotorTruckCargoScheduledVehicleAdditionalInterests As List(Of QuickQuoteAdditionalInterest) 'note: cov also has CoverageBasisTypeId set to 1
+        'Private _MotorTruckCargoScheduledVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _MotorTruckCargoScheduledVehicleLoadingUnloading As Boolean 'CoverageDetail
+        'Private _MotorTruckCargoScheduledVehicleNamedPerils As Boolean 'CoverageDetail
+        'Private _MotorTruckCargoScheduledVehicleOperatingRadius As String 'CoverageDetail
+        'Private _MotorTruckCargoScheduledVehicleRate As String 'CoverageDetail
+        'Private _MotorTruckCargoScheduledVehicleDeductibleId As String 'static data
+        'Private _MotorTruckCargoScheduledVehicleDescription As String
+        'Private _MotorTruckCargoScheduledVehicleQuotedPremium As String
+        'Private _MotorTruckCargoScheduledVehicleCatastropheLimit As String 'note: cov also has CoverageBasisTypeId set to 1
+        'Private _MotorTruckCargoScheduledVehicleCatastropheQuotedPremium As String
+        'Private _SignsAdditionalInterests As List(Of QuickQuoteAdditionalInterest) 'note: cov also has CoverageBasisTypeId set to 1
+        'Private _SignsCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _SignsMaximumDeductible As String 'CoverageDetail
+        'Private _SignsMinimumDeductible As String 'CoverageDetail
+        'Private _SignsValuationMethodTypeId As String 'CoverageDetail; static data
+        'Private _SignsDeductibleId As String 'static data
+        'Private _SignsQuotedPremium As String
+        'Private _SignsAnyOneLossCatastropheLimit As String 'note: cov also has CoverageBasisTypeId set to 1
+        'Private _SignsAnyOneLossCatastropheQuotedPremium As String
+        'Private _ContractorsEquipmentCatastropheLimit As String
+        'Private _ContractorsEquipmentCatastropheQuotedPremium As String
+        'Private _CanUseClassificationCodeNumForClassificationCodeReconciliation As Boolean 'for reconciliation
+        'Private _AggregateLimit As String 'decimal
+        'Private _NumberOfEmployees As String 'int
+        'Private _EmployeeTheftLimit As String 'note: cov also has CoverageBasisTypeId 1
+        'Private _EmployeeTheftDeductibleId As String 'static data
+        'Private _EmployeeTheftNumberOfRatableEmployees As String 'CoverageDetail
+        'Private _EmployeeTheftNumberOfAdditionalPremises As String 'CoverageDetail
+        'Private _EmployeeTheftFaithfulPerformanceOfDutyTypeId As String 'CoverageDetail; static data
+        'Private _EmployeeTheftScheduledEmployeeBenefitPlans As List(Of String)
+        'Private _EmployeeTheftIncludedPersonsOrClasses As List(Of String)
+        'Private _EmployeeTheftIncludedChairpersonsAndSpecifiedCommitteeMembers As List(Of String)
+        'Private _EmployeeTheftScheduledPartners As List(Of String)
+        'Private _EmployeeTheftScheduledLLCMembers As List(Of String)
+        'Private _EmployeeTheftScheduledNonCompensatedOfficers As List(Of String)
+        'Private _EmployeeTheftExcludedPersonsOrClasses As List(Of String)
+        'Private _EmployeeTheftQuotedPremium As String
+        'Private _InsidePremisesTheftOfMoneyAndSecuritiesLimit As String 'note: cov also has CoverageBasisTypeId 1
+        'Private _InsidePremisesTheftOfMoneyAndSecuritiesDeductibleId As String 'static data
+        'Private _InsidePremisesTheftOfMoneyAndSecuritiesNumberOfPremises As String 'CoverageDetail
+        'Private _InsidePremisesTheftOfMoneyAndSecuritiesIncludeGuestsProperty As Boolean 'CoverageDetail
+        'Private _InsidePremisesTheftOfMoneyAndSecuritiesRequireRecordOfChecks As Boolean 'CoverageDetail
+        'Private _InsidePremisesTheftOfMoneyAndSecuritiesQuotedPremium As String
+        'Private _OutsideThePremisesLimit As String 'note: cov also has CoverageBasisTypeId 1
+        'Private _OutsideThePremisesDeductibleId As String 'static data
+        'Private _OutsideThePremisesNumberOfPremises As String 'CoverageDetail
+        'Private _OutsideThePremisesIncludeSellingPrice As Boolean 'CoverageDetail
+        'Private _OutsideThePremisesLimitToRobberyOnly As Boolean 'CoverageDetail
+        'Private _OutsideThePremisesRequireRecordOfChecks As Boolean 'CoverageDetail
+        'Private _OutsideThePremisesQuotedPremium As String
+        ''added 7/13/2018
+        'Private _HasConvertedFarmIncidentalLimitCoverages As Boolean
+        'Private _HasConvertedScheduledPersonalPropertyCoverages As Boolean
+        'Private _HasConvertedUnscheduledPersonalPropertyCoverages As Boolean
+        'Private _CanUseScheduledFarmPersonalPropertyNumForScheduledPersonalPropertyReconciliation As Boolean
+        'Private _CanUseUnscheduledFarmPersonalPropertyNumForUnscheduledPersonalPropertyReconciliation As Boolean
+        'Private _HasConvertedOptionalCoverages As Boolean
+        'Private _CanUseOptionalCoveragesNumForOptionalCoverageReconciliation As Boolean
+        'Private _CanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+        'Private _Farm_F_and_G_DeductibleLimitId As String 'static data
+        'Private _Farm_F_and_G_DeductibleQuotedPremium As String
+        'Private _HasFarmEquipmentBreakdown As Boolean
+        'Private _FarmEquipmentBreakdownQuotedPremium As String
+        'Private _HasFarmExtender As Boolean
+        'Private _FarmExtenderQuotedPremium As String
+        'Private _FarmAllStarLimitId As String 'static data
+        'Private _FarmAllStarQuotedPremium As String
+        'Private _HasFarmEmployersLiability As Boolean
+        'Private _FarmEmployersLiabilityQuotedPremium As String
+        'Private _FarmFireLegalLiabilityLimitId As String 'static data
+        'Private _FarmFireLegalLiabilityQuotedPremium As String
+        'Private _HasFarmPersonalAndAdvertisingInjury As Boolean
+        'Private _FarmPersonalAndAdvertisingInjuryQuotedPremium As String
+        'Private _FarmContractGrowersCareCustodyControlLimitId As String 'static data
+        'Private _FarmContractGrowersCareCustodyControlDescription As String
+        'Private _FarmContractGrowersCareCustodyControlQuotedPremium As String
+        'Private _HasFarmExclusionOfProductsCompletedWork As Boolean
+        'Private _FarmExclusionOfProductsCompletedWorkQuotedPremium As String
+        'Private _FarmIncidentalLimits As List(Of QuickQuoteFarmIncidentalLimit) 'goes w/ FarmIncidentalLimitCoverages
+        ''for CPR/CPP Business Income ALS (eff 4/1/2015)
+        'Private _HasBusinessIncomeALS As Boolean
+        'Private _BusinessIncomeALSLimit As String
+        'Private _BusinessIncomeALSQuotedPremium As String
+        ''for CPP Contractors Enhancement Endorsement (CPR, CGL, CIM; eff 5/12/2015)
+        'Private _HasContractorsEnhancement As Boolean
+        'Private _ContractorsEnhancementQuotedPremium As String
+        'Private _CPP_CPR_ContractorsEnhancementQuotedPremium As String
+        'Private _CPP_CGL_ContractorsEnhancementQuotedPremium As String
+        'Private _CPP_CIM_ContractorsEnhancementQuotedPremium As String
+        ''for CPP Manufacturers Enhancement (CPR, CGL; eff 6/30/2015)
+        'Private _HasManufacturersEnhancement As Boolean
+        'Private _ManufacturersEnhancementQuotedPremium As String
+        'Private _CPP_CPR_ManufacturersEnhancementQuotedPremium As String
+        'Private _CPP_CGL_ManufacturersEnhancementQuotedPremium As String
+        'Private _FarmMachinerySpecialCoverageG_QuotedPremium As String
+        ''for new cov (PPA versionId 102; coverageCodeId 80443)
+        'Private _HasAutoPlusEnhancement As Boolean
+        'Private _AutoPlusEnhancement_QuotedPremium As String
+        'Private _HasApartmentBuildings As Boolean
+        'Private _NumberOfLocationsWithApartments As String
+        'Private _ApartmentQuotedPremium As String
+        'Private _HasRestaurantEndorsement As Boolean
+        'Private _RestaurantQuotedPremium As String
+        'Private _ScheduledGolfCourses As List(Of QuickQuoteScheduledGolfCourse)
+        'Private _ScheduledGolfCartCourses As List(Of QuickQuoteScheduledGolfCartCourse)
+        'Private _GolfCourseQuotedPremium As String 'covCodeId 21341
+        'Private _GolfCourseCoverageLimitId As String 'covCodeId 21341
+        'Private _GolfCourseDeductibleId As String 'covCodeId 21341
+        'Private _GolfCourseCoinsuranceTypeId As String 'covCodeId 21341
+        'Private _GolfCourseRate As String 'covCodeId 21341
+        'Private _GolfCartQuotedPremium As String 'covCodeId 50121
+        'Private _GolfCartManualLimitAmount As String 'covCodeId 50121
+        'Private _GolfCartDeductibleId As String 'covCodeId 50121
+        'Private _GolfCartCoinsuranceTypeId As String 'covCodeId 50121
+        'Private _GolfCartRate As String 'covCodeId 50121
+        'Private _GolfCartCatastropheManualLimitAmount As String 'covCodeId 21343
+        'Private _GolfCartDebrisRemovalCoverageLimitId As String 'covCodeId 80223
+        'Private _Liability_UM_UIM_AggregateLiabilityIncrementTypeId As String 'covDetail; covCodeId 21552
+        'Private _Liability_UM_UIM_DeductibleCategoryTypeId As String 'covDetail; covCodeId 21552
+        'Private _HasUninsuredMotoristPropertyDamage As Boolean 'covCodeId 21539
+        'Private _UninsuredMotoristPropertyDamageQuotedPremium As String 'covCodeId 21539; may not be populated
+        'Private _MedicalPaymentsTypeId As String 'covDetail; covCodeId 21540
+        'Private _HasPhysicalDamageOtherThanCollision As Boolean 'covCodeId 21550
+        'Private _PhysicalDamageOtherThanCollisionQuotedPremium As String 'covCodeId 21550; may not be populated
+        'Private _HasPhysicalDamageCollision As Boolean 'covCodeId 21551
+        'Private _PhysicalDamageCollisionQuotedPremium As String 'covCodeId 21551; may not be populated
+        'Private _PhysicalDamageCollisionDeductibleId As String 'covCodeId 21551
+        'Private _HasGarageKeepersOtherThanCollision As Boolean 'covCodeId 21541
+        'Private _GarageKeepersOtherThanCollisionQuotedPremium As String 'covCodeId 21541
+        ''Private _GarageKeepersOtherThanCollisionManualLimitAmount As String 'covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+        ''Private _GarageKeepersOtherThanCollisionBasisTypeId As String 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+        ''Private _GarageKeepersOtherThanCollisionDeductibleCategoryTypeId As String 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+        ''Private _GarageKeepersOtherThanCollisionTypeId As String 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+        ''Private _GarageKeepersOtherThanCollisionDeductibleId As String 'covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+        'Private _HasGarageKeepersCollision As Boolean 'covCodeId 21542
+        'Private _GarageKeepersCollisionQuotedPremium As String 'covCodeId 21542
+        ''Private _GarageKeepersCollisionManualLimitAmount As String 'covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+        ''Private _GarageKeepersCollisionBasisTypeId As String 'covDetail; covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+        ''Private _GarageKeepersCollisionDeductibleId As String 'covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+        'Private _CPP_MinPremAdj_CPR As String 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+        'Private _CPP_MinPremAdj_CGL As String 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+        'Private _CPP_MinPremAdj_CIM As String 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+        'Private _CPP_MinPremAdj_CRM As String 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+        'Private _CPP_MinPremAdj_GAR As String 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+        'Private _CAP_GAR_PolicyLevelCovs_Premium As String
+        'Private _WCP_WaiverPremium As String 'covCodeId 10124 CovAddInfo w/ "Waiver Premium" in desc
+        ''added 7/14/2018
+        'Private _MultiLineDiscountValue As String
+        'Private _PriorBodilyInjuryLimitId As String
+
+        'removed 7/24/2018
+        ''RiskLevel
+        ''added 7/10/2018
+        'Private _Dec_BuildingLimit_All_Premium As String
+        'Private _Dec_BuildingPersPropLimit_All_Premium As String
+        'Private _HasLocation As Boolean
+        'Private _HasLocationWithBuilding As Boolean
+        'Private _HasLocationWithClassification As Boolean
+        'Private _VehiclesTotal_CombinedSingleLimitLiablityQuotedPremium As String
+        'Private _VehiclesTotal_MedicalPaymentsQuotedPremium As String
+        'Private _VehiclesTotal_UninsuredMotoristLiabilityQuotedPremium As String
+        'Private _VehiclesTotal_UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium As String
+        'Private _VehiclesTotal_UM_UIM_CovsQuotedPremium As String 'combines _VehiclesTotal_UninsuredMotoristLiabilityQuotedPremium and _VehiclesTotal_UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium
+        'Private _VehiclesTotal_ComprehensiveCoverageQuotedPremium As String
+        'Private _VehiclesTotal_CollisionCoverageQuotedPremium As String
+        'Private _VehiclesTotal_TowingAndLaborQuotedPremium As String
+        'Private _VehiclesTotal_RentalReimbursementQuotedPremium As String
+        ''added 7/11/2018
+        'Private _CPR_BuildingsTotal_BuildingCovQuotedPremium As String
+        'Private _CPR_BuildingsTotal_PersPropCoverageQuotedPremium As String
+        'Private _CPR_BuildingsTotal_PersPropOfOthersQuotedPremium As String
+        'Private _CPR_BuildingsTotal_BusinessIncomeCovQuotedPremium As String
+        'Private _CPR_BuildingsTotal_EQ_QuotedPremium As String
+        'Private _LocationsTotal_EquipmentBreakdownQuotedPremium As String
+        'Private _LocationsTotal_PropertyInTheOpenRecords_QuotedPremium As String
+        'Private _LocationsTotal_PropertyInTheOpenRecords_EQ_Premium As String
+        'Private _LocationsTotal_PitoRecords_And_BuildingsTotal_Combined_EQ_Premium As String
+        'Private _VehiclesTotal_PremiumFullTerm As String
+        'Private _LocationsTotal_PremiumFullTerm As String
+        'Private _Locations_BuildingsTotal_PremiumFullTerm As String
+        'Private _CanUseDriverNumForDriverReconciliation As Boolean
+        'Private _CanUseVehicleNumForVehicleReconciliation As Boolean
+        'Private _CanUseLocationNumForLocationReconciliation As Boolean
+        'Private _CanUseApplicantNumForApplicantReconciliation As Boolean
+        'Private _VehiclesTotal_BodilyInjuryLiabilityQuotedPremium As String
+        'Private _VehiclesTotal_PropertyDamageQuotedPremium As String
+        'Private _VehiclesTotal_UninsuredCombinedSingleQuotedPremium As String
+        'Private _VehiclesTotal_UninsuredMotoristPropertyDamageQuotedPremium As String
+        'Private _VehiclesTotal_UninsuredMotoristPropertyDamageDeductibleQuotedPremium As String
+        'Private _VehiclesTotal_PollutionLiabilityBroadenedCoverageQuotedPremium As String
+        'Private _VehiclesTotal_TransportationExpenseQuotedPremium As String
+        'Private _VehiclesTotal_AutoLoanOrLeaseQuotedPremium As String
+        'Private _VehiclesTotal_TapesAndRecordsQuotedPremium As String
+        'Private _VehiclesTotal_SoundEquipmentQuotedPremium As String
+        'Private _VehiclesTotal_ElectronicEquipmentQuotedPremium As String
+        'Private _VehiclesTotal_TripInterruptionQuotedPremium As String
+        'Private _CanUseOperatorNumForOperatorReconciliation As Boolean
+        'Private _Locations_InlandMarinesTotal_Premium As String
+        'Private _Locations_InlandMarinesTotal_CoveragePremium As String
+        'Private _Locations_RvWatercraftsTotal_Premium As String
+        'Private _Locations_RvWatercraftsTotal_CoveragesPremium As String
+        ''added 7/13/2018
+        'Private _Locations_Farm_L_Liability_QuotedPremium As String
+        'Private _Locations_Farm_M_Medical_Payments_QuotedPremium As String
+        'Private _LocationsTotal_LiabilityQuotedPremium As String 'loc covCodeId 10111
+        'Private _LocationsTotal_MedicalPaymentsQuotedPremium As String 'loc covCodeId 10112
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionStandardOpenLotsQuotedPremium As String 'loc covCodeId 10116
+        ''for GAR
+        'Private _LocationsTotal_ClassIIEmployees25AndOlder As String
+        'Private _LocationsTotal_ClassIIEmployeesUnderAge25 As String
+        'Private _LocationsTotal_ClassIOtherEmployees As String
+        'Private _LocationsTotal_ClassIRegularEmployees As String
+        'Private _LocationsTotal_NumberOfEmployees As String
+        'Private _LocationsTotal_Payroll As String
+        'Private _LocationsTotal_UninsuredUnderinsuredMotoristBIandPDNumberOfPlates As String 'covCodeId 10113; covDetail
+        'Private _LocationsTotal_ClassIEmployees As String
+        'Private _LocationsTotal_ClassIIEmployees As String
+        'Private _LocationsTotal_ClassIandIIEmployees As String
+        'Private _LocationsTotal_DealersBlanketCollisionQuotedPremium As String 'loc covCodeId 10120
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionBuildingQuotedPremium As String 'loc covCodeId 10115
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionBuildingManualLimitAmount As String 'loc covCodeId 10115
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsQuotedPremium As String 'loc covCodeId 10117
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsManualLimitAmount As String 'loc covCodeId 10117
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsQuotedPremium As String 'loc covCodeId 10118
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsManualLimitAmount As String 'loc covCodeId 10118
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsQuotedPremium As String 'loc covCodeId 10119
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsManualLimitAmount As String 'loc covCodeId 10119
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionTotalQuotedPremium As String 'SUM of loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+        'Private _LocationsTotal_PhysicalDamageOtherThanCollisionTotalManualLimitAmount As String 'SUM of loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+        'Private _Locations_PhysicalDamageOtherThanCollisionDeductibleCategoryTypeId As String 'covDetail; loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+        'Private _Locations_PhysicalDamageOtherThanCollisionTypeId As String 'covDetail; loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+        'Private _Locations_PhysicalDamageOtherThanCollisionDeductibleId As String 'loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+        'Private _CAP_GAR_LocationLevelCovs_Premium As String
+        'Private _CAP_GAR_VehicleLevelCovs_Premium As String
+        'Private _LocationsTotal_UninsuredUnderinsuredMotoristBIandPDQuotedPremium As String 'loc covCodeId 10113
+        'Private _LocationsTotal_GarageKeepersOtherThanCollisionQuotedPremium As String 'loc covCodeId 10086
+        'Private _LocationsTotal_GarageKeepersCollisionQuotedPremium As String 'loc covCodeId 10087
+        'Private _LocationsTotal_GarageKeepersCoverageExtensionsQuotedPremium As String 'loc covCodeId 10126
+        'Private _VehiclesTotal_CAP_GAR_TotalCoveragesPremium As String 'should essentially match CAP_GAR_VehicleLevelCovs_Premium
+        'Private _VehiclesTotal_TotalCoveragesPremium As String
+        'Private _DriversTotal_TotalCoveragesPremium As String
+
+        'PolicyLevel and RiskLevel
+        'added 7/13/2018
+        Private _GarageKeepersTotalPremium As String 'SUM of prems for policy (covCodeIds 21541 and 21542 - has prem) and loc (covCodeIds 10086, 10087, and 10126 - no prem) covs
+        'for GAR (also CAP)
+        Private _AutoLiabilityTotalPremium As String 'SUM of prems for policy (covCodeId 21552 - CAP/GAR: Liability_UM_UIM_QuotedPremium), loc (covCodeId 10111 - GAR: LiabilityQuotedPremium), and veh (covCodeId 2 - PPA/CAP/GAR: Liability_UM_UIM_QuotedPremium) covs
+        Private _AutoMedicalPaymentsTotalPremium As String 'SUM of prems for policy (covCodeId 21540 - CAP/GAR: MedicalPaymentsQuotedPremium; could also be for 70072 - HOM/DFR, 70018 - FAR), loc (covCodeId 10112 - GAR: MedicalPaymentsQuotedPremium), and veh (covCodeId 60006 - CAP/GAR: MedicalPaymentsQuotedPremium; could also be for 6 - PPA) covs
+        Private _Auto_UM_UIM_TotalPremium As String 'SUM of prems for policy (covCodeId 21539 - CAP/GAR: UninsuredMotoristPropertyDamageQuotedPremium), loc (covCodeId 10113 - GAR: UninsuredUnderinsuredMotoristBIandPDQuotedPremium), and veh (covCodeIds 30013 - CAP/GAR: UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium and 8 - PPA/CAP/GAR: UninsuredMotoristLiabilityQuotedPremium) covs
+        Private _AutoComprehensiveTotalPremium As String 'SUM of prems for policy (covCodeId 21550 - CAP/GAR: PhysicalDamageOtherThanCollisionQuotedPremium; 10063 - CAP/GAR: ComprehensiveQuotedPremium as-of 6/19/2017), loc (covCodeId 10116 - GAR: PhysicalDamageOtherThanCollisionStandardOpenLotsQuotedPremium), and veh (covCodeId 3 - PPA/CAP/GAR: ComprehensiveQuotedPremium) covs
+        Private _AutoCollisionTotalPremium As String 'SUM of prems for policy (covCodeId 21551 - CAP/GAR: PhysicalDamageCollisionQuotedPremium; 10064 - CAP/GAR: CollisionQuotedPremium as-of 6/19/2017), loc (covCodeId 10120 - GAR: DealersBlanketCollisionQuotedPremium), and veh (covCodeId 5 - PPA/CAP/GAR: CollisionQuotedPremium) covs
+        Private _CAP_GAR_OptCovs_Premium As String 'diff of CAP/GAR totalPremium minus above premiums, towingLabor, rental, and garageKeepers; note: will also exclude (subtract) EnhancementEndorsement as-of 6/20/2017
+        Private _CAP_GAR_PolicyAndLocationLevelCovs_Premium As String
+        '7/23/2018 - moved from PolicyLevel section
+        Private _GarageKeepersOtherThanCollisionManualLimitAmount As String 'covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+        Private _GarageKeepersOtherThanCollisionBasisTypeId As String 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+        Private _GarageKeepersOtherThanCollisionDeductibleCategoryTypeId As String 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+        Private _GarageKeepersOtherThanCollisionTypeId As String 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+        Private _GarageKeepersOtherThanCollisionDeductibleId As String 'covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+        Private _GarageKeepersCollisionManualLimitAmount As String 'covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+        Private _GarageKeepersCollisionBasisTypeId As String 'covDetail; covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+        Private _GarageKeepersCollisionDeductibleId As String 'covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+
+        'added 4/20/2020 for PUP/FUP
+        Private _UnderlyingPolicies As List(Of QuickQuoteUnderlyingPolicy)
+        Private _CanUseUnderlyingPolicyNumForUnderlyingPolicyReconciliation As Boolean
+
+        'added 7/24/2018
+        Private _PolicyLevelInfoExtended As QuickQuoteLobPolicyLevelInfoExtended
+        Private _RiskLevelInfoExtended As QuickQuoteLobRiskLevelInfoExtended
+
+        Public Event CompanyChanged(ByVal prevCompanyId As String, ByVal newCompanyId As String) 'added 11/28/2022
+
+        'Public Property LobInfo As QuickQuoteLobInfo 'removed w/ inheritance change to QuickQuoteLobInfo
+        '    Get
+        '        If _LobInfo Is Nothing Then
+        '            _LobInfo = New QuickQuoteLobInfo
+        '        End If
+        '        Return _LobInfo
+        '    End Get
+        '    Set(value As QuickQuoteLobInfo)
+        '        _LobInfo = value
+        '    End Set
+        'End Property
+
+        'added 6/28/2018
+        Public Property AddFormsVersionId As String
+            Get
+                Return _AddFormsVersionId
+            End Get
+            Set(value As String)
+                _AddFormsVersionId = value
+            End Set
+        End Property
+        Public Property RatingVersionId As String
+            Get
+                Return _RatingVersionId
+            End Get
+            Set(value As String)
+                _RatingVersionId = value
+            End Set
+        End Property
+        Public Property UnderwritingVersionId As String
+            Get
+                Return _UnderwritingVersionId
+            End Get
+            Set(value As String)
+                _UnderwritingVersionId = value
+            End Set
+        End Property
+        Public Property VersionId As String
+            Get
+                Return _VersionId
+            End Get
+            Set(value As String)
+                '_VersionId = value
+                'updated 7/16/2018
+                Dim prevVersionId As String = _VersionId
+                _VersionId = value
+                If prevVersionId <> _VersionId AndAlso qqHelper.IsPositiveIntegerString(_VersionId) = True Then 'only update other fields if versionId has changed and versionId is valid
+                    'QuickQuoteHelperClass.SetLobAndStateStuffFromDiamondVersionId(_VersionId, _LobId, _LobType, _StateId, defaultStateToIndiana:=True, actualLobId:=_ActualLobId) 'updated 7/31/2018 for actualLobId
+                    'updated 11/27/2022
+                    QuickQuoteHelperClass.SetLobStateAndCompanyStuffFromDiamondVersionId(_VersionId, lobId:=_LobId, lobType:=_LobType, stateId:=_StateId, companyId:=_CompanyId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True, actualLobId:=_ActualLobId) 'updated 7/31/2018 for actualLobId
+                    'updated 06/15/2023; reverted back since changing LobType triggers logic that could inadvertently overwrite the versionId from staticData
+                    'QuickQuoteHelperClass.SetLobStateAndCompanyStuffFromDiamondVersionId(_VersionId, lobId:=_LobId, lobType:=LobType, stateId:=_StateId, companyId:=_CompanyId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True, actualLobId:=_ActualLobId) 'updated 7/31/2018 for actualLobId
+                    'added 6/22/2023 - need to make sure LobType is up-to-date on lower-level logics
+                    If System.Enum.IsDefined(GetType(QuickQuoteObject.QuickQuoteLobType), _LobType) = True AndAlso _LobType <> QuickQuoteObject.QuickQuoteLobType.None Then
+                        PolicyLevelInfoExtended.Set_LobType(_LobType)
+                        RiskLevelInfoExtended.Set_LobType(_LobType)
+                    End If
+                    'If qqHelper.IsPositiveIntegerString(_LobId) = True Then 'could use this IF to be closer to previous code
+                    ResetPackagePartVersionIds()
+                    'End If
+                End If
+            End Set
+        End Property
+        'these next ones aren't really stored; just determined by VersionId
+        Public Property LobId As String
+            Get
+                Return _LobId
+            End Get
+            Set(value As String)
+                '_LobId = value
+                'updated 7/16/2018
+                Dim prevLobId As String = _LobId
+                _LobId = value
+                If prevLobId <> _LobId AndAlso IsNumeric(_LobId) = True Then 'only update other fields if lobId has changed and lobId is valid
+                    'QuickQuoteHelperClass.SetLobTypeAndDiamondVersionIdFromLobIdAndStateId(_LobId, _StateId, _LobType, _VersionId, defaultStateToIndiana:=True)
+                    'updated 11/27/2022
+                    QuickQuoteHelperClass.SetLobTypeAndDiamondVersionIdFromLobIdStateIdAndCompanyId(_LobId, _StateId, _CompanyId, lobType:=_LobType, versionId:=_VersionId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True)
+                    'updated 06/15/2023; reverted back since changing LobType triggers logic that could inadvertently overwrite the versionId from staticData
+                    'QuickQuoteHelperClass.SetLobTypeAndDiamondVersionIdFromLobIdStateIdAndCompanyId(_LobId, _StateId, _CompanyId, lobType:=LobType, versionId:=_VersionId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True)
+                    'added 6/22/2023 - need to make sure LobType is up-to-date on lower-level logics
+                    If System.Enum.IsDefined(GetType(QuickQuoteObject.QuickQuoteLobType), _LobType) = True AndAlso _LobType <> QuickQuoteObject.QuickQuoteLobType.None Then
+                        PolicyLevelInfoExtended.Set_LobType(_LobType)
+                        RiskLevelInfoExtended.Set_LobType(_LobType)
+                    End If
+                    ResetPackagePartVersionIds()
+                End If
+            End Set
+        End Property
+        Public ReadOnly Property ActualLobId As String 'added 7/31/2018
+            Get
+                If String.IsNullOrWhiteSpace(_ActualLobId) = True Then
+                    Return _LobId
+                Else
+                    Return _ActualLobId
+                End If
+            End Get
+        End Property
+        Public Property LobType As QuickQuoteObject.QuickQuoteLobType
+            Get
+                Return _LobType
+            End Get
+            Set(value As QuickQuoteObject.QuickQuoteLobType)
+                '_LobType = value
+                'updated 7/16/2018
+                Dim prevLobType As QuickQuoteObject.QuickQuoteLobType = _LobType
+                _LobType = value
+
+                'added 8/16/2018
+                PolicyLevelInfoExtended.Set_LobType(_LobType)
+                RiskLevelInfoExtended.Set_LobType(_LobType)
+
+                If prevLobType <> _LobType AndAlso System.Enum.IsDefined(GetType(QuickQuoteObject.QuickQuoteLobType), _LobType) = True AndAlso _LobType <> QuickQuoteObject.QuickQuoteLobType.None Then 'only update other fields if lobType has changed and lobType is valid
+                    'QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeAndStateId(_LobType, _StateId, _LobId, _VersionId, defaultStateToIndiana:=True)
+                    'updated 11/27/2022
+                    QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeStateIdAndCompanyId(_LobType, _StateId, _CompanyId, lobId:=_LobId, versionId:=_VersionId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True)
+
+                    ResetPackagePartVersionIds() 'note: old logic had this outside of IF so it was always happening
+                End If
+            End Set
+        End Property
+        Public Property StateId As String
+            Get
+                Return _StateId
+            End Get
+            Set(value As String)
+                '_StateId = value
+                'updated 7/16/2018
+                Dim prevStateId As String = _StateId
+                _StateId = value
+
+                If QuickQuoteHelperClass.isTextMatch(prevStateId, _StateId, matchType:=QuickQuoteHelperClass.TextMatchType.IntegerOrText_IgnoreCasing) = False AndAlso System.Enum.IsDefined(GetType(QuickQuoteObject.QuickQuoteLobType), _LobType) = True AndAlso _LobType <> QuickQuoteObject.QuickQuoteLobType.None Then 'only update other fields if stateId has changed and lobType is valid
+                    'QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeAndStateId(_LobType, _StateId, _LobId, _VersionId, defaultStateToIndiana:=True) 'note: old logic was passing in empty string for lobId ByRef param with the assumption that it should already be set... not sure that applies when passing in _LobType private variable and not LobType property
+                    'updated 11/27/2022
+                    QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeStateIdAndCompanyId(_LobType, _StateId, _CompanyId, lobId:=_LobId, versionId:=_VersionId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True) 'note: old logic was passing in empty string for lobId ByRef param with the assumption that it should already be set... not sure that applies when passing in _LobType private variable and not LobType property
+                    'note: may need to call ResetPackagePartVersionIds()
+                    ResetPackagePartVersionIds() 'added call 11/14/2018; logic now accommodates IL where it didn't previously
+                End If
+            End Set
+        End Property
+        Public Property CompanyId As String 'added 11/26/2022; previously at TopLevelQuoteInfo.QuoteBase.CommonInfo
+            Get
+                Return _CompanyId
+            End Get
+            Set(value As String)
+                Dim prevCompanyId As String = _CompanyId
+                _CompanyId = value
+
+                If QuickQuoteHelperClass.isTextMatch(prevCompanyId, _CompanyId, matchType:=QuickQuoteHelperClass.TextMatchType.IntegerOrText_IgnoreCasing) = False AndAlso System.Enum.IsDefined(GetType(QuickQuoteObject.QuickQuoteLobType), _LobType) = True AndAlso _LobType <> QuickQuoteObject.QuickQuoteLobType.None Then 'only update other fields if stateId has changed and lobType is valid
+                    QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeStateIdAndCompanyId(_LobType, _StateId, _CompanyId, lobId:=_LobId, versionId:=_VersionId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True) 'note: old logic was passing in empty string for lobId ByRef param with the assumption that it should already be set... not sure that applies when passing in _LobType private variable and not LobType property
+                    'note: may need to call ResetPackagePartVersionIds()
+                    ResetPackagePartVersionIds() 'added call 11/14/2018; logic now accommodates IL where it didn't previously
+
+                    RaiseEvent CompanyChanged(prevCompanyId, _CompanyId) 'added 11/28/2022
+                End If
+            End Set
+        End Property
+        Public Property StateAbbreviation As String
+            Get
+                Return QuickQuoteHelperClass.StateAbbreviationForDiamondStateId(qqHelper.IntegerForString(_StateId))
+            End Get
+            Set(value As String)
+                StateId = QuickQuoteHelperClass.DiamondStateIdForStateAbbreviation(value, defaultToIndiana:=True).ToString
+            End Set
+        End Property
+        Public Property State As QuickQuoteHelperClass.QuickQuoteState
+            Get
+                Return QuickQuoteHelperClass.QuickQuoteStateForDiamondStateId(qqHelper.IntegerForString(_StateId))
+            End Get
+            Set(value As QuickQuoteHelperClass.QuickQuoteState)
+                StateId = QuickQuoteHelperClass.DiamondStateIdForQuickQuoteState(value, defaultToIndiana:=True).ToString
+            End Set
+        End Property
+        Public Property Company As QuickQuoteHelperClass.QuickQuoteCompany 'added 11/26/2022
+            Get
+                Return QuickQuoteHelperClass.QuickQuoteCompanyForDiamondCompanyId(qqHelper.IntegerForString(_CompanyId))
+            End Get
+            Set(value As QuickQuoteHelperClass.QuickQuoteCompany)
+                CompanyId = QuickQuoteHelperClass.DiamondCompanyIdForQuickQuoteCompany(value, defaultToIndianaFarmersMutual:=True).ToString
+            End Set
+        End Property
+        'added 7/10/2018
+        Public Property CPP_CPR_PackagePart_VersionId As String
+            Get
+                Return _CPP_CPR_PackagePart_VersionId
+            End Get
+            Set(value As String)
+                _CPP_CPR_PackagePart_VersionId = value
+            End Set
+        End Property
+        Public Property CPP_CPR_PackagePart_AddFormsVersionId As String
+            Get
+                Return _CPP_CPR_PackagePart_AddFormsVersionId
+            End Get
+            Set(value As String)
+                _CPP_CPR_PackagePart_AddFormsVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CPR_PackagePart_RatingVersionId As String
+            Get
+                Return _CPP_CPR_PackagePart_RatingVersionId
+            End Get
+            Set(value As String)
+                _CPP_CPR_PackagePart_RatingVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CPR_PackagePart_UnderwritingVersionId As String
+            Get
+                Return _CPP_CPR_PackagePart_UnderwritingVersionId
+            End Get
+            Set(value As String)
+                _CPP_CPR_PackagePart_UnderwritingVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CGL_PackagePart_VersionId As String
+            Get
+                Return _CPP_CGL_PackagePart_VersionId
+            End Get
+            Set(value As String)
+                _CPP_CGL_PackagePart_VersionId = value
+            End Set
+        End Property
+        Public Property CPP_CGL_PackagePart_AddFormsVersionId As String
+            Get
+                Return _CPP_CGL_PackagePart_AddFormsVersionId
+            End Get
+            Set(value As String)
+                _CPP_CGL_PackagePart_AddFormsVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CGL_PackagePart_RatingVersionId As String
+            Get
+                Return _CPP_CGL_PackagePart_RatingVersionId
+            End Get
+            Set(value As String)
+                _CPP_CGL_PackagePart_RatingVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CGL_PackagePart_UnderwritingVersionId As String
+            Get
+                Return _CPP_CGL_PackagePart_UnderwritingVersionId
+            End Get
+            Set(value As String)
+                _CPP_CGL_PackagePart_UnderwritingVersionId = value
+            End Set
+        End Property
+        Public Property CPP_Main_PackagePart_VersionId As String
+            Get
+                Return _CPP_Main_PackagePart_VersionId
+            End Get
+            Set(value As String)
+                _CPP_Main_PackagePart_VersionId = value
+            End Set
+        End Property
+        Public Property CPP_Main_PackagePart_AddFormsVersionId As String
+            Get
+                Return _CPP_Main_PackagePart_AddFormsVersionId
+            End Get
+            Set(value As String)
+                _CPP_Main_PackagePart_AddFormsVersionId = value
+            End Set
+        End Property
+        Public Property CPP_Main_PackagePart_RatingVersionId As String
+            Get
+                Return _CPP_Main_PackagePart_RatingVersionId
+            End Get
+            Set(value As String)
+                _CPP_Main_PackagePart_RatingVersionId = value
+            End Set
+        End Property
+        Public Property CPP_Main_PackagePart_UnderwritingVersionId As String
+            Get
+                Return _CPP_Main_PackagePart_UnderwritingVersionId
+            End Get
+            Set(value As String)
+                _CPP_Main_PackagePart_UnderwritingVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CRM_PackagePart_VersionId As String
+            Get
+                Return _CPP_CRM_PackagePart_VersionId
+            End Get
+            Set(value As String)
+                _CPP_CRM_PackagePart_VersionId = value
+            End Set
+        End Property
+        Public Property CPP_CRM_PackagePart_AddFormsVersionId As String
+            Get
+                Return _CPP_CRM_PackagePart_AddFormsVersionId
+            End Get
+            Set(value As String)
+                _CPP_CRM_PackagePart_AddFormsVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CRM_PackagePart_RatingVersionId As String
+            Get
+                Return _CPP_CRM_PackagePart_RatingVersionId
+            End Get
+            Set(value As String)
+                _CPP_CRM_PackagePart_RatingVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CRM_PackagePart_UnderwritingVersionId As String
+            Get
+                Return _CPP_CRM_PackagePart_UnderwritingVersionId
+            End Get
+            Set(value As String)
+                _CPP_CRM_PackagePart_UnderwritingVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CIM_PackagePart_VersionId As String
+            Get
+                Return _CPP_CIM_PackagePart_VersionId
+            End Get
+            Set(value As String)
+                _CPP_CIM_PackagePart_VersionId = value
+            End Set
+        End Property
+        Public Property CPP_CIM_PackagePart_AddFormsVersionId As String
+            Get
+                Return _CPP_CIM_PackagePart_AddFormsVersionId
+            End Get
+            Set(value As String)
+                _CPP_CIM_PackagePart_AddFormsVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CIM_PackagePart_RatingVersionId As String
+            Get
+                Return _CPP_CIM_PackagePart_RatingVersionId
+            End Get
+            Set(value As String)
+                _CPP_CIM_PackagePart_RatingVersionId = value
+            End Set
+        End Property
+        Public Property CPP_CIM_PackagePart_UnderwritingVersionId As String
+            Get
+                Return _CPP_CIM_PackagePart_UnderwritingVersionId
+            End Get
+            Set(value As String)
+                _CPP_CIM_PackagePart_UnderwritingVersionId = value
+            End Set
+        End Property
+        'added 7/11/2018
+        Public Property AdditionalInterestNamesAndAddresses As Generic.List(Of QuickQuoteGenericNameAddress) 'this isn't used w/ new look/feel, but would possibly need here if there could be separate lists per state
+            Get
+                Return _AdditionalInterestNamesAndAddresses
+            End Get
+            Set(value As Generic.List(Of QuickQuoteGenericNameAddress))
+                _AdditionalInterestNamesAndAddresses = value
+            End Set
+        End Property
+        Public Property CPP_GL_PackagePart_QuotedPremium As String
+            Get
+                Return qqHelper.QuotedPremiumFormat(_CPP_GL_PackagePart_QuotedPremium)
+            End Get
+            Set(value As String)
+                _CPP_GL_PackagePart_QuotedPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_CPP_GL_PackagePart_QuotedPremium)
+            End Set
+        End Property
+        Public Property CPP_CPR_PackagePart_QuotedPremium As String
+            Get
+                Return qqHelper.QuotedPremiumFormat(_CPP_CPR_PackagePart_QuotedPremium)
+            End Get
+            Set(value As String)
+                _CPP_CPR_PackagePart_QuotedPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_CPP_CPR_PackagePart_QuotedPremium)
+            End Set
+        End Property
+        Public Property CPP_CIM_PackagePart_QuotedPremium As String
+            Get
+                Return qqHelper.QuotedPremiumFormat(_CPP_CIM_PackagePart_QuotedPremium)
+            End Get
+            Set(value As String)
+                _CPP_CIM_PackagePart_QuotedPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_CPP_CIM_PackagePart_QuotedPremium)
+            End Set
+        End Property
+        Public Property CPP_CRM_PackagePart_QuotedPremium As String
+            Get
+                Return qqHelper.QuotedPremiumFormat(_CPP_CRM_PackagePart_QuotedPremium)
+            End Get
+            Set(value As String)
+                _CPP_CRM_PackagePart_QuotedPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_CPP_CRM_PackagePart_QuotedPremium)
+            End Set
+        End Property
+        Public Property CPP_GAR_PackagePart_QuotedPremium As String
+            Get
+                Return qqHelper.QuotedPremiumFormat(_CPP_GAR_PackagePart_QuotedPremium)
+            End Get
+            Set(value As String)
+                _CPP_GAR_PackagePart_QuotedPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_CPP_GAR_PackagePart_QuotedPremium)
+            End Set
+        End Property
+        'added 7/13/2018
+        Public Property CPP_Has_InlandMarine_PackagePart As Boolean
+            Get
+                Return _CPP_Has_InlandMarine_PackagePart
+            End Get
+            Set(value As Boolean)
+                _CPP_Has_InlandMarine_PackagePart = value
+            End Set
+        End Property
+        Public Property CPP_Has_Crime_PackagePart As Boolean
+            Get
+                Return _CPP_Has_Crime_PackagePart
+            End Get
+            Set(value As Boolean)
+                _CPP_Has_Crime_PackagePart = value
+            End Set
+        End Property
+        Public Property CPP_Has_Garage_PackagePart As Boolean
+            Get
+                Return _CPP_Has_Garage_PackagePart
+            End Get
+            Set(value As Boolean)
+                _CPP_Has_Garage_PackagePart = value
+            End Set
+        End Property
+
+        Public Property CPP_Has_Property_PackagePart As Boolean 'will likely always be on CPP
+            Get
+                Return _CPP_Has_Property_PackagePart
+            End Get
+            Set(value As Boolean)
+                _CPP_Has_Property_PackagePart = value
+            End Set
+        End Property
+        Public Property CPP_Has_GeneralLiability_PackagePart As Boolean 'typically on CPP but shouldn't be when Garage PackagePart is there
+            Get
+                Return _CPP_Has_GeneralLiability_PackagePart
+            End Get
+            Set(value As Boolean)
+                _CPP_Has_GeneralLiability_PackagePart = value
+            End Set
+        End Property
+
+        'PolicyLevel
+        'added 7/11/2018
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CRM_ProgramTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CRM_ProgramTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CRM_ProgramTypeId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_GAR_ProgramTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_GAR_ProgramTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_GAR_ProgramTypeId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property RiskGradeLookupId_Original As String
+            Get
+                Return PolicyLevelInfoExtended.RiskGradeLookupId_Original
+            End Get
+        End Property
+        Protected Friend Sub Set_RiskGradeLookupId_Original(ByVal rgLookupIdOrig As String)
+            PolicyLevelInfoExtended.Set_RiskGradeLookupId_Original(rgLookupIdOrig)
+        End Sub
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CGL_RiskGrade As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CGL_RiskGrade
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CGL_RiskGrade = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CGL_RiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CGL_RiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CGL_RiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CPR_RiskGrade As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CPR_RiskGrade
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CPR_RiskGrade = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CPR_RiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CPR_RiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CPR_RiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ErrorRiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.ErrorRiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ErrorRiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ReplacementRiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.ReplacementRiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ReplacementRiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CGL_ErrorRiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CGL_ErrorRiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CGL_ErrorRiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CGL_ReplacementRiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CGL_ReplacementRiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CGL_ReplacementRiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CPR_ErrorRiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CPR_ErrorRiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CPR_ErrorRiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CPR_ReplacementRiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CPR_ReplacementRiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CPR_ReplacementRiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CIM_RiskGrade As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CIM_RiskGrade
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CIM_RiskGrade = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CIM_RiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CIM_RiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CIM_RiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CIM_ErrorRiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CIM_ErrorRiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CIM_ErrorRiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CIM_ReplacementRiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CIM_ReplacementRiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CIM_ReplacementRiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CRM_RiskGrade As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CRM_RiskGrade
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CRM_RiskGrade = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CRM_RiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CRM_RiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CRM_RiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CRM_ErrorRiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CRM_ErrorRiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CRM_ErrorRiskGradeLookupId = value
+            End Set
+        End Property
+        'added 8/6/2018 to ignore for Serialization since it will already be in another object
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CRM_ReplacementRiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CRM_ReplacementRiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CRM_ReplacementRiskGradeLookupId = value
+            End Set
+        End Property
+        'added 7/5/2018
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 70017 (BOP) or 80154 (CGL)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OccurrenceLiabilityLimit As String
+            Get
+                Return PolicyLevelInfoExtended.OccurrenceLiabilityLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OccurrenceLiabilityLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        '''
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>CPP Target Market</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_TargetMarketID As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_TargetMarketID
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_TargetMarketID = value
+            End Set
+        End Property
+        ''' <summary>
+        '''
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 70017 (BOP) or 80154 (CGL)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OccurrenceLiabilityLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.OccurrenceLiabilityLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OccurrenceLiabilityLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 70017 (BOP) or 80154 (CGL)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OccurrencyLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.OccurrencyLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OccurrencyLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80144</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TenantsFireLiability As String
+            Get
+                Return PolicyLevelInfoExtended.TenantsFireLiability
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TenantsFireLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80144</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TenantsFireLiabilityId As String
+            Get
+                Return PolicyLevelInfoExtended.TenantsFireLiabilityId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TenantsFireLiabilityId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80144</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TenantsFireLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.TenantsFireLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TenantsFireLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80146</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PropertyDamageLiabilityDeductible As String
+            Get
+                Return PolicyLevelInfoExtended.PropertyDamageLiabilityDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PropertyDamageLiabilityDeductible = value
+            End Set
+        End Property
+        ''' <summary>
+        '''
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80146</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PropertyDamageLiabilityDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.PropertyDamageLiabilityDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PropertyDamageLiabilityDeductibleId = value
+            End Set
+        End Property
+        ''' <summary>
+        '''
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80557</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PayrollAmount As String
+            Get
+                Return PolicyLevelInfoExtended.PayrollAmount
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PayrollAmount = value
+            End Set
+        End Property
+        ''' <summary>
+        '''
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80557</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property StopGapPayroll As String
+            Get
+                Return PolicyLevelInfoExtended.StopGapPayroll
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.StopGapPayroll = value
+            End Set
+        End Property
+        ''' <summary>
+        '''
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80557</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property StopGapLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.StopGapLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.StopGapLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        '''
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80557</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property StopGapQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.StopGapQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.StopGapQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        '''
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80557</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasHerbicidePersticideApplicator As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasHerbicidePersticideApplicator
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasHerbicidePersticideApplicator = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketRatingQuotedPremium As String '*not sure where to find (specs show 21085)
+            Get
+                Return PolicyLevelInfoExtended.BlanketRatingQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketRatingQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 286 or 80094 (PPA); property covers Enhancement Endorsement for all LOBs</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasEnhancementEndorsement As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasEnhancementEndorsement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasEnhancementEndorsement = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 286 or 80094 (PPA); property covers Enhancement Endorsement for all LOBs</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EnhancementEndorsementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.EnhancementEndorsementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EnhancementEndorsementQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        '''
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80560 (CAP)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LegalEntityTypeQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.LegalEntityTypeQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LegalEntityTypeQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        '''
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80560 (CAP)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LegalEntityType As TriState
+            Get
+                Return PolicyLevelInfoExtended.LegalEntityType
+            End Get
+            Set(value As TriState)
+                PolicyLevelInfoExtended.LegalEntityType = value
+            End Set
+        End Property
+        'added 7/11/2018
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 286; specific to the GL package part for CPP</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Has_PackageGL_EnhancementEndorsement As Boolean
+            Get
+                Return PolicyLevelInfoExtended.Has_PackageGL_EnhancementEndorsement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.Has_PackageGL_EnhancementEndorsement = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Has_PackageGL_PlusEnhancementEndorsement As Boolean
+            Get
+                Return PolicyLevelInfoExtended.Has_PackageGL_PlusEnhancementEndorsement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.Has_PackageGL_PlusEnhancementEndorsement = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 286; specific to the GL package part for CPP</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PackageGL_EnhancementEndorsementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PackageGL_EnhancementEndorsementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PackageGL_EnhancementEndorsementQuotedPremium = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PackageGL_PlusEnhancementEndorsementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PackageGL_PlusEnhancementEndorsementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PackageGL_PlusEnhancementEndorsementQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 286; specific to the CPR package part for CPP</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Has_PackageCPR_EnhancementEndorsement As Boolean
+            Get
+                Return PolicyLevelInfoExtended.Has_PackageCPR_EnhancementEndorsement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.Has_PackageCPR_EnhancementEndorsement = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 286; specific to the CPR package part for CPP</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PackageCPR_EnhancementEndorsementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PackageCPR_EnhancementEndorsementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PackageCPR_EnhancementEndorsementQuotedPremium = value
+            End Set
+        End Property
+        'Added 6/27/2022 for task 75780 MLW
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 100009; specific to the CPR package part for CPP</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Has_PackageCPR_PlusEnhancementEndorsement As Boolean
+            Get
+                Return PolicyLevelInfoExtended.Has_PackageCPR_PlusEnhancementEndorsement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.Has_PackageCPR_PlusEnhancementEndorsement = value
+            End Set
+        End Property
+        'Added 6/27/2022 for task 75780 MLW
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 100009; specific to the CPR package part for CPP</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PackageCPR_PlusEnhancementEndorsementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PackageCPR_PlusEnhancementEndorsementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PackageCPR_PlusEnhancementEndorsementQuotedPremium = value
+            End Set
+        End Property
+        'added 7/6/2018
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 926, 21018, 501, 21022, 21019, 21023, 21020, 21053, 21054, 21055, 21024, 21025, 21026, 21016, 21017, or 21021</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AdditionalInsuredsCount As Integer
+            Get
+                Return PolicyLevelInfoExtended.AdditionalInsuredsCount
+            End Get
+            Set(value As Integer)
+                PolicyLevelInfoExtended.AdditionalInsuredsCount = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 80371</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasAdditionalInsuredsCheckboxBOP As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasAdditionalInsuredsCheckboxBOP
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasAdditionalInsuredsCheckboxBOP = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 80371</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AdditionalInsuredsCheckboxBOP As List(Of QuickQuoteAdditionalInsured)
+            Get
+                Return PolicyLevelInfoExtended.AdditionalInsuredsCheckboxBOP
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInsured))
+                PolicyLevelInfoExtended.AdditionalInsuredsCheckboxBOP = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 80371</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property AdditionalInsuredsCheckboxBOPPremium As String
+            Get
+                Return PolicyLevelInfoExtended.AdditionalInsuredsCheckboxBOPPremium
+            End Get
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 926, 21018, 501, 21022, 21019, 21023, 21020, 21053, 21054, 21055, 21024, 21025, 21026, 21016, 21017, or 21021</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AdditionalInsuredsManualCharge As String
+            Get
+                Return PolicyLevelInfoExtended.AdditionalInsuredsManualCharge
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.AdditionalInsuredsManualCharge = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 926, 21018, 501, 21022, 21019, 21023, 21020, 21053, 21054, 21055, 21024, 21025, 21026, 21016, 21017, or 21021</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AdditionalInsuredsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.AdditionalInsuredsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.AdditionalInsuredsQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 926, 21018, 501, 21022, 21019, 21023, 21020, 21053, 21054, 21055, 21024, 21025, 21026, 21016, 21017, or 21021</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AdditionalInsureds As Generic.List(Of QuickQuoteAdditionalInsured)
+            Get
+                Return PolicyLevelInfoExtended.AdditionalInsureds
+            End Get
+            Set(value As Generic.List(Of QuickQuoteAdditionalInsured))
+                PolicyLevelInfoExtended.AdditionalInsureds = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property AdditionalInsuredsBackup As List(Of QuickQuoteAdditionalInsured)
+            Get
+                Return PolicyLevelInfoExtended.AdditionalInsuredsBackup
+            End Get
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 185 (this property is specific to NumberOfEmployees)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeBenefitsLiabilityText As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeeBenefitsLiabilityText
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeBenefitsLiabilityText = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 185</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeBenefitsLiabilityOccurrenceLimit As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeeBenefitsLiabilityOccurrenceLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeBenefitsLiabilityOccurrenceLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 185</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeBenefitsLiabilityOccurrenceLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeeBenefitsLiabilityOccurrenceLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeBenefitsLiabilityOccurrenceLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 185</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeBenefitsLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeeBenefitsLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeBenefitsLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 185</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeBenefitsLiabilityRetroactiveDate As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeeBenefitsLiabilityRetroactiveDate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeBenefitsLiabilityRetroactiveDate = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 185</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeBenefitsLiabilityAggregateLimit As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeeBenefitsLiabilityAggregateLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeBenefitsLiabilityAggregateLimit = value 'might need limit formatting
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 185</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeBenefitsLiabilityDeductible As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeeBenefitsLiabilityDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeBenefitsLiabilityDeductible = value 'might need limit formatting
+            End Set
+        End Property
+
+        '3/9/2017 - BOP stuff
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10132</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasElectronicData As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasElectronicData
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasElectronicData = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10132</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ElectronicDataLimit As String
+            Get
+                Return PolicyLevelInfoExtended.ElectronicDataLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ElectronicDataLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10132</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ElectronicDataQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ElectronicDataQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ElectronicDataQuotedPremium = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21004</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentInstallationLimit As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentInstallationLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentInstallationLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21004</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentInstallationLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentInstallationLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentInstallationLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21004</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentInstallationLimitQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentInstallationLimitQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentInstallationLimitQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21007</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsToolsEquipmentBlanket As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsToolsEquipmentBlanket
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsToolsEquipmentBlanket = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21007</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsToolsEquipmentBlanketSubLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsToolsEquipmentBlanketSubLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsToolsEquipmentBlanketSubLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21007</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsToolsEquipmentBlanketQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsToolsEquipmentBlanketQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsToolsEquipmentBlanketQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21008</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsToolsEquipmentScheduled As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsToolsEquipmentScheduled
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsToolsEquipmentScheduled = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21008</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsToolsEquipmentScheduledQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsToolsEquipmentScheduledQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsToolsEquipmentScheduledQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21005</remarks> '4/1/2015 note: removed ' (would also use 21421 if present in response xml)'
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsToolsEquipmentRented As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsToolsEquipmentRented
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsToolsEquipmentRented = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21005</remarks> '4/1/2015 note: removed ' (would also use 21421 if present in response xml)'
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsToolsEquipmentRentedQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsToolsEquipmentRentedQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsToolsEquipmentRentedQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21008</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentScheduledItems As Generic.List(Of QuickQuoteContractorsEquipmentScheduledItem)
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentScheduledItems
+            End Get
+            Set(value As Generic.List(Of QuickQuoteContractorsEquipmentScheduledItem))
+                PolicyLevelInfoExtended.ContractorsEquipmentScheduledItems = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property ContractorsEquipmentScheduledItemsBackup As Generic.List(Of QuickQuoteContractorsEquipmentScheduledItem)
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentScheduledItemsBackup
+            End Get
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21006</remarks> '4/1/2015 note: removed ' (would also use 80225 if present in response xml)'
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEmployeeTools As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEmployeeTools
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEmployeeTools = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21006</remarks> '4/1/2015 note: removed ' (would also use 80225 if present in response xml)'
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEmployeeToolsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEmployeeToolsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEmployeeToolsQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21009 (this property is specific to NumberOfEmployees)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CrimeEmpDisEmployeeText As String
+            Get
+                Return PolicyLevelInfoExtended.CrimeEmpDisEmployeeText
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CrimeEmpDisEmployeeText = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21009 (this property is specific to NumberOfLocations)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CrimeEmpDisLocationText As String
+            Get
+                Return PolicyLevelInfoExtended.CrimeEmpDisLocationText
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CrimeEmpDisLocationText = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21009</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CrimeEmpDisLimit As String
+            Get
+                Return PolicyLevelInfoExtended.CrimeEmpDisLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CrimeEmpDisLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21009</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CrimeEmpDisLimitId As String 'verified in database 7/3/2012
+            Get
+                Return PolicyLevelInfoExtended.CrimeEmpDisLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CrimeEmpDisLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21009</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CrimeEmpDisQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CrimeEmpDisQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CrimeEmpDisQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21010</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CrimeForgeryLimit As String
+            Get
+                Return PolicyLevelInfoExtended.CrimeForgeryLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CrimeForgeryLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21010</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CrimeForgeryLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.CrimeForgeryLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CrimeForgeryLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21010</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CrimeForgeryQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CrimeForgeryQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CrimeForgeryQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 309</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasEarthquake As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasEarthquake
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasEarthquake = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 309</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EarthquakeQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.EarthquakeQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EarthquakeQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21029</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasHiredAuto As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasHiredAuto
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasHiredAuto = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21029</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HiredAutoQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.HiredAutoQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.HiredAutoQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21030</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasNonOwnedAuto As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasNonOwnedAuto
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasNonOwnedAuto = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21030</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property NonOwnedAutoWithDelivery As Boolean
+            Get
+                Return PolicyLevelInfoExtended.NonOwnedAutoWithDelivery
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.NonOwnedAutoWithDelivery = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21030</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property NonOwnedAutoQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.NonOwnedAutoQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.NonOwnedAutoQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80145; CoverageLimitId</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PropertyDeductibleId As String '*currently being sent/returned in XML here instead of at building level
+            Get
+                Return PolicyLevelInfoExtended.PropertyDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PropertyDeductibleId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10054 (this property is specific to text for CoverageLimitId)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployersLiability As String
+            Get
+                Return PolicyLevelInfoExtended.EmployersLiability
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployersLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10054 (this property is specific to CoverageLimitId)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployersLiabilityId As String
+            Get
+                Return PolicyLevelInfoExtended.EmployersLiabilityId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployersLiabilityId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10054</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployersLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.EmployersLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployersLiabilityQuotedPremium = value
+            End Set
+        End Property
+        'added 7/9/2018
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80155</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GeneralAggregateLimit As String
+            Get
+                Return PolicyLevelInfoExtended.GeneralAggregateLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GeneralAggregateLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80155</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GeneralAggregateLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.GeneralAggregateLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GeneralAggregateLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80155</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GeneralAggregateQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.GeneralAggregateQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GeneralAggregateQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80156</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ProductsCompletedOperationsAggregateLimit As String
+            Get
+                Return PolicyLevelInfoExtended.ProductsCompletedOperationsAggregateLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ProductsCompletedOperationsAggregateLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80156</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ProductsCompletedOperationsAggregateLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.ProductsCompletedOperationsAggregateLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ProductsCompletedOperationsAggregateLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80156</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ProductsCompletedOperationsAggregateQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ProductsCompletedOperationsAggregateQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ProductsCompletedOperationsAggregateQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80169</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PersonalAndAdvertisingInjuryLimit As String
+            Get
+                Return PolicyLevelInfoExtended.PersonalAndAdvertisingInjuryLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PersonalAndAdvertisingInjuryLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80169</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PersonalAndAdvertisingInjuryLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.PersonalAndAdvertisingInjuryLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PersonalAndAdvertisingInjuryLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80169</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PersonalAndAdvertisingInjuryQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PersonalAndAdvertisingInjuryQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PersonalAndAdvertisingInjuryQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80178</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property DamageToPremisesRentedLimit As String
+            Get
+                Return PolicyLevelInfoExtended.DamageToPremisesRentedLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.DamageToPremisesRentedLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80178</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property DamageToPremisesRentedLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.DamageToPremisesRentedLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.DamageToPremisesRentedLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80178</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property DamageToPremisesRentedQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.DamageToPremisesRentedQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.DamageToPremisesRentedQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80170</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MedicalExpensesLimit As String
+            Get
+                Return PolicyLevelInfoExtended.MedicalExpensesLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MedicalExpensesLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80170</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MedicalExpensesLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.MedicalExpensesLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MedicalExpensesLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80170</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MedicalExpensesQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.MedicalExpensesQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MedicalExpensesQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 12</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasExclusionOfAmishWorkers As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasExclusionOfAmishWorkers
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasExclusionOfAmishWorkers = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 13</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasExclusionOfSoleProprietorsPartnersOfficersAndOthers As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasExclusionOfSoleProprietorsPartnersOfficersAndOthers
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasExclusionOfSoleProprietorsPartnersOfficersAndOthers = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 14</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasInclusionOfSoleProprietorsPartnersOfficersAndOthers As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasInclusionOfSoleProprietorsPartnersOfficersAndOthers
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasInclusionOfSoleProprietorsPartnersOfficersAndOthers = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 15</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasWaiverOfSubrogation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasWaiverOfSubrogation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasWaiverOfSubrogation = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 15</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property WaiverOfSubrogationNumberOfWaivers As Integer
+            Get
+                Return PolicyLevelInfoExtended.WaiverOfSubrogationNumberOfWaivers
+            End Get
+            Set(value As Integer)
+                PolicyLevelInfoExtended.WaiverOfSubrogationNumberOfWaivers = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 15</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property WaiverOfSubrogationPremium As String
+            Get
+                Return PolicyLevelInfoExtended.WaiverOfSubrogationPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.WaiverOfSubrogationPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 15</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property WaiverOfSubrogationPremiumId As String
+            Get
+                Return PolicyLevelInfoExtended.WaiverOfSubrogationPremiumId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.WaiverOfSubrogationPremiumId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 12</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ExclusionOfAmishWorkerRecords As Generic.List(Of QuickQuoteExclusionOfAmishWorkerRecord)
+            Get
+                Return PolicyLevelInfoExtended.ExclusionOfAmishWorkerRecords
+            End Get
+            Set(value As Generic.List(Of QuickQuoteExclusionOfAmishWorkerRecord))
+                PolicyLevelInfoExtended.ExclusionOfAmishWorkerRecords = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 13</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ExclusionOfSoleProprietorRecords As Generic.List(Of QuickQuoteExclusionOfSoleProprietorRecord)
+            Get
+                Return PolicyLevelInfoExtended.ExclusionOfSoleProprietorRecords
+            End Get
+            Set(value As Generic.List(Of QuickQuoteExclusionOfSoleProprietorRecord))
+                PolicyLevelInfoExtended.ExclusionOfSoleProprietorRecords = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 14</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InclusionOfSoleProprietorRecords As Generic.List(Of QuickQuoteInclusionOfSoleProprietorRecord)
+            Get
+                Return PolicyLevelInfoExtended.InclusionOfSoleProprietorRecords
+            End Get
+            Set(value As Generic.List(Of QuickQuoteInclusionOfSoleProprietorRecord))
+                PolicyLevelInfoExtended.InclusionOfSoleProprietorRecords = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 15</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property WaiverOfSubrogationRecords As Generic.List(Of QuickQuoteWaiverOfSubrogationRecord)
+            Get
+                Return PolicyLevelInfoExtended.WaiverOfSubrogationRecords
+            End Get
+            Set(value As Generic.List(Of QuickQuoteWaiverOfSubrogationRecord))
+                PolicyLevelInfoExtended.WaiverOfSubrogationRecords = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property ExclusionOfAmishWorkerRecordsBackup As Generic.List(Of QuickQuoteExclusionOfAmishWorkerRecord)
+            Get
+                Return PolicyLevelInfoExtended.ExclusionOfAmishWorkerRecordsBackup
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property ExclusionOfSoleProprietorRecordsBackup As Generic.List(Of QuickQuoteExclusionOfSoleProprietorRecord)
+            Get
+                Return PolicyLevelInfoExtended.ExclusionOfSoleProprietorRecordsBackup
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property InclusionOfSoleProprietorRecordsBackup As Generic.List(Of QuickQuoteInclusionOfSoleProprietorRecord)
+            Get
+                Return PolicyLevelInfoExtended.InclusionOfSoleProprietorRecordsBackup
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property WaiverOfSubrogationRecordsBackup As Generic.List(Of QuickQuoteWaiverOfSubrogationRecord)
+            Get
+                Return PolicyLevelInfoExtended.WaiverOfSubrogationRecordsBackup
+            End Get
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21032</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasBarbersProfessionalLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasBarbersProfessionalLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasBarbersProfessionalLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21032</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BarbersProfessionalLiabiltyQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BarbersProfessionalLiabiltyQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BarbersProfessionalLiabiltyQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21032</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BarbersProfessionalLiabilityFullTimeEmpNum As String
+            Get
+                Return PolicyLevelInfoExtended.BarbersProfessionalLiabilityFullTimeEmpNum
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BarbersProfessionalLiabilityFullTimeEmpNum = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21032</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BarbersProfessionalLiabilityPartTimeEmpNum As String
+            Get
+                Return PolicyLevelInfoExtended.BarbersProfessionalLiabilityPartTimeEmpNum
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BarbersProfessionalLiabilityPartTimeEmpNum = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21032</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BarbersProfessionalLiabilityDescription As String
+            Get
+                Return PolicyLevelInfoExtended.BarbersProfessionalLiabilityDescription
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BarbersProfessionalLiabilityDescription = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21033</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasBeauticiansProfessionalLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasBeauticiansProfessionalLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasBeauticiansProfessionalLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21033</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BeauticiansProfessionalLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BeauticiansProfessionalLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BeauticiansProfessionalLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21033</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BeauticiansProfessionalLiabilityFullTimeEmpNum As String
+            Get
+                Return PolicyLevelInfoExtended.BeauticiansProfessionalLiabilityFullTimeEmpNum
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BeauticiansProfessionalLiabilityFullTimeEmpNum = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21033</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BeauticiansProfessionalLiabilityPartTimeEmpNum As String
+            Get
+                Return PolicyLevelInfoExtended.BeauticiansProfessionalLiabilityPartTimeEmpNum
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BeauticiansProfessionalLiabilityPartTimeEmpNum = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21033</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BeauticiansProfessionalLiabilityDescription As String
+            Get
+                Return PolicyLevelInfoExtended.BeauticiansProfessionalLiabilityDescription
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BeauticiansProfessionalLiabilityDescription = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21034</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFuneralDirectorsProfessionalLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasFuneralDirectorsProfessionalLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFuneralDirectorsProfessionalLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21034</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FuneralDirectorsProfessionalLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FuneralDirectorsProfessionalLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FuneralDirectorsProfessionalLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21034</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FuneralDirectorsProfessionalLiabilityEmpNum As String
+            Get
+                Return PolicyLevelInfoExtended.FuneralDirectorsProfessionalLiabilityEmpNum
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FuneralDirectorsProfessionalLiabilityEmpNum = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21036</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasPrintersProfessionalLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasPrintersProfessionalLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasPrintersProfessionalLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21036</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PrintersProfessionalLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PrintersProfessionalLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PrintersProfessionalLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21036</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PrintersProfessionalLiabilityLocNum As String
+            Get
+                Return PolicyLevelInfoExtended.PrintersProfessionalLiabilityLocNum
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PrintersProfessionalLiabilityLocNum = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21058</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasSelfStorageFacility As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasSelfStorageFacility
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasSelfStorageFacility = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21058</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SelfStorageFacilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.SelfStorageFacilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SelfStorageFacilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21058</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SelfStorageFacilityLimit As String
+            Get
+                Return PolicyLevelInfoExtended.SelfStorageFacilityLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SelfStorageFacilityLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 164</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasVeterinariansProfessionalLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasVeterinariansProfessionalLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasVeterinariansProfessionalLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 164</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VeterinariansProfessionalLiabilityEmpNum As String
+            Get
+                Return PolicyLevelInfoExtended.VeterinariansProfessionalLiabilityEmpNum
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.VeterinariansProfessionalLiabilityEmpNum = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 164</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VeterinariansProfessionalLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.VeterinariansProfessionalLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.VeterinariansProfessionalLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 164</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasPharmacistProfessionalLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasPharmacistProfessionalLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasPharmacistProfessionalLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 164</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PharmacistAnnualGrossSales As String
+            Get
+                Return PolicyLevelInfoExtended.PharmacistAnnualGrossSales
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PharmacistAnnualGrossSales = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 164</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PharmacistQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PharmacistQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PharmacistQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasLiquorLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasLiquorLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasLiquorLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorLiabilityAnnualGrossAlcoholSalesReceipts As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorLiabilityAnnualGrossAlcoholSalesReceipts
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorLiabilityAnnualGrossAlcoholSalesReceipts = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorLiabilityAnnualGrossPackageSalesReceipts As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorLiabilityAnnualGrossPackageSalesReceipts
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorLiabilityAnnualGrossPackageSalesReceipts = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property LiquorLiabilityAggregateLimit As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorLiabilityAggregateLimit
+            End Get
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorLiabilityClassCodeTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorLiabilityClassCodeTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorLiabilityClassCodeTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21035</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasOpticalAndHearingAidProfessionalLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasOpticalAndHearingAidProfessionalLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasOpticalAndHearingAidProfessionalLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21035</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OpticalAndHearingAidProfessionalLiabilityEmpNum As String
+            Get
+                Return PolicyLevelInfoExtended.OpticalAndHearingAidProfessionalLiabilityEmpNum
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OpticalAndHearingAidProfessionalLiabilityEmpNum = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21035</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OpticalAndHearingAidProfessionalLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.OpticalAndHearingAidProfessionalLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OpticalAndHearingAidProfessionalLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80376 and 80377</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasMotelCoverage As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasMotelCoverage
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasMotelCoverage = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80376</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotelCoveragePerGuestLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.MotelCoveragePerGuestLimitId '371 - 1,000/25,000, 372 - 2,000/50,000, 373 - 3,000/75,000, 374 - 4,000/100,000
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotelCoveragePerGuestLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80376</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotelCoveragePerGuestLimit As String
+            Get
+                Return PolicyLevelInfoExtended.MotelCoveragePerGuestLimit '371 - 1,000/25,000, 372 - 2,000/50,000, 373 - 3,000/75,000, 374 - 4,000/100,000
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotelCoveragePerGuestLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80377</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotelCoverageSafeDepositLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.MotelCoverageSafeDepositLimitId '0 - N/A, 8 - 25,000, 9 - 50,000, 10 - 100,000, 55 - 250,000
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotelCoverageSafeDepositLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80377</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotelCoverageSafeDepositLimit As String
+            Get
+                Return PolicyLevelInfoExtended.MotelCoverageSafeDepositLimit '0 - N/A, 8 - 25,000, 9 - 50,000, 10 - 100,000, 55 - 250,000
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotelCoverageSafeDepositLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80377</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotelCoverageSafeDepositDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.MotelCoverageSafeDepositDeductibleId '40 - 0, 4 - 250,8 - 500,9 - 1,000,15 - 2,500
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotelCoverageSafeDepositDeductibleId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80377</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotelCoverageSafeDepositDeductible As String
+            Get
+                Return PolicyLevelInfoExtended.MotelCoverageSafeDepositDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotelCoverageSafeDepositDeductible = value '40 - 0, 4 - 250,8 - 500,9 - 1,000,15 - 2,500
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80376</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotelCoveragePerGuestQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.MotelCoveragePerGuestQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotelCoveragePerGuestQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80377</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotelCoverageSafeDepositQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.MotelCoverageSafeDepositQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotelCoverageSafeDepositQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80377</remarks>
+        <Obsolete("don't use this... premium for 80376 is in MotelCoveragePerGuestQuotedPremium, and premium for 80377 is in MotelCoverageSafeDepositQuotedPremium")>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotelCoverageQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.MotelCoverageQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotelCoverageQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80398</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasPhotographyCoverage As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasPhotographyCoverage
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasPhotographyCoverage = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80398</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasPhotographyCoverageScheduledCoverages As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasPhotographyCoverageScheduledCoverages
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasPhotographyCoverageScheduledCoverages = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80398</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PhotographyCoverageQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PhotographyCoverageQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PhotographyCoverageQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80398</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property PhotographyTotalScheduledLimits As String
+            Get
+                Return PolicyLevelInfoExtended.PhotographyTotalScheduledLimits
+            End Get
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond Scheduled Item w/ scheduleditem_id 21248</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PhotographyScheduledCoverages As List(Of QuickQuoteCoverage)
+            Get
+                Return PolicyLevelInfoExtended.PhotographyScheduledCoverages
+            End Get
+            Set(value As List(Of QuickQuoteCoverage))
+                PolicyLevelInfoExtended.PhotographyScheduledCoverages = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80378</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasPhotographyMakeupAndHair As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasPhotographyMakeupAndHair
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasPhotographyMakeupAndHair = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80378</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PhotographyMakeupAndHairQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PhotographyMakeupAndHairQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PhotographyMakeupAndHairQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80380</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasResidentialCleaning As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasResidentialCleaning
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasResidentialCleaning = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80380</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ResidentialCleaningQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ResidentialCleaningQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ResidentialCleaningQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorLiabilityOccurrenceLimit As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorLiabilityOccurrenceLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorLiabilityOccurrenceLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorLiabilityOccurrenceLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorLiabilityOccurrenceLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorLiabilityOccurrenceLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134 (LiquorLiabilityClassificationId 50911 - Manufacturer, Wholesalers &amp; Distributors; LiquorLiabilityClassificationId 58161 - Restaurants or Hotels; LiquorLiabilityClassificationId 59211 - Package Stores; LiquorLiabilityClassificationId 70412 - Clubs</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorLiabilityClassification As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorLiabilityClassification
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorLiabilityClassification = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134 (LiquorLiabilityClassificationId 50911 - Manufacturer, Wholesalers &amp; Distributors; LiquorLiabilityClassificationId 58161 - Restaurants or Hotels; LiquorLiabilityClassificationId 59211 - Package Stores; LiquorLiabilityClassificationId 70412 - Clubs</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorLiabilityClassificationId As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorLiabilityClassificationId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorLiabilityClassificationId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorSales As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorSales
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorSales = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks> 50911 - Manufacturers, Wholesalers and Distributors selling alcoholic beverages for consumption off premises CoverageCode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorManufacturersSales As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorManufacturersSales
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorManufacturersSales = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>58161 - Restaurants, Taverns, Hotels, Motels including package sales CoverageCode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorRestaurantsSales As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorRestaurantsSales
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorRestaurantsSales = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>59211 - Package Stores and other retail establishments selling alchoholic beverages for consumption off premises CoverageCode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorPackageStoresSales As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorPackageStoresSales
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorPackageStoresSales = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>70412 - Clubs CoverageCode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorClubsSales As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorClubsSales
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorClubsSales = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21134</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiquorLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.LiquorLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiquorLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21131</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ProfessionalLiabilityCemetaryNumberOfBurials As String
+            Get
+                Return PolicyLevelInfoExtended.ProfessionalLiabilityCemetaryNumberOfBurials
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ProfessionalLiabilityCemetaryNumberOfBurials = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21131</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ProfessionalLiabilityCemetaryQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ProfessionalLiabilityCemetaryQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ProfessionalLiabilityCemetaryQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21034</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ProfessionalLiabilityFuneralDirectorsNumberOfBodies As String
+            Get
+                Return PolicyLevelInfoExtended.ProfessionalLiabilityFuneralDirectorsNumberOfBodies
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ProfessionalLiabilityFuneralDirectorsNumberOfBodies = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21132</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ProfessionalLiabilityPastoralNumberOfClergy As String
+            Get
+                Return PolicyLevelInfoExtended.ProfessionalLiabilityPastoralNumberOfClergy
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ProfessionalLiabilityPastoralNumberOfClergy = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21132</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ProfessionalLiabilityPastoralQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ProfessionalLiabilityPastoralQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ProfessionalLiabilityPastoralQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 14</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_ManagementCooperation As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_ManagementCooperation
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_ManagementCooperation = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 14</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_ManagementCooperationDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_ManagementCooperationDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_ManagementCooperationDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 1</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_Location As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_Location
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_Location = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 1</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_LocationDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_LocationDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_LocationDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 9</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_BuildingFeatures As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_BuildingFeatures
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_BuildingFeatures = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 9</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_BuildingFeaturesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_BuildingFeaturesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_BuildingFeaturesDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 2</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_Premises As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_Premises
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_Premises = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 2</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_PremisesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_PremisesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_PremisesDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 4</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_Employees As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_Employees
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_Employees = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 4</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_EmployeesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_EmployeesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_EmployeesDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 12</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_Protection As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_Protection
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_Protection = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 12</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_ProtectionDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_ProtectionDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_ProtectionDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 15</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CatostrophicHazards As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CatostrophicHazards
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CatostrophicHazards = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 15</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CatostrophicHazardsDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CatostrophicHazardsDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CatostrophicHazardsDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 16</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_ManagementExperience As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_ManagementExperience
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_ManagementExperience = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 16</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_ManagementExperienceDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_ManagementExperienceDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_ManagementExperienceDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_Equipment As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_Equipment
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_Equipment = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_EquipmentDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_EquipmentDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_EquipmentDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 19</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_MedicalFacilities As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_MedicalFacilities
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_MedicalFacilities = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 19</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_MedicalFacilitiesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_MedicalFacilitiesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_MedicalFacilitiesDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 17</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_ClassificationPeculiarities As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_ClassificationPeculiarities
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_ClassificationPeculiarities = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 17</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_ClassificationPeculiaritiesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_ClassificationPeculiaritiesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_ClassificationPeculiaritiesDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 14</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_ManagementCooperation As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_ManagementCooperation
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_ManagementCooperation = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 14</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_ManagementCooperationDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_ManagementCooperationDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_ManagementCooperationDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 1</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_Location As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_Location
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_Location = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 1</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_LocationDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_LocationDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_LocationDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 2</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_Premises As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_Premises
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_Premises = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 2</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_PremisesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_PremisesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_PremisesDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_Equipment As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_Equipment
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_Equipment = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_EquipmentDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_EquipmentDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_EquipmentDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 4</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_Employees As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_Employees
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_Employees = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 4</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_EmployeesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_EmployeesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_EmployeesDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 17</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_ClassificationPeculiarities As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_ClassificationPeculiarities
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_ClassificationPeculiarities = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 5 (Premises) or 6 (Products) and RiskCharacteristicTypeId 17</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_GL_ClassificationPeculiaritiesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_GL_ClassificationPeculiaritiesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_GL_ClassificationPeculiaritiesDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 1 (Liability) and RiskCharacteristicTypeId 5</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_Management As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_Management
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_Management = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 1 (Liability) and RiskCharacteristicTypeId 5</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_ManagementDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_ManagementDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_ManagementDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 1 (Liability) and RiskCharacteristicTypeId 4</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_Employees As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_Employees
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_Employees = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 1 (Liability) and RiskCharacteristicTypeId 4</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_EmployeesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_EmployeesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_EmployeesDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 1 (Liability) and RiskCharacteristicTypeId 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_Equipment As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_Equipment
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_Equipment = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 1 (Liability) and RiskCharacteristicTypeId 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_EquipmentDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_EquipmentDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_EquipmentDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 1 (Liability) and RiskCharacteristicTypeId 13</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_SafetyOrganization As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_SafetyOrganization
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_SafetyOrganization = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 1 (Liability) and RiskCharacteristicTypeId 13</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_SafetyOrganizationDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_SafetyOrganizationDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_SafetyOrganizationDesc = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 2 (Physical Damage) and RiskCharacteristicTypeId 5</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_Management_Phys_Damage As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_Management_Phys_Damage
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_Management_Phys_Damage = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 2 (Physical Damage) and RiskCharacteristicTypeId 5</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_ManagementDesc_Phys_Damage As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_ManagementDesc_Phys_Damage
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_ManagementDesc_Phys_Damage = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 2 (Physical Damage) and RiskCharacteristicTypeId 4</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_Employees_Phys_Damage As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_Employees_Phys_Damage
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_Employees_Phys_Damage = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 2 (Physical Damage) and RiskCharacteristicTypeId 4</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_EmployeesDesc_Phys_Damage As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_EmployeesDesc_Phys_Damage
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_EmployeesDesc_Phys_Damage = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 2 (Physical Damage) and RiskCharacteristicTypeId 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_Equipment_Phys_Damage As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_Equipment_Phys_Damage
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_Equipment_Phys_Damage = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 2 (Physical Damage) and RiskCharacteristicTypeId 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_EquipmentDesc_Phys_Damage As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_EquipmentDesc_Phys_Damage
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_EquipmentDesc_Phys_Damage = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 2 (Physical Damage) and RiskCharacteristicTypeId 13</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_SafetyOrganization_Phys_Damage As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_SafetyOrganization_Phys_Damage
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_SafetyOrganization_Phys_Damage = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 2 (Physical Damage) and RiskCharacteristicTypeId 13</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CAP_SafetyOrganizationDesc_Phys_Damage As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CAP_SafetyOrganizationDesc_Phys_Damage
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CAP_SafetyOrganizationDesc_Phys_Damage = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 5</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CPR_Management As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CPR_Management
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CPR_Management = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 5</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CPR_ManagementDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CPR_ManagementDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CPR_ManagementDesc = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 24</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CPR_PremisesAndEquipment As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CPR_PremisesAndEquipment
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CPR_PremisesAndEquipment = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond ScheduledRating w/ ScheduleRatingTypeId 4 (IRPM) and RiskCharacteristicTypeId 24</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_CPR_PremisesAndEquipmentDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_CPR_PremisesAndEquipmentDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_CPR_PremisesAndEquipmentDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_CareConditionOfEquipPremises As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_CareConditionOfEquipPremises
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_CareConditionOfEquipPremises = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_CareConditionOfEquipPremisesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_CareConditionOfEquipPremisesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_CareConditionOfEquipPremisesDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_Cooperation As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_Cooperation
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_Cooperation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_CooperationDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_CooperationDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_CooperationDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_DamageSusceptibility As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_DamageSusceptibility
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_DamageSusceptibility = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_DamageSusceptibilityDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_DamageSusceptibilityDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_DamageSusceptibilityDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_DispersionOrConcentration As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_DispersionOrConcentration
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_DispersionOrConcentration = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_DispersionOrConcentrationDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_DispersionOrConcentrationDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_DispersionOrConcentrationDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_SuperiorOrInferiorStructureFeatures As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_SuperiorOrInferiorStructureFeatures
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_SuperiorOrInferiorStructureFeatures = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_SuperiorOrInferiorStructureFeaturesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_SuperiorOrInferiorStructureFeaturesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_SuperiorOrInferiorStructureFeaturesDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_UseOfRiceHullsOrFlameRetardantBedding As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_UseOfRiceHullsOrFlameRetardantBedding
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_UseOfRiceHullsOrFlameRetardantBedding = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_UseOfRiceHullsOrFlameRetardantBeddingDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_UseOfRiceHullsOrFlameRetardantBeddingDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_UseOfRiceHullsOrFlameRetardantBeddingDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_Location As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_Location
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_Location = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_LocationDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_LocationDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_LocationDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_MiscProtectFeaturesOrHazards As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_MiscProtectFeaturesOrHazards
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_MiscProtectFeaturesOrHazards = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_MiscProtectFeaturesOrHazardsDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_MiscProtectFeaturesOrHazardsDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_MiscProtectFeaturesOrHazardsDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_RoofCondition As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_RoofCondition
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_RoofCondition = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_RoofConditionDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_RoofConditionDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_RoofConditionDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_StoragePracticesAndHazardousOperations As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_StoragePracticesAndHazardousOperations
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_StoragePracticesAndHazardousOperations = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_StoragePracticesAndHazardousOperationsDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_StoragePracticesAndHazardousOperationsDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_StoragePracticesAndHazardousOperationsDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_PastLosses As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_PastLosses
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_PastLosses = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_PastLossesDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_PastLossesDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_PastLossesDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_SupportingBusiness As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_SupportingBusiness
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_SupportingBusiness = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_SupportingBusinessDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_SupportingBusinessDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_SupportingBusinessDesc = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_RegularOnsiteInspections As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_RegularOnsiteInspections
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_RegularOnsiteInspections = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IRPM_FAR_RegularOnsiteInspectionsDesc As String
+            Get
+                Return PolicyLevelInfoExtended.IRPM_FAR_RegularOnsiteInspectionsDesc
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IRPM_FAR_RegularOnsiteInspectionsDesc = value
+            End Set
+        End Property
+        'added 7/10/2018
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Dec_BOP_OptCovs_Premium As String
+            Get
+                Return PolicyLevelInfoExtended.Dec_BOP_OptCovs_Premium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Dec_BOP_OptCovs_Premium = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10124 (Workers Compensation); value for CoverageAdditionalInfoRecord w/ description containing 'Experience Mod Premium'</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ExpModQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ExpModQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ExpModQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10124 (Workers Compensation); value for CoverageAdditionalInfoRecord w/ description containing 'Scheduled Rating Plan Premium'</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduleModQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ScheduleModQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ScheduleModQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10124 (Workers Compensation); value for CoverageAdditionalInfoRecord w/ description containing 'Terrorism Risk Premium'</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TerrorismQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.TerrorismQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TerrorismQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10124 (Workers Compensation); sum of all values for CoverageAdditionalInfoRecords w/ description containing 'Workers Compensation - Premium Discount'</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PremDiscountQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PremDiscountQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PremDiscountQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10124 (Workers Compensation); value for CoverageAdditionalInfoRecord w/ description containing 'Minimum Premium'</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MinimumQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.MinimumQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MinimumQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10124 (Workers Compensation); value for CoverageAdditionalInfoRecord w/ description containing 'Minimum Premium Adjustment'</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MinimumPremiumAdjustment As String
+            Get
+                Return PolicyLevelInfoExtended.MinimumPremiumAdjustment
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MinimumPremiumAdjustment = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10055 (Subject)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TotalEstimatedPlanPremium As String
+            Get
+                Return PolicyLevelInfoExtended.TotalEstimatedPlanPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TotalEstimatedPlanPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 20227</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SecondInjuryFundQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.SecondInjuryFundQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SecondInjuryFundQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80559</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IL_WCP_CommissionOperationsFundSurcharge As String
+            Get
+                Return PolicyLevelInfoExtended.IL_WCP_CommissionOperationsFundSurcharge
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IL_WCP_CommissionOperationsFundSurcharge = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Dec_LossConstantPremium As String
+            Get
+                Return PolicyLevelInfoExtended.Dec_LossConstantPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Dec_LossConstantPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Dec_ExpenseConstantPremium As String
+            Get
+                Return PolicyLevelInfoExtended.Dec_ExpenseConstantPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Dec_ExpenseConstantPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Dec_WC_TotalPremiumDue As String
+            Get
+                Return PolicyLevelInfoExtended.Dec_WC_TotalPremiumDue
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Dec_WC_TotalPremiumDue = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 21153 (Premises) and 21154 (Products)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesAndProducts_Deductible As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesAndProducts_Deductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesAndProducts_Deductible = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 21153 (Premises) and 21154 (Products)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesAndProducts_DeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesAndProducts_DeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesAndProducts_DeductibleId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 21153 (Premises) and 21154 (Products)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesAndProducts_Description As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesAndProducts_Description
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesAndProducts_Description = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 21153 (Premises) and 21154 (Products)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesAndProducts_DeductibleCategoryType As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesAndProducts_DeductibleCategoryType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesAndProducts_DeductibleCategoryType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 21153 (Premises) and 21154 (Products)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesAndProducts_DeductibleCategoryTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesAndProducts_DeductibleCategoryTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesAndProducts_DeductibleCategoryTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 21153 (Premises) and 21154 (Products)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesAndProducts_DeductiblePerType As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesAndProducts_DeductiblePerType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesAndProducts_DeductiblePerType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 21153 (Premises) and 21154 (Products)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesAndProducts_DeductiblePerTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesAndProducts_DeductiblePerTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesAndProducts_DeductiblePerTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 21153 (Premises) and 21154 (Products)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Has_GL_PremisesAndProducts As Boolean
+            Get
+                Return PolicyLevelInfoExtended.Has_GL_PremisesAndProducts
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.Has_GL_PremisesAndProducts = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond GLClassifications and coverages w/ coveragecode_id 80150; combines policy level w/ all locations</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesTotalQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesTotalQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesTotalQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond GLClassifications and coverages w/ coveragecode_id 80152; combines policy level w/ all locations</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_ProductsTotalQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.GL_ProductsTotalQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_ProductsTotalQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond GLClassifications and coverages w/ coveragecode_id 80150</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesPolicyLevelQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesPolicyLevelQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesPolicyLevelQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond GLClassifications and coverages w/ coveragecode_id 80152</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_ProductsPolicyLevelQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.GL_ProductsPolicyLevelQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_ProductsPolicyLevelQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80245 (Commercial GL Subline 334 - Policy [premises]); value for CoverageAdditionalInfoRecord w/ description of 'Minimum Premium'</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesMinimumQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesMinimumQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesMinimumQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80245 (Commercial GL Subline 334 - Policy [premises]); value for CoverageAdditionalInfoRecord w/ description of 'Minimum Premium Adjustment'</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_PremisesMinimumPremiumAdjustment As String
+            Get
+                Return PolicyLevelInfoExtended.GL_PremisesMinimumPremiumAdjustment
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_PremisesMinimumPremiumAdjustment = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80247 (Commercial GL Subline 336 - Policy [products]); value for CoverageAdditionalInfoRecord w/ description of 'Minimum Premium'</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_ProductsMinimumQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.GL_ProductsMinimumQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_ProductsMinimumQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80247 (Commercial GL Subline 336 - Policy [products]); value for CoverageAdditionalInfoRecord w/ description of 'Minimum Premium Adjustment'</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GL_ProductsMinimumPremiumAdjustment As String
+            Get
+                Return PolicyLevelInfoExtended.GL_ProductsMinimumPremiumAdjustment
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GL_ProductsMinimumPremiumAdjustment = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Dec_GL_OptCovs_Premium As String
+            Get
+                Return PolicyLevelInfoExtended.Dec_GL_OptCovs_Premium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Dec_GL_OptCovs_Premium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10125 (CAP)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFarmPollutionLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasFarmPollutionLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFarmPollutionLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10125 (CAP)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmPollutionLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FarmPollutionLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmPollutionLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 10066, 10062, 10063, 10064, or 10065</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasHiredBorrowedNonOwned As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasHiredBorrowedNonOwned
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasHiredBorrowedNonOwned = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10066</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasNonOwnershipLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasNonOwnershipLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasNonOwnershipLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10066</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property NonOwnershipLiabilityNumberOfEmployees As String
+            Get
+                Return PolicyLevelInfoExtended.NonOwnershipLiabilityNumberOfEmployees
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.NonOwnershipLiabilityNumberOfEmployees = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10066</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property NonOwnership_ENO_RatingTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.NonOwnership_ENO_RatingTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.NonOwnership_ENO_RatingTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10066</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property NonOwnership_ENO_RatingType As String
+            Get
+                Return PolicyLevelInfoExtended.NonOwnership_ENO_RatingType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.NonOwnership_ENO_RatingType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10066</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property NonOwnershipLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.NonOwnershipLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.NonOwnershipLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10062; CoverageTypeId = 2 (Excess)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasHiredBorrowedLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasHiredBorrowedLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasHiredBorrowedLiability = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10062</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HiredBorrowedLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.HiredBorrowedLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.HiredBorrowedLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10062 (would also use 10065 if present in response xml); IfAnyBasis</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasHiredCarPhysicalDamage As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasHiredCarPhysicalDamage
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasHiredCarPhysicalDamage = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10065</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HiredBorrowedLossOfUseQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.HiredBorrowedLossOfUseQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.HiredBorrowedLossOfUseQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10063; OtherThanCollisionTypeId = 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComprehensiveDeductible As String
+            Get
+                Return PolicyLevelInfoExtended.ComprehensiveDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComprehensiveDeductible = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10063; OtherThanCollisionTypeId = 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComprehensiveDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.ComprehensiveDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComprehensiveDeductibleId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10063; OtherThanCollisionTypeId = 3</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComprehensiveQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ComprehensiveQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComprehensiveQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10064</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CollisionDeductible As String
+            Get
+                Return PolicyLevelInfoExtended.CollisionDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CollisionDeductible = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10064</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CollisionDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.CollisionDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CollisionDeductibleId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 10064</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CollisionQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CollisionQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CollisionQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21552</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Liability_UM_UIM_Limit As String '5/10/2017 note: added static data values to DiamondStaticData.xml (specific to CAP/GAR)
+            Get
+                Return PolicyLevelInfoExtended.Liability_UM_UIM_Limit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Liability_UM_UIM_Limit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21552</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Liability_UM_UIM_LimitId As String '5/10/2017 note: added static data values to DiamondStaticData.xml (specific to CAP/GAR)
+            Get
+                Return PolicyLevelInfoExtended.Liability_UM_UIM_LimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Liability_UM_UIM_LimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21552</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Liability_UM_UIM_QuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.Liability_UM_UIM_QuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Liability_UM_UIM_QuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21540 (CAP) or 70072 (HOM and DFR)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MedicalPaymentsLimit As String '8/11/2014 note: need to update to use static data list... w/ param for lobType; '4/29/2015 note: FAR may now use the MedicalPaymentsLimitId property (unless we decide to create a new prop)... will need to update logic for FAR values and/or update logic to use the static data file; 5/11/2017 note: still need to update to use static data and send LOB
+            Get
+                Return PolicyLevelInfoExtended.MedicalPaymentsLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MedicalPaymentsLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21540 (CAP) or 70072 (HOM and DFR)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MedicalPaymentsLimitid As String '8/11/2014 note: need to update to use static data list... w/ param for lobType; 4/29/2015 note: FAR may now use the MedicalPaymentsLimitId property (unless we decide to create a new prop)... will need to update logic for FAR values and/or update logic to use the static data file; 5/11/2017 note: still need to update to use static data and send LOB
+            Get
+                Return PolicyLevelInfoExtended.MedicalPaymentsLimitid
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MedicalPaymentsLimitid = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21540 (CAP) or 70072 (HOM and DFR)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MedicalPaymentsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.MedicalPaymentsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MedicalPaymentsQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to modifier w/ Diamond ModifierTypeId 61 (Quote) or 62 (Issue/Bound)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property QuoteOrIssueBound As QuickQuoteObject.QuickQuoteQuoteOrIssueBound
+            Get
+                Return PolicyLevelInfoExtended.QuoteOrIssueBound
+            End Get
+            Set(value As QuickQuoteObject.QuickQuoteQuoteOrIssueBound)
+                PolicyLevelInfoExtended.QuoteOrIssueBound = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to modifier w/ Diamond ModifierTypeId 63 (Issue/Bound EffDate; goes w/ ModifierTypeId 62 - Issue/Bound)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IssueBoundEffectiveDate As String
+            Get
+                Return PolicyLevelInfoExtended.IssueBoundEffectiveDate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IssueBoundEffectiveDate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiabilityAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+            Get
+                Return PolicyLevelInfoExtended.LiabilityAutoSymbolObject
+            End Get
+            Set(value As QuickQuoteDeveloperAutoSymbol)
+                PolicyLevelInfoExtended.LiabilityAutoSymbolObject = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MedicalPaymentsAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+            Get
+                Return PolicyLevelInfoExtended.MedicalPaymentsAutoSymbolObject
+            End Get
+            Set(value As QuickQuoteDeveloperAutoSymbol)
+                PolicyLevelInfoExtended.MedicalPaymentsAutoSymbolObject = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UninsuredMotoristAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+            Get
+                Return PolicyLevelInfoExtended.UninsuredMotoristAutoSymbolObject
+            End Get
+            Set(value As QuickQuoteDeveloperAutoSymbol)
+                PolicyLevelInfoExtended.UninsuredMotoristAutoSymbolObject = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UnderinsuredMotoristAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+            Get
+                Return PolicyLevelInfoExtended.UnderinsuredMotoristAutoSymbolObject
+            End Get
+            Set(value As QuickQuoteDeveloperAutoSymbol)
+                PolicyLevelInfoExtended.UnderinsuredMotoristAutoSymbolObject = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComprehensiveCoverageAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+            Get
+                Return PolicyLevelInfoExtended.ComprehensiveCoverageAutoSymbolObject
+            End Get
+            Set(value As QuickQuoteDeveloperAutoSymbol)
+                PolicyLevelInfoExtended.ComprehensiveCoverageAutoSymbolObject = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CollisionCoverageAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+            Get
+                Return PolicyLevelInfoExtended.CollisionCoverageAutoSymbolObject
+            End Get
+            Set(value As QuickQuoteDeveloperAutoSymbol)
+                PolicyLevelInfoExtended.CollisionCoverageAutoSymbolObject = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property NonOwnershipAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+            Get
+                Return PolicyLevelInfoExtended.NonOwnershipAutoSymbolObject
+            End Get
+            Set(value As QuickQuoteDeveloperAutoSymbol)
+                PolicyLevelInfoExtended.NonOwnershipAutoSymbolObject = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HiredBorrowedAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+            Get
+                Return PolicyLevelInfoExtended.HiredBorrowedAutoSymbolObject
+            End Get
+            Set(value As QuickQuoteDeveloperAutoSymbol)
+                PolicyLevelInfoExtended.HiredBorrowedAutoSymbolObject = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TowingAndLaborAutoSymbolObject As QuickQuoteDeveloperAutoSymbol
+            Get
+                Return PolicyLevelInfoExtended.TowingAndLaborAutoSymbolObject
+            End Get
+            Set(value As QuickQuoteDeveloperAutoSymbol)
+                PolicyLevelInfoExtended.TowingAndLaborAutoSymbolObject = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' flag used to determine if developer auto symbols should be used instead of QuickQuoteAutoSymbols
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>always set to True when saveType is Quote instead of AppGap</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UseDeveloperAutoSymbols As Boolean
+            Get
+                Return PolicyLevelInfoExtended.UseDeveloperAutoSymbols
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.UseDeveloperAutoSymbols = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Dec_CAP_OptCovs_Premium As String
+            Get
+                Return PolicyLevelInfoExtended.Dec_CAP_OptCovs_Premium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Dec_CAP_OptCovs_Premium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Dec_CAP_OptCovs_Premium_Without_GarageKeepers As String
+            Get
+                Return PolicyLevelInfoExtended.Dec_CAP_OptCovs_Premium_Without_GarageKeepers
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Dec_CAP_OptCovs_Premium_Without_GarageKeepers = value
+            End Set
+        End Property
+        'added 7/11/2018
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CAP_Liability_WouldHaveSymbol8 As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CAP_Liability_WouldHaveSymbol8
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CAP_Liability_WouldHaveSymbol8 = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CAP_Liability_WouldHaveSymbol9 As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CAP_Liability_WouldHaveSymbol9
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CAP_Liability_WouldHaveSymbol9 = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CAP_Comprehensive_WouldHaveSymbol8 As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CAP_Comprehensive_WouldHaveSymbol8
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CAP_Comprehensive_WouldHaveSymbol8 = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CAP_Collision_WouldHaveSymbol8 As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CAP_Collision_WouldHaveSymbol8
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CAP_Collision_WouldHaveSymbol8 = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21082</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasBlanketBuilding As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasBlanketBuilding
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasBlanketBuilding = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21083</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasBlanketContents As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasBlanketContents
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasBlanketContents = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21084</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasBlanketBuildingAndContents As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasBlanketBuildingAndContents
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasBlanketBuildingAndContents = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21085</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasBlanketBusinessIncome As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasBlanketBusinessIncome
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasBlanketBusinessIncome = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21082</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21083</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketContentsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketContentsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketContentsQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21084</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingAndContentsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingAndContentsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingAndContentsQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21085</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBusinessIncomeQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBusinessIncomeQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBusinessIncomeQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21082</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingCauseOfLossTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingCauseOfLossTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingCauseOfLossTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21082</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingCauseOfLossType As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingCauseOfLossType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingCauseOfLossType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21083</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketContentsCauseOfLossTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketContentsCauseOfLossTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketContentsCauseOfLossTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21083</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketContentsCauseOfLossType As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketContentsCauseOfLossType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketContentsCauseOfLossType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21084</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingAndContentsCauseOfLossTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingAndContentsCauseOfLossTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingAndContentsCauseOfLossTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21084</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingAndContentsCauseOfLossType As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingAndContentsCauseOfLossType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingAndContentsCauseOfLossType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21085</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBusinessIncomeCauseOfLossTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBusinessIncomeCauseOfLossTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBusinessIncomeCauseOfLossTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21085</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBusinessIncomeCauseOfLossType As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBusinessIncomeCauseOfLossType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBusinessIncomeCauseOfLossType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21082</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingLimit As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21082</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingCoinsuranceTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingCoinsuranceTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingCoinsuranceTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21082</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingCoinsuranceType As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingCoinsuranceType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingCoinsuranceType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21082</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingValuationId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingValuationId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingValuationId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21082</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingValuation As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingValuation
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingValuation = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21083</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketContentsLimit As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketContentsLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketContentsLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21083</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketContentsCoinsuranceTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketContentsCoinsuranceTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketContentsCoinsuranceTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21083</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketContentsCoinsuranceType As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketContentsCoinsuranceType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketContentsCoinsuranceType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21083</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketContentsValuationId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketContentsValuationId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketContentsValuationId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21083</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketContentsValuation As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketContentsValuation
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketContentsValuation = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21084</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingAndContentsLimit As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingAndContentsLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingAndContentsLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21084</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingAndContentsCoinsuranceTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingAndContentsCoinsuranceTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingAndContentsCoinsuranceTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21084</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingAndContentsCoinsuranceType As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingAndContentsCoinsuranceType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingAndContentsCoinsuranceType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21084</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingAndContentsValuationId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingAndContentsValuationId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingAndContentsValuationId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21084</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingAndContentsValuation As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingAndContentsValuation
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingAndContentsValuation = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21085</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBusinessIncomeLimit As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBusinessIncomeLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBusinessIncomeLimit = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21085</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBusinessIncomeCoinsuranceTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBusinessIncomeCoinsuranceTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBusinessIncomeCoinsuranceTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21085</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBusinessIncomeCoinsuranceType As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBusinessIncomeCoinsuranceType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBusinessIncomeCoinsuranceType = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21085</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBusinessIncomeValuationId As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBusinessIncomeValuationId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBusinessIncomeValuationId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21085</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBusinessIncomeValuation As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBusinessIncomeValuation
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBusinessIncomeValuation = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverages w/ coveragecode_ids 21082 (building), 21083 (contents), 21084 (building and contents), 21085 (business income), and 21122 (combined EQ)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPR_BlanketCoverages_TotalPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CPR_BlanketCoverages_TotalPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPR_BlanketCoverages_TotalPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 21122</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketCombinedEarthquake_QuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketCombinedEarthquake_QuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketCombinedEarthquake_QuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingIsAgreedValue As Boolean
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingIsAgreedValue
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.BlanketBuildingIsAgreedValue = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketContentsIsAgreedValue As Boolean
+            Get
+                Return PolicyLevelInfoExtended.BlanketContentsIsAgreedValue
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.BlanketContentsIsAgreedValue = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingAndContentsIsAgreedValue As Boolean
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingAndContentsIsAgreedValue
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.BlanketBuildingAndContentsIsAgreedValue = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingAndContentsDeductibleID As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingAndContentsDeductibleID
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingAndContentsDeductibleID = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketContentsDeductibleID As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketContentsDeductibleID
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketContentsDeductibleID = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBuildingDeductibleID As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketBuildingDeductibleID
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketBuildingDeductibleID = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketBusinessIncomeIsAgreedValue As Boolean
+            Get
+                Return PolicyLevelInfoExtended.BlanketBusinessIncomeIsAgreedValue
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.BlanketBusinessIncomeIsAgreedValue = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' used for tier override
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>should just be used for testing</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UseTierOverride As Boolean
+            Get
+                Return PolicyLevelInfoExtended.UseTierOverride
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.UseTierOverride = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' used for tier override
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>uses Diamond's TierAdjustmentType table; should just be used for testing</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TierAdjustmentTypeId As String 'TierAdjustmentType table: N/A=0; 1=13; etc.
+            Get
+                Return PolicyLevelInfoExtended.TierAdjustmentTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TierAdjustmentTypeId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 30007 (HOM and DFR)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PersonalLiabilityLimitId As String '259=25,000; 262=100,000
+            Get
+                Return PolicyLevelInfoExtended.PersonalLiabilityLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PersonalLiabilityLimitId = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 30007 (HOM and DFR)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PersonalLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.PersonalLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PersonalLiabilityQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasConvertedCoverages As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasConvertedCoverages
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasConvertedCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasConvertedInclusionsExclusions As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasConvertedInclusionsExclusions
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasConvertedInclusionsExclusions = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasConvertedModifiers As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasConvertedModifiers
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasConvertedModifiers = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasConvertedScheduledRatings As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasConvertedScheduledRatings
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasConvertedScheduledRatings = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseExclusionNumForExclusionReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CanUseExclusionNumForExclusionReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CanUseExclusionNumForExclusionReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseLossHistoryNumForLossHistoryReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CanUseLossHistoryNumForLossHistoryReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CanUseLossHistoryNumForLossHistoryReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasEPLI As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasEPLI
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasEPLI = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EPLI_Applied As Boolean
+            Get
+                Return PolicyLevelInfoExtended.EPLI_Applied
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.EPLI_Applied = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EPLIPremium As String
+            Get
+                Return PolicyLevelInfoExtended.EPLIPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EPLIPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EPLICoverageLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.EPLICoverageLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EPLICoverageLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property EPLICoverageLimit As String
+            Get
+                Return PolicyLevelInfoExtended.EPLICoverageLimit
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EPLIDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.EPLIDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EPLIDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property EPLIDeductible As String
+            Get
+                Return PolicyLevelInfoExtended.EPLIDeductible
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EPLICoverageTypeID As String
+            Get
+                Return PolicyLevelInfoExtended.EPLICoverageTypeID
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EPLICoverageTypeID = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property EPLICoverageType As String
+            Get
+                Return PolicyLevelInfoExtended.EPLICoverageType
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' CGL - Blanket Waiver of Subrogation
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketWaiverOfSubrogation As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketWaiverOfSubrogation
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketWaiverOfSubrogation = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' CGL - Blanket Waiver of Subrogation Quoted Premium
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 70017 (BOP) or 80154 (CGL)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketWaiverOfSubrogationQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketWaiverOfSubrogationQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketWaiverOfSubrogationQuotedPremium = value
+            End Set
+        End Property
+
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasCondoDandO As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasCondoDandO
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasCondoDandO = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CondoDandOAssociatedName As String
+            Get
+                Return PolicyLevelInfoExtended.CondoDandOAssociatedName
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CondoDandOAssociatedName = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CondoDandODeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.CondoDandODeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CondoDandODeductibleId = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property CondoDandODeductible As String
+            Get
+                Return PolicyLevelInfoExtended.CondoDandODeductible
+            End Get
+
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CondoDandOPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CondoDandOPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CondoDandOPremium = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CondoDandOManualLimit As String
+            Get
+
+                Return PolicyLevelInfoExtended.CondoDandOManualLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CondoDandOManualLimit = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUsePolicyUnderwritingNumForPolicyUnderwritingReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CanUsePolicyUnderwritingNumForPolicyUnderwritingReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CanUsePolicyUnderwritingNumForPolicyUnderwritingReconciliation = value
+            End Set
+        End Property
+        'added 7/12/2018
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasConvertedScheduledCoverages As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasConvertedScheduledCoverages
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasConvertedScheduledCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseScheduledCoverageNumForScheduledCoverageReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CanUseScheduledCoverageNumForScheduledCoverageReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CanUseScheduledCoverageNumForScheduledCoverageReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentScheduledCoverages As List(Of QuickQuoteContractorsEquipmentScheduledCoverage)
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentScheduledCoverages
+            End Get
+            Set(value As List(Of QuickQuoteContractorsEquipmentScheduledCoverage))
+                PolicyLevelInfoExtended.ContractorsEquipmentScheduledCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property ContractorsEquipmentScheduledCoveragesTotalQuotedPremium As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.FullTermPremium for ContractorsEquipmentScheduledCoverages
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentScheduledCoveragesTotalQuotedPremium
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentScheduleCoinsuranceTypeId As String 'may need static data placeholder; may be defaulted as there's just one value in dropdown (1 = per 100)
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentScheduleCoinsuranceTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentScheduleCoinsuranceTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentScheduleDeductibleId As String 'may need static data placeholder
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentScheduleDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentScheduleDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentScheduleRate As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentScheduleRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentScheduleRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentScheduleQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentScheduleQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentScheduleQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property ContractorsEquipmentScheduleManualLimitAmount As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.ManualLimitAmount for ContractorsEquipmentScheduledCoverages
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentScheduleManualLimitAmount
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentLeasedRentedFromOthersLimit As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentLeasedRentedFromOthersLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentLeasedRentedFromOthersLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentLeasedRentedFromOthersCoverageLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentLeasedRentedFromOthersCoverageLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentLeasedRentedFromOthersCoverageLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentLeasedRentedFromOthersRate As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentLeasedRentedFromOthersRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentLeasedRentedFromOthersRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentLeasedRentedFromOthersQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentLeasedRentedFromOthersQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentLeasedRentedFromOthersQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentRentalReimbursementLimit As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentRentalReimbursementLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentRentalReimbursementLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentRentalReimbursementRate As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentRentalReimbursementRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentRentalReimbursementRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentRentalReimbursementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentRentalReimbursementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentRentalReimbursementQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentSmallToolsEndorsementPerOccurrenceLimit As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerOccurrenceLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerOccurrenceLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentSmallToolsEndorsementPerOccurrenceRate As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerOccurrenceRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerOccurrenceRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentSmallToolsEndorsementPerOccurrenceDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerOccurrenceDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerOccurrenceDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentSmallToolsEndorsementPerOccurrenceQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerOccurrenceQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerOccurrenceQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentSmallToolsEndorsementPerToolLimit As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerToolLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerToolLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentSmallToolsEndorsementPerToolQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerToolQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentSmallToolsEndorsementPerToolQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SmallToolsLimit As String
+            Get
+                Return PolicyLevelInfoExtended.SmallToolsLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SmallToolsLimit = value
+                qqHelper.ConvertToLimitFormat(PolicyLevelInfoExtended.SmallToolsLimit)
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SmallToolsRate As String
+            Get
+                Return PolicyLevelInfoExtended.SmallToolsRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SmallToolsRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SmallToolsDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.SmallToolsDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SmallToolsDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SmallToolsAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.SmallToolsAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.SmallToolsAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SmallToolsCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.SmallToolsCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.SmallToolsCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SmallToolsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.SmallToolsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SmallToolsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SmallToolsIsEmployeeTools As Boolean 'small tools floater
+            Get
+                Return PolicyLevelInfoExtended.SmallToolsIsEmployeeTools
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.SmallToolsIsEmployeeTools = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SmallToolsIsToolsLeasedOrRented As Boolean 'small tools floater
+            Get
+                Return PolicyLevelInfoExtended.SmallToolsIsToolsLeasedOrRented
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.SmallToolsIsToolsLeasedOrRented = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SmallToolsAnyOneLossCatastropheLimit As String
+            Get
+                Return PolicyLevelInfoExtended.SmallToolsAnyOneLossCatastropheLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SmallToolsAnyOneLossCatastropheLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SmallToolsAnyOneLossCatastropheQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.SmallToolsAnyOneLossCatastropheQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SmallToolsAnyOneLossCatastropheQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationScheduledLocations As List(Of QuickQuoteInstallationScheduledLocation)
+            Get
+                Return PolicyLevelInfoExtended.InstallationScheduledLocations
+            End Get
+            Set(value As List(Of QuickQuoteInstallationScheduledLocation))
+                PolicyLevelInfoExtended.InstallationScheduledLocations = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property InstallationScheduledLocationsTotalLimit As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.ManualLimitAmount for InstallationScheduledLocations
+            Get
+                Return PolicyLevelInfoExtended.InstallationScheduledLocationsTotalLimit
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property InstallationScheduledLocationsTotalQuotedPremium As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.FullTermPremium for InstallationScheduledLocations
+            Get
+                Return PolicyLevelInfoExtended.InstallationScheduledLocationsTotalQuotedPremium
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.InstallationAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.InstallationAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.InstallationCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.InstallationCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationBlanketLimit As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationBlanketLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationBlanketLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationBlanketCoinsuranceTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationBlanketCoinsuranceTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationBlanketCoinsuranceTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationBlanketDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationBlanketDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationBlanketDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationBlanketRate As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationBlanketRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationBlanketRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationBlanketQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationBlanketQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationBlanketQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationBlanketAnyOneLossCatastropheLimit As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationBlanketAnyOneLossCatastropheLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationBlanketAnyOneLossCatastropheLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationBlanketAnyOneLossCatastropheQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationBlanketAnyOneLossCatastropheQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationBlanketAnyOneLossCatastropheQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationAdditionalDebrisRemovalExpenseLimit As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationAdditionalDebrisRemovalExpenseLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationAdditionalDebrisRemovalExpenseLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationAdditionalDebrisRemovalExpenseQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationAdditionalDebrisRemovalExpenseQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationAdditionalDebrisRemovalExpenseQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationStorageLocationsLimit As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationStorageLocationsLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationStorageLocationsLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationStorageLocationsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationStorageLocationsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationStorageLocationsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationTransitLimit As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationTransitLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationTransitLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationTransitQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationTransitQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationTransitQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationTestingLimit As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationTestingLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationTestingLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationTestingQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationTestingQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationTestingQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationSewerBackupLimit As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationSewerBackupLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationSewerBackupLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationSewerBackupDeductible As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationSewerBackupDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationSewerBackupDeductible = value 'might need limit formatting
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationSewerBackupQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationSewerBackupQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationSewerBackupQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationSewerBackupCatastropheLimit As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationSewerBackupCatastropheLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationSewerBackupCatastropheLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationSewerBackupCatastropheQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationSewerBackupCatastropheQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationSewerBackupCatastropheQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationEarthquakeLimit As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationEarthquakeLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationEarthquakeLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationEarthquakeDeductible As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationEarthquakeDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationEarthquakeDeductible = value 'might need limit formatting
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationEarthquakeQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationEarthquakeQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationEarthquakeQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationEarthquakeCatastropheLimit As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationEarthquakeCatastropheLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationEarthquakeCatastropheLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InstallationEarthquakeCatastropheQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InstallationEarthquakeCatastropheQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InstallationEarthquakeCatastropheQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BusinessPersonalPropertyLimit As String 'shown in UI Installation Coverage Extensions section, but may not be specific to Installation
+            Get
+                Return PolicyLevelInfoExtended.BusinessPersonalPropertyLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BusinessPersonalPropertyLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BusinessPersonalPropertyQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BusinessPersonalPropertyQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BusinessPersonalPropertyQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledPropertyItems As List(Of QuickQuoteScheduledPropertyItem)
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPropertyItems
+            End Get
+            Set(value As List(Of QuickQuoteScheduledPropertyItem))
+                PolicyLevelInfoExtended.ScheduledPropertyItems = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property ScheduledPropertyItemsTotalLimit As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.ManualLimitAmount for ScheduledPropertyItems
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPropertyItemsTotalLimit
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property ScheduledPropertyItemsTotalQuotedPremium As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.FullTermPremium for ScheduledPropertyItems
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPropertyItemsTotalQuotedPremium
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledPropertyAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPropertyAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.ScheduledPropertyAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledPropertyCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPropertyCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.ScheduledPropertyCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledPropertyCoinsuranceTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPropertyCoinsuranceTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ScheduledPropertyCoinsuranceTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledPropertyDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPropertyDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ScheduledPropertyDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledPropertyRate As String
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPropertyRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ScheduledPropertyRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledPropertyNamedPerils As Boolean
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPropertyNamedPerils
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.ScheduledPropertyNamedPerils = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledPropertyQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPropertyQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ScheduledPropertyQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerCoinsuranceTypeId As String 'cov also has CoverageBasisTypeId set to 1
+            Get
+                Return PolicyLevelInfoExtended.ComputerCoinsuranceTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerCoinsuranceTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerExcludeEarthquake As Boolean
+            Get
+                Return PolicyLevelInfoExtended.ComputerExcludeEarthquake
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.ComputerExcludeEarthquake = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerValuationMethodTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.ComputerValuationMethodTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerValuationMethodTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.ComputerAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.ComputerAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.ComputerCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.ComputerCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ComputerQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerAllPerilsDeductibleId As String 'cov also has CoverageBasisTypeId set to 1
+            Get
+                Return PolicyLevelInfoExtended.ComputerAllPerilsDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerAllPerilsDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerAllPerilsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ComputerAllPerilsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerAllPerilsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerEarthquakeVolcanicEruptionDeductible As String 'cov also has CoverageBasisTypeId set to 1; example also has ApplyToWrittenPremiuim set to true
+            Get
+                Return PolicyLevelInfoExtended.ComputerEarthquakeVolcanicEruptionDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerEarthquakeVolcanicEruptionDeductible = value 'might need limit formatting
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerEarthquakeVolcanicEruptionQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ComputerEarthquakeVolcanicEruptionQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerEarthquakeVolcanicEruptionQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerMechanicalBreakdownDeductible As String 'cov also has CoverageBasisTypeId set to 1; example also has ApplyToWrittenPremiuim set to true
+            Get
+                Return PolicyLevelInfoExtended.ComputerMechanicalBreakdownDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerMechanicalBreakdownDeductible = value 'might need limit formatting
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerMechanicalBreakdownQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ComputerMechanicalBreakdownQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerMechanicalBreakdownQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskDeductibleId As String 'cov also has CoverageBasisTypeId set to 1
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BuildersRiskDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskRate As String
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BuildersRiskRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.BuildersRiskAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.BuildersRiskCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BuildersRiskQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskScheduledLocations As List(Of QuickQuoteBuildersRiskScheduledLocation)
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskScheduledLocations
+            End Get
+            Set(value As List(Of QuickQuoteBuildersRiskScheduledLocation))
+                PolicyLevelInfoExtended.BuildersRiskScheduledLocations = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property BuildersRiskScheduledLocationsTotalLimit As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.ManualLimitAmount for BuildersRiskScheduledLocations; 2/19/2015 note: this should also include Coverage.ManualLimitAmount for other covs under ScheduledCoverage... currently looking at 21348 (Builder's Risk - Schedule) only
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskScheduledLocationsTotalLimit
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property BuildersRiskScheduledLocationsTotalQuotedPremium As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.FullTermPremium for BuildersRiskScheduledLocations
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskScheduledLocationsTotalQuotedPremium
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskScheduleStorageLocationsLimit As String
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskScheduleStorageLocationsLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BuildersRiskScheduleStorageLocationsLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskScheduleStorageLocationsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskScheduleStorageLocationsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BuildersRiskScheduleStorageLocationsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskScheduleTransitLimit As String
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskScheduleTransitLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BuildersRiskScheduleTransitLimit = value
+                qqHelper.ConvertToLimitFormat(PolicyLevelInfoExtended.BuildersRiskScheduleTransitLimit)
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskScheduleTransitQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskScheduleTransitQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BuildersRiskScheduleTransitQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskScheduleTestingLimit As String
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskScheduleTestingLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BuildersRiskScheduleTestingLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BuildersRiskScheduleTestingQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BuildersRiskScheduleTestingQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BuildersRiskScheduleTestingQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FineArtsDeductibleCategoryTypeId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.FineArtsDeductibleCategoryTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FineArtsDeductibleCategoryTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FineArtsRate As String
+            Get
+                Return PolicyLevelInfoExtended.FineArtsRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FineArtsRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FineArtsDeductibleId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.FineArtsDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FineArtsDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FineArtsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FineArtsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FineArtsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FineArtsAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.FineArtsAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.FineArtsAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FineArtsCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.FineArtsCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.FineArtsCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FineArtsBreakageMarringOrScratching As Boolean 'renamed from HasFineArtsBreakageMarringOrScratching
+            Get
+                Return PolicyLevelInfoExtended.FineArtsBreakageMarringOrScratching
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.FineArtsBreakageMarringOrScratching = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FineArtsBreakageMarringOrScratchingQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FineArtsBreakageMarringOrScratchingQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FineArtsBreakageMarringOrScratchingQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoAnyOneOwnedVehicleLimit As String
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoAnyOneOwnedVehicleDeductibleId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoAnyOneOwnedVehicleRate As String
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoAnyOneOwnedVehicleDescription As String
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleDescription
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleDescription = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoAnyOneOwnedVehicleAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoAnyOneOwnedVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoAnyOneOwnedVehicleLoadingUnloading As Boolean
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleLoadingUnloading
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleLoadingUnloading = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoAnyOneOwnedVehicleNamedPerils As Boolean
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleNamedPerils
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleNamedPerils = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoAnyOneOwnedVehicleQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OwnersCargoAnyOneOwnedVehicleQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoCatastropheLimit As String
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoCatastropheLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OwnersCargoCatastropheLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersCargoCatastropheQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.OwnersCargoCatastropheQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OwnersCargoCatastropheQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationCatastropheLimit As String
+            Get
+                Return PolicyLevelInfoExtended.TransportationCatastropheLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TransportationCatastropheLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationCatastropheDeductibleId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.TransportationCatastropheDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TransportationCatastropheDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationCatastropheDescription As String
+            Get
+                Return PolicyLevelInfoExtended.TransportationCatastropheDescription
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TransportationCatastropheDescription = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationCatastropheAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.TransportationCatastropheAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.TransportationCatastropheAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationCatastropheCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.TransportationCatastropheCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.TransportationCatastropheCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationCatastropheLoadingUnloading As Boolean
+            Get
+                Return PolicyLevelInfoExtended.TransportationCatastropheLoadingUnloading
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.TransportationCatastropheLoadingUnloading = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationCatastropheNamedPerils As Boolean
+            Get
+                Return PolicyLevelInfoExtended.TransportationCatastropheNamedPerils
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.TransportationCatastropheNamedPerils = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationCatastropheQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.TransportationCatastropheQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TransportationCatastropheQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationAnyOneOwnedVehicleLimit As String 'note: cov also has CoverageBasisTypeId set to 1
+            Get
+                Return PolicyLevelInfoExtended.TransportationAnyOneOwnedVehicleLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TransportationAnyOneOwnedVehicleLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationAnyOneOwnedVehicleNumberOfVehicles As String 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.TransportationAnyOneOwnedVehicleNumberOfVehicles
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TransportationAnyOneOwnedVehicleNumberOfVehicles = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationAnyOneOwnedVehicleRate As String
+            Get
+                Return PolicyLevelInfoExtended.TransportationAnyOneOwnedVehicleRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TransportationAnyOneOwnedVehicleRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TransportationAnyOneOwnedVehicleQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.TransportationAnyOneOwnedVehicleQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TransportationAnyOneOwnedVehicleQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicles As List(Of QuickQuoteScheduledVehicle)
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicles
+            End Get
+            Set(value As List(Of QuickQuoteScheduledVehicle))
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicles = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property MotorTruckCargoScheduledVehiclesTotalLimit As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.ManualLimitAmount for MotorTruckCargoScheduledVehicles
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehiclesTotalLimit
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property MotorTruckCargoScheduledVehiclesTotalQuotedPremium As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.FullTermPremium for MotorTruckCargoScheduledVehicles
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehiclesTotalQuotedPremium
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleLoadingUnloading As Boolean 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleLoadingUnloading
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleLoadingUnloading = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleNamedPerils As Boolean 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleNamedPerils
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleNamedPerils = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleOperatingRadius As String 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleOperatingRadius
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleOperatingRadius = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleRate As String 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleDeductibleId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleDescription As String
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleDescription
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleDescription = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleCatastropheLimit As String
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleCatastropheLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleCatastropheLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoScheduledVehicleCatastropheQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleCatastropheQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoScheduledVehicleCatastropheQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleAdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleLoadingUnloading As Boolean 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleLoadingUnloading
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleLoadingUnloading = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleNamedPerils As Boolean 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleNamedPerils
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleNamedPerils = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleOperatingRadius As String 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleOperatingRadius
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleOperatingRadius = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleRate As String 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleDeductibleId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledNumberOfVehicles As String
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledNumberOfVehicles
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledNumberOfVehicles = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledAnyVehicleLimit As String
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledAnyVehicleLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledAnyVehicleLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleDescription As String
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleDescription
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleDescription = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleCatastropheLimit As String
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleCatastropheLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleCatastropheLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MotorTruckCargoUnScheduledVehicleCatastropheQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleCatastropheQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MotorTruckCargoUnScheduledVehicleCatastropheQuotedPremium = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SignsAdditionalInterests As List(Of QuickQuoteAdditionalInterest) 'note: cov also has CoverageBasisTypeId set to 1
+            Get
+                Return PolicyLevelInfoExtended.SignsAdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.SignsAdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SignsCanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.SignsCanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.SignsCanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SignsMaximumDeductible As String 'CoverageDetail; may need limit formatting
+            Get
+                Return PolicyLevelInfoExtended.SignsMaximumDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SignsMaximumDeductible = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SignsMinimumDeductible As String 'CoverageDetail; may need limit formatting
+            Get
+                Return PolicyLevelInfoExtended.SignsMinimumDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SignsMinimumDeductible = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SignsValuationMethodTypeId As String 'CoverageDetail; static data
+            Get
+                Return PolicyLevelInfoExtended.SignsValuationMethodTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SignsValuationMethodTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SignsDeductibleId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.SignsDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SignsDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SignsQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.SignsQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SignsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SignsAnyOneLossCatastropheLimit As String 'note: cov also has CoverageBasisTypeId set to 1
+            Get
+                Return PolicyLevelInfoExtended.SignsAnyOneLossCatastropheLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SignsAnyOneLossCatastropheLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SignsAnyOneLossCatastropheQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.SignsAnyOneLossCatastropheQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.SignsAnyOneLossCatastropheQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentCatastropheLimit As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentCatastropheLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentCatastropheLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEquipmentCatastropheQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEquipmentCatastropheQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEquipmentCatastropheQuotedPremium = value
+            End Set
+
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseClassificationCodeNumForClassificationCodeReconciliation As Boolean 'for reconciliation
+            Get
+                Return PolicyLevelInfoExtended.CanUseClassificationCodeNumForClassificationCodeReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CanUseClassificationCodeNumForClassificationCodeReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftLimit As String 'note: cov also has CoverageBasisTypeId 1
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeTheftLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftDeductibleId As String 'static data; note: proposal doesn't currently show values that weren't used for VR (less than 500); full list: 0=N/A, 2=100, 4=250, 8=500, 9=1,000, 15=2,500, 17=10,000, 19=25,000, 20=50,000, 21=75,000, 22=100,000
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeTheftDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftNumberOfRatableEmployees As String 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftNumberOfRatableEmployees
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeTheftNumberOfRatableEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftNumberOfAdditionalPremises As String 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftNumberOfAdditionalPremises
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeTheftNumberOfAdditionalPremises = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftFaithfulPerformanceOfDutyTypeId As String 'CoverageDetail; static data
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftFaithfulPerformanceOfDutyTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeTheftFaithfulPerformanceOfDutyTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftScheduledEmployeeBenefitPlans As List(Of String)
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftScheduledEmployeeBenefitPlans
+            End Get
+            Set(value As List(Of String))
+                PolicyLevelInfoExtended.EmployeeTheftScheduledEmployeeBenefitPlans = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftIncludedPersonsOrClasses As List(Of String)
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftIncludedPersonsOrClasses
+            End Get
+            Set(value As List(Of String))
+                PolicyLevelInfoExtended.EmployeeTheftIncludedPersonsOrClasses = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftIncludedChairpersonsAndSpecifiedCommitteeMembers As List(Of String)
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftIncludedChairpersonsAndSpecifiedCommitteeMembers
+            End Get
+            Set(value As List(Of String))
+                PolicyLevelInfoExtended.EmployeeTheftIncludedChairpersonsAndSpecifiedCommitteeMembers = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftScheduledPartners As List(Of String)
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftScheduledPartners
+            End Get
+            Set(value As List(Of String))
+                PolicyLevelInfoExtended.EmployeeTheftScheduledPartners = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftScheduledLLCMembers As List(Of String)
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftScheduledLLCMembers
+            End Get
+            Set(value As List(Of String))
+                PolicyLevelInfoExtended.EmployeeTheftScheduledLLCMembers = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftScheduledNonCompensatedOfficers As List(Of String)
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftScheduledNonCompensatedOfficers
+            End Get
+            Set(value As List(Of String))
+                PolicyLevelInfoExtended.EmployeeTheftScheduledNonCompensatedOfficers = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftExcludedPersonsOrClasses As List(Of String)
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftExcludedPersonsOrClasses
+            End Get
+            Set(value As List(Of String))
+                PolicyLevelInfoExtended.EmployeeTheftExcludedPersonsOrClasses = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeTheftQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeeTheftQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeeTheftQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InsidePremisesTheftOfMoneyAndSecuritiesLimit As String 'note: cov also has CoverageBasisTypeId 1
+            Get
+                Return PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InsidePremisesTheftOfMoneyAndSecuritiesDeductibleId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InsidePremisesTheftOfMoneyAndSecuritiesNumberOfPremises As String 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesNumberOfPremises
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesNumberOfPremises = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InsidePremisesTheftOfMoneyAndSecuritiesIncludeGuestsProperty As Boolean 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesIncludeGuestsProperty
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesIncludeGuestsProperty = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InsidePremisesTheftOfMoneyAndSecuritiesRequireRecordOfChecks As Boolean 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesRequireRecordOfChecks
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesRequireRecordOfChecks = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InsidePremisesTheftOfMoneyAndSecuritiesQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.InsidePremisesTheftOfMoneyAndSecuritiesQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OutsideThePremisesLimit As String 'note: cov also has CoverageBasisTypeId 1
+            Get
+                Return PolicyLevelInfoExtended.OutsideThePremisesLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OutsideThePremisesLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OutsideThePremisesDeductibleId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.OutsideThePremisesDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OutsideThePremisesDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OutsideThePremisesNumberOfPremises As String 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.OutsideThePremisesNumberOfPremises
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OutsideThePremisesNumberOfPremises = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OutsideThePremisesIncludeSellingPrice As Boolean 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.OutsideThePremisesIncludeSellingPrice
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.OutsideThePremisesIncludeSellingPrice = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OutsideThePremisesLimitToRobberyOnly As Boolean 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.OutsideThePremisesLimitToRobberyOnly
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.OutsideThePremisesLimitToRobberyOnly = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OutsideThePremisesRequireRecordOfChecks As Boolean 'CoverageDetail
+            Get
+                Return PolicyLevelInfoExtended.OutsideThePremisesRequireRecordOfChecks
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.OutsideThePremisesRequireRecordOfChecks = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OutsideThePremisesQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.OutsideThePremisesQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OutsideThePremisesQuotedPremium = value
+            End Set
+        End Property
+
+        'added 02/03/2020 for new crime coverages
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ForgeryAlterationDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.ForgeryAlterationDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ForgeryAlterationDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ForgeryAlterationLimit As String
+            Get
+                Return PolicyLevelInfoExtended.ForgeryAlterationLimit
+            End Get
+            Set
+                PolicyLevelInfoExtended.ForgeryAlterationLimit = Value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ForgeryAlterationNumberOfRatableEmployees As String
+            Get
+                Return PolicyLevelInfoExtended.ForgeryAlterationNumberOfRatableEmployees
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ForgeryAlterationNumberOfRatableEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ForgeryAlterationAdditionalPremises As String
+            Get
+                Return PolicyLevelInfoExtended.ForgeryAlterationAdditionalPremises
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ForgeryAlterationAdditionalPremises = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ForgeryAlterationQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ForgeryAlterationQuotedPremium
+            End Get
+            Set
+                PolicyLevelInfoExtended.ForgeryAlterationQuotedPremium = Value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerFraudDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.ComputerFraudDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerFraudDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerFraudLimit As String
+            Get
+                Return PolicyLevelInfoExtended.ComputerFraudLimit
+            End Get
+            Set
+                PolicyLevelInfoExtended.ComputerFraudLimit = Value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerFraudNumberOfRatableEmployees As String
+            Get
+                Return PolicyLevelInfoExtended.ComputerFraudNumberOfRatableEmployees
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerFraudNumberOfRatableEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerFraudAdditionalPremises As String
+            Get
+                Return PolicyLevelInfoExtended.ComputerFraudAdditionalPremises
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ComputerFraudAdditionalPremises = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ComputerFraudQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ComputerFraudQuotedPremium
+            End Get
+            Set
+                PolicyLevelInfoExtended.ComputerFraudQuotedPremium = Value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FundsTransferFraudDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.FundsTransferFraudDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FundsTransferFraudDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FundsTransferFraudLimit As String
+            Get
+                Return PolicyLevelInfoExtended.FundsTransferFraudLimit
+            End Get
+            Set
+                PolicyLevelInfoExtended.FundsTransferFraudLimit = Value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FundsTransferFraudNumberOfRatableEmployees As String
+            Get
+                Return PolicyLevelInfoExtended.FundsTransferFraudNumberOfRatableEmployees
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FundsTransferFraudNumberOfRatableEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FundsTransferFraudAdditionalPremises As String
+            Get
+                Return PolicyLevelInfoExtended.FundsTransferFraudAdditionalPremises
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FundsTransferFraudAdditionalPremises = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FundsTransferFraudQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FundsTransferFraudQuotedPremium
+            End Get
+            Set
+                PolicyLevelInfoExtended.FundsTransferFraudQuotedPremium = Value
+            End Set
+        End Property
+
+        'added 7/13/2018
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasConvertedFarmIncidentalLimitCoverages As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasConvertedFarmIncidentalLimitCoverages
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasConvertedFarmIncidentalLimitCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasConvertedScheduledPersonalPropertyCoverages As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasConvertedScheduledPersonalPropertyCoverages
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasConvertedScheduledPersonalPropertyCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasConvertedUnscheduledPersonalPropertyCoverages As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasConvertedUnscheduledPersonalPropertyCoverages
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasConvertedUnscheduledPersonalPropertyCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseScheduledFarmPersonalPropertyNumForScheduledPersonalPropertyReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CanUseScheduledFarmPersonalPropertyNumForScheduledPersonalPropertyReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CanUseScheduledFarmPersonalPropertyNumForScheduledPersonalPropertyReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseUnscheduledFarmPersonalPropertyNumForUnscheduledPersonalPropertyReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CanUseUnscheduledFarmPersonalPropertyNumForUnscheduledPersonalPropertyReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CanUseUnscheduledFarmPersonalPropertyNumForUnscheduledPersonalPropertyReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasConvertedOptionalCoverages As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasConvertedOptionalCoverages
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasConvertedOptionalCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseOptionalCoveragesNumForOptionalCoverageReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CanUseOptionalCoveragesNumForOptionalCoverageReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CanUseOptionalCoveragesNumForOptionalCoverageReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseAdditionalInterestNumForAdditionalInterestReconciliation As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CanUseAdditionalInterestNumForAdditionalInterestReconciliation
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CanUseAdditionalInterestNumForAdditionalInterestReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Farm_F_and_G_DeductibleLimitId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.Farm_F_and_G_DeductibleLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Farm_F_and_G_DeductibleLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Farm_F_and_G_DeductibleQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.Farm_F_and_G_DeductibleQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Farm_F_and_G_DeductibleQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFarmEquipmentBreakdown As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasFarmEquipmentBreakdown
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFarmEquipmentBreakdown = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmEquipmentBreakdownQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FarmEquipmentBreakdownQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmEquipmentBreakdownQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFarmExtender As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasFarmExtender
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFarmExtender = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmExtenderQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FarmExtenderQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmExtenderQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmAllStarLimitId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.FarmAllStarLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmAllStarLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmAllStarQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FarmAllStarQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmAllStarQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFarmAllStar As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasFarmAllStar
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFarmAllStar = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmAllStarWaterBackupLimitId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.FarmAllStarWaterBackupLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmAllStarWaterBackupLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmAllStarWaterDamageLimitId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.FarmAllStarWaterDamageLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmAllStarWaterDamageLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFarmEmployersLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasFarmEmployersLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFarmEmployersLiability = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmEmployersLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FarmEmployersLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmEmployersLiabilityQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmFireLegalLiabilityLimitId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.FarmFireLegalLiabilityLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmFireLegalLiabilityLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmFireLegalLiabilityQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FarmFireLegalLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmFireLegalLiabilityQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFarmPersonalAndAdvertisingInjury As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasFarmPersonalAndAdvertisingInjury
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFarmPersonalAndAdvertisingInjury = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmPersonalAndAdvertisingInjuryQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FarmPersonalAndAdvertisingInjuryQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmPersonalAndAdvertisingInjuryQuotedPremium = value
+            End Set
+        End Property
+    #Region "Farm Contact Growers"
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmContractGrowersCareCustodyControlLimitId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.FarmContractGrowersCareCustodyControlLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmContractGrowersCareCustodyControlLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmContractGrowersCareCustodyControlDescription As String
+            Get
+                Return PolicyLevelInfoExtended.FarmContractGrowersCareCustodyControlDescription
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmContractGrowersCareCustodyControlDescription = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmContractGrowersCareCustodyControlQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FarmContractGrowersCareCustodyControlQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmContractGrowersCareCustodyControlQuotedPremium = value
+            End Set
+        End Property
+    #End Region
+#Region "Farm Custom Feeding"
+         'Cattle
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingCattleLimitId As String 'static data
+            Get
+                'Return _FarmContractGrowersCareCustodyControlLimitId
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingCattleLimitId
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlLimitId = value
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingCattleLimitId = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property FarmCustomFeedingCattleLimit As String
+            Get
+                Return PolicyLevelInfoExtended.FarmCustomFeedingCattleLimit
+            End Get
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingCattleDescription As String
+            Get
+                'Return _FarmContractGrowersCareCustodyControlDescription
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingCattleDescription
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlDescription = value
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingCattleDescription = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingCattleQuotedPremium As String
+            Get
+                'Return qqHelper.QuotedPremiumFormat(_FarmContractGrowersCareCustodyControlQuotedPremium)
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingCattleQuotedPremium
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlQuotedPremium = value
+                'qqHelper.ConvertToQuotedPremiumFormat(_FarmContractGrowersCareCustodyControlQuotedPremium)
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingCattleQuotedPremium = value
+            End Set
+        End Property
+        'Equine
+         <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingEquineLimitId As String 'static data
+            Get
+                'Return _FarmContractGrowersCareCustodyControlLimitId
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingEquineLimitId
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlLimitId = value
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingEquineLimitId = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property FarmCustomFeedingEquineLimit As String
+            Get
+                Return PolicyLevelInfoExtended.FarmCustomFeedingEquineLimit
+            End Get
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingEquineDescription As String
+            Get
+                'Return _FarmContractGrowersCareCustodyControlDescription
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingEquineDescription
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlDescription = value
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingEquineDescription = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingEquineQuotedPremium As String
+            Get
+                'Return qqHelper.QuotedPremiumFormat(_FarmContractGrowersCareCustodyControlQuotedPremium)
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingEquineQuotedPremium
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlQuotedPremium = value
+                'qqHelper.ConvertToQuotedPremiumFormat(_FarmContractGrowersCareCustodyControlQuotedPremium)
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingEquineQuotedPremium = value
+            End Set
+        End Property
+        'Poultry
+         <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingPoultryLimitId As String 'static data
+            Get
+                'Return _FarmContractGrowersCareCustodyControlLimitId
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingPoultryLimitId
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlLimitId = value
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingPoultryLimitId = value
+            End Set
+        End Property
+        
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property FarmCustomFeedingPoultryLimit As String
+            Get
+                Return PolicyLevelInfoExtended.FarmCustomFeedingPoultryLimit
+            End Get
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingPoultryDescription As String
+            Get
+                'Return _FarmContractGrowersCareCustodyControlDescription
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingPoultryDescription
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlDescription = value
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingPoultryDescription = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingPoultryQuotedPremium As String
+            Get
+                'Return qqHelper.QuotedPremiumFormat(_FarmContractGrowersCareCustodyControlQuotedPremium)
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingPoultryQuotedPremium
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlQuotedPremium = value
+                'qqHelper.ConvertToQuotedPremiumFormat(_FarmContractGrowersCareCustodyControlQuotedPremium)
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingPoultryQuotedPremium = value
+            End Set
+        End Property
+        'Swine
+         <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingSwineLimitId As String 'static data
+            Get
+                'Return _FarmContractGrowersCareCustodyControlLimitId
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingSwineLimitId
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlLimitId = value
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingSwineLimitId = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property FarmCustomFeedingSwineLimit As String
+            Get
+                Return PolicyLevelInfoExtended.FarmCustomFeedingSwineLimit
+            End Get
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingSwineDescription As String
+            Get
+                'Return _FarmContractGrowersCareCustodyControlDescription
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingSwineDescription
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlDescription = value
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingSwineDescription = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmCustomFeedingSwineQuotedPremium As String
+            Get
+                'Return qqHelper.QuotedPremiumFormat(_FarmContractGrowersCareCustodyControlQuotedPremium)
+                'updated 7/21/2018
+                Return PolicyLevelInfoExtended.FarmCustomFeedingSwineQuotedPremium
+            End Get
+            Set(value As String)
+                '_FarmContractGrowersCareCustodyControlQuotedPremium = value
+                'qqHelper.ConvertToQuotedPremiumFormat(_FarmContractGrowersCareCustodyControlQuotedPremium)
+                'updated 7/21/2018
+                PolicyLevelInfoExtended.FarmCustomFeedingSwineQuotedPremium = value
+            End Set
+        End Property
+#End Region
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFarmExclusionOfProductsCompletedWork As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasFarmExclusionOfProductsCompletedWork
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFarmExclusionOfProductsCompletedWork = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmExclusionOfProductsCompletedWorkQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FarmExclusionOfProductsCompletedWorkQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmExclusionOfProductsCompletedWorkQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmIncidentalLimits As List(Of QuickQuoteFarmIncidentalLimit) 'goes w/ FarmIncidentalLimitCoverages
+            Get
+                Return PolicyLevelInfoExtended.FarmIncidentalLimits
+            End Get
+            Set(value As List(Of QuickQuoteFarmIncidentalLimit))
+                PolicyLevelInfoExtended.FarmIncidentalLimits = value
+            End Set
+        End Property
+        'for CPR/CPP Business Income ALS (eff 4/1/2015)
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasBusinessIncomeALS As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasBusinessIncomeALS
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasBusinessIncomeALS = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BusinessIncomeALSLimit As String
+            Get
+                Return PolicyLevelInfoExtended.BusinessIncomeALSLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BusinessIncomeALSLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BusinessIncomeALSQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.BusinessIncomeALSQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BusinessIncomeALSQuotedPremium = value
+            End Set
+        End Property
+        'for CPP Contractors Enhancement Endorsement (CPR, CGL, CIM; eff 5/12/2015)
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasContractorsEnhancement As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasContractorsEnhancement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasContractorsEnhancement = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ContractorsEnhancementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ContractorsEnhancementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ContractorsEnhancementQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CPR_ContractorsEnhancementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CPR_ContractorsEnhancementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CPR_ContractorsEnhancementQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CGL_ContractorsEnhancementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CGL_ContractorsEnhancementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CGL_ContractorsEnhancementQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CIM_ContractorsEnhancementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CIM_ContractorsEnhancementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CIM_ContractorsEnhancementQuotedPremium = value
+            End Set
+        End Property
+        'for CPP Manufacturers Enhancement (CPR, CGL; eff 6/30/2015)
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasManufacturersEnhancement As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasManufacturersEnhancement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasManufacturersEnhancement = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ManufacturersEnhancementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ManufacturersEnhancementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ManufacturersEnhancementQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CPR_ManufacturersEnhancementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CPR_ManufacturersEnhancementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CPR_ManufacturersEnhancementQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CGL_ManufacturersEnhancementQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CPP_CGL_ManufacturersEnhancementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CGL_ManufacturersEnhancementQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmMachinerySpecialCoverageG_QuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FarmMachinerySpecialCoverageG_QuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmMachinerySpecialCoverageG_QuotedPremium = value
+            End Set
+        End Property
+        'for new cov (PPA versionId 102; coverageCodeId 80443)
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasAutoPlusEnhancement As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasAutoPlusEnhancement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasAutoPlusEnhancement = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AutoPlusEnhancement_QuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.AutoPlusEnhancement_QuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.AutoPlusEnhancement_QuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80387; stored in xml at policy level</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasApartmentBuildings As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasApartmentBuildings
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasApartmentBuildings = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80387; stored in xml at policy level</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property NumberOfLocationsWithApartments As String
+            Get
+                Return PolicyLevelInfoExtended.NumberOfLocationsWithApartments
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.NumberOfLocationsWithApartments = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80387; stored in xml at policy level</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ApartmentQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.ApartmentQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ApartmentQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80387; stored in xml at policy level</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasRestaurantEndorsement As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasRestaurantEndorsement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasRestaurantEndorsement = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80387; stored in xml at policy level</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property RestaurantQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.RestaurantQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.RestaurantQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledGolfCourses As List(Of QuickQuoteScheduledGolfCourse)
+            Get
+                Return PolicyLevelInfoExtended.ScheduledGolfCourses
+            End Get
+            Set(value As List(Of QuickQuoteScheduledGolfCourse))
+                PolicyLevelInfoExtended.ScheduledGolfCourses = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledGolfCartCourses As List(Of QuickQuoteScheduledGolfCartCourse)
+            Get
+                Return PolicyLevelInfoExtended.ScheduledGolfCartCourses
+            End Get
+            Set(value As List(Of QuickQuoteScheduledGolfCartCourse))
+                PolicyLevelInfoExtended.ScheduledGolfCartCourses = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCourseQuotedPremium As String 'covCodeId 21341
+            Get
+                Return PolicyLevelInfoExtended.GolfCourseQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCourseQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCourseCoverageLimitId As String 'covCodeId 21341
+            Get
+                Return PolicyLevelInfoExtended.GolfCourseCoverageLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCourseCoverageLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property GolfCourseCoverageLimit As String 'added 5/8/2017; still needs update to static data values
+            Get
+                Return PolicyLevelInfoExtended.GolfCourseCoverageLimit
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCourseDeductibleId As String 'covCodeId 21341
+            Get
+                Return PolicyLevelInfoExtended.GolfCourseDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCourseDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property GolfCourseDeductible As String 'added 5/8/2017; still needs update to static data values
+            Get
+                Return PolicyLevelInfoExtended.GolfCourseDeductible
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCourseCoinsuranceTypeId As String 'covCodeId 21341
+            Get
+                Return PolicyLevelInfoExtended.GolfCourseCoinsuranceTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCourseCoinsuranceTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property GolfCourseCoinsuranceType As String
+            Get
+                Return PolicyLevelInfoExtended.GolfCourseCoinsuranceType
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCourseRate As String 'covCodeId 21341
+            Get
+                Return PolicyLevelInfoExtended.GolfCourseRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCourseRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCartQuotedPremium As String 'covCodeId 50121
+            Get
+                Return PolicyLevelInfoExtended.GolfCartQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCartQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCartManualLimitAmount As String 'covCodeId 50121
+            Get
+                Return PolicyLevelInfoExtended.GolfCartManualLimitAmount
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCartManualLimitAmount = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCartDeductibleId As String 'covCodeId 50121
+            Get
+                Return PolicyLevelInfoExtended.GolfCartDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCartDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property GolfCartDeductible As String 'added 5/8/2017; still needs update to static data values
+            Get
+                Return PolicyLevelInfoExtended.GolfCartDeductible
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCartCoinsuranceTypeId As String 'covCodeId 50121
+            Get
+                Return PolicyLevelInfoExtended.GolfCartCoinsuranceTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCartCoinsuranceTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property GolfCartCoinsuranceType As String 'added 5/8/2017; still needs update to static data values
+            Get
+                Return PolicyLevelInfoExtended.GolfCartCoinsuranceType
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCartRate As String 'covCodeId 50121
+            Get
+                Return PolicyLevelInfoExtended.GolfCartRate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCartRate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCartCatastropheManualLimitAmount As String 'covCodeId 21343
+            Get
+                Return PolicyLevelInfoExtended.GolfCartCatastropheManualLimitAmount
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCartCatastropheManualLimitAmount = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GolfCartDebrisRemovalCoverageLimitId As String 'covCodeId 80223
+            Get
+                Return PolicyLevelInfoExtended.GolfCartDebrisRemovalCoverageLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GolfCartDebrisRemovalCoverageLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property GolfCartDebrisRemovalCoverageLimit As String 'added 5/9/2017; still needs update to static data values
+            Get
+                Return PolicyLevelInfoExtended.GolfCartDebrisRemovalCoverageLimit
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Liability_UM_UIM_AggregateLiabilityIncrementTypeId As String 'covDetail; covCodeId 21552
+            Get
+                Return PolicyLevelInfoExtended.Liability_UM_UIM_AggregateLiabilityIncrementTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Liability_UM_UIM_AggregateLiabilityIncrementTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property Liability_UM_UIM_AggregateLiabilityIncrementType As String
+            Get
+                Return PolicyLevelInfoExtended.Liability_UM_UIM_AggregateLiabilityIncrementType
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Liability_UM_UIM_DeductibleCategoryTypeId As String 'covDetail; covCodeId 21552
+            Get
+                Return PolicyLevelInfoExtended.Liability_UM_UIM_DeductibleCategoryTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Liability_UM_UIM_DeductibleCategoryTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property Liability_UM_UIM_DeductibleCategoryType As String
+            Get
+                Return PolicyLevelInfoExtended.Liability_UM_UIM_DeductibleCategoryType
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasUninsuredMotoristPropertyDamage As Boolean 'covCodeId 21539
+            Get
+                Return PolicyLevelInfoExtended.HasUninsuredMotoristPropertyDamage
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasUninsuredMotoristPropertyDamage = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UninsuredMotoristPropertyDamageQuotedPremium As String 'covCodeId 21539; may not be populated
+            Get
+                Return PolicyLevelInfoExtended.UninsuredMotoristPropertyDamageQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.UninsuredMotoristPropertyDamageQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MedicalPaymentsTypeId As String 'covDetail; covCodeId 21540
+            Get
+                Return PolicyLevelInfoExtended.MedicalPaymentsTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MedicalPaymentsTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property MedicalPaymentsType As String
+            Get
+                Return PolicyLevelInfoExtended.MedicalPaymentsType
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasPhysicalDamageOtherThanCollision As Boolean 'covCodeId 21550
+            Get
+                Return PolicyLevelInfoExtended.HasPhysicalDamageOtherThanCollision
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasPhysicalDamageOtherThanCollision = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PhysicalDamageOtherThanCollisionQuotedPremium As String 'covCodeId 21550; may not be populated
+            Get
+                Return PolicyLevelInfoExtended.PhysicalDamageOtherThanCollisionQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PhysicalDamageOtherThanCollisionQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasPhysicalDamageCollision As Boolean 'covCodeId 21551
+            Get
+                Return PolicyLevelInfoExtended.HasPhysicalDamageCollision
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasPhysicalDamageCollision = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PhysicalDamageCollisionQuotedPremium As String 'covCodeId 21551; may not be populated
+            Get
+                Return PolicyLevelInfoExtended.PhysicalDamageCollisionQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PhysicalDamageCollisionQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PhysicalDamageCollisionDeductibleId As String 'covCodeId 21551
+            Get
+                Return PolicyLevelInfoExtended.PhysicalDamageCollisionDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PhysicalDamageCollisionDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property PhysicalDamageCollisionDeductible As String 'added 5/9/2017; still needs update to static data values
+            Get
+                Return PolicyLevelInfoExtended.PhysicalDamageCollisionDeductible
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasGarageKeepersOtherThanCollision As Boolean 'covCodeId 21541
+            Get
+                Return PolicyLevelInfoExtended.HasGarageKeepersOtherThanCollision
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasGarageKeepersOtherThanCollision = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GarageKeepersOtherThanCollisionQuotedPremium As String 'covCodeId 21541
+            Get
+                Return PolicyLevelInfoExtended.GarageKeepersOtherThanCollisionQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GarageKeepersOtherThanCollisionQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasGarageKeepersCollision As Boolean 'covCodeId 21542
+            Get
+                Return PolicyLevelInfoExtended.HasGarageKeepersCollision
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasGarageKeepersCollision = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GarageKeepersCollisionQuotedPremium As String 'covCodeId 21542
+            Get
+                Return PolicyLevelInfoExtended.GarageKeepersCollisionQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.GarageKeepersCollisionQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_MinPremAdj_CPR As String 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+            Get
+                Return PolicyLevelInfoExtended.CPP_MinPremAdj_CPR
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_MinPremAdj_CPR = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_MinPremAdj_CGL As String 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+            Get
+                Return PolicyLevelInfoExtended.CPP_MinPremAdj_CGL
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_MinPremAdj_CGL = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_MinPremAdj_CIM As String 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+            Get
+                Return PolicyLevelInfoExtended.CPP_MinPremAdj_CIM
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_MinPremAdj_CIM = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_MinPremAdj_CRM As String 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+            Get
+                Return PolicyLevelInfoExtended.CPP_MinPremAdj_CRM
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_MinPremAdj_CRM = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_MinPremAdj_GAR As String 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+            Get
+                Return PolicyLevelInfoExtended.CPP_MinPremAdj_GAR
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_MinPremAdj_GAR = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CAP_GAR_PolicyLevelCovs_Premium As String
+            Get
+                Return PolicyLevelInfoExtended.CAP_GAR_PolicyLevelCovs_Premium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CAP_GAR_PolicyLevelCovs_Premium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property WCP_WaiverPremium As String 'covCodeId 10124 CovAddInfo w/ "Waiver Premium" in desc
+            Get
+                Return PolicyLevelInfoExtended.WCP_WaiverPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.WCP_WaiverPremium = value
+            End Set
+        End Property
+        'added 7/14/2018
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property MultiLineDiscount As String
+            Get
+                Return PolicyLevelInfoExtended.MultiLineDiscount
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.MultiLineDiscount = value
+            End Set
+        End Property
+        'added 4/1/2019 - Bug 30754 - DJG
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasAdvancedQuoteDiscount As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasAdvancedQuoteDiscount
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasAdvancedQuoteDiscount = value
+            End Set
+        End Property
+        'added 08/18/2023 - Task WS-855 - BD
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFarmIndicator As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasFarmIndicator
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFarmIndicator = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PriorBodilyInjuryLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.PriorBodilyInjuryLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PriorBodilyInjuryLimitId = value
+            End Set
+        End Property
+
+        'added 9/25/2018 for multi-state
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Liability_UM_UIM_DeductibleId As String 'covCodeId 21552
+            Get
+                Return PolicyLevelInfoExtended.Liability_UM_UIM_DeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.Liability_UM_UIM_DeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UninsuredMotoristPropertyDamageLimitId As String 'covCodeId 21539; note: same prop exists on Vehicle
+            Get
+                Return PolicyLevelInfoExtended.UninsuredMotoristPropertyDamageLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.UninsuredMotoristPropertyDamageLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UninsuredMotoristPropertyDamageDeductibleId As String 'covCodeId 21539
+            Get
+                Return PolicyLevelInfoExtended.UninsuredMotoristPropertyDamageDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.UninsuredMotoristPropertyDamageDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UnderinsuredMotoristBodilyInjuryLiabilityLimitId As String 'covCodeId 21548
+            Get
+                Return PolicyLevelInfoExtended.UnderinsuredMotoristBodilyInjuryLiabilityLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.UnderinsuredMotoristBodilyInjuryLiabilityLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium As String 'covCodeId 21548
+            Get
+                Return PolicyLevelInfoExtended.UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium = value
+            End Set
+        End Property
+
+        'RiskLevel
+        'added 7/10/2018
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>combined prem for Diamond coverage w/ coveragecode_id 165 on all buildings</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Dec_BuildingLimit_All_Premium As String
+            Get
+                Return RiskLevelInfoExtended.Dec_BuildingLimit_All_Premium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Dec_BuildingLimit_All_Premium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>combined prem for Diamond coverage w/ coveragecode_id 21037 on all buildings</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Dec_BuildingPersPropLimit_All_Premium As String
+            Get
+                Return RiskLevelInfoExtended.Dec_BuildingPersPropLimit_All_Premium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Dec_BuildingPersPropLimit_All_Premium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasLocation As Boolean
+            Get
+                Return RiskLevelInfoExtended.HasLocation
+            End Get
+            Set(value As Boolean)
+                RiskLevelInfoExtended.HasLocation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasLocationWithBuilding As Boolean
+            Get
+                Return RiskLevelInfoExtended.HasLocationWithBuilding
+            End Get
+            Set(value As Boolean)
+                RiskLevelInfoExtended.HasLocationWithBuilding = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasLocationWithClassification As Boolean
+            Get
+                Return RiskLevelInfoExtended.HasLocationWithClassification
+            End Get
+            Set(value As Boolean)
+                RiskLevelInfoExtended.HasLocationWithClassification = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond vehicle coverage w/ coveragecode_id 2; sum of all vehicles</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_CombinedSingleLimitLiablityQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_CombinedSingleLimitLiablityQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_CombinedSingleLimitLiablityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond vehicle coverage w/ coveragecode_id 60006 (CAP) or 6 (PPA); sum of all vehicles</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_MedicalPaymentsQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_MedicalPaymentsQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_MedicalPaymentsQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond vehicle coverage w/ coveragecode_id 8; sum of all vehicles</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UninsuredMotoristLiabilityQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UninsuredMotoristLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UninsuredMotoristLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond vehicle coverage w/ coveragecode_id 30013; sum of all vehicles</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond vehicle coverages w/ coveragecode_ids 8 and 30013; sum of all vehicles</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UM_UIM_CovsQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UM_UIM_CovsQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UM_UIM_CovsQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond vehicle coverage w/ coveragecode_id 3; sum of all vehicles</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_ComprehensiveCoverageQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_ComprehensiveCoverageQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_ComprehensiveCoverageQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond vehicle coverage w/ coveragecode_id 5; sum of all vehicles</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_CollisionCoverageQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_CollisionCoverageQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_CollisionCoverageQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond vehicle coverage w/ coveragecode_id 60008; sum of all vehicles</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_TowingAndLaborQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_TowingAndLaborQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_TowingAndLaborQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond vehicle coverages w/ coveragecode_ids 10094 (Comp) and 10095 (Coll); sum of all vehicles</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_RentalReimbursementQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_RentalReimbursementQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_RentalReimbursementQuotedPremium = value
+            End Set
+        End Property
+        'added 7/11/2018
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>combined prem for Diamond coverage w/ coveragecode_id 165 on all buildings</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPR_BuildingsTotal_BuildingCovQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.CPR_BuildingsTotal_BuildingCovQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.CPR_BuildingsTotal_BuildingCovQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>combined prem for Diamond coverage w/ coveragecode_id 21090 (when BusinessPropertyTypeId &lt;&gt; 8 [Personal Property of Others]) on all buildings; found inside building ScheduledCoverage</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPR_BuildingsTotal_PersPropCoverageQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.CPR_BuildingsTotal_PersPropCoverageQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.CPR_BuildingsTotal_PersPropCoverageQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>combined prem for Diamond coverage w/ coveragecode_id 21090 (when BusinessPropertyTypeId = 8 [Personal Property of Others]) on all buildings; found inside building ScheduledCoverage</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPR_BuildingsTotal_PersPropOfOthersQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.CPR_BuildingsTotal_PersPropOfOthersQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.CPR_BuildingsTotal_PersPropOfOthersQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>combined prem for Diamond coverage w/ coveragecode_id 21095 on all buildings</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPR_BuildingsTotal_BusinessIncomeCovQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.CPR_BuildingsTotal_BusinessIncomeCovQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.CPR_BuildingsTotal_BusinessIncomeCovQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>combined prem for Diamond coverages w/ coveragecode_ids 21155 (building EQ), 21163 (business income EQ), and 21160 (persProp and persPropOfOthers EQ; found inside building ScheduledCoverage) on all buildings</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPR_BuildingsTotal_EQ_QuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.CPR_BuildingsTotal_EQ_QuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.CPR_BuildingsTotal_EQ_QuotedPremium = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>combined prem for Diamond coverage w/ coveragecode_id 21042 on all locations</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_EquipmentBreakdownQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_EquipmentBreakdownQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_EquipmentBreakdownQuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>combined prem for Diamond coverage w/ coveragecode_id 21107 on all locations; found inside location ScheduledCoverage where UICoverageScheduledCoverageParentTypeId = 91 (Property in the Open)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PropertyInTheOpenRecords_QuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PropertyInTheOpenRecords_QuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PropertyInTheOpenRecords_QuotedPremium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>combined prem for Diamond coverage w/ coveragecode_id 21520 on all locations; found inside location ScheduledCoverage where UICoverageScheduledCoverageParentTypeId = 91 (Property in the Open)</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PropertyInTheOpenRecords_EQ_Premium As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PropertyInTheOpenRecords_EQ_Premium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PropertyInTheOpenRecords_EQ_Premium = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks><see cref="LocationsTotal_PropertyInTheOpenRecords_EQ_Premium"/> + <see cref="CPR_BuildingsTotal_EQ_QuotedPremium"/></remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PitoRecords_And_BuildingsTotal_Combined_EQ_Premium As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PitoRecords_And_BuildingsTotal_Combined_EQ_Premium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PitoRecords_And_BuildingsTotal_Combined_EQ_Premium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_PremiumFullTerm As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_PremiumFullTerm
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_PremiumFullTerm = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PremiumFullTerm As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PremiumFullTerm
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PremiumFullTerm = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations_BuildingsTotal_PremiumFullTerm As String
+            Get
+                Return RiskLevelInfoExtended.Locations_BuildingsTotal_PremiumFullTerm
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Locations_BuildingsTotal_PremiumFullTerm = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseDriverNumForDriverReconciliation As Boolean
+            Get
+                Return RiskLevelInfoExtended.CanUseDriverNumForDriverReconciliation
+            End Get
+            Set(value As Boolean)
+                RiskLevelInfoExtended.CanUseDriverNumForDriverReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseVehicleNumForVehicleReconciliation As Boolean
+            Get
+                Return RiskLevelInfoExtended.CanUseVehicleNumForVehicleReconciliation
+            End Get
+            Set(value As Boolean)
+                RiskLevelInfoExtended.CanUseVehicleNumForVehicleReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseLocationNumForLocationReconciliation As Boolean
+            Get
+                Return RiskLevelInfoExtended.CanUseLocationNumForLocationReconciliation
+            End Get
+            Set(value As Boolean)
+                RiskLevelInfoExtended.CanUseLocationNumForLocationReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseApplicantNumForApplicantReconciliation As Boolean
+            Get
+                Return RiskLevelInfoExtended.CanUseApplicantNumForApplicantReconciliation
+            End Get
+            Set(value As Boolean)
+                RiskLevelInfoExtended.CanUseApplicantNumForApplicantReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_BodilyInjuryLiabilityQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_BodilyInjuryLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_BodilyInjuryLiabilityQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_PropertyDamageQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_PropertyDamageQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_PropertyDamageQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UninsuredCombinedSingleQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UninsuredCombinedSingleQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UninsuredCombinedSingleQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UninsuredMotoristPropertyDamageQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UninsuredMotoristPropertyDamageQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UninsuredMotoristPropertyDamageQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UninsuredMotoristPropertyDamageDeductibleQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UninsuredMotoristPropertyDamageDeductibleQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UninsuredMotoristPropertyDamageDeductibleQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_PollutionLiabilityBroadenedCoverageQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_PollutionLiabilityBroadenedCoverageQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_PollutionLiabilityBroadenedCoverageQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_TransportationExpenseQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_TransportationExpenseQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_TransportationExpenseQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_AutoLoanOrLeaseQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_AutoLoanOrLeaseQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_AutoLoanOrLeaseQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_TapesAndRecordsQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_TapesAndRecordsQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_TapesAndRecordsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_SoundEquipmentQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_SoundEquipmentQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_SoundEquipmentQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_ElectronicEquipmentQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_ElectronicEquipmentQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_ElectronicEquipmentQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_TripInterruptionQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_TripInterruptionQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_TripInterruptionQuotedPremium = value
+            End Set
+        End Property
+        'added 10/12/2018
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UnderinsuredCombinedSingleLimitQuotedPremium As String 'covCodeId 296 (PPA IL only)
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UnderinsuredCombinedSingleLimitQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UnderinsuredCombinedSingleLimitQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UninsuredBodilyInjuryQuotedPremium As String 'covCodeId 294 (PPA IL, HOM IN, DFR IN, FAR IN/IL)
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UninsuredBodilyInjuryQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UninsuredBodilyInjuryQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UnderinsuredBodilyInjuryQuotedPremium As String 'covCodeId 295 (PPA IL only)
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UnderinsuredBodilyInjuryQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UnderinsuredBodilyInjuryQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UM_UIM_CombinedSingleLimitQuotedPremium As String 'VehiclesTotal_UninsuredCombinedSingleQuotedPremium: covCodeId 10007 (PPA IN only) or covCodeId 7 (PPA IL only) + VehiclesTotal_UnderinsuredCombinedSingleLimitQuotedPremium: covCodeId 296 (PPA IL only)
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UM_UIM_CombinedSingleLimitQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UM_UIM_CombinedSingleLimitQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_UM_UIM_BodilyInjuryLiabilityQuotedPremium As String 'VehiclesTotal_UninsuredMotoristLiabilityQuotedPremium: covCodeId 8 (PPA IN/IL, CAP IN/IL, GAR IN) + VehiclesTotal_UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium: covCodeId 30013 (CAP IN/IL, GAR IN) + VehiclesTotal_UninsuredBodilyInjuryQuotedPremium: covCodeId 294 (PPA IL, HOM IN, DFR IN, FAR IN/IL) + VehiclesTotal_UnderinsuredBodilyInjuryQuotedPremium: covCodeId 295 (PPA IL only)
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_UM_UIM_BodilyInjuryLiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_UM_UIM_BodilyInjuryLiabilityQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CanUseOperatorNumForOperatorReconciliation As Boolean
+            Get
+                Return RiskLevelInfoExtended.CanUseOperatorNumForOperatorReconciliation
+            End Get
+            Set(value As Boolean)
+                RiskLevelInfoExtended.CanUseOperatorNumForOperatorReconciliation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations_InlandMarinesTotal_Premium As String
+            Get
+                Return RiskLevelInfoExtended.Locations_InlandMarinesTotal_Premium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Locations_InlandMarinesTotal_Premium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations_InlandMarinesTotal_CoveragePremium As String
+            Get
+                Return RiskLevelInfoExtended.Locations_InlandMarinesTotal_CoveragePremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Locations_InlandMarinesTotal_CoveragePremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations_RvWatercraftsTotal_Premium As String
+            Get
+                Return RiskLevelInfoExtended.Locations_RvWatercraftsTotal_Premium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Locations_RvWatercraftsTotal_Premium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations_RvWatercraftsTotal_CoveragesPremium As String
+            Get
+                Return RiskLevelInfoExtended.Locations_RvWatercraftsTotal_CoveragesPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Locations_RvWatercraftsTotal_CoveragesPremium = value
+            End Set
+        End Property
+        'added 7/13/2018
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations_Farm_L_Liability_QuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.Locations_Farm_L_Liability_QuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Locations_Farm_L_Liability_QuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations_Farm_M_Medical_Payments_QuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.Locations_Farm_M_Medical_Payments_QuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Locations_Farm_M_Medical_Payments_QuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_LiabilityQuotedPremium As String 'loc covCodeId 10111
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_LiabilityQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_LiabilityQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_MedicalPaymentsQuotedPremium As String 'loc covCodeId 10112
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_MedicalPaymentsQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_MedicalPaymentsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionStandardOpenLotsQuotedPremium As String 'loc covCodeId 10116
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionStandardOpenLotsQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionStandardOpenLotsQuotedPremium = value
+            End Set
+        End Property
+        'for GAR
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_ClassIIEmployees25AndOlder As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_ClassIIEmployees25AndOlder
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_ClassIIEmployees25AndOlder = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_ClassIIEmployeesUnderAge25 As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_ClassIIEmployeesUnderAge25
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_ClassIIEmployeesUnderAge25 = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_ClassIOtherEmployees As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_ClassIOtherEmployees
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_ClassIOtherEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_ClassIRegularEmployees As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_ClassIRegularEmployees
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_ClassIRegularEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_NumberOfEmployees As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_NumberOfEmployees
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_NumberOfEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_Payroll As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_Payroll
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_Payroll = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_UninsuredUnderinsuredMotoristBIandPDNumberOfPlates As String 'covCodeId 10113; covDetail
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_UninsuredUnderinsuredMotoristBIandPDNumberOfPlates
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_UninsuredUnderinsuredMotoristBIandPDNumberOfPlates = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_ClassIEmployees As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_ClassIEmployees
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_ClassIEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_ClassIIEmployees As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_ClassIIEmployees
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_ClassIIEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_ClassIandIIEmployees As String
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_ClassIandIIEmployees
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_ClassIandIIEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_DealersBlanketCollisionQuotedPremium As String 'loc covCodeId 10120
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_DealersBlanketCollisionQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_DealersBlanketCollisionQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionBuildingQuotedPremium As String 'loc covCodeId 10115
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionBuildingQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionBuildingQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionBuildingManualLimitAmount As String 'loc covCodeId 10115
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionBuildingManualLimitAmount
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionBuildingManualLimitAmount = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsQuotedPremium As String 'loc covCodeId 10117
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsManualLimitAmount As String 'loc covCodeId 10117
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsManualLimitAmount
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsManualLimitAmount = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsQuotedPremium As String 'loc covCodeId 10118
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsManualLimitAmount As String 'loc covCodeId 10118
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsManualLimitAmount
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsManualLimitAmount = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsQuotedPremium As String 'loc covCodeId 10119
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsManualLimitAmount As String 'loc covCodeId 10119
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsManualLimitAmount
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsManualLimitAmount = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionTotalQuotedPremium As String 'SUM of loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionTotalQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionTotalQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_PhysicalDamageOtherThanCollisionTotalManualLimitAmount As String 'SUM of loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionTotalManualLimitAmount
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_PhysicalDamageOtherThanCollisionTotalManualLimitAmount = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations_PhysicalDamageOtherThanCollisionDeductibleCategoryTypeId As String 'covDetail; loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+            Get
+                Return RiskLevelInfoExtended.Locations_PhysicalDamageOtherThanCollisionDeductibleCategoryTypeId
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Locations_PhysicalDamageOtherThanCollisionDeductibleCategoryTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property Locations_PhysicalDamageOtherThanCollisionDeductibleCategoryType As String
+            Get
+                Return RiskLevelInfoExtended.Locations_PhysicalDamageOtherThanCollisionDeductibleCategoryType
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations_PhysicalDamageOtherThanCollisionTypeId As String 'covDetail; loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+            Get
+                Return RiskLevelInfoExtended.Locations_PhysicalDamageOtherThanCollisionTypeId
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Locations_PhysicalDamageOtherThanCollisionTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property Locations_PhysicalDamageOtherThanCollisionType As String
+            Get
+                Return RiskLevelInfoExtended.Locations_PhysicalDamageOtherThanCollisionType
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations_PhysicalDamageOtherThanCollisionDeductibleId As String 'loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+            Get
+                Return RiskLevelInfoExtended.Locations_PhysicalDamageOtherThanCollisionDeductibleId
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.Locations_PhysicalDamageOtherThanCollisionDeductibleId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property Locations_PhysicalDamageOtherThanCollisionDeductible As String
+            Get
+                Return RiskLevelInfoExtended.Locations_PhysicalDamageOtherThanCollisionDeductible
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CAP_GAR_LocationLevelCovs_Premium As String
+            Get
+                Return RiskLevelInfoExtended.CAP_GAR_LocationLevelCovs_Premium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.CAP_GAR_LocationLevelCovs_Premium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CAP_GAR_VehicleLevelCovs_Premium As String
+            Get
+                Return RiskLevelInfoExtended.CAP_GAR_VehicleLevelCovs_Premium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.CAP_GAR_VehicleLevelCovs_Premium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_UninsuredUnderinsuredMotoristBIandPDQuotedPremium As String 'loc covCodeId 10113
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_UninsuredUnderinsuredMotoristBIandPDQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_UninsuredUnderinsuredMotoristBIandPDQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_GarageKeepersOtherThanCollisionQuotedPremium As String 'loc covCodeId 10086
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_GarageKeepersOtherThanCollisionQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_GarageKeepersOtherThanCollisionQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_GarageKeepersCollisionQuotedPremium As String 'loc covCodeId 10087
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_GarageKeepersCollisionQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_GarageKeepersCollisionQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LocationsTotal_GarageKeepersCoverageExtensionsQuotedPremium As String 'loc covCodeId 10126
+            Get
+                Return RiskLevelInfoExtended.LocationsTotal_GarageKeepersCoverageExtensionsQuotedPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.LocationsTotal_GarageKeepersCoverageExtensionsQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_CAP_GAR_TotalCoveragesPremium As String 'should essentially match CAP_GAR_VehicleLevelCovs_Premium
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_CAP_GAR_TotalCoveragesPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_CAP_GAR_TotalCoveragesPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property VehiclesTotal_TotalCoveragesPremium As String
+            Get
+                Return RiskLevelInfoExtended.VehiclesTotal_TotalCoveragesPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.VehiclesTotal_TotalCoveragesPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property DriversTotal_TotalCoveragesPremium As String
+            Get
+                Return RiskLevelInfoExtended.DriversTotal_TotalCoveragesPremium
+            End Get
+            Set(value As String)
+                RiskLevelInfoExtended.DriversTotal_TotalCoveragesPremium = value
+            End Set
+        End Property
+        '7/23/2018 - moved from PolicyLevel section
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property CustomerAutoLegalQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.CustomerAutoLegalQuotedPremium
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property TenantAutoLegalQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.TenantAutoLegalQuotedPremium
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property FineArtsLocationQuotedPremium As String
+            Get
+                Return RiskLevelInfoExtended.FineArtsLocationQuotedPremium
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property ComputerBuildingsTotalLimit As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.ManualLimitAmount for applicable buildings covs
+            Get
+                Return RiskLevelInfoExtended.ComputerBuildingsTotalLimit
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property ComputerBuildingsTotalQuotedPremium As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.FullTermPremium for applicable buildings covs
+            Get
+                Return RiskLevelInfoExtended.ComputerBuildingsTotalQuotedPremium
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property FineArtsBuildingsTotalLimit As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.ManualLimitAmount for applicable buildings covs
+            Get
+                Return RiskLevelInfoExtended.FineArtsBuildingsTotalLimit
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property FineArtsBuildingsTotalQuotedPremium As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.FullTermPremium for applicable buildings covs
+            Get
+                Return RiskLevelInfoExtended.FineArtsBuildingsTotalQuotedPremium
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property SignsBuildingTotalLimit As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.ManualLimitAmount for building scheduled/unscheduled signs
+            Get
+                Return RiskLevelInfoExtended.SignsBuildingTotalLimit
+            End Get
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property SignsBuildingTotalQuotedPremium As String 'won't use private variable; just ReadOnly prop... should equal sum of Coverage.FullTermPremium for building scheduled/unscheduled signs
+            Get
+                Return RiskLevelInfoExtended.SignsBuildingTotalQuotedPremium
+            End Get
+        End Property
+
+
+        'PolicyLevel and RiskLevel
+        'added 7/13/2018
+        Public Property GarageKeepersTotalPremium As String 'SUM of prems for policy (covCodeIds 21541 and 21542 - has prem) and loc (covCodeIds 10086, 10087, and 10126 - no prem) covs
+            Get
+                Return qqHelper.QuotedPremiumFormat(_GarageKeepersTotalPremium)
+            End Get
+            Set(value As String)
+                _GarageKeepersTotalPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_GarageKeepersTotalPremium)
+            End Set
+        End Property
+        'for GAR (also CAP)
+        Public Property AutoLiabilityTotalPremium As String 'SUM of prems for policy (covCodeId 21552 - CAP/GAR: Liability_UM_UIM_QuotedPremium), loc (covCodeId 10111 - GAR: LiabilityQuotedPremium), and veh (covCodeId 2 - PPA/CAP/GAR: Liability_UM_UIM_QuotedPremium) covs
+            Get
+                Return qqHelper.QuotedPremiumFormat(_AutoLiabilityTotalPremium)
+            End Get
+            Set(value As String)
+                _AutoLiabilityTotalPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_AutoLiabilityTotalPremium)
+            End Set
+        End Property
+        Public Property AutoMedicalPaymentsTotalPremium As String 'SUM of prems for policy (covCodeId 21540 - CAP/GAR: MedicalPaymentsQuotedPremium; could also be for 70072 - HOM/DFR, 70018 - FAR), loc (covCodeId 10112 - GAR: MedicalPaymentsQuotedPremium), and veh (covCodeId 60006 - CAP/GAR: MedicalPaymentsQuotedPremium; could also be for 6 - PPA) covs
+            Get
+                Return qqHelper.QuotedPremiumFormat(_AutoMedicalPaymentsTotalPremium)
+            End Get
+            Set(value As String)
+                _AutoMedicalPaymentsTotalPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_AutoMedicalPaymentsTotalPremium)
+            End Set
+        End Property
+        Public Property Auto_UM_UIM_TotalPremium As String 'SUM of prems for policy (covCodeId 21539 - CAP/GAR: UninsuredMotoristPropertyDamageQuotedPremium), loc (covCodeId 10113 - GAR: UninsuredUnderinsuredMotoristBIandPDQuotedPremium), and veh (covCodeIds 30013 - CAP/GAR: UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium and 8 - PPA/CAP/GAR: UninsuredMotoristLiabilityQuotedPremium) covs
+            Get
+                Return qqHelper.QuotedPremiumFormat(_Auto_UM_UIM_TotalPremium)
+            End Get
+            Set(value As String)
+                _Auto_UM_UIM_TotalPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_Auto_UM_UIM_TotalPremium)
+            End Set
+        End Property
+        Public Property AutoComprehensiveTotalPremium As String 'SUM of prems for policy (covCodeId 21550 - CAP/GAR: PhysicalDamageOtherThanCollisionQuotedPremium; 10063 - CAP/GAR: ComprehensiveQuotedPremium as-of 6/19/2017), loc (covCodeId 10116 - GAR: PhysicalDamageOtherThanCollisionStandardOpenLotsQuotedPremium), and veh (covCodeId 3 - PPA/CAP/GAR: ComprehensiveQuotedPremium) covs
+            Get
+                Return qqHelper.QuotedPremiumFormat(_AutoComprehensiveTotalPremium)
+            End Get
+            Set(value As String)
+                _AutoComprehensiveTotalPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_AutoComprehensiveTotalPremium)
+            End Set
+        End Property
+        Public Property AutoCollisionTotalPremium As String 'SUM of prems for policy (covCodeId 21551 - CAP/GAR: PhysicalDamageCollisionQuotedPremium; 10064 - CAP/GAR: CollisionQuotedPremium as-of 6/19/2017), loc (covCodeId 10120 - GAR: DealersBlanketCollisionQuotedPremium), and veh (covCodeId 5 - PPA/CAP/GAR: CollisionQuotedPremium) covs
+            Get
+                Return qqHelper.QuotedPremiumFormat(_AutoCollisionTotalPremium)
+            End Get
+            Set(value As String)
+                _AutoCollisionTotalPremium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_AutoCollisionTotalPremium)
+            End Set
+        End Property
+        Public Property CAP_GAR_OptCovs_Premium As String 'diff of CAP/GAR totalPremium minus above premiums, towingLabor, rental, and garageKeepers; note: will also exclude (subtract) EnhancementEndorsement as-of 6/20/2017
+            Get
+                Return qqHelper.QuotedPremiumFormat(_CAP_GAR_OptCovs_Premium)
+            End Get
+            Set(value As String)
+                _CAP_GAR_OptCovs_Premium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_CAP_GAR_OptCovs_Premium)
+            End Set
+        End Property
+        Public Property CAP_GAR_PolicyAndLocationLevelCovs_Premium As String
+            Get
+                Return qqHelper.QuotedPremiumFormat(_CAP_GAR_PolicyAndLocationLevelCovs_Premium)
+            End Get
+            Set(value As String)
+                _CAP_GAR_PolicyAndLocationLevelCovs_Premium = value
+                qqHelper.ConvertToQuotedPremiumFormat(_CAP_GAR_PolicyAndLocationLevelCovs_Premium)
+            End Set
+        End Property
+        '7/23/2018 - moved from PolicyLevel section
+        Public Property GarageKeepersOtherThanCollisionManualLimitAmount As String 'covCodeId 21541
+            Get
+                ResetStateLevelLocationsIfNeeded() 'added 10/15/2018
+                Dim _garageKeepersOtcTotalLimitFromLocs As String = qqHelper.GarageKeepersOtherThanCollisionTotalLimitFromLocations(Locations, returnInLimitFormat:=True) '7/13/2018 note: was using _Locations
+                If qqHelper.IsPositiveDecimalString(_garageKeepersOtcTotalLimitFromLocs) = True Then
+                    _GarageKeepersOtherThanCollisionManualLimitAmount = _garageKeepersOtcTotalLimitFromLocs
+                End If
+                Return _GarageKeepersOtherThanCollisionManualLimitAmount
+            End Get
+            Set(value As String)
+                _GarageKeepersOtherThanCollisionManualLimitAmount = value
+                qqHelper.ConvertToLimitFormat(_GarageKeepersOtherThanCollisionManualLimitAmount)
+                ResetStateLevelLocationsIfNeeded() 'added 10/15/2018
+                qqHelper.UpdateGarageKeepersOtherThanCollisionAtLocationLevelBasedOnTotalLimit(value, Locations) '7/13/2018 note: was using _Locations
+            End Set
+        End Property
+        Public Property GarageKeepersOtherThanCollisionBasisTypeId As String 'covDetail; covCodeId 21541
+            Get
+                Return _GarageKeepersOtherThanCollisionBasisTypeId
+            End Get
+            Set(value As String)
+                _GarageKeepersOtherThanCollisionBasisTypeId = value
+                ResetStateLevelLocationsIfNeeded() 'added 10/15/2018
+                If qqHelper.LocationCount(Locations) > 0 Then '7/13/2018 note: was using _Locations
+                    For Each l As QuickQuoteLocation In Locations
+                        If l IsNot Nothing Then
+                            l.Set_GarageKeepersOtherThanCollisionBasisTypeId(_GarageKeepersOtherThanCollisionBasisTypeId)
+                        End If
+                    Next
+                End If
+            End Set
+        End Property
+        Public ReadOnly Property GarageKeepersOtherThanCollisionBasisType As String
+            Get
+                Return qqHelper.GetStaticDataTextForValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.GarageKeepersOtherThanCollisionBasisTypeId, _GarageKeepersOtherThanCollisionBasisTypeId)
+            End Get
+        End Property
+        Public Property GarageKeepersOtherThanCollisionDeductibleCategoryTypeId As String 'covDetail; covCodeId 21541
+            Get
+                Return _GarageKeepersOtherThanCollisionDeductibleCategoryTypeId
+            End Get
+            Set(value As String)
+                _GarageKeepersOtherThanCollisionDeductibleCategoryTypeId = value
+                ResetStateLevelLocationsIfNeeded() 'added 10/15/2018
+                If qqHelper.LocationCount(Locations) > 0 Then '7/13/2018 note: was using _Locations
+                    For Each l As QuickQuoteLocation In Locations
+                        If l IsNot Nothing Then
+                            l.Set_GarageKeepersOtherThanCollisionDeductibleCategoryTypeId(_GarageKeepersOtherThanCollisionDeductibleCategoryTypeId)
+                        End If
+                    Next
+                End If
+            End Set
+        End Property
+        Public ReadOnly Property GarageKeepersOtherThanCollisionDeductibleCategoryType As String
+            Get
+                Return qqHelper.GetStaticDataTextForValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.GarageKeepersOtherThanCollisionDeductibleCategoryTypeId, _GarageKeepersOtherThanCollisionDeductibleCategoryTypeId)
+            End Get
+        End Property
+        Public Property GarageKeepersOtherThanCollisionTypeId As String 'covDetail; covCodeId 21541
+            Get
+                Return _GarageKeepersOtherThanCollisionTypeId
+            End Get
+            Set(value As String)
+                _GarageKeepersOtherThanCollisionTypeId = value
+                ResetStateLevelLocationsIfNeeded() 'added 10/15/2018
+                If qqHelper.LocationCount(Locations) > 0 Then '7/13/2018 note: was using _Locations
+                    For Each l As QuickQuoteLocation In Locations
+                        If l IsNot Nothing Then
+                            l.Set_GarageKeepersOtherThanCollisionTypeId(_GarageKeepersOtherThanCollisionTypeId)
+                        End If
+                    Next
+                End If
+            End Set
+        End Property
+        Public ReadOnly Property GarageKeepersOtherThanCollisionType As String
+            Get
+                Return qqHelper.GetStaticDataTextForValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.GarageKeepersOtherThanCollisionTypeId, _GarageKeepersOtherThanCollisionTypeId)
+            End Get
+        End Property
+        Public Property GarageKeepersOtherThanCollisionDeductibleId As String 'covCodeId 21541
+            Get
+                Return _GarageKeepersOtherThanCollisionDeductibleId
+            End Get
+            Set(value As String)
+                _GarageKeepersOtherThanCollisionDeductibleId = value
+                ResetStateLevelLocationsIfNeeded() 'added 10/15/2018
+                If qqHelper.LocationCount(Locations) > 0 Then '7/13/2018 note: was using _Locations
+                    For Each l As QuickQuoteLocation In Locations
+                        If l IsNot Nothing Then
+                            l.Set_GarageKeepersOtherThanCollisionDeductibleId(_GarageKeepersOtherThanCollisionDeductibleId)
+                        End If
+                    Next
+                End If
+            End Set
+        End Property
+        Public ReadOnly Property GarageKeepersOtherThanCollisionDeductible As String 'added 5/9/2017; still needs update to static data values
+            Get
+                Return qqHelper.GetStaticDataTextForValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.GarageKeepersOtherThanCollisionDeductibleId, _GarageKeepersOtherThanCollisionDeductibleId)
+            End Get
+        End Property
+        Public Property GarageKeepersCollisionManualLimitAmount As String 'covCodeId 21542
+            Get
+                ResetStateLevelLocationsIfNeeded() 'added 10/15/2018
+                Dim _garageKeepersCollTotalLimitFromLocs As String = qqHelper.GarageKeepersCollisionTotalLimitFromLocations(Locations, returnInLimitFormat:=True) '7/13/2018 note: was using _Locations
+                If qqHelper.IsPositiveDecimalString(_garageKeepersCollTotalLimitFromLocs) = True Then
+                    _GarageKeepersCollisionManualLimitAmount = _garageKeepersCollTotalLimitFromLocs
+                End If
+                Return _GarageKeepersCollisionManualLimitAmount
+            End Get
+            Set(value As String)
+                _GarageKeepersCollisionManualLimitAmount = value
+                qqHelper.ConvertToLimitFormat(_GarageKeepersCollisionManualLimitAmount)
+                ResetStateLevelLocationsIfNeeded() 'added 10/15/2018
+                qqHelper.UpdateGarageKeepersCollisionAtLocationLevelBasedOnTotalLimit(value, Locations) '7/13/2018 note: was using _Locations
+            End Set
+        End Property
+        Public Property GarageKeepersCollisionBasisTypeId As String 'covDetail; covCodeId 21542
+            Get
+                Return _GarageKeepersCollisionBasisTypeId
+            End Get
+            Set(value As String)
+                _GarageKeepersCollisionBasisTypeId = value
+                ResetStateLevelLocationsIfNeeded() 'added 10/15/2018
+                If qqHelper.LocationCount(Locations) > 0 Then '7/13/2018 note: was using _Locations
+                    For Each l As QuickQuoteLocation In Locations
+                        If l IsNot Nothing Then
+                            l.Set_GarageKeepersCollisionBasisTypeId(_GarageKeepersCollisionBasisTypeId)
+                        End If
+                    Next
+                End If
+            End Set
+        End Property
+        Public ReadOnly Property GarageKeepersCollisionBasisType As String
+            Get
+                Return qqHelper.GetStaticDataTextForValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.GarageKeepersCollisionBasisTypeId, _GarageKeepersCollisionBasisTypeId)
+            End Get
+        End Property
+        Public Property GarageKeepersCollisionDeductibleId As String 'covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+            Get
+                Return _GarageKeepersCollisionDeductibleId
+            End Get
+            Set(value As String)
+                _GarageKeepersCollisionDeductibleId = value
+                ResetStateLevelLocationsIfNeeded() 'added 10/15/2018
+                If qqHelper.LocationCount(Locations) > 0 Then '7/13/2018 note: was using _Locations
+                    For Each l As QuickQuoteLocation In Locations
+                        If l IsNot Nothing Then
+                            l.Set_GarageKeepersCollisionDeductibleId(_GarageKeepersCollisionDeductibleId)
+                        End If
+                    Next
+                End If
+            End Set
+        End Property
+        Public ReadOnly Property GarageKeepersCollisionDeductible As String 'added 5/9/2017; still needs update to static data values
+            Get
+                Return qqHelper.GetStaticDataTextForValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.GarageKeepersCollisionDeductibleId, _GarageKeepersCollisionDeductibleId)
+            End Get
+        End Property
+        Public Property GarageKeepersBasisTypeId As String 'covDetail; covCodeIds 21541 (OtherThanColl) and 21542 (Coll); moved to PolicyLevel and RiskLevel section 7/23/2018
+            Get
+                Dim gkBasisTypeId As String = ""
+
+                If qqHelper.IsPositiveIntegerString(_GarageKeepersOtherThanCollisionBasisTypeId) = True Then
+                    gkBasisTypeId = _GarageKeepersOtherThanCollisionBasisTypeId
+                ElseIf qqHelper.IsPositiveIntegerString(_GarageKeepersCollisionBasisTypeId) = True Then
+                    gkBasisTypeId = _GarageKeepersCollisionBasisTypeId
+                ElseIf String.IsNullOrWhiteSpace(_GarageKeepersOtherThanCollisionBasisTypeId) = False Then
+                    gkBasisTypeId = _GarageKeepersOtherThanCollisionBasisTypeId
+                ElseIf String.IsNullOrWhiteSpace(_GarageKeepersCollisionBasisTypeId) = False Then
+                    gkBasisTypeId = _GarageKeepersCollisionBasisTypeId
+                End If
+
+                Return gkBasisTypeId
+            End Get
+            Set(value As String)
+                GarageKeepersOtherThanCollisionBasisTypeId = value
+                GarageKeepersCollisionBasisTypeId = value
+            End Set
+        End Property
+        Public ReadOnly Property GarageKeepersBasisType As String 'moved to PolicyLevel and RiskLevel section 7/23/2018
+            Get
+                Return qqHelper.GetStaticDataTextForValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteCoverage, QuickQuoteHelperClass.QuickQuotePropertyName.BasisTypeId, GarageKeepersBasisTypeId)
+            End Get
+        End Property
+
+        'added 4/20/2020 for PUP/FUP
+        Public Property UnderlyingPolicies As List(Of QuickQuoteUnderlyingPolicy)
+            Get
+                Return _UnderlyingPolicies
+            End Get
+            Set(value As List(Of QuickQuoteUnderlyingPolicy))
+                _UnderlyingPolicies = value
+            End Set
+        End Property
+        Public Property CanUseUnderlyingPolicyNumForUnderlyingPolicyReconciliation As Boolean
+            Get
+                Return _CanUseUnderlyingPolicyNumForUnderlyingPolicyReconciliation
+            End Get
+            Set(value As Boolean)
+                _CanUseUnderlyingPolicyNumForUnderlyingPolicyReconciliation = value
+            End Set
+        End Property
+
+        'added 10/15/2018 for IL (similar to existing props w/o IL, but different form # and typeId)
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 287</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasExclusionOfSoleProprietorsPartnersOfficersAndOthers_IL As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasExclusionOfSoleProprietorsPartnersOfficersAndOthers_IL
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasExclusionOfSoleProprietorsPartnersOfficersAndOthers_IL = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 287</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ExclusionOfSoleProprietorRecords_IL As List(Of QuickQuoteExclusionOfSoleProprietorRecord_IL)
+            Get
+                Return PolicyLevelInfoExtended.ExclusionOfSoleProprietorRecords_IL
+            End Get
+            Set(value As List(Of QuickQuoteExclusionOfSoleProprietorRecord_IL))
+                PolicyLevelInfoExtended.ExclusionOfSoleProprietorRecords_IL = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property ExclusionOfSoleProprietorRecordsBackup_IL As Generic.List(Of QuickQuoteExclusionOfSoleProprietorRecord_IL)
+            Get
+                Return PolicyLevelInfoExtended.ExclusionOfSoleProprietorRecordsBackup_IL
+            End Get
+        End Property
+        'added 4/26/2019 for KY
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 291</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasKentuckyRejectionOfCoverageEndorsement As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasKentuckyRejectionOfCoverageEndorsement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasKentuckyRejectionOfCoverageEndorsement = value
+            End Set
+        End Property
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>specific to Diamond InclusionsExclusions w/ TypeId 291</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property KentuckyRejectionOfCoverageEndorsementRecords As List(Of QuickQuoteKentuckyRejectionOfCoverageEndorsement)
+            Get
+                Return PolicyLevelInfoExtended.KentuckyRejectionOfCoverageEndorsementRecords
+            End Get
+            Set(value As List(Of QuickQuoteKentuckyRejectionOfCoverageEndorsement))
+                PolicyLevelInfoExtended.KentuckyRejectionOfCoverageEndorsementRecords = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public ReadOnly Property KentuckyRejectionOfCoverageEndorsementRecordsBackup As List(Of QuickQuoteKentuckyRejectionOfCoverageEndorsement)
+            Get
+                Return PolicyLevelInfoExtended.KentuckyRejectionOfCoverageEndorsementRecordsBackup
+            End Get
+        End Property
+
+        'added 10/24/2018
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasIllinoisContractorsHomeRepairAndRemodeling As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasIllinoisContractorsHomeRepairAndRemodeling
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasIllinoisContractorsHomeRepairAndRemodeling = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IllinoisContractorsHomeRepairAndRemodelingManualLimitAmount As String
+            Get
+                Return PolicyLevelInfoExtended.IllinoisContractorsHomeRepairAndRemodelingManualLimitAmount
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IllinoisContractorsHomeRepairAndRemodelingManualLimitAmount = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property IllinoisContractorsHomeRepairAndRemodelingQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.IllinoisContractorsHomeRepairAndRemodelingQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.IllinoisContractorsHomeRepairAndRemodelingQuotedPremium = value
+            End Set
+        End Property
+
+        'added 11/28/2018 for WCP IL (included in total premium)
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CatastropheOtherThanCertifiedActsOfTerrorismQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CatastropheOtherThanCertifiedActsOfTerrorismQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CatastropheOtherThanCertifiedActsOfTerrorismQuotedPremium = value
+            End Set
+        End Property
+
+        'added 04/15/2019 for CGG-CPP-BOP Cyber Liability
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CyberLiability As Boolean
+            Get
+                Return PolicyLevelInfoExtended.CyberLiability
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.CyberLiability = value
+            End Set
+        End Property
+
+        'added 04/15/2019 for CGG-CPP-BOP Cyber Liability
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CyberLiabilityPremium As String
+            Get
+                Return PolicyLevelInfoExtended.CyberLiabilityPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CyberLiabilityPremium = value
+            End Set
+        End Property
+
+        'added 04/15/2019 for CGG-CPP-BOP Cyber Liability
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CyberLiabilityDeductible As String
+            Get
+                Return PolicyLevelInfoExtended.CyberLiabilityDeductible
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CyberLiabilityDeductible = value
+            End Set
+        End Property
+
+        'added 04/15/2019 for CGG-CPP-BOP Cyber Liability
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CyberLiabilityDeductibleId As String
+            Get
+                Return PolicyLevelInfoExtended.CyberLiabilityDeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CyberLiabilityDeductibleId = value
+            End Set
+        End Property
+
+        'added 04/15/2019 for CGG-CPP-BOP Cyber Liability
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CyberLiabilityLimit As String
+            Get
+                Return PolicyLevelInfoExtended.CyberLiabilityLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CyberLiabilityLimit = value
+            End Set
+        End Property
+
+        'added 04/15/2019 for CGG-CPP-BOP Cyber Liability
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CyberLiabilityLimitId As String
+            Get
+                Return PolicyLevelInfoExtended.CyberLiabilityLimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CyberLiabilityLimitId = value
+            End Set
+        End Property
+
+        'added 04/15/2019 for CGG-CPP-BOP Cyber Liability
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CyberLiabilityTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.CyberLiabilityTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CyberLiabilityTypeId = value
+            End Set
+        End Property
+
+        'added 04/15/2019 for CGG-CPP-BOP Cyber Liability
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CyberLiabilityType As String
+            Get
+                Return PolicyLevelInfoExtended.CyberLiabilityType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CyberLiabilityType = value
+            End Set
+        End Property
+
+        'added 7/15/2019 for WCP KY
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property KentuckySpecialFundAssessmentQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.KentuckySpecialFundAssessmentQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.KentuckySpecialFundAssessmentQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property WCP_KY_PremSurcharge As String
+            Get
+                Return PolicyLevelInfoExtended.WCP_KY_PremSurcharge
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.WCP_KY_PremSurcharge = value
+            End Set
+        End Property
+
+        'added 7/24/2018
+        Public Property PolicyLevelInfoExtended As QuickQuoteLobPolicyLevelInfoExtended
+            Get
+                If _PolicyLevelInfoExtended Is Nothing Then
+                    _PolicyLevelInfoExtended = New QuickQuoteLobPolicyLevelInfoExtended
+                End If
+                '_PolicyLevelInfoExtended.SetParent = Me
+                'updated 7/25/2018
+                SetObjectsParent(_PolicyLevelInfoExtended)
+                Return _PolicyLevelInfoExtended
+            End Get
+            Set(value As QuickQuoteLobPolicyLevelInfoExtended)
+                _PolicyLevelInfoExtended = value
+                SetObjectsParent(_PolicyLevelInfoExtended) 'added 7/25/2018
+            End Set
+        End Property
+        Public Property RiskLevelInfoExtended As QuickQuoteLobRiskLevelInfoExtended
+            Get
+                If _RiskLevelInfoExtended Is Nothing Then
+                    _RiskLevelInfoExtended = New QuickQuoteLobRiskLevelInfoExtended
+                End If
+                '_RiskLevelInfoExtended.SetParent = Me
+                'updated 7/25/2018
+                SetObjectsParent(_RiskLevelInfoExtended)
+                Return _RiskLevelInfoExtended
+            End Get
+            Set(value As QuickQuoteLobRiskLevelInfoExtended)
+                _RiskLevelInfoExtended = value
+                SetObjectsParent(_RiskLevelInfoExtended) 'added 7/25/2018
+            End Set
+        End Property
+        'PolicyLevel
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PolicyId As String
+            Get
+                Return PolicyLevelInfoExtended.PolicyId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PolicyId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PolicyImageNum As String
+            Get
+                Return PolicyLevelInfoExtended.PolicyImageNum
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PolicyImageNum = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AdditionalInterestListLinks As List(Of QuickQuoteAdditionalInterestListLink)
+            Get
+                Return PolicyLevelInfoExtended.AdditionalInterestListLinks
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterestListLink))
+                PolicyLevelInfoExtended.AdditionalInterestListLinks = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AdditionalInterests As List(Of QuickQuoteAdditionalInterest)
+            Get
+                Return PolicyLevelInfoExtended.AdditionalInterests
+            End Get
+            Set(value As List(Of QuickQuoteAdditionalInterest))
+                PolicyLevelInfoExtended.AdditionalInterests = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AggregateLiabilityIncrementTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.AggregateLiabilityIncrementTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.AggregateLiabilityIncrementTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AggregateLimit As String 'decimal
+            Get
+                Return PolicyLevelInfoExtended.AggregateLimit
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.AggregateLimit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AnniversaryRatingEffectiveDate As String
+            Get
+                Return PolicyLevelInfoExtended.AnniversaryRatingEffectiveDate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.AnniversaryRatingEffectiveDate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AnniversaryRatingExpirationDate As String
+            Get
+                Return PolicyLevelInfoExtended.AnniversaryRatingExpirationDate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.AnniversaryRatingExpirationDate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AutoHome As Boolean
+            Get
+                Return PolicyLevelInfoExtended.AutoHome
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.AutoHome = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property AutoSymbols As Generic.List(Of QuickQuoteAutoSymbol)
+            Get
+                Return PolicyLevelInfoExtended.AutoSymbols
+            End Get
+            Set(value As Generic.List(Of QuickQuoteAutoSymbol))
+                PolicyLevelInfoExtended.AutoSymbols = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketRatingOption As String
+            Get
+                Return PolicyLevelInfoExtended.BlanketRatingOption
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketRatingOption = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property BlanketRatingOptionId As String 'verified in database 7/3/2012
+            Get
+                Return PolicyLevelInfoExtended.BlanketRatingOptionId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.BlanketRatingOptionId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ClassificationCodes As List(Of QuickQuoteClassificationCode)
+            Get
+                Return PolicyLevelInfoExtended.ClassificationCodes
+            End Get
+            Set(value As List(Of QuickQuoteClassificationCode))
+                PolicyLevelInfoExtended.ClassificationCodes = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Coverages As Generic.List(Of QuickQuoteCoverage)
+            Get
+                Return PolicyLevelInfoExtended.Coverages
+            End Get
+            Set(value As Generic.List(Of QuickQuoteCoverage))
+                PolicyLevelInfoExtended.Coverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property DeductiblePerTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.DeductiblePerTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.DeductiblePerTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property DeductiblePerType As String
+            Get
+                Return PolicyLevelInfoExtended.DeductiblePerType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.DeductiblePerType = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property DrivecamContractEffectiveDate As String '/DateTime; may not be needed... identified in xml but not UI
+            Get
+                Return PolicyLevelInfoExtended.DrivecamContractEffectiveDate
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.DrivecamContractEffectiveDate = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeeDiscount As Boolean
+            Get
+                Return PolicyLevelInfoExtended.EmployeeDiscount
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.EmployeeDiscount = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeesFullTime As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeesFullTime
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeesFullTime = value 'could add numeric formatting... maybe limit formatting (whole #)
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeesPartTime1To40Days As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeesPartTime1To40Days
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeesPartTime1To40Days = value 'could add numeric formatting... maybe limit formatting (whole #)
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EmployeesPartTime41To179Days As String
+            Get
+                Return PolicyLevelInfoExtended.EmployeesPartTime41To179Days
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EmployeesPartTime41To179Days = value 'could add numeric formatting... maybe limit formatting (whole #)
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property EntityTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.EntityTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.EntityTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Exclusions As List(Of QuickQuoteExclusion)
+            Get
+                Return PolicyLevelInfoExtended.Exclusions
+            End Get
+            Set(value As List(Of QuickQuoteExclusion))
+                PolicyLevelInfoExtended.Exclusions = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FacultativeReinsurance As Boolean
+            Get
+                Return PolicyLevelInfoExtended.FacultativeReinsurance
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.FacultativeReinsurance = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmIncidentalLimitCoverages As List(Of QuickQuoteCoverage)
+            Get
+                Return PolicyLevelInfoExtended.FarmIncidentalLimitCoverages
+            End Get
+            Set(value As List(Of QuickQuoteCoverage))
+                PolicyLevelInfoExtended.FarmIncidentalLimitCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property GLClassifications As Generic.List(Of QuickQuoteGLClassification)
+            Get
+                Return PolicyLevelInfoExtended.GLClassifications
+            End Get
+            Set(value As Generic.List(Of QuickQuoteGLClassification))
+                PolicyLevelInfoExtended.GLClassifications = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HouseholdMembers As List(Of QuickQuoteHouseholdMember)
+            Get
+                Return PolicyLevelInfoExtended.HouseholdMembers
+            End Get
+            Set(value As List(Of QuickQuoteHouseholdMember))
+                PolicyLevelInfoExtended.HouseholdMembers = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property InclusionsExclusions As Generic.List(Of QuickQuoteInclusionExclusion)
+            Get
+                Return PolicyLevelInfoExtended.InclusionsExclusions
+            End Get
+            Set(value As Generic.List(Of QuickQuoteInclusionExclusion))
+                PolicyLevelInfoExtended.InclusionsExclusions = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LiabilityOptionId As String
+            Get
+                Return PolicyLevelInfoExtended.LiabilityOptionId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LiabilityOptionId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LimitedPerilsCategoryTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.LimitedPerilsCategoryTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.LimitedPerilsCategoryTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property LossHistoryRecords As Generic.List(Of QuickQuoteLossHistoryRecord)
+            Get
+                Return PolicyLevelInfoExtended.LossHistoryRecords
+            End Get
+            Set(value As Generic.List(Of QuickQuoteLossHistoryRecord))
+                PolicyLevelInfoExtended.LossHistoryRecords = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Modifiers As Generic.List(Of QuickQuoteModifier)
+            Get
+                Return PolicyLevelInfoExtended.Modifiers
+            End Get
+            Set(value As Generic.List(Of QuickQuoteModifier))
+                PolicyLevelInfoExtended.Modifiers = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property NumberOfEmployees As String 'int
+            Get
+                Return PolicyLevelInfoExtended.NumberOfEmployees
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.NumberOfEmployees = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OptionalCoverages As List(Of QuickQuoteOptionalCoverage)
+            Get
+                Return PolicyLevelInfoExtended.OptionalCoverages
+            End Get
+            Set(value As List(Of QuickQuoteOptionalCoverage))
+                PolicyLevelInfoExtended.OptionalCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PackageModificationAssignmentTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.PackageModificationAssignmentTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PackageModificationAssignmentTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PackageModificationAssignmentType As String
+            Get
+                Return PolicyLevelInfoExtended.PackageModificationAssignmentType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PackageModificationAssignmentType = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PackageTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.PackageTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PackageTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PackageType As String
+            Get
+                Return PolicyLevelInfoExtended.PackageType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PackageType = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PolicyTypeId As String 'only coded for CPR right now (9/27/2012)
+            Get
+                Return PolicyLevelInfoExtended.PolicyTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PolicyTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PolicyType As String 'only coded for CPR right now (9/27/2012)
+            Get
+                Return PolicyLevelInfoExtended.PolicyType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.PolicyType = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PolicyUnderwritings As Generic.List(Of QuickQuotePolicyUnderwriting)
+            Get
+                Return PolicyLevelInfoExtended.PolicyUnderwritings
+            End Get
+            Set(value As Generic.List(Of QuickQuotePolicyUnderwriting))
+                PolicyLevelInfoExtended.PolicyUnderwritings = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PolicyUnderwritingCodeAndLevelAndTabIds As Generic.List(Of String)
+            Get
+                Return PolicyLevelInfoExtended.PolicyUnderwritingCodeAndLevelAndTabIds
+            End Get
+            Set(value As Generic.List(Of String))
+                PolicyLevelInfoExtended.PolicyUnderwritingCodeAndLevelAndTabIds = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property PriorCarrier As QuickQuotePriorCarrier
+            Get
+                Return PolicyLevelInfoExtended.PriorCarrier
+            End Get
+            Set(value As QuickQuotePriorCarrier)
+                PolicyLevelInfoExtended.PriorCarrier = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ProgramType As String
+            Get
+                Return PolicyLevelInfoExtended.ProgramType
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ProgramType = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ProgramTypeId As String
+            Get
+                Return PolicyLevelInfoExtended.ProgramTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.ProgramTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property RiskGrade As String
+            Get
+                Return PolicyLevelInfoExtended.RiskGrade
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.RiskGrade = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property RiskGradeLookupId As String
+            Get
+                Return PolicyLevelInfoExtended.RiskGradeLookupId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.RiskGradeLookupId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledCoverages As List(Of QuickQuoteScheduledCoverage)
+            Get
+                Return PolicyLevelInfoExtended.ScheduledCoverages
+            End Get
+            Set(value As List(Of QuickQuoteScheduledCoverage))
+                PolicyLevelInfoExtended.ScheduledCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledPersonalPropertyCoverages As List(Of QuickQuoteScheduledPersonalPropertyCoverage)
+            Get
+                Return PolicyLevelInfoExtended.ScheduledPersonalPropertyCoverages
+            End Get
+            Set(value As List(Of QuickQuoteScheduledPersonalPropertyCoverage))
+                PolicyLevelInfoExtended.ScheduledPersonalPropertyCoverages = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ScheduledRatings As Generic.List(Of QuickQuoteScheduledRating)
+            Get
+                Return PolicyLevelInfoExtended.ScheduledRatings
+            End Get
+            Set(value As Generic.List(Of QuickQuoteScheduledRating))
+                PolicyLevelInfoExtended.ScheduledRatings = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property SelectMarketCredit As Boolean
+            Get
+                Return PolicyLevelInfoExtended.SelectMarketCredit
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.SelectMarketCredit = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ThirdPartyData As QuickQuoteThirdPartyData
+            Get
+                Return PolicyLevelInfoExtended.ThirdPartyData
+            End Get
+            Set(value As QuickQuoteThirdPartyData)
+                PolicyLevelInfoExtended.ThirdPartyData = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TierTypeId As String 'N/A=-1; None=0; Uniform=1; Variable=2
+            Get
+                Return PolicyLevelInfoExtended.TierTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.TierTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property TieringInformation As QuickQuoteTieringInformation
+            Get
+                Return PolicyLevelInfoExtended.TieringInformation
+            End Get
+            Set(value As QuickQuoteTieringInformation)
+                PolicyLevelInfoExtended.TieringInformation = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UnscheduledPersonalPropertyCoverage As QuickQuoteUnscheduledPersonalPropertyCoverage
+            Get
+                Return PolicyLevelInfoExtended.UnscheduledPersonalPropertyCoverage
+            End Get
+            Set(value As QuickQuoteUnscheduledPersonalPropertyCoverage)
+                PolicyLevelInfoExtended.UnscheduledPersonalPropertyCoverage = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ResidenceInfo As QuickQuoteResidenceInfo
+            Get
+                Return PolicyLevelInfoExtended.ResidenceInfo
+            End Get
+            Set(value As QuickQuoteResidenceInfo)
+                PolicyLevelInfoExtended.ResidenceInfo = value
+            End Set
+        End Property
+
+        'added 4/20/2020 for PUP/FUP
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmSizeTypeId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.FarmSizeTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmSizeTypeId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FarmTypeId As String 'static data
+            Get
+                Return PolicyLevelInfoExtended.FarmTypeId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FarmTypeId = value
+            End Set
+        End Property
+
+        ''' <remarks>CovCodeId 80446</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property OwnersLesseesorContractorsCompletedOperationsTotalPremium As String
+            Get
+                Return PolicyLevelInfoExtended.OwnersLesseesorContractorsCompletedOperationsTotalPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.OwnersLesseesorContractorsCompletedOperationsTotalPremium = value
+            End Set
+        End Property
+
+        'RiskLevel
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Applicants As Generic.List(Of QuickQuoteApplicant)
+            Get
+                Return RiskLevelInfoExtended.Applicants
+            End Get
+            Set(value As Generic.List(Of QuickQuoteApplicant))
+                RiskLevelInfoExtended.Applicants = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Drivers As Generic.List(Of QuickQuoteDriver)
+            Get
+                Return RiskLevelInfoExtended.Drivers
+            End Get
+            Set(value As Generic.List(Of QuickQuoteDriver))
+                RiskLevelInfoExtended.Drivers = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Locations As Generic.List(Of QuickQuoteLocation)
+            Get
+                Return RiskLevelInfoExtended.Locations
+            End Get
+            Set(value As Generic.List(Of QuickQuoteLocation))
+                RiskLevelInfoExtended.Locations = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Vehicles As Generic.List(Of QuickQuoteVehicle)
+            Get
+                Return RiskLevelInfoExtended.Vehicles
+            End Get
+            Set(value As Generic.List(Of QuickQuoteVehicle))
+                RiskLevelInfoExtended.Vehicles = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property Operators As List(Of QuickQuoteOperator)
+            Get
+                Return RiskLevelInfoExtended.Operators
+            End Get
+            Set(value As List(Of QuickQuoteOperator))
+                RiskLevelInfoExtended.Operators = value
+            End Set
+        End Property
+      
+           'added 7/9/2021
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFoodManufacturersEnhancement As Boolean 'covCodeId 100000
+            Get
+                Return PolicyLevelInfoExtended.HasFoodManufacturersEnhancement
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFoodManufacturersEnhancement = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FoodManufacturersEnhancementQuotedPremium As String 'covCodeId 100000
+            Get
+                Return PolicyLevelInfoExtended.FoodManufacturersEnhancementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FoodManufacturersEnhancementQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CPR_FoodManufacturersEnhancementQuotedPremium As String 'covCodeId 100000
+            Get
+                Return PolicyLevelInfoExtended.CPP_CPR_FoodManufacturersEnhancementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CPR_FoodManufacturersEnhancementQuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property CPP_CGL_FoodManufacturersEnhancementQuotedPremium As String 'covCodeId 100000
+            Get
+                Return PolicyLevelInfoExtended.CPP_CGL_FoodManufacturersEnhancementQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.CPP_CGL_FoodManufacturersEnhancementQuotedPremium = value
+            End Set
+        End Property
+      
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks>corresponds to Diamond coverage w/ coveragecode_id 80572</remarks>
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property HasFamilyCyberProtection As Boolean
+            Get
+                Return PolicyLevelInfoExtended.HasFamilyCyberProtection
+            End Get
+            Set(value As Boolean)
+                PolicyLevelInfoExtended.HasFamilyCyberProtection = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property FamilyCyberProtectionQuotedPremium As String
+            Get
+                Return PolicyLevelInfoExtended.FamilyCyberProtectionQuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.FamilyCyberProtectionQuotedPremium = value
+            End Set
+        End Property
+
+        #region "Umbrella"
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UmbrellaSelfInsuredRetentionLimitId() As String
+            Get
+                Return _PolicyLevelInfoExtended.UmbrellaSelfInsuredRetentionLimitId
+            End Get
+            Set(ByVal value As String)
+                _PolicyLevelInfoExtended.UmbrellaSelfInsuredRetentionLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UmbrellaCoverageLimitId() As String
+            Get
+                Return _PolicyLevelInfoExtended.UmbrellaCoverageLimitId
+            End Get
+            Set(ByVal value As String)
+                _PolicyLevelInfoExtended.UmbrellaCoverageLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UmbrellaUmUimLimitId() As String
+            Get
+                Return _PolicyLevelInfoExtended.UmbrellaUmUimLimitId
+            End Get
+            Set(ByVal value As String)
+                _PolicyLevelInfoExtended.UmbrellaUmUimLimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UmbrellaCoverageCalculation() As String
+            Get
+                Return _PolicyLevelInfoExtended.UmbrellaCoverageCalculation
+            End Get
+             Protected Friend Set(value As String)
+                _PolicyLevelInfoExtended.UmbrellaCoverageCalculation = value
+            End Set
+        End Property
+        
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UmbrellaUmUimCoverageCalculation() As String
+            Get
+                Return _PolicyLevelInfoExtended.UmbrellaUmUimCoverageCalculation
+            End Get
+            Protected Friend Set(value As String)
+                _PolicyLevelInfoExtended.UmbrellaUmUimCoverageCalculation = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UmbrellaLimitPremium() As String
+            Get
+                Return _PolicyLevelInfoExtended.UmbrellaLimitPremium
+            End Get
+            Protected Friend Set(value As String)
+                _PolicyLevelInfoExtended.UmbrellaLimitPremium = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UmbrellaUmUimPremium() As String
+            Get
+                Return _PolicyLevelInfoExtended.UmbrellaUmUimPremium
+            End Get
+            Protected Friend Set(value As String)
+                _PolicyLevelInfoExtended.UmbrellaUmUimPremium = value
+            End Set
+        End Property
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property ManualAggregateLiabilityLimit() As String
+            Get
+                return _PolicyLevelInfoExtended.ManualAggregateLiabilityLimit
+            End Get
+            Set(value As String)
+                _PolicyLevelInfoExtended.ManualAggregateLiabilityLimit = value
+            End Set
+        end property
+        #End Region
+
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UninsuredMotoristPropertyDamage_IL_QuotedPremium As String 'covCodeId 30015; may not be populated
+            Get
+                Return PolicyLevelInfoExtended.UninsuredMotoristPropertyDamage_IL_QuotedPremium
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.UninsuredMotoristPropertyDamage_IL_QuotedPremium = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UninsuredMotoristPropertyDamage_IL_LimitId As String 'covCodeId 30015
+            Get
+                Return PolicyLevelInfoExtended.UninsuredMotoristPropertyDamage_IL_LimitId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.UninsuredMotoristPropertyDamage_IL_LimitId = value
+            End Set
+        End Property
+        <Script.Serialization.ScriptIgnore>
+        <System.Xml.Serialization.XmlIgnore()>
+        Public Property UninsuredMotoristPropertyDamage_IL_DeductibleId As String 'covCodeId 30015
+            Get
+                Return PolicyLevelInfoExtended.UninsuredMotoristPropertyDamage_IL_DeductibleId
+            End Get
+            Set(value As String)
+                PolicyLevelInfoExtended.UninsuredMotoristPropertyDamage_IL_DeductibleId = value
+            End Set
+        End Property
+
+        Public Sub New()
+            MyBase.New()
+            SetDefaults()
+        End Sub
+        Public Sub New(Parent As QuickQuoteObject) 'added 6/27/2018; could probably just use generic type so one constructor could be used for multiple types
+            MyBase.New()
+            SetDefaults()
+            Me.SetParent = Parent
+        End Sub
+        Public Sub New(Parent As QuickQuotePackagePart) 'added 6/27/2018; could probably just use generic type so one constructor could be used for multiple types
+            MyBase.New()
+            SetDefaults()
+            Me.SetParent = Parent
+        End Sub
+        Private Sub SetDefaults()
+            '_LobInfo = New QuickQuoteLobInfo 'removed w/ inheritance change to QuickQuoteLobInfo
+
+            'added 7/24/2018
+            _PolicyLevelInfoExtended = New QuickQuoteLobPolicyLevelInfoExtended
+            _RiskLevelInfoExtended = New QuickQuoteLobRiskLevelInfoExtended
+
+            'added 6/28/2018
+            _AddFormsVersionId = ""
+            _RatingVersionId = ""
+            _UnderwritingVersionId = ""
+            _VersionId = ""
+            'these next ones aren't really stored; just determined by VersionId
+            _LobId = ""
+            _ActualLobId = "" 'added 7/31/2018
+            _LobType = QuickQuoteObject.QuickQuoteLobType.None
+            _StateId = ""
+            _CompanyId = "" 'added 11/26/2022; previously at TopLevelQuoteInfo.QuoteBase.CommonInfo
+            'added 7/10/2018; QuickQuoteObject uses ResetPackagePartVersionIds method
+            '_CPP_CPR_PackagePart_VersionId = ""
+            '_CPP_CPR_PackagePart_AddFormsVersionId = ""
+            '_CPP_CPR_PackagePart_RatingVersionId = ""
+            '_CPP_CPR_PackagePart_UnderwritingVersionId = ""
+            '_CPP_CGL_PackagePart_VersionId = ""
+            '_CPP_CGL_PackagePart_AddFormsVersionId = ""
+            '_CPP_CGL_PackagePart_RatingVersionId = ""
+            '_CPP_CGL_PackagePart_UnderwritingVersionId = ""
+            '_CPP_Main_PackagePart_VersionId = ""
+            '_CPP_Main_PackagePart_AddFormsVersionId = ""
+            '_CPP_Main_PackagePart_RatingVersionId = ""
+            '_CPP_Main_PackagePart_UnderwritingVersionId = ""
+            '_CPP_CRM_PackagePart_VersionId = ""
+            '_CPP_CRM_PackagePart_AddFormsVersionId = ""
+            '_CPP_CRM_PackagePart_RatingVersionId = ""
+            '_CPP_CRM_PackagePart_UnderwritingVersionId = ""
+            '_CPP_CIM_PackagePart_VersionId = ""
+            '_CPP_CIM_PackagePart_AddFormsVersionId = ""
+            '_CPP_CIM_PackagePart_RatingVersionId = ""
+            '_CPP_CIM_PackagePart_UnderwritingVersionId = ""
+            'updated 7/16/2018
+            ResetPackagePartVersionIds()
+            'added 7/11/2018
+            _AdditionalInterestNamesAndAddresses = New Generic.List(Of QuickQuoteGenericNameAddress) 'this isn't used w/ new look/feel, but would possibly need here if there could be separate lists per state
+            _CPP_GL_PackagePart_QuotedPremium = ""
+            _CPP_CPR_PackagePart_QuotedPremium = ""
+            _CPP_CIM_PackagePart_QuotedPremium = ""
+            _CPP_CRM_PackagePart_QuotedPremium = ""
+            _CPP_GAR_PackagePart_QuotedPremium = ""
+            'added 7/13/2018
+            _CPP_Has_InlandMarine_PackagePart = False
+            _CPP_Has_Crime_PackagePart = False
+            _CPP_Has_Garage_PackagePart = False
+            _CPP_Has_Property_PackagePart = False 'will likely always be on CPP
+            _CPP_Has_GeneralLiability_PackagePart = False 'typically on CPP but shouldn't be when Garage PackagePart is there
+            'added 7/17/2018
+            _QuoteEffectiveDate = ""
+            _QuoteTransactionType = QuickQuoteObject.QuickQuoteTransactionType.None
+
+            'removed 7/24/2018
+            ''PolicyLevel
+            ''added 7/11/2018
+            '_CPP_CRM_ProgramTypeId = ""
+            '_CPP_GAR_ProgramTypeId = ""
+            '_RiskGradeLookupId_Original = ""
+            '_CPP_CGL_RiskGrade = ""
+            '_CPP_CGL_RiskGradeLookupId = ""
+            '_CPP_CPR_RiskGrade = ""
+            '_CPP_CPR_RiskGradeLookupId = ""
+            '_ErrorRiskGradeLookupId = ""
+            '_ReplacementRiskGradeLookupId = ""
+            '_CPP_CGL_ErrorRiskGradeLookupId = ""
+            '_CPP_CGL_ReplacementRiskGradeLookupId = ""
+            '_CPP_CPR_ErrorRiskGradeLookupId = ""
+            '_CPP_CPR_ReplacementRiskGradeLookupId = ""
+            '_CPP_CIM_RiskGrade = ""
+            '_CPP_CIM_RiskGradeLookupId = ""
+            '_CPP_CIM_ErrorRiskGradeLookupId = ""
+            '_CPP_CIM_ReplacementRiskGradeLookupId = ""
+            '_CPP_CRM_RiskGrade = ""
+            '_CPP_CRM_RiskGradeLookupId = ""
+            '_CPP_CRM_ErrorRiskGradeLookupId = ""
+            '_CPP_CRM_ReplacementRiskGradeLookupId = ""
+            ''added 7/5/2018
+            '_OccurrenceLiabilityLimit = ""
+            '_OccurrenceLiabilityLimitId = ""
+            '_OccurrencyLiabilityQuotedPremium = ""
+            '_TenantsFireLiability = ""
+            '_TenantsFireLiabilityId = ""
+            '_TenantsFireLiabilityQuotedPremium = ""
+            '_PropertyDamageLiabilityDeductible = ""
+            '_PropertyDamageLiabilityDeductibleId = ""
+            '_BlanketRatingQuotedPremium = ""
+            '_HasEnhancementEndorsement = False
+            '_EnhancementEndorsementQuotedPremium = ""
+            ''added 7/11/2018
+            '_Has_PackageGL_EnhancementEndorsement = False
+            '_PackageGL_EnhancementEndorsementQuotedPremium = ""
+            '_Has_PackageCPR_EnhancementEndorsement = False
+            '_PackageCPR_EnhancementEndorsementQuotedPremium = ""
+            ''added 7/6/2018
+            '_AdditionalInsuredsCount = 0
+            '_AdditionalInsuredsCheckboxBOP = Nothing
+            '_HasAdditionalInsuredsCheckboxBOP = False
+            '_AdditionalInsuredsManualCharge = ""
+            '_AdditionalInsuredsQuotedPremium = ""
+            '_AdditionalInsureds = Nothing
+            '_AdditionalInsuredsBackup = Nothing
+            '_EmployeeBenefitsLiabilityText = ""
+            '_EmployeeBenefitsLiabilityOccurrenceLimit = ""
+            '_EmployeeBenefitsLiabilityOccurrenceLimitId = ""
+            '_EmployeeBenefitsLiabilityQuotedPremium = ""
+            '_EmployeeBenefitsLiabilityRetroactiveDate = ""
+            '_EmployeeBenefitsLiabilityAggregateLimit = ""
+            '_EmployeeBenefitsLiabilityDeductible = ""
+            '_ContractorsEquipmentInstallationLimit = ""
+            '_ContractorsEquipmentInstallationLimitId = ""
+            '_ContractorsEquipmentInstallationLimitQuotedPremium = ""
+            '_ContractorsToolsEquipmentBlanket = ""
+            '_ContractorsToolsEquipmentBlanketSubLimitId = ""
+            '_ContractorsToolsEquipmentBlanketQuotedPremium = ""
+            '_ContractorsToolsEquipmentScheduled = ""
+            '_ContractorsToolsEquipmentScheduledQuotedPremium = ""
+            '_ContractorsToolsEquipmentRented = ""
+            '_ContractorsToolsEquipmentRentedQuotedPremium = ""
+            '_ContractorsEquipmentScheduledItems = Nothing
+            '_ContractorsEquipmentScheduledItemsBackup = Nothing
+            '_ContractorsEmployeeTools = ""
+            '_ContractorsEmployeeToolsQuotedPremium = ""
+            '_CrimeEmpDisEmployeeText = ""
+            '_CrimeEmpDisLocationText = ""
+            '_CrimeEmpDisLimit = ""
+            '_CrimeEmpDisLimitId = ""
+            '_CrimeEmpDisQuotedPremium = ""
+            '_CrimeForgeryLimit = ""
+            '_CrimeForgeryLimitId = ""
+            '_CrimeForgeryQuotedPremium = ""
+            '_HasEarthquake = False
+            '_EarthquakeQuotedPremium = ""
+            '_HasHiredAuto = False
+            '_HiredAutoQuotedPremium = ""
+            '_HasNonOwnedAuto = False
+            '_NonOwnedAutoWithDelivery = False
+            '_NonOwnedAutoQuotedPremium = ""
+            '_PropertyDeductibleId = ""
+            '_EmployersLiability = ""
+            '_EmployersLiabilityId = ""
+            '_EmployersLiabilityQuotedPremium = ""
+            ''added 7/9/2018
+            '_GeneralAggregateLimit = ""
+            '_GeneralAggregateLimitId = ""
+            '_GeneralAggregateQuotedPremium = ""
+            '_ProductsCompletedOperationsAggregateLimit = ""
+            '_ProductsCompletedOperationsAggregateLimitId = ""
+            '_ProductsCompletedOperationsAggregateQuotedPremium = ""
+            '_PersonalAndAdvertisingInjuryLimit = ""
+            '_PersonalAndAdvertisingInjuryLimitId = ""
+            '_PersonalAndAdvertisingInjuryQuotedPremium = ""
+            '_DamageToPremisesRentedLimit = ""
+            '_DamageToPremisesRentedLimitId = ""
+            '_DamageToPremisesRentedQuotedPremium = ""
+            '_MedicalExpensesLimit = ""
+            '_MedicalExpensesLimitId = ""
+            '_MedicalExpensesQuotedPremium = ""
+            '_HasExclusionOfAmishWorkers = False
+            '_HasExclusionOfSoleProprietorsPartnersOfficersAndOthers = False
+            '_HasInclusionOfSoleProprietorsPartnersOfficersAndOthers = False
+            '_HasWaiverOfSubrogation = False
+            '_WaiverOfSubrogationNumberOfWaivers = 0
+            '_WaiverOfSubrogationPremium = ""
+            '_WaiverOfSubrogationPremiumId = ""
+            '_NeedsToUpdateWaiverOfSubrogationPremiumId = False
+            '_ExclusionOfAmishWorkerRecords = Nothing
+            '_ExclusionOfSoleProprietorRecords = Nothing
+            '_InclusionOfSoleProprietorRecords = Nothing
+            '_WaiverOfSubrogationRecords = Nothing
+            '_ExclusionOfAmishWorkerRecordsBackup = Nothing
+            '_ExclusionOfSoleProprietorRecordsBackup = Nothing
+            '_InclusionOfSoleProprietorRecordsBackup = Nothing
+            '_WaiverOfSubrogationRecordsBackup = Nothing
+            '_HasBarbersProfessionalLiability = False
+            '_BarbersProfessionalLiabiltyQuotedPremium = ""
+            '_BarbersProfessionalLiabilityFullTimeEmpNum = ""
+            '_BarbersProfessionalLiabilityPartTimeEmpNum = ""
+            '_BarbersProfessionalLiabilityDescription = ""
+            '_HasBeauticiansProfessionalLiability = False
+            '_BeauticiansProfessionalLiabilityQuotedPremium = ""
+            '_BeauticiansProfessionalLiabilityFullTimeEmpNum = ""
+            '_BeauticiansProfessionalLiabilityPartTimeEmpNum = ""
+            '_BeauticiansProfessionalLiabilityDescription = ""
+            '_HasFuneralDirectorsProfessionalLiability = False
+            '_FuneralDirectorsProfessionalLiabilityQuotedPremium = ""
+            '_FuneralDirectorsProfessionalLiabilityEmpNum = ""
+            '_HasPrintersProfessionalLiability = False
+            '_PrintersProfessionalLiabilityQuotedPremium = ""
+            '_PrintersProfessionalLiabilityLocNum = ""
+            '_HasSelfStorageFacility = False
+            '_SelfStorageFacilityQuotedPremium = ""
+            '_SelfStorageFacilityLimit = ""
+            '_HasVeterinariansProfessionalLiability = False
+            '_VeterinariansProfessionalLiabilityEmpNum = ""
+            '_VeterinariansProfessionalLiabilityQuotedPremium = ""
+            '_HasPharmacistProfessionalLiability = False
+            '_PharmacistAnnualGrossSales = ""
+            '_PharmacistQuotedPremium = ""
+            '_HasOpticalAndHearingAidProfessionalLiability = False
+            '_OpticalAndHearingAidProfessionalLiabilityEmpNum = ""
+            '_OpticalAndHearingAidProfessionalLiabilityQuotedPremium = ""
+            '_HasMotelCoverage = False
+            '_MotelCoveragePerGuestLimitId = ""
+            '_MotelCoveragePerGuestLimit = ""
+            '_MotelCoveragePerGuestQuotedPremium = ""
+            '_MotelCoverageSafeDepositLimitId = ""
+            '_MotelCoverageSafeDepositDeductibleId = ""
+            '_MotelCoverageSafeDepositLimit = ""
+            '_MotelCoverageSafeDepositDeductible = ""
+            '_MotelCoverageQuotedPremium = ""
+            '_MotelCoverageSafeDepositQuotedPremium = ""
+            '_HasPhotographyCoverage = False
+            '_HasPhotographyCoverageScheduledCoverages = False
+            '_PhotographyScheduledCoverages = Nothing
+            '_HasPhotographyMakeupAndHair = False
+            '_PhotographyMakeupAndHairQuotedPremium = ""
+            '_PhotographyCoverageQuotedPremium = ""
+            '_HasLiquorLiability = False
+            '_LiquorLiabilityClassCodeTypeId = "" '12 = 58161 - Restaurant Includes Package Sales, 13 = 59211 - Package Sales for Consumption Off Premises
+            '_LiquorLiabilityAnnualGrossPackageSalesReceipts = ""
+            '_LiquorLiabilityAnnualGrossAlcoholSalesReceipts = ""
+            '_HasResidentialCleaning = False
+            '_ResidentialCleaningQuotedPremium = ""
+            '_LiquorLiabilityOccurrenceLimit = ""
+            '_LiquorLiabilityOccurrenceLimitId = ""
+            '_LiquorLiabilityClassification = ""
+            '_LiquorLiabilityClassificationId = ""
+            '_LiquorSales = ""
+            '_LiquorLiabilityQuotedPremium = ""
+            '_ProfessionalLiabilityCemetaryNumberOfBurials = ""
+            '_ProfessionalLiabilityCemetaryQuotedPremium = ""
+            '_ProfessionalLiabilityFuneralDirectorsNumberOfBodies = ""
+            '_ProfessionalLiabilityPastoralNumberOfClergy = ""
+            '_ProfessionalLiabilityPastoralQuotedPremium = ""
+            'Reset_IRPM_Values()
+            ''added 7/10/2018
+            '_Dec_BOP_OptCovs_Premium = ""
+            '_ExpModQuotedPremium = ""
+            '_ScheduleModQuotedPremium = ""
+            '_TerrorismQuotedPremium = ""
+            '_PremDiscountQuotedPremium = ""
+            '_MinimumQuotedPremium = ""
+            '_MinimumPremiumAdjustment = ""
+            '_TotalEstimatedPlanPremium = ""
+            '_SecondInjuryFundQuotedPremium = ""
+            'Dec_LossConstantPremium = "0" 'using property to set default so formatting happens
+            'Dec_ExpenseConstantPremium = "160" 'using property to set default so formatting happens
+            '_Dec_WC_TotalPremiumDue = ""
+            '_GL_PremisesAndProducts_Deductible = ""
+            '_GL_PremisesAndProducts_DeductibleId = ""
+            '_GL_PremisesAndProducts_Description = ""
+            '_GL_PremisesAndProducts_DeductibleCategoryType = ""
+            '_GL_PremisesAndProducts_DeductibleCategoryTypeId = ""
+            '_GL_PremisesAndProducts_DeductiblePerType = ""
+            '_GL_PremisesAndProducts_DeductiblePerTypeId = ""
+            '_Has_GL_PremisesAndProducts = False
+            '_GL_PremisesTotalQuotedPremium = ""
+            '_GL_ProductsTotalQuotedPremium = ""
+            '_GL_PremisesPolicyLevelQuotedPremium = ""
+            '_GL_ProductsPolicyLevelQuotedPremium = ""
+            '_GL_PremisesMinimumQuotedPremium = ""
+            '_GL_PremisesMinimumPremiumAdjustment = ""
+            '_GL_ProductsMinimumQuotedPremium = ""
+            '_GL_ProductsMinimumPremiumAdjustment = ""
+            '_Dec_GL_OptCovs_Premium = ""
+            '_HasFarmPollutionLiability = False
+            '_FarmPollutionLiabilityQuotedPremium = ""
+            '_HasHiredBorrowedNonOwned = False
+            '_HasNonOwnershipLiability = False
+            '_NonOwnershipLiabilityNumberOfEmployees = ""
+            '_NonOwnership_ENO_RatingTypeId = ""
+            '_NonOwnership_ENO_RatingType = ""
+            '_NonOwnershipLiabilityQuotedPremium = ""
+            '_HasHiredBorrowedLiability = False
+            '_HiredBorrowedLiabilityQuotedPremium = ""
+            '_HasHiredCarPhysicalDamage = False
+            '_HiredBorrowedLossOfUseQuotedPremium = ""
+            '_ComprehensiveDeductible = ""
+            '_ComprehensiveDeductibleId = ""
+            '_ComprehensiveQuotedPremium = ""
+            '_CollisionDeductible = ""
+            '_CollisionDeductibleId = ""
+            '_CollisionQuotedPremium = ""
+            '_Liability_UM_UIM_Limit = ""
+            '_Liability_UM_UIM_LimitId = ""
+            '_Liability_UM_UIM_QuotedPremium = ""
+            '_MedicalPaymentsLimit = ""
+            '_MedicalPaymentsLimitId = ""
+            '_MedicalPaymentsQuotedPremium = ""
+            '_QuoteOrIssueBound = QuickQuoteObject.QuickQuoteQuoteOrIssueBound.Quote
+            '_IssueBoundEffectiveDate = ""
+            '_LiabilityAutoSymbolObject = New QuickQuoteDeveloperAutoSymbol
+            '_MedicalPaymentsAutoSymbolObject = New QuickQuoteDeveloperAutoSymbol
+            '_UninsuredMotoristAutoSymbolObject = New QuickQuoteDeveloperAutoSymbol
+            '_UnderinsuredMotoristAutoSymbolObject = New QuickQuoteDeveloperAutoSymbol
+            '_ComprehensiveCoverageAutoSymbolObject = New QuickQuoteDeveloperAutoSymbol
+            '_CollisionCoverageAutoSymbolObject = New QuickQuoteDeveloperAutoSymbol
+            '_NonOwnershipAutoSymbolObject = New QuickQuoteDeveloperAutoSymbol
+            '_HiredBorrowedAutoSymbolObject = New QuickQuoteDeveloperAutoSymbol
+            '_TowingAndLaborAutoSymbolObject = New QuickQuoteDeveloperAutoSymbol
+            '_UseDeveloperAutoSymbols = False
+            '_Dec_CAP_OptCovs_Premium = ""
+            '_Dec_CAP_OptCovs_Premium_Without_GarageKeepers = ""
+            ''added 7/11/2018
+            '_CAP_Liability_WouldHaveSymbol8 = False
+            '_CAP_Liability_WouldHaveSymbol9 = False
+            '_CAP_Comprehensive_WouldHaveSymbol8 = False
+            '_CAP_Collision_WouldHaveSymbol8 = False
+            '_HasBlanketBuilding = False
+            '_HasBlanketContents = False
+            '_HasBlanketBuildingAndContents = False
+            '_HasBlanketBusinessIncome = False
+            '_BlanketBuildingQuotedPremium = ""
+            '_BlanketContentsQuotedPremium = ""
+            '_BlanketBuildingAndContentsQuotedPremium = ""
+            '_BlanketBusinessIncomeQuotedPremium = ""
+            '_BlanketBuildingCauseOfLossTypeId = ""
+            '_BlanketBuildingCauseOfLossType = ""
+            '_BlanketContentsCauseOfLossTypeId = ""
+            '_BlanketContentsCauseOfLossType = ""
+            '_BlanketBuildingAndContentsCauseOfLossTypeId = ""
+            '_BlanketBuildingAndContentsCauseOfLossType = ""
+            '_BlanketBusinessIncomeCauseOfLossTypeId = ""
+            '_BlanketBusinessIncomeCauseOfLossType = ""
+            '_BlanketBuildingLimit = ""
+            '_BlanketBuildingCoinsuranceTypeId = ""
+            '_BlanketBuildingCoinsuranceType = ""
+            '_BlanketBuildingValuationId = ""
+            '_BlanketBuildingValuation = ""
+            '_BlanketContentsLimit = ""
+            '_BlanketContentsCoinsuranceTypeId = ""
+            '_BlanketContentsCoinsuranceType = ""
+            '_BlanketContentsValuationId = ""
+            '_BlanketContentsValuation = ""
+            '_BlanketBuildingAndContentsLimit = ""
+            '_BlanketBuildingAndContentsCoinsuranceTypeId = ""
+            '_BlanketBuildingAndContentsCoinsuranceType = ""
+            '_BlanketBuildingAndContentsValuationId = ""
+            '_BlanketBuildingAndContentsValuation = ""
+            '_BlanketBusinessIncomeLimit = ""
+            '_BlanketBusinessIncomeCoinsuranceTypeId = ""
+            '_BlanketBusinessIncomeCoinsuranceType = ""
+            '_BlanketBusinessIncomeValuationId = ""
+            '_BlanketBusinessIncomeValuation = ""
+            '_CPR_BlanketCoverages_TotalPremium = ""
+            '_BlanketCombinedEarthquake_QuotedPremium = ""
+            '_BlanketBuildingIsAgreedValue = False
+            '_BlanketContentsIsAgreedValue = False
+            '_BlanketBuildingAndContentsIsAgreedValue = False
+            '_BlanketBusinessIncomeIsAgreedValue = False
+            '_UseTierOverride = False
+            '_TierAdjustmentTypeId = ""
+            '_PersonalLiabilityLimitId = ""
+            '_PersonalLiabilityQuotedPremium = ""
+            '_HasConvertedCoverages = False
+            '_HasConvertedInclusionsExclusions = False
+            '_HasConvertedModifiers = False
+            '_HasConvertedScheduledRatings = False
+            '_CanUseExclusionNumForExclusionReconciliation = False
+            '_CanUseLossHistoryNumForLossHistoryReconciliation = False
+            '_HasEPLI = False
+            '_EPLI_Applied = False
+            '_EPLIPremium = ""
+            '_EPLICoverageLimitId = ""
+            '_EPLIDeductibleId = ""
+            '_EPLICoverageTypeId = ""
+            '_BlanketWaiverOfSubrogation = 0  ' 0 = None; 1 = CGL1004; 2 = CGL1002; 3/5/2015 note: may need to be updated to empty string; now use this for 3 = CAP and 4 = WCP
+            '_BlanketWaiverOfSubrogationQuotedPremium = ""
+            '_HasCondoDandO = False
+            '_CondoDandOAssociatedName = ""
+            '_CondoDandODeductibleId = ""
+            '_CondoDandOPremium = ""
+            '_CondoDandOManualLimit = ""
+            '_CanUsePolicyUnderwritingNumForPolicyUnderwritingReconciliation = False
+            ''added 7/12/2018
+            '_HasConvertedScheduledCoverages = False
+            '_CanUseScheduledCoverageNumForScheduledCoverageReconciliation = False
+            '_ContractorsEquipmentScheduledCoverages = Nothing
+            '_ContractorsEquipmentScheduleCoinsuranceTypeId = "" 'may need static data placeholder; may be defaulted as there's just one value in dropdown (1 = per 100)
+            '_ContractorsEquipmentScheduleDeductibleId = "" 'may need static data placeholder
+            '_ContractorsEquipmentScheduleRate = ""
+            '_ContractorsEquipmentScheduleQuotedPremium = ""
+            '_ContractorsEquipmentLeasedRentedFromOthersLimit = ""
+            '_ContractorsEquipmentLeasedRentedFromOthersCoverageLimitId = ""
+            '_ContractorsEquipmentLeasedRentedFromOthersRate = ""
+            '_ContractorsEquipmentLeasedRentedFromOthersQuotedPremium = ""
+            '_ContractorsEquipmentRentalReimbursementLimit = ""
+            '_ContractorsEquipmentRentalReimbursementRate = ""
+            '_ContractorsEquipmentRentalReimbursementQuotedPremium = ""
+            '_ContractorsEquipmentSmallToolsEndorsementPerOccurrenceLimit = ""
+            '_ContractorsEquipmentSmallToolsEndorsementPerOccurrenceRate = ""
+            '_ContractorsEquipmentSmallToolsEndorsementPerOccurrenceDeductibleId = ""
+            '_ContractorsEquipmentSmallToolsEndorsementPerOccurrenceQuotedPremium = ""
+            '_ContractorsEquipmentSmallToolsEndorsementPerToolLimit = ""
+            '_ContractorsEquipmentSmallToolsEndorsementPerToolQuotedPremium = ""
+            '_SmallToolsLimit = ""
+            '_SmallToolsRate = ""
+            '_SmallToolsDeductibleId = ""
+            '_SmallToolsAdditionalInterests = Nothing
+            '_SmallToolsCanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_SmallToolsQuotedPremium = ""
+            '_SmallToolsIsEmployeeTools = False 'small tools floater
+            '_SmallToolsIsToolsLeasedOrRented = False 'small tools floater
+            '_SmallToolsAnyOneLossCatastropheLimit = ""
+            '_SmallToolsAnyOneLossCatastropheQuotedPremium = ""
+            '_InstallationScheduledLocations = Nothing
+            '_InstallationQuotedPremium = ""
+            '_InstallationAdditionalInterests = Nothing
+            '_InstallationCanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_InstallationBlanketLimit = ""
+            '_InstallationBlanketCoinsuranceTypeId = ""
+            '_InstallationBlanketDeductibleId = ""
+            '_InstallationBlanketRate = ""
+            '_InstallationBlanketQuotedPremium = ""
+            '_InstallationBlanketAnyOneLossCatastropheLimit = ""
+            '_InstallationBlanketAnyOneLossCatastropheQuotedPremium = ""
+            '_InstallationAdditionalDebrisRemovalExpenseLimit = ""
+            '_InstallationAdditionalDebrisRemovalExpenseQuotedPremium = ""
+            '_InstallationStorageLocationsLimit = ""
+            '_InstallationStorageLocationsQuotedPremium = ""
+            '_InstallationTransitLimit = ""
+            '_InstallationTransitQuotedPremium = ""
+            '_InstallationTestingLimit = ""
+            '_InstallationTestingQuotedPremium = ""
+            '_InstallationSewerBackupLimit = ""
+            '_InstallationSewerBackupDeductible = ""
+            '_InstallationSewerBackupQuotedPremium = ""
+            '_InstallationSewerBackupCatastropheLimit = ""
+            '_InstallationSewerBackupCatastropheQuotedPremium = ""
+            '_InstallationEarthquakeLimit = ""
+            '_InstallationEarthquakeDeductible = ""
+            '_InstallationEarthquakeQuotedPremium = ""
+            '_InstallationEarthquakeCatastropheLimit = ""
+            '_InstallationEarthquakeCatastropheQuotedPremium = ""
+            '_BusinessPersonalPropertyLimit = "" 'shown in UI Installation Coverage Extensions section, but may not be specific to Installation
+            '_BusinessPersonalPropertyQuotedPremium = ""
+            '_ScheduledPropertyItems = Nothing
+            '_ScheduledPropertyAdditionalInterests = Nothing
+            '_ScheduledPropertyCanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_ScheduledPropertyCoinsuranceTypeId = ""
+            '_ScheduledPropertyDeductibleId = ""
+            '_ScheduledPropertyRate = ""
+            '_ScheduledPropertyNamedPerils = False
+            '_ScheduledPropertyQuotedPremium = ""
+            '_ComputerCoinsuranceTypeId = "" 'cov also has CoverageBasisTypeId set to 1
+            '_ComputerExcludeEarthquake = False
+            '_ComputerValuationMethodTypeId = ""
+            '_ComputerAdditionalInterests = Nothing
+            '_ComputerCanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_ComputerQuotedPremium = ""
+            '_ComputerAllPerilsDeductibleId = "" 'cov also has CoverageBasisTypeId set to 1
+            '_ComputerAllPerilsQuotedPremium = ""
+            '_ComputerEarthquakeVolcanicEruptionDeductible = "" 'cov also has CoverageBasisTypeId set to 1; example also has ApplyToWrittenPremiuim set to true
+            '_ComputerEarthquakeVolcanicEruptionQuotedPremium = ""
+            '_ComputerMechanicalBreakdownDeductible = "" 'cov also has CoverageBasisTypeId set to 1; example also has ApplyToWrittenPremiuim set to true
+            '_ComputerMechanicalBreakdownQuotedPremium = ""
+            '_BuildersRiskDeductibleId = "" 'cov also has CoverageBasisTypeId set to 1
+            '_BuildersRiskRate = ""
+            '_BuildersRiskAdditionalInterests = Nothing
+            '_BuildersRiskCanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_BuildersRiskQuotedPremium = ""
+            '_BuildersRiskScheduledLocations = Nothing
+            '_BuildersRiskScheduleStorageLocationsLimit = ""
+            '_BuildersRiskScheduleStorageLocationsQuotedPremium = ""
+            '_BuildersRiskScheduleTransitLimit = ""
+            '_BuildersRiskScheduleTransitQuotedPremium = ""
+            '_BuildersRiskScheduleTestingLimit = ""
+            '_BuildersRiskScheduleTestingQuotedPremium = ""
+            '_FineArtsDeductibleCategoryTypeId = ""
+            '_FineArtsRate = ""
+            '_FineArtsDeductibleId = ""
+            '_FineArtsQuotedPremium = ""
+            '_FineArtsAdditionalInterests = Nothing
+            '_FineArtsCanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_FineArtsBreakageMarringOrScratching = False 'renamed from _HasFineArtsBreakageMarringOrScratching
+            '_FineArtsBreakageMarringOrScratchingQuotedPremium = ""
+            '_OwnersCargoAnyOneOwnedVehicleLimit = ""
+            '_OwnersCargoAnyOneOwnedVehicleDeductibleId = "" 'static data
+            '_OwnersCargoAnyOneOwnedVehicleRate = ""
+            '_OwnersCargoAnyOneOwnedVehicleDescription = ""
+            '_OwnersCargoAnyOneOwnedVehicleAdditionalInterests = Nothing
+            '_OwnersCargoAnyOneOwnedVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_OwnersCargoAnyOneOwnedVehicleLoadingUnloading = False
+            '_OwnersCargoAnyOneOwnedVehicleNamedPerils = False
+            '_OwnersCargoAnyOneOwnedVehicleQuotedPremium = ""
+            '_OwnersCargoCatastropheLimit = ""
+            '_OwnersCargoCatastropheQuotedPremium = ""
+            '_TransportationCatastropheLimit = ""
+            '_TransportationCatastropheDeductibleId = "" 'static data
+            '_TransportationCatastropheDescription = ""
+            '_TransportationCatastropheAdditionalInterests = Nothing
+            '_TransportationCatastropheCanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_TransportationCatastropheLoadingUnloading = False
+            '_TransportationCatastropheNamedPerils = False
+            '_TransportationCatastropheQuotedPremium = ""
+            '_TransportationAnyOneOwnedVehicleLimit = "" 'note: cov also has CoverageBasisTypeId set to 1
+            '_TransportationAnyOneOwnedVehicleNumberOfVehicles = "" 'CoverageDetail
+            '_TransportationAnyOneOwnedVehicleRate = ""
+            '_TransportationAnyOneOwnedVehicleQuotedPremium = ""
+            '_MotorTruckCargoScheduledVehicles = Nothing
+            '_MotorTruckCargoScheduledVehicleAdditionalInterests = Nothing
+            '_MotorTruckCargoScheduledVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_MotorTruckCargoScheduledVehicleLoadingUnloading = False 'CoverageDetail
+            '_MotorTruckCargoScheduledVehicleNamedPerils = False 'CoverageDetail
+            '_MotorTruckCargoScheduledVehicleOperatingRadius = "" 'CoverageDetail
+            '_MotorTruckCargoScheduledVehicleRate = "" 'CoverageDetail
+            '_MotorTruckCargoScheduledVehicleDeductibleId = "" 'static data
+            '_MotorTruckCargoScheduledVehicleDescription = ""
+            '_MotorTruckCargoScheduledVehicleQuotedPremium = ""
+            '_MotorTruckCargoScheduledVehicleCatastropheLimit = ""
+            '_MotorTruckCargoScheduledVehicleCatastropheQuotedPremium = ""
+            '_SignsAdditionalInterests = Nothing
+            '_SignsCanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_SignsMaximumDeductible = "" 'CoverageDetail
+            '_SignsMinimumDeductible = "" 'CoverageDetail
+            '_SignsValuationMethodTypeId = "" 'CoverageDetail; static data
+            '_SignsDeductibleId = "" 'static data
+            '_SignsQuotedPremium = ""
+            '_SignsAnyOneLossCatastropheLimit = "" 'note: cov also has CoverageBasisTypeId set to 1
+            '_SignsAnyOneLossCatastropheQuotedPremium = ""
+            '_ContractorsEquipmentCatastropheLimit = ""
+            '_ContractorsEquipmentCatastropheQuotedPremium = ""
+            '_CanUseClassificationCodeNumForClassificationCodeReconciliation = False
+            '_AggregateLimit = ""
+            '_NumberOfEmployees = ""
+            '_EmployeeTheftLimit = "" 'note: cov also has CoverageBasisTypeId 1
+            '_EmployeeTheftDeductibleId = "" 'static data
+            '_EmployeeTheftNumberOfRatableEmployees = "" 'CoverageDetail
+            '_EmployeeTheftNumberOfAdditionalPremises = "" 'CoverageDetail
+            '_EmployeeTheftFaithfulPerformanceOfDutyTypeId = "" 'CoverageDetail; static data
+            '_EmployeeTheftScheduledEmployeeBenefitPlans = Nothing
+            '_EmployeeTheftIncludedPersonsOrClasses = Nothing
+            '_EmployeeTheftIncludedChairpersonsAndSpecifiedCommitteeMembers = Nothing
+            '_EmployeeTheftScheduledPartners = Nothing
+            '_EmployeeTheftScheduledLLCMembers = Nothing
+            '_EmployeeTheftScheduledNonCompensatedOfficers = Nothing
+            '_EmployeeTheftExcludedPersonsOrClasses = Nothing
+            '_EmployeeTheftQuotedPremium = ""
+            '_InsidePremisesTheftOfMoneyAndSecuritiesLimit = "" 'note: cov also has CoverageBasisTypeId 1
+            '_InsidePremisesTheftOfMoneyAndSecuritiesDeductibleId = "" 'static data
+            '_InsidePremisesTheftOfMoneyAndSecuritiesNumberOfPremises = "" 'CoverageDetail
+            '_InsidePremisesTheftOfMoneyAndSecuritiesIncludeGuestsProperty = False 'CoverageDetail
+            '_InsidePremisesTheftOfMoneyAndSecuritiesRequireRecordOfChecks = False 'CoverageDetail
+            '_InsidePremisesTheftOfMoneyAndSecuritiesQuotedPremium = ""
+            '_OutsideThePremisesLimit = "" 'note: cov also has CoverageBasisTypeId 1
+            '_OutsideThePremisesDeductibleId = "" 'static data
+            '_OutsideThePremisesNumberOfPremises = "" 'CoverageDetail
+            '_OutsideThePremisesIncludeSellingPrice = False 'CoverageDetail
+            '_OutsideThePremisesLimitToRobberyOnly = False 'CoverageDetail
+            '_OutsideThePremisesRequireRecordOfChecks = False 'CoverageDetail
+            '_OutsideThePremisesQuotedPremium = ""
+            ''added 7/13/2018
+            '_HasConvertedFarmIncidentalLimitCoverages = False
+            '_HasConvertedScheduledPersonalPropertyCoverages = False
+            '_HasConvertedUnscheduledPersonalPropertyCoverages = False
+            '_CanUseScheduledFarmPersonalPropertyNumForScheduledPersonalPropertyReconciliation = False
+            '_CanUseUnscheduledFarmPersonalPropertyNumForUnscheduledPersonalPropertyReconciliation = False
+            '_HasConvertedOptionalCoverages = False
+            '_CanUseOptionalCoveragesNumForOptionalCoverageReconciliation = False
+            '_CanUseAdditionalInterestNumForAdditionalInterestReconciliation = False
+            '_Farm_F_and_G_DeductibleLimitId = "" 'static data
+            '_Farm_F_and_G_DeductibleQuotedPremium = ""
+            '_HasFarmEquipmentBreakdown = False
+            '_FarmEquipmentBreakdownQuotedPremium = ""
+            '_HasFarmExtender = False
+            '_FarmExtenderQuotedPremium = ""
+            '_FarmAllStarLimitId = ""
+            '_FarmAllStarQuotedPremium = ""
+            '_HasFarmEmployersLiability = False
+            '_FarmEmployersLiabilityQuotedPremium = ""
+            '_FarmFireLegalLiabilityLimitId = ""
+            '_FarmFireLegalLiabilityQuotedPremium = ""
+            '_HasFarmPersonalAndAdvertisingInjury = False
+            '_FarmPersonalAndAdvertisingInjuryQuotedPremium = ""
+            '_FarmContractGrowersCareCustodyControlLimitId = ""
+            '_FarmContractGrowersCareCustodyControlDescription = ""
+            '_FarmContractGrowersCareCustodyControlQuotedPremium = ""
+            '_HasFarmExclusionOfProductsCompletedWork = False
+            '_FarmExclusionOfProductsCompletedWorkQuotedPremium = ""
+            'FarmIncidentalLimits = Nothing 'goes w/ FarmIncidentalLimitCoverages
+            ''for CPR/CPP Business Income ALS (eff 4/1/2015)
+            '_HasBusinessIncomeALS = False
+            '_BusinessIncomeALSLimit = ""
+            '_BusinessIncomeALSQuotedPremium = ""
+            ''for CPP Contractors Enhancement Endorsement (CPR, CGL, CIM; eff 5/12/2015)
+            '_HasContractorsEnhancement = False
+            '_ContractorsEnhancementQuotedPremium = ""
+            '_CPP_CPR_ContractorsEnhancementQuotedPremium = ""
+            '_CPP_CGL_ContractorsEnhancementQuotedPremium = ""
+            '_CPP_CIM_ContractorsEnhancementQuotedPremium = ""
+            ''for CPP Manufacturers Enhancement (CPR, CGL; eff 6/30/2015)
+            '_HasManufacturersEnhancement = False
+            '_ManufacturersEnhancementQuotedPremium = ""
+            '_CPP_CPR_ManufacturersEnhancementQuotedPremium = ""
+            '_CPP_CGL_ManufacturersEnhancementQuotedPremium = ""
+            '_FarmMachinerySpecialCoverageG_QuotedPremium = ""
+            ''for new cov (PPA versionId 102; coverageCodeId 80443)
+            '_HasAutoPlusEnhancement = False
+            '_AutoPlusEnhancement_QuotedPremium = ""
+            '_HasApartmentBuildings = False
+            '_NumberOfLocationsWithApartments = ""
+            '_ApartmentQuotedPremium = ""
+            '_HasRestaurantEndorsement = False
+            '_RestaurantQuotedPremium = ""
+            '_ScheduledGolfCourses = Nothing
+            '_ScheduledGolfCartCourses = Nothing
+            '_GolfCourseQuotedPremium = "" 'covCodeId 21341
+            '_GolfCourseCoverageLimitId = "" 'covCodeId 21341
+            '_GolfCourseDeductibleId = "" 'covCodeId 21341
+            '_GolfCourseCoinsuranceTypeId = "" 'covCodeId 21341
+            '_GolfCourseRate = "" 'covCodeId 21341
+            '_GolfCartQuotedPremium = "" 'covCodeId 50121
+            '_GolfCartManualLimitAmount = "" 'covCodeId 50121
+            '_GolfCartDeductibleId = "" 'covCodeId 50121
+            '_GolfCartCoinsuranceTypeId = "" 'covCodeId 50121
+            '_GolfCartRate = "" 'covCodeId 50121
+            '_GolfCartCatastropheManualLimitAmount = "" 'covCodeId 21343
+            '_GolfCartDebrisRemovalCoverageLimitId = "" 'covCodeId 80223
+            '_Liability_UM_UIM_AggregateLiabilityIncrementTypeId = "" 'covDetail; covCodeId 21552
+            '_Liability_UM_UIM_DeductibleCategoryTypeId = "" 'covDetail; covCodeId 21552
+            '_HasUninsuredMotoristPropertyDamage = False 'covCodeId 21539
+            '_UninsuredMotoristPropertyDamageQuotedPremium = "" 'covCodeId 21539; may not be populated
+            '_MedicalPaymentsTypeId = "" 'covDetail; covCodeId 21540
+            '_HasPhysicalDamageOtherThanCollision = False 'covCodeId 21550; may not be populated
+            '_PhysicalDamageOtherThanCollisionQuotedPremium = "" 'covCodeId 21550
+            '_HasPhysicalDamageCollision = False 'covCodeId 21551
+            '_PhysicalDamageCollisionQuotedPremium = "" 'covCodeId 21551; may not be populated
+            '_PhysicalDamageCollisionDeductibleId = "" 'covCodeId 21551
+            '_HasGarageKeepersOtherThanCollision = False 'covCodeId 21541
+            '_GarageKeepersOtherThanCollisionQuotedPremium = "" 'covCodeId 21541
+            ''_GarageKeepersOtherThanCollisionManualLimitAmount = "" 'covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+            ''_GarageKeepersOtherThanCollisionBasisTypeId = "" 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+            ''_GarageKeepersOtherThanCollisionDeductibleCategoryTypeId = "" 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+            ''_GarageKeepersOtherThanCollisionTypeId = "" 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+            ''_GarageKeepersOtherThanCollisionDeductibleId = "" 'covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+            '_HasGarageKeepersCollision = False 'covCodeId 21542
+            '_GarageKeepersCollisionQuotedPremium = "" 'covCodeId 21542
+            ''_GarageKeepersCollisionManualLimitAmount = "" 'covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+            ''_GarageKeepersCollisionBasisTypeId = "" 'covDetail; covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+            ''_GarageKeepersCollisionDeductibleId = "" 'covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+            '_CPP_MinPremAdj_CPR = "" 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+            '_CPP_MinPremAdj_CGL = "" 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+            '_CPP_MinPremAdj_CIM = "" 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+            '_CPP_MinPremAdj_CRM = "" 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+            '_CPP_MinPremAdj_GAR = "" 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+            '_CAP_GAR_PolicyLevelCovs_Premium = ""
+            '_WCP_WaiverPremium = "" 'covCodeId 10124 CovAddInfo w/ "Waiver Premium" in desc
+            ''added 7/14/2018
+            '_MultiLineDiscountValue = ""
+            '_PriorBodilyInjuryLimitId = ""
+
+            'removed 7/24/2018
+            ''RiskLevel
+            ''added 7/10/2018
+            '_Dec_BuildingLimit_All_Premium = ""
+            '_Dec_BuildingPersPropLimit_All_Premium = ""
+            '_HasLocation = False
+            '_HasLocationWithBuilding = False
+            '_HasLocationWithClassification = False
+            '_VehiclesTotal_CombinedSingleLimitLiablityQuotedPremium = ""
+            '_VehiclesTotal_MedicalPaymentsQuotedPremium = ""
+            '_VehiclesTotal_UninsuredMotoristLiabilityQuotedPremium = ""
+            '_VehiclesTotal_UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium = ""
+            '_VehiclesTotal_UM_UIM_CovsQuotedPremium = ""
+            '_VehiclesTotal_ComprehensiveCoverageQuotedPremium = ""
+            '_VehiclesTotal_CollisionCoverageQuotedPremium = ""
+            '_VehiclesTotal_TowingAndLaborQuotedPremium = ""
+            '_VehiclesTotal_RentalReimbursementQuotedPremium = ""
+            ''added 7/11/2018
+            '_CPR_BuildingsTotal_BuildingCovQuotedPremium = ""
+            '_CPR_BuildingsTotal_PersPropCoverageQuotedPremium = ""
+            '_CPR_BuildingsTotal_PersPropOfOthersQuotedPremium = ""
+            '_CPR_BuildingsTotal_BusinessIncomeCovQuotedPremium = ""
+            '_CPR_BuildingsTotal_EQ_QuotedPremium = ""
+            '_LocationsTotal_EquipmentBreakdownQuotedPremium = ""
+            '_LocationsTotal_PropertyInTheOpenRecords_QuotedPremium = ""
+            '_LocationsTotal_PropertyInTheOpenRecords_EQ_Premium = ""
+            '_LocationsTotal_PitoRecords_And_BuildingsTotal_Combined_EQ_Premium = ""
+            '_VehiclesTotal_PremiumFullTerm = ""
+            '_LocationsTotal_PremiumFullTerm = ""
+            '_Locations_BuildingsTotal_PremiumFullTerm = ""
+            '_CanUseDriverNumForDriverReconciliation = False
+            '_CanUseVehicleNumForVehicleReconciliation = False
+            '_CanUseLocationNumForLocationReconciliation = False
+            '_CanUseApplicantNumForApplicantReconciliation = False
+            '_VehiclesTotal_BodilyInjuryLiabilityQuotedPremium = ""
+            '_VehiclesTotal_PropertyDamageQuotedPremium = ""
+            '_VehiclesTotal_UninsuredCombinedSingleQuotedPremium = ""
+            '_VehiclesTotal_UninsuredMotoristPropertyDamageQuotedPremium = ""
+            '_VehiclesTotal_UninsuredMotoristPropertyDamageDeductibleQuotedPremium = ""
+            '_VehiclesTotal_PollutionLiabilityBroadenedCoverageQuotedPremium = ""
+            '_VehiclesTotal_TransportationExpenseQuotedPremium = ""
+            '_VehiclesTotal_AutoLoanOrLeaseQuotedPremium = ""
+            '_VehiclesTotal_TapesAndRecordsQuotedPremium = ""
+            '_VehiclesTotal_SoundEquipmentQuotedPremium = ""
+            '_VehiclesTotal_ElectronicEquipmentQuotedPremium = ""
+            '_VehiclesTotal_TripInterruptionQuotedPremium = ""
+            '_CanUseOperatorNumForOperatorReconciliation = False
+            '_Locations_InlandMarinesTotal_Premium = ""
+            '_Locations_InlandMarinesTotal_CoveragePremium = ""
+            '_Locations_RvWatercraftsTotal_Premium = ""
+            '_Locations_RvWatercraftsTotal_CoveragesPremium = ""
+            ''added 7/13/2018
+            '_Locations_Farm_L_Liability_QuotedPremium = ""
+            '_Locations_Farm_M_Medical_Payments_QuotedPremium = ""
+            '_LocationsTotal_LiabilityQuotedPremium = "" 'loc covCodeId 10111
+            '_LocationsTotal_MedicalPaymentsQuotedPremium = "" 'loc covCodeId 10112
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionStandardOpenLotsQuotedPremium = "" 'loc covCodeId 10116
+            ''for GAR
+            '_LocationsTotal_ClassIIEmployees25AndOlder = ""
+            '_LocationsTotal_ClassIIEmployeesUnderAge25 = ""
+            '_LocationsTotal_ClassIOtherEmployees = ""
+            '_LocationsTotal_ClassIRegularEmployees = ""
+            '_LocationsTotal_NumberOfEmployees = ""
+            '_LocationsTotal_Payroll = ""
+            '_LocationsTotal_UninsuredUnderinsuredMotoristBIandPDNumberOfPlates = "" 'covCodeId 10113; covDetail
+            '_LocationsTotal_ClassIEmployees = ""
+            '_LocationsTotal_ClassIIEmployees = ""
+            '_LocationsTotal_ClassIandIIEmployees = ""
+            '_LocationsTotal_DealersBlanketCollisionQuotedPremium = "" 'loc covCodeId 10120
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionBuildingQuotedPremium = "" 'loc covCodeId 10115
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionBuildingManualLimitAmount = "" 'loc covCodeId 10115
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsQuotedPremium = "" 'loc covCodeId 10117
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsManualLimitAmount = "" 'loc covCodeId 10117
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsQuotedPremium = "" 'loc covCodeId 10118
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsManualLimitAmount = "" 'loc covCodeId 10118
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsQuotedPremium = "" 'loc covCodeId 10119
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsManualLimitAmount = "" 'loc covCodeId 10119
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionTotalQuotedPremium = "" 'SUM of loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+            '_LocationsTotal_PhysicalDamageOtherThanCollisionTotalManualLimitAmount = "" 'SUM of loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+            '_Locations_PhysicalDamageOtherThanCollisionDeductibleCategoryTypeId = "" 'covDetail; loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+            '_Locations_PhysicalDamageOtherThanCollisionTypeId = "" 'covDetail; loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+            '_Locations_PhysicalDamageOtherThanCollisionDeductibleId = "" 'loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+            '_CAP_GAR_LocationLevelCovs_Premium = ""
+            '_CAP_GAR_VehicleLevelCovs_Premium = ""
+            '_LocationsTotal_UninsuredUnderinsuredMotoristBIandPDQuotedPremium = "" 'loc covCodeId 10113
+            '_LocationsTotal_GarageKeepersOtherThanCollisionQuotedPremium = "" 'loc covCodeId 10086
+            '_LocationsTotal_GarageKeepersCollisionQuotedPremium = "" 'loc covCodeId 10087
+            '_LocationsTotal_GarageKeepersCoverageExtensionsQuotedPremium = "" 'loc covCodeId 10126
+            '_VehiclesTotal_CAP_GAR_TotalCoveragesPremium = "" 'should essentially match CAP_GAR_VehicleLevelCovs_Premium
+            '_VehiclesTotal_TotalCoveragesPremium = ""
+            '_DriversTotal_TotalCoveragesPremium = ""
+
+            'PolicyLevel and RiskLevel
+            'added 7/13/2018
+            _GarageKeepersTotalPremium = "" 'SUM of prems for policy (covCodeIds 21541 and 21542 - has prem) and loc (covCodeIds 10086, 10087, and 10126 - no prem) covs
+            'for GAR (also CAP)
+            _AutoLiabilityTotalPremium = "" 'SUM of prems for policy (covCodeId 21552 - CAP/GAR: Liability_UM_UIM_QuotedPremium), loc (covCodeId 10111 - GAR: LiabilityQuotedPremium), and veh (covCodeId 2 - PPA/CAP/GAR: Liability_UM_UIM_QuotedPremium) covs
+            _AutoMedicalPaymentsTotalPremium = "" 'SUM of prems for policy (covCodeId 21540 - CAP/GAR: MedicalPaymentsQuotedPremium; could also be for 70072 - HOM/DFR, 70018 - FAR), loc (covCodeId 10112 - GAR: MedicalPaymentsQuotedPremium), and veh (covCodeId 60006 - CAP/GAR: MedicalPaymentsQuotedPremium; could also be for 6 - PPA) covs
+            _Auto_UM_UIM_TotalPremium = "" 'SUM of prems for policy (covCodeId 21539 - CAP/GAR: UninsuredMotoristPropertyDamageQuotedPremium), loc (covCodeId 10113 - GAR: UninsuredUnderinsuredMotoristBIandPDQuotedPremium), and veh (covCodeIds 30013 - CAP/GAR: UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium and 8 - PPA/CAP/GAR: UninsuredMotoristLiabilityQuotedPremium) covs
+            _AutoComprehensiveTotalPremium = "" 'SUM of prems for policy (covCodeId 21550 - CAP/GAR: PhysicalDamageOtherThanCollisionQuotedPremium; 10063 - CAP/GAR: ComprehensiveQuotedPremium as-of 6/19/2017), loc (covCodeId 10116 - GAR: PhysicalDamageOtherThanCollisionStandardOpenLotsQuotedPremium), and veh (covCodeId 3 - PPA/CAP/GAR: ComprehensiveQuotedPremium) covs
+            _AutoCollisionTotalPremium = "" 'SUM of prems for policy (covCodeId 21551 - CAP/GAR: PhysicalDamageCollisionQuotedPremium; 10064 - CAP/GAR: CollisionQuotedPremium as-of 6/19/2017), loc (covCodeId 10120 - GAR: DealersBlanketCollisionQuotedPremium), and veh (covCodeId 5 - PPA/CAP/GAR: CollisionQuotedPremium) covs
+            _CAP_GAR_OptCovs_Premium = "" 'diff of CAP/GAR totalPremium minus above premiums, towingLabor, rental, and garageKeepers; note: will also exclude (subtract) EnhancementEndorsement as-of 6/20/2017
+            _CAP_GAR_PolicyAndLocationLevelCovs_Premium = ""
+            '7/23/2018 - moved from PolicyLevel section
+            _GarageKeepersOtherThanCollisionManualLimitAmount = "" 'covCodeId 21541
+            _GarageKeepersOtherThanCollisionBasisTypeId = "" 'covDetail; covCodeId 21541
+            _GarageKeepersOtherThanCollisionDeductibleCategoryTypeId = "" 'covDetail; covCodeId 21541
+            _GarageKeepersOtherThanCollisionTypeId = "" 'covDetail; covCodeId 21541
+            _GarageKeepersOtherThanCollisionDeductibleId = "" 'covCodeId 21541
+            _GarageKeepersCollisionManualLimitAmount = "" 'covCodeId 21542
+            _GarageKeepersCollisionBasisTypeId = "" 'covDetail; covCodeId 21542
+            _GarageKeepersCollisionDeductibleId = "" 'covCodeId 21542
+
+            'added 4/20/2020 for PUP/FUP
+            _UnderlyingPolicies = Nothing
+            _CanUseUnderlyingPolicyNumForUnderlyingPolicyReconciliation = False
+
+        End Sub
+        Public Sub Reset_IRPM_Values() 'added 7/9/2018
+            '_IRPM_ManagementCooperation = "1.000"
+            '_IRPM_ManagementCooperationDesc = ""
+            '_IRPM_Location = "1.000"
+            '_IRPM_LocationDesc = ""
+            '_IRPM_BuildingFeatures = "1.000"
+            '_IRPM_BuildingFeaturesDesc = ""
+            '_IRPM_Premises = "1.000"
+            '_IRPM_PremisesDesc = ""
+            '_IRPM_Employees = "1.000"
+            '_IRPM_EmployeesDesc = ""
+            '_IRPM_Protection = "1.000"
+            '_IRPM_ProtectionDesc = ""
+            '_IRPM_CatostrophicHazards = "1.000"
+            '_IRPM_CatostrophicHazardsDesc = ""
+            '_IRPM_ManagementExperience = "1.000"
+            '_IRPM_ManagementExperienceDesc = ""
+            '_IRPM_Equipment = "1.000"
+            '_IRPM_EquipmentDesc = ""
+            '_IRPM_MedicalFacilities = "1.000"
+            '_IRPM_MedicalFacilitiesDesc = ""
+            '_IRPM_ClassificationPeculiarities = "1.000"
+            '_IRPM_ClassificationPeculiaritiesDesc = ""
+            '_IRPM_GL_ManagementCooperation = "1.000"
+            '_IRPM_GL_ManagementCooperationDesc = ""
+            '_IRPM_GL_Location = "1.000"
+            '_IRPM_GL_LocationDesc = ""
+            '_IRPM_GL_Premises = "1.000"
+            '_IRPM_GL_PremisesDesc = ""
+            '_IRPM_GL_Equipment = "1.000"
+            '_IRPM_GL_EquipmentDesc = ""
+            '_IRPM_GL_Employees = "1.000"
+            '_IRPM_GL_EmployeesDesc = ""
+            '_IRPM_GL_ClassificationPeculiarities = "1.000"
+            '_IRPM_GL_ClassificationPeculiaritiesDesc = ""
+            '_IRPM_CAP_Management = "1.000"
+            '_IRPM_CAP_ManagementDesc = ""
+            '_IRPM_CAP_Employees = "1.000"
+            '_IRPM_CAP_EmployeesDesc = ""
+            '_IRPM_CAP_Equipment = "1.000"
+            '_IRPM_CAP_EquipmentDesc = ""
+            '_IRPM_CAP_SafetyOrganization = "1.000"
+            '_IRPM_CAP_SafetyOrganizationDesc = ""
+            '_IRPM_CPR_Management = "1.000"
+            '_IRPM_CPR_ManagementDesc = ""
+            '_IRPM_CPR_PremisesAndEquipment = "1.000"
+            '_IRPM_CPR_PremisesAndEquipmentDesc = ""
+            '_IRPM_FAR_CareConditionOfEquipPremises = "1.000"
+            '_IRPM_FAR_CareConditionOfEquipPremisesDesc = ""
+            '_IRPM_FAR_Cooperation = "1.000"
+            '_IRPM_FAR_CooperationDesc = ""
+            '_IRPM_FAR_DamageSusceptibility = "1.000"
+            '_IRPM_FAR_DamageSusceptibilityDesc = ""
+            '_IRPM_FAR_DispersionOrConcentration = "1.000"
+            '_IRPM_FAR_DispersionOrConcentrationDesc = ""
+            '_IRPM_FAR_SuperiorOrInferiorStructureFeatures = "1.000"
+            '_IRPM_FAR_SuperiorOrInferiorStructureFeaturesDesc = ""
+            '_IRPM_FAR_UseOfRiceHullsOrFlameRetardantBedding = "1.000"
+            '_IRPM_FAR_UseOfRiceHullsOrFlameRetardantBeddingDesc = ""
+            '_IRPM_FAR_Location = "1.000"
+            '_IRPM_FAR_LocationDesc = ""
+            '_IRPM_FAR_MiscProtectFeaturesOrHazards = "1.000"
+            '_IRPM_FAR_MiscProtectFeaturesOrHazardsDesc = ""
+            '_IRPM_FAR_RoofCondition = "1.000"
+            '_IRPM_FAR_RoofConditionDesc = ""
+            '_IRPM_FAR_StoragePracticesAndHazardousOperations = "1.000"
+            '_IRPM_FAR_StoragePracticesAndHazardousOperationsDesc = ""
+            '_IRPM_FAR_PastLosses = "1.000"
+            '_IRPM_FAR_PastLossesDesc = ""
+            '_IRPM_FAR_SupportingBusiness = "1.000"
+            '_IRPM_FAR_SupportingBusinessDesc = ""
+            '_IRPM_FAR_RegularOnsiteInspections = "1.000"
+            '_IRPM_FAR_RegularOnsiteInspectionsDesc = ""
+
+            'updated 7/24/2018
+            PolicyLevelInfoExtended.Reset_IRPM_Values()
+        End Sub
+        'added 7/16/2018
+        Private Sub ResetPackagePartVersionIds()
+            Dim old_CPR_VersionId As String = _CPP_CPR_PackagePart_VersionId
+            Dim old_CPR_AddFormsVersionId As String = _CPP_CPR_PackagePart_AddFormsVersionId
+            Dim old_CPR_RatingVersionId As String = _CPP_CPR_PackagePart_RatingVersionId
+            Dim old_CPR_UnderwritingVersionId As String = _CPP_CPR_PackagePart_UnderwritingVersionId
+            Dim old_CGL_VersionId As String = _CPP_CGL_PackagePart_VersionId
+            Dim old_CGL_AddFormsVersionId As String = _CPP_CGL_PackagePart_AddFormsVersionId
+            Dim old_CGL_RatingVersionId As String = _CPP_CGL_PackagePart_RatingVersionId
+            Dim old_CGL_UnderwritingVersionId As String = _CPP_CGL_PackagePart_UnderwritingVersionId
+            Dim old_Main_VersionId As String = _CPP_Main_PackagePart_VersionId
+            Dim old_Main_AddFormsVersionId As String = _CPP_Main_PackagePart_AddFormsVersionId
+            Dim old_Main_RatingVersionId As String = _CPP_Main_PackagePart_RatingVersionId
+            Dim old_Main_UnderwritingVersionId As String = _CPP_Main_PackagePart_UnderwritingVersionId
+            Dim old_CRM_VersionId As String = _CPP_CRM_PackagePart_VersionId
+            Dim old_CRM_AddFormsVersionId As String = _CPP_CRM_PackagePart_AddFormsVersionId
+            Dim old_CRM_RatingVersionId As String = _CPP_CRM_PackagePart_RatingVersionId
+            Dim old_CRM_UnderwritingVersionId As String = _CPP_CRM_PackagePart_UnderwritingVersionId
+            Dim old_CIM_VersionId As String = _CPP_CIM_PackagePart_VersionId
+            Dim old_CIM_AddFormsVersionId As String = _CPP_CIM_PackagePart_AddFormsVersionId
+            Dim old_CIM_RatingVersionId As String = _CPP_CIM_PackagePart_RatingVersionId
+            Dim old_CIM_UnderwritingVersionId As String = _CPP_CIM_PackagePart_UnderwritingVersionId
+            _CPP_CPR_PackagePart_VersionId = ""
+            _CPP_CPR_PackagePart_AddFormsVersionId = ""
+            _CPP_CPR_PackagePart_RatingVersionId = ""
+            _CPP_CPR_PackagePart_UnderwritingVersionId = ""
+            _CPP_CGL_PackagePart_VersionId = ""
+            _CPP_CGL_PackagePart_AddFormsVersionId = ""
+            _CPP_CGL_PackagePart_RatingVersionId = ""
+            _CPP_CGL_PackagePart_UnderwritingVersionId = ""
+            _CPP_Main_PackagePart_VersionId = ""
+            _CPP_Main_PackagePart_AddFormsVersionId = ""
+            _CPP_Main_PackagePart_RatingVersionId = ""
+            _CPP_Main_PackagePart_UnderwritingVersionId = ""
+            _CPP_CRM_PackagePart_VersionId = ""
+            _CPP_CRM_PackagePart_AddFormsVersionId = ""
+            _CPP_CRM_PackagePart_RatingVersionId = ""
+            _CPP_CRM_PackagePart_UnderwritingVersionId = ""
+            _CPP_CIM_PackagePart_VersionId = ""
+            _CPP_CIM_PackagePart_AddFormsVersionId = ""
+            _CPP_CIM_PackagePart_RatingVersionId = ""
+            _CPP_CIM_PackagePart_UnderwritingVersionId = ""
+
+            If _LobType <> Nothing AndAlso _LobType = QuickQuoteObject.QuickQuoteLobType.CommercialPackage Then
+
+                If _VersionId = old_Main_VersionId Then
+                    _CPP_Main_PackagePart_AddFormsVersionId = old_Main_AddFormsVersionId
+                    _CPP_Main_PackagePart_RatingVersionId = old_Main_RatingVersionId
+                    _CPP_Main_PackagePart_UnderwritingVersionId = old_Main_UnderwritingVersionId
+                End If
+
+                'Dim CPR_LobId As String = qqHelper.GetRelatedStaticDataValueForOptionValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.LobType, System.Enum.GetName(GetType(QuickQuoteObject.QuickQuoteLobType), QuickQuoteObject.QuickQuoteLobType.CommercialProperty), QuickQuoteHelperClass.QuickQuotePropertyName.LobId) 'updated 7/21/2018 from QuickQuoteLobType to QuickQuoteObject.QuickQuoteLobType
+                '_CPP_CPR_PackagePart_VersionId = qqHelper.GetRelatedStaticDataValueForOptionValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.LobId, CPR_LobId, QuickQuoteHelperClass.QuickQuotePropertyName.VersionId)
+                'updated 11/14/2018
+                Dim CPR_LobId As String = ""
+                'QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeAndStateId(QuickQuoteObject.QuickQuoteLobType.CommercialProperty, _StateId, CPR_LobId, _CPP_CPR_PackagePart_VersionId, defaultStateToIndiana:=True)
+                'updated 11/27/2022
+                QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeStateIdAndCompanyId(QuickQuoteObject.QuickQuoteLobType.CommercialProperty, _StateId, _CompanyId, lobId:=CPR_LobId, versionId:=_CPP_CPR_PackagePart_VersionId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True)
+                If _CPP_CPR_PackagePart_VersionId = old_CPR_VersionId Then
+                    _CPP_CPR_PackagePart_AddFormsVersionId = old_CPR_AddFormsVersionId
+                    _CPP_CPR_PackagePart_RatingVersionId = old_CPR_RatingVersionId
+                    _CPP_CPR_PackagePart_UnderwritingVersionId = old_CPR_UnderwritingVersionId
+                End If
+
+                'Dim CGL_LobId As String = qqHelper.GetRelatedStaticDataValueForOptionValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.LobType, System.Enum.GetName(GetType(QuickQuoteObject.QuickQuoteLobType), QuickQuoteObject.QuickQuoteLobType.CommercialGeneralLiability), QuickQuoteHelperClass.QuickQuotePropertyName.LobId) 'updated 7/21/2018 from QuickQuoteLobType to QuickQuoteObject.QuickQuoteLobType
+                '_CPP_CGL_PackagePart_VersionId = qqHelper.GetRelatedStaticDataValueForOptionValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.LobId, CGL_LobId, QuickQuoteHelperClass.QuickQuotePropertyName.VersionId)
+                'updated 11/14/2018
+                Dim CGL_LobId As String = ""
+                'QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeAndStateId(QuickQuoteObject.QuickQuoteLobType.CommercialGeneralLiability, _StateId, CGL_LobId, _CPP_CGL_PackagePart_VersionId, defaultStateToIndiana:=True)
+                'updated 11/27/2022
+                QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeStateIdAndCompanyId(QuickQuoteObject.QuickQuoteLobType.CommercialGeneralLiability, _StateId, _CompanyId, lobId:=CGL_LobId, versionId:=_CPP_CGL_PackagePart_VersionId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True)
+                If _CPP_CGL_PackagePart_VersionId = old_CGL_VersionId Then
+                    _CPP_CGL_PackagePart_AddFormsVersionId = old_CGL_AddFormsVersionId
+                    _CPP_CGL_PackagePart_RatingVersionId = old_CGL_RatingVersionId
+                    _CPP_CGL_PackagePart_UnderwritingVersionId = old_CGL_UnderwritingVersionId
+                End If
+
+                'Dim CRM_LobId As String = qqHelper.GetRelatedStaticDataValueForOptionValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.LobType, System.Enum.GetName(GetType(QuickQuoteObject.QuickQuoteLobType), QuickQuoteObject.QuickQuoteLobType.CommercialCrime), QuickQuoteHelperClass.QuickQuotePropertyName.LobId) 'updated 7/21/2018 from QuickQuoteLobType to QuickQuoteObject.QuickQuoteLobType
+                '_CPP_CRM_PackagePart_VersionId = qqHelper.GetRelatedStaticDataValueForOptionValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.LobId, CRM_LobId, QuickQuoteHelperClass.QuickQuotePropertyName.VersionId)
+                'updated 11/14/2018
+                Dim CRM_LobId As String = ""
+                'QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeAndStateId(QuickQuoteObject.QuickQuoteLobType.CommercialCrime, _StateId, CRM_LobId, _CPP_CRM_PackagePart_VersionId, defaultStateToIndiana:=True)
+                'updated 11/27/2022
+                QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeStateIdAndCompanyId(QuickQuoteObject.QuickQuoteLobType.CommercialCrime, _StateId, _CompanyId, lobId:=CRM_LobId, versionId:=_CPP_CRM_PackagePart_VersionId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True)
+                If _CPP_CRM_PackagePart_VersionId = old_CRM_VersionId Then
+                    _CPP_CRM_PackagePart_AddFormsVersionId = old_CRM_AddFormsVersionId
+                    _CPP_CRM_PackagePart_RatingVersionId = old_CRM_RatingVersionId
+                    _CPP_CRM_PackagePart_UnderwritingVersionId = old_CRM_UnderwritingVersionId
+                End If
+
+                'Dim CIM_LobId As String = qqHelper.GetRelatedStaticDataValueForOptionValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.LobType, System.Enum.GetName(GetType(QuickQuoteObject.QuickQuoteLobType), QuickQuoteObject.QuickQuoteLobType.CommercialInlandMarine), QuickQuoteHelperClass.QuickQuotePropertyName.LobId) 'updated 7/21/2018 from QuickQuoteLobType to QuickQuoteObject.QuickQuoteLobType
+                '_CPP_CIM_PackagePart_VersionId = qqHelper.GetRelatedStaticDataValueForOptionValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteObject, QuickQuoteHelperClass.QuickQuotePropertyName.LobId, CIM_LobId, QuickQuoteHelperClass.QuickQuotePropertyName.VersionId)
+                'updated 11/14/2018
+                Dim CIM_LobId As String = ""
+                'QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeAndStateId(QuickQuoteObject.QuickQuoteLobType.CommercialInlandMarine, _StateId, CIM_LobId, _CPP_CIM_PackagePart_VersionId, defaultStateToIndiana:=True)
+                'updated 11/27/2022
+                QuickQuoteHelperClass.SetDiamondLobIdAndVersionIdFromLobTypeStateIdAndCompanyId(QuickQuoteObject.QuickQuoteLobType.CommercialInlandMarine, _StateId, _CompanyId, lobId:=CIM_LobId, versionId:=_CPP_CIM_PackagePart_VersionId, defaultStateToIndiana:=True, defaultCompanyToIndianaFarmersMutual:=True)
+                If _CPP_CIM_PackagePart_VersionId = old_CIM_VersionId Then
+                    _CPP_CIM_PackagePart_AddFormsVersionId = old_CIM_AddFormsVersionId
+                    _CPP_CIM_PackagePart_RatingVersionId = old_CIM_RatingVersionId
+                    _CPP_CIM_PackagePart_UnderwritingVersionId = old_CIM_UnderwritingVersionId
+                End If
+
+                Validate_CPP_PackagePart_VersionIds()
+            End If
+        End Sub
+        'Private Sub Default_CPR_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None)
+        'updated 11/28/2022
+        Private Sub Default_CPR_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.IndianaFarmersIndemnity Then 'added IF 11/28/2022; original IFM logic is in ELSE
+                If qqState = QuickQuoteHelperClass.QuickQuoteState.Illinois Then
+                    _CPP_CPR_PackagePart_VersionId = "252"
+                    _CPP_CPR_PackagePart_AddFormsVersionId = "256"
+                    _CPP_CPR_PackagePart_RatingVersionId = "551"
+                    _CPP_CPR_PackagePart_UnderwritingVersionId = "251"
+                ElseIf qqState = QuickQuoteHelperClass.QuickQuoteState.Ohio Then
+                    _CPP_CPR_PackagePart_VersionId = "253"
+                    _CPP_CPR_PackagePart_AddFormsVersionId = "257"
+                    _CPP_CPR_PackagePart_RatingVersionId = "552"
+                    _CPP_CPR_PackagePart_UnderwritingVersionId = "252"
+                Else 'IN
+                    _CPP_CPR_PackagePart_VersionId = "251"
+                    _CPP_CPR_PackagePart_AddFormsVersionId = "255"
+                    _CPP_CPR_PackagePart_RatingVersionId = "550"
+                    _CPP_CPR_PackagePart_UnderwritingVersionId = "250"
+                End If
+            Else 'IFM
+                If qqState = QuickQuoteHelperClass.QuickQuoteState.Illinois Then 'added IF 11/14/2018; original IN logic is in ELSE
+                    _CPP_CPR_PackagePart_VersionId = "134"
+                    _CPP_CPR_PackagePart_AddFormsVersionId = "133"
+                    _CPP_CPR_PackagePart_RatingVersionId = "278"
+                    _CPP_CPR_PackagePart_UnderwritingVersionId = "133"
+                ElseIf qqState = QuickQuoteHelperClass.QuickQuoteState.Ohio Then 'added ELSEIF 11/28/2022
+                    _CPP_CPR_PackagePart_VersionId = "224"
+                    _CPP_CPR_PackagePart_AddFormsVersionId = "228"
+                    _CPP_CPR_PackagePart_RatingVersionId = "503"
+                    _CPP_CPR_PackagePart_UnderwritingVersionId = "223"
+                Else '11/14/2018 note: ELSE is for IN
+                    If _CPP_CPR_PackagePart_VersionId = "16" Then
+                        _CPP_CPR_PackagePart_VersionId = "16"
+                        _CPP_CPR_PackagePart_AddFormsVersionId = "16"
+                        _CPP_CPR_PackagePart_RatingVersionId = "22"
+                        _CPP_CPR_PackagePart_UnderwritingVersionId = "16"
+                    Else
+                        _CPP_CPR_PackagePart_VersionId = "123"
+                        _CPP_CPR_PackagePart_AddFormsVersionId = "122"
+                        _CPP_CPR_PackagePart_RatingVersionId = "263"
+                        _CPP_CPR_PackagePart_UnderwritingVersionId = "122"
+                    End If
+                End If
+            End If
+        End Sub
+        'Private Sub Default_CGL_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+        'updated 11/28/2022
+        Private Sub Default_CGL_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.IndianaFarmersIndemnity Then 'added IF 11/28/2022; original IFM logic is in ELSE
+                If qqState = QuickQuoteHelperClass.QuickQuoteState.Illinois Then
+                    _CPP_CGL_PackagePart_VersionId = "258"
+                    _CPP_CGL_PackagePart_AddFormsVersionId = "262"
+                    _CPP_CGL_PackagePart_RatingVersionId = "557"
+                    _CPP_CGL_PackagePart_UnderwritingVersionId = "257"
+                ElseIf qqState = QuickQuoteHelperClass.QuickQuoteState.Ohio Then
+                    _CPP_CGL_PackagePart_VersionId = "259"
+                    _CPP_CGL_PackagePart_AddFormsVersionId = "263"
+                    _CPP_CGL_PackagePart_RatingVersionId = "558"
+                    _CPP_CGL_PackagePart_UnderwritingVersionId = "258"
+                Else 'IN
+                    _CPP_CGL_PackagePart_VersionId = "257"
+                    _CPP_CGL_PackagePart_AddFormsVersionId = "261"
+                    _CPP_CGL_PackagePart_RatingVersionId = "556"
+                    _CPP_CGL_PackagePart_UnderwritingVersionId = "256"
+                End If
+            Else 'IFM
+                If qqState = QuickQuoteHelperClass.QuickQuoteState.Illinois Then 'added IF 11/14/2018; original IN logic is in ELSE
+                    _CPP_CGL_PackagePart_VersionId = "129"
+                    _CPP_CGL_PackagePart_AddFormsVersionId = "128"
+                    _CPP_CGL_PackagePart_RatingVersionId = "272"
+                    _CPP_CGL_PackagePart_UnderwritingVersionId = "128"
+                ElseIf qqState = QuickQuoteHelperClass.QuickQuoteState.Ohio Then 'added ELSEIF 11/28/2022
+                    _CPP_CGL_PackagePart_VersionId = "180"
+                    _CPP_CGL_PackagePart_AddFormsVersionId = "183"
+                    _CPP_CGL_PackagePart_RatingVersionId = "368"
+                    _CPP_CGL_PackagePart_UnderwritingVersionId = "179"
+                Else '11/14/2018 note: ELSE is for IN
+                    If _CPP_CGL_PackagePart_VersionId = "13" Then
+                        _CPP_CGL_PackagePart_VersionId = "13"
+                        _CPP_CGL_PackagePart_AddFormsVersionId = "13"
+                        _CPP_CGL_PackagePart_RatingVersionId = "19"
+                        _CPP_CGL_PackagePart_UnderwritingVersionId = "13"
+                    Else
+                        _CPP_CGL_PackagePart_VersionId = "113"
+                        _CPP_CGL_PackagePart_AddFormsVersionId = "113"
+                        _CPP_CGL_PackagePart_RatingVersionId = "265"
+                        _CPP_CGL_PackagePart_UnderwritingVersionId = "113"
+                    End If
+                End If
+            End If
+        End Sub
+        'Private Sub Default_Main_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+        'updated 11/28/2022
+        Private Sub Default_Main_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.IndianaFarmersIndemnity Then 'added IF 11/28/2022; original IFM logic is in ELSE
+                If qqState = QuickQuoteHelperClass.QuickQuoteState.Illinois Then
+                    _CPP_Main_PackagePart_VersionId = "249"
+                    _CPP_Main_PackagePart_AddFormsVersionId = "253"
+                    _CPP_Main_PackagePart_RatingVersionId = "548"
+                    _CPP_Main_PackagePart_UnderwritingVersionId = "248"
+                ElseIf qqState = QuickQuoteHelperClass.QuickQuoteState.Ohio Then
+                    _CPP_Main_PackagePart_VersionId = "250"
+                    _CPP_Main_PackagePart_AddFormsVersionId = "254"
+                    _CPP_Main_PackagePart_RatingVersionId = "549"
+                    _CPP_Main_PackagePart_UnderwritingVersionId = "249"
+                Else 'IN
+                    _CPP_Main_PackagePart_VersionId = "248"
+                    _CPP_Main_PackagePart_AddFormsVersionId = "252"
+                    _CPP_Main_PackagePart_RatingVersionId = "547"
+                    _CPP_Main_PackagePart_UnderwritingVersionId = "247"
+                End If
+            Else 'IFM
+                If qqState = QuickQuoteHelperClass.QuickQuoteState.Illinois Then 'added IF 11/14/2018; original IN logic is in ELSE
+                    _CPP_Main_PackagePart_VersionId = "133"
+                    _CPP_Main_PackagePart_AddFormsVersionId = "132"
+                    _CPP_Main_PackagePart_RatingVersionId = "277"
+                    _CPP_Main_PackagePart_UnderwritingVersionId = "132"
+                ElseIf qqState = QuickQuoteHelperClass.QuickQuoteState.Ohio Then 'added ELSEIF 11/28/2022
+                    _CPP_Main_PackagePart_VersionId = "196"
+                    _CPP_Main_PackagePart_AddFormsVersionId = "200"
+                    _CPP_Main_PackagePart_RatingVersionId = "394"
+                    _CPP_Main_PackagePart_UnderwritingVersionId = "195"
+                Else '11/14/2018 note: ELSE is for IN
+                    If _CPP_Main_PackagePart_VersionId = "14" Then
+                        _CPP_Main_PackagePart_VersionId = "14"
+                        _CPP_Main_PackagePart_AddFormsVersionId = "14"
+                        _CPP_Main_PackagePart_RatingVersionId = "20"
+                        _CPP_Main_PackagePart_UnderwritingVersionId = "14"
+                    Else
+                        _CPP_Main_PackagePart_VersionId = "88"
+                        _CPP_Main_PackagePart_AddFormsVersionId = "88"
+                        _CPP_Main_PackagePart_RatingVersionId = "134"
+                        _CPP_Main_PackagePart_UnderwritingVersionId = "88"
+                    End If
+                End If
+            End If
+        End Sub
+        'Private Sub Default_CRM_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+        'updated 11/28/2022
+        Private Sub Default_CRM_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.IndianaFarmersIndemnity Then 'added IF 11/28/2022; original IFM logic is in ELSE
+                If qqState = QuickQuoteHelperClass.QuickQuoteState.Illinois Then
+                    _CPP_CRM_PackagePart_VersionId = "270"
+                    _CPP_CRM_PackagePart_AddFormsVersionId = "275"
+                    _CPP_CRM_PackagePart_RatingVersionId = "570"
+                    _CPP_CRM_PackagePart_UnderwritingVersionId = "270"
+                ElseIf qqState = QuickQuoteHelperClass.QuickQuoteState.Ohio Then
+                    _CPP_CRM_PackagePart_VersionId = "271"
+                    _CPP_CRM_PackagePart_AddFormsVersionId = "276"
+                    _CPP_CRM_PackagePart_RatingVersionId = "571"
+                    _CPP_CRM_PackagePart_UnderwritingVersionId = "271"
+                Else 'IN
+                    _CPP_CRM_PackagePart_VersionId = "269"
+                    _CPP_CRM_PackagePart_AddFormsVersionId = "273"
+                    _CPP_CRM_PackagePart_RatingVersionId = "568"
+                    _CPP_CRM_PackagePart_UnderwritingVersionId = "268"
+                End If
+            Else 'IFM
+                If qqState = QuickQuoteHelperClass.QuickQuoteState.Illinois Then 'added IF 11/14/2018; original IN logic is in ELSE
+                    _CPP_CRM_PackagePart_VersionId = "124"
+                    _CPP_CRM_PackagePart_AddFormsVersionId = "123"
+                    _CPP_CRM_PackagePart_RatingVersionId = "264"
+                    _CPP_CRM_PackagePart_UnderwritingVersionId = "123"
+                ElseIf qqState = QuickQuoteHelperClass.QuickQuoteState.Ohio Then 'added ELSEIF 11/28/2022
+                    _CPP_CRM_PackagePart_VersionId = "178"
+                    _CPP_CRM_PackagePart_AddFormsVersionId = "181"
+                    _CPP_CRM_PackagePart_RatingVersionId = "366"
+                    _CPP_CRM_PackagePart_UnderwritingVersionId = "177"
+                Else '11/14/2018 note: ELSE is for IN
+                    If _CPP_CRM_PackagePart_VersionId = "12" Then
+                        _CPP_CRM_PackagePart_VersionId = "12"
+                        _CPP_CRM_PackagePart_AddFormsVersionId = "12"
+                        _CPP_CRM_PackagePart_RatingVersionId = "18"
+                        _CPP_CRM_PackagePart_UnderwritingVersionId = "12"
+                    Else
+                        _CPP_CRM_PackagePart_VersionId = "79"
+                        _CPP_CRM_PackagePart_AddFormsVersionId = "79"
+                        _CPP_CRM_PackagePart_RatingVersionId = "125"
+                        _CPP_CRM_PackagePart_UnderwritingVersionId = "79"
+                    End If
+                End If
+            End If
+        End Sub
+        'Private Sub Default_CIM_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+        'updated 11/28/2022
+        Private Sub Default_CIM_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.IndianaFarmersIndemnity Then 'added IF 11/28/2022; original IFM logic is in ELSE
+                If qqState = QuickQuoteHelperClass.QuickQuoteState.Illinois Then
+                    _CPP_CIM_PackagePart_VersionId = "264"
+                    _CPP_CIM_PackagePart_AddFormsVersionId = "268"
+                    _CPP_CIM_PackagePart_RatingVersionId = "563"
+                    _CPP_CIM_PackagePart_UnderwritingVersionId = "263"
+                ElseIf qqState = QuickQuoteHelperClass.QuickQuoteState.Ohio Then
+                    _CPP_CIM_PackagePart_VersionId = "265"
+                    _CPP_CIM_PackagePart_AddFormsVersionId = "269"
+                    _CPP_CIM_PackagePart_RatingVersionId = "564"
+                    _CPP_CIM_PackagePart_UnderwritingVersionId = "264"
+                Else 'IN
+                    _CPP_CIM_PackagePart_VersionId = "263"
+                    _CPP_CIM_PackagePart_AddFormsVersionId = "267"
+                    _CPP_CIM_PackagePart_RatingVersionId = "562"
+                    _CPP_CIM_PackagePart_UnderwritingVersionId = "262"
+                End If
+            Else 'IFM
+                If qqState = QuickQuoteHelperClass.QuickQuoteState.Illinois Then 'added IF 11/14/2018; original IN logic is in ELSE
+                    _CPP_CIM_PackagePart_VersionId = "127"
+                    _CPP_CIM_PackagePart_AddFormsVersionId = "126"
+                    _CPP_CIM_PackagePart_RatingVersionId = "268"
+                    _CPP_CIM_PackagePart_UnderwritingVersionId = "126"
+                ElseIf qqState = QuickQuoteHelperClass.QuickQuoteState.Ohio Then 'added ELSEIF 11/28/2022
+                    _CPP_CIM_PackagePart_VersionId = "184"
+                    _CPP_CIM_PackagePart_AddFormsVersionId = "191"
+                    _CPP_CIM_PackagePart_RatingVersionId = "378"
+                    _CPP_CIM_PackagePart_UnderwritingVersionId = "183"
+                Else '11/14/2018 note: ELSE is for IN
+                    If _CPP_CIM_PackagePart_VersionId = "46" Then
+                        _CPP_CIM_PackagePart_VersionId = "46"
+                        _CPP_CIM_PackagePart_AddFormsVersionId = "46"
+                        _CPP_CIM_PackagePart_RatingVersionId = "80"
+                        _CPP_CIM_PackagePart_UnderwritingVersionId = "46"
+                    Else
+                        _CPP_CIM_PackagePart_VersionId = "114"
+                        _CPP_CIM_PackagePart_AddFormsVersionId = "114"
+                        _CPP_CIM_PackagePart_RatingVersionId = "247"
+                        _CPP_CIM_PackagePart_UnderwritingVersionId = "114"
+                    End If
+                End If
+            End If
+        End Sub
+        Public Sub Validate_CPP_PackagePart_VersionIds()
+            Dim qqState As QuickQuoteHelperClass.QuickQuoteState = Me.State 'added 11/14/2018
+            Dim qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = Me.Company 'added 11/28/2022
+
+            Validate_Main_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param; updated 11/28/2022 for optional company param
+
+            Validate_CPR_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param
+
+            Validate_CGL_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param
+
+            Validate_CRM_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param
+
+            Validate_CIM_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param
+        End Sub
+        'Private Sub Validate_Main_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+        'updated 11/28/2022
+        Private Sub Validate_Main_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+            'If _CPP_Main_PackagePart_VersionId = "" OrElse ((_CPP_Main_PackagePart_VersionId = "14" OrElse _CPP_Main_PackagePart_VersionId = "88") AndAlso _CPP_Main_PackagePart_RatingVersionId = "") Then
+            'updated 11/14/2018; updated 11/28/2022 for optional company param
+            If _CPP_Main_PackagePart_VersionId = "" OrElse (HasDefaultPackagePartVersionId_Main(qqState:=qqState, qqCompany:=qqCompany) = True AndAlso _CPP_Main_PackagePart_RatingVersionId = "") Then
+                If _VersionId <> "" Then
+                    _CPP_Main_PackagePart_VersionId = _VersionId
+                    _CPP_Main_PackagePart_AddFormsVersionId = _AddFormsVersionId
+                    _CPP_Main_PackagePart_RatingVersionId = _RatingVersionId
+                    _CPP_Main_PackagePart_UnderwritingVersionId = _UnderwritingVersionId
+
+                    'If (_CPP_Main_PackagePart_VersionId = "14" OrElse _CPP_Main_PackagePart_VersionId = "88") AndAlso _CPP_Main_PackagePart_RatingVersionId = "" Then
+                    'updated 11/14/2018; updated 11/28/2022 for optional company param
+                    If HasDefaultPackagePartVersionId_Main(qqState:=qqState, qqCompany:=qqCompany) = True AndAlso _CPP_Main_PackagePart_RatingVersionId = "" Then
+                        Default_Main_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param; updated 11/28/2022 for optional company param
+                    End If
+                Else
+                    Default_Main_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param; updated 11/28/2022 for optional company param
+                End If
+            End If
+        End Sub
+        'Private Function HasDefaultPackagePartVersionId_Main(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) As Boolean 'added 11/14/2018
+        'updated 11/28/2022
+        Private Function HasDefaultPackagePartVersionId_Main(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) As Boolean 'added 11/14/2018
+            Dim hasIt As Boolean = False
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.IndianaFarmersIndemnity Then 'added IF 11/28/2022; original IFM logic is in ELSE
+                Select Case qqState
+                    Case QuickQuoteHelperClass.QuickQuoteState.Illinois
+                        If _CPP_Main_PackagePart_VersionId = "249" Then
+                            hasIt = True
+                        End If
+                    Case QuickQuoteHelperClass.QuickQuoteState.Ohio
+                        If _CPP_Main_PackagePart_VersionId = "250" Then
+                            hasIt = True
+                        End If
+                    Case Else 'IN
+                        If _CPP_Main_PackagePart_VersionId = "248" Then
+                            hasIt = True
+                        End If
+                End Select
+            Else 'IFM
+                Select Case qqState
+                    Case QuickQuoteHelperClass.QuickQuoteState.Illinois
+                        If _CPP_Main_PackagePart_VersionId = "133" Then '11/28/2022: fixed from _CPP_CIM_PackagePart_VersionId
+                            hasIt = True
+                        End If
+                    Case QuickQuoteHelperClass.QuickQuoteState.Ohio 'added 11/28/2022
+                        If _CPP_Main_PackagePart_VersionId = "196" Then
+                            hasIt = True
+                        End If
+                    Case Else 'IN
+                        If _CPP_Main_PackagePart_VersionId = "14" OrElse _CPP_Main_PackagePart_VersionId = "88" Then
+                            hasIt = True
+                        End If
+                End Select
+            End If
+
+            Return hasIt
+        End Function
+        'Private Sub Validate_CPR_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+        'updated 11/28/2022
+        Private Sub Validate_CPR_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+            'If _CPP_CPR_PackagePart_VersionId = "" OrElse ((_CPP_CPR_PackagePart_VersionId = "16" OrElse _CPP_CPR_PackagePart_VersionId = "123") AndAlso _CPP_CPR_PackagePart_RatingVersionId = "") Then
+            'updated 11/14/2018; updated 11/28/2022 for optional company param
+            If _CPP_CPR_PackagePart_VersionId = "" OrElse (HasDefaultPackagePartVersionId_CPR(qqState:=qqState, qqCompany:=qqCompany) = True AndAlso _CPP_CPR_PackagePart_RatingVersionId = "") Then
+                Default_CPR_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param; updated 11/28/2022 for optional company param
+            End If
+        End Sub
+        'Private Function HasDefaultPackagePartVersionId_CPR(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) As Boolean 'added 11/14/2018
+        'updated 11/28/2022
+        Private Function HasDefaultPackagePartVersionId_CPR(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) As Boolean 'added 11/14/2018
+            Dim hasIt As Boolean = False
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.IndianaFarmersIndemnity Then 'added IF 11/28/2022; original IFM logic is in ELSE
+                Select Case qqState
+                    Case QuickQuoteHelperClass.QuickQuoteState.Illinois
+                        If _CPP_CPR_PackagePart_VersionId = "252" Then
+                            hasIt = True
+                        End If
+                    Case QuickQuoteHelperClass.QuickQuoteState.Ohio
+                        If _CPP_CPR_PackagePart_VersionId = "253" Then
+                            hasIt = True
+                        End If
+                    Case Else 'IN
+                        If _CPP_CPR_PackagePart_VersionId = "251" Then
+                            hasIt = True
+                        End If
+                End Select
+            Else 'IFM
+                Select Case qqState
+                    Case QuickQuoteHelperClass.QuickQuoteState.Illinois
+                        If _CPP_CPR_PackagePart_VersionId = "134" Then '11/28/2022: fixed from _CPP_CIM_PackagePart_VersionId
+                            hasIt = True
+                        End If
+                    Case QuickQuoteHelperClass.QuickQuoteState.Ohio 'added 11/28/2022
+                        If _CPP_CPR_PackagePart_VersionId = "224" Then
+                            hasIt = True
+                        End If
+                    Case Else 'IN
+                        If _CPP_CPR_PackagePart_VersionId = "16" OrElse _CPP_CPR_PackagePart_VersionId = "123" Then
+                            hasIt = True
+                        End If
+                End Select
+            End If
+
+            Return hasIt
+        End Function
+        'Private Sub Validate_CGL_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+        'updated 11/28/2022
+        Private Sub Validate_CGL_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+            'If _CPP_CGL_PackagePart_VersionId = "" OrElse ((_CPP_CGL_PackagePart_VersionId = "13" OrElse _CPP_CGL_PackagePart_VersionId = "113") AndAlso _CPP_CGL_PackagePart_RatingVersionId = "") Then
+            'updated 11/14/2018; updated 11/28/2022 for optional company param
+            If _CPP_CGL_PackagePart_VersionId = "" OrElse (HasDefaultPackagePartVersionId_CGL(qqState:=qqState, qqCompany:=qqCompany) = True AndAlso _CPP_CGL_PackagePart_RatingVersionId = "") Then
+                Default_CGL_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param; updated 11/28/2022 for optional company param
+            End If
+        End Sub
+        'Private Function HasDefaultPackagePartVersionId_CGL(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) As Boolean 'added 11/14/2018
+        'updated 11/28/2022
+        Private Function HasDefaultPackagePartVersionId_CGL(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) As Boolean 'added 11/14/2018
+            Dim hasIt As Boolean = False
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.IndianaFarmersIndemnity Then 'added IF 11/28/2022; original IFM logic is in ELSE
+                Select Case qqState
+                    Case QuickQuoteHelperClass.QuickQuoteState.Illinois
+                        If _CPP_CGL_PackagePart_VersionId = "258" Then
+                            hasIt = True
+                        End If
+                    Case QuickQuoteHelperClass.QuickQuoteState.Ohio
+                        If _CPP_CGL_PackagePart_VersionId = "259" Then
+                            hasIt = True
+                        End If
+                    Case Else 'IN
+                        If _CPP_CGL_PackagePart_VersionId = "257" Then
+                            hasIt = True
+                        End If
+                End Select
+            Else 'IFM
+                Select Case qqState
+                    Case QuickQuoteHelperClass.QuickQuoteState.Illinois
+                        If _CPP_CGL_PackagePart_VersionId = "129" Then '11/28/2022: fixed from _CPP_CIM_PackagePart_VersionId
+                            hasIt = True
+                        End If
+                    Case QuickQuoteHelperClass.QuickQuoteState.Ohio 'added 11/28/2022
+                        If _CPP_CGL_PackagePart_VersionId = "180" Then
+                            hasIt = True
+                        End If
+                    Case Else 'IN
+                        If _CPP_CGL_PackagePart_VersionId = "13" OrElse _CPP_CGL_PackagePart_VersionId = "113" Then
+                            hasIt = True
+                        End If
+                End Select
+            End If
+
+            Return hasIt
+        End Function
+        'Private Sub Validate_CRM_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+        'updated 11/28/2022
+        Private Sub Validate_CRM_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+            'If _CPP_CRM_PackagePart_VersionId = "" OrElse ((_CPP_CRM_PackagePart_VersionId = "12" OrElse _CPP_CRM_PackagePart_VersionId = "79") AndAlso _CPP_CRM_PackagePart_RatingVersionId = "") Then
+            'updated 11/14/2018; updated 11/28/2022 for optional company param
+            If _CPP_CRM_PackagePart_VersionId = "" OrElse (HasDefaultPackagePartVersionId_CRM(qqState:=qqState, qqCompany:=qqCompany) = True AndAlso _CPP_CRM_PackagePart_RatingVersionId = "") Then
+                Default_CRM_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param; updated 11/28/2022 for optional company param
+            End If
+        End Sub
+        'Private Function HasDefaultPackagePartVersionId_CRM(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) As Boolean 'added 11/14/2018
+        'updated 11/28/2022
+        Private Function HasDefaultPackagePartVersionId_CRM(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) As Boolean 'added 11/14/2018
+            Dim hasIt As Boolean = False
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.IndianaFarmersIndemnity Then 'added IF 11/28/2022; original IFM logic is in ELSE
+                Select Case qqState
+                    Case QuickQuoteHelperClass.QuickQuoteState.Illinois
+                        If _CPP_CRM_PackagePart_VersionId = "270" Then
+                            hasIt = True
+                        End If
+                    Case QuickQuoteHelperClass.QuickQuoteState.Ohio
+                        If _CPP_CRM_PackagePart_VersionId = "271" Then
+                            hasIt = True
+                        End If
+                    Case Else 'IN
+                        If _CPP_CRM_PackagePart_VersionId = "269" Then
+                            hasIt = True
+                        End If
+                End Select
+            Else 'IFM
+                Select Case qqState
+                    Case QuickQuoteHelperClass.QuickQuoteState.Illinois
+                        If _CPP_CRM_PackagePart_VersionId = "124" Then '11/28/2022: fixed from _CPP_CIM_PackagePart_VersionId
+                            hasIt = True
+                        End If
+                    Case QuickQuoteHelperClass.QuickQuoteState.Ohio 'added 11/28/2022
+                        If _CPP_CRM_PackagePart_VersionId = "178" Then
+                            hasIt = True
+                        End If
+                    Case Else 'IN
+                        If _CPP_CRM_PackagePart_VersionId = "12" OrElse _CPP_CRM_PackagePart_VersionId = "79" Then
+                            hasIt = True
+                        End If
+                End Select
+            End If
+
+            Return hasIt
+        End Function
+        'Private Sub Validate_CIM_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+        'updated 11/28/2022
+        Private Sub Validate_CIM_PackagePart_VersionIds(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) '11/14/2018 - added optional param for qqState so it doesn't always have to be fetched again
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+            'If _CPP_CIM_PackagePart_VersionId = "" OrElse ((_CPP_CIM_PackagePart_VersionId = "46" OrElse _CPP_CIM_PackagePart_VersionId = "114") AndAlso _CPP_CIM_PackagePart_RatingVersionId = "") Then
+            'updated 11/14/2018; updated 11/28/2022 for optional company param
+            If _CPP_CIM_PackagePart_VersionId = "" OrElse (HasDefaultPackagePartVersionId_CIM(qqState:=qqState, qqCompany:=qqCompany) = True AndAlso _CPP_CIM_PackagePart_RatingVersionId = "") Then
+                Default_CIM_PackagePart_VersionIds(qqState:=qqState, qqCompany:=qqCompany) 'updated 11/14/2018 for optional state param; updated 11/28/2022 for optional company param
+            End If
+        End Sub
+        'Private Function HasDefaultPackagePartVersionId_CIM(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None) As Boolean 'added 11/14/2018
+        'updated 11/28/2022
+        Private Function HasDefaultPackagePartVersionId_CIM(Optional ByVal qqState As QuickQuoteHelperClass.QuickQuoteState = QuickQuoteHelperClass.QuickQuoteState.None, Optional ByVal qqCompany As QuickQuoteHelperClass.QuickQuoteCompany = QuickQuoteHelperClass.QuickQuoteCompany.None) As Boolean 'added 11/14/2018
+            Dim hasIt As Boolean = False
+            If qqState = QuickQuoteHelperClass.QuickQuoteState.None Then 'added 11/14/2018
+                qqState = Me.State
+            End If
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.None Then 'added 11/28/2022
+                qqCompany = Me.Company
+            End If
+
+            If qqCompany = QuickQuoteHelperClass.QuickQuoteCompany.IndianaFarmersIndemnity Then 'added IF 11/28/2022; original IFM logic is in ELSE
+                Select Case qqState
+                    Case QuickQuoteHelperClass.QuickQuoteState.Illinois
+                        If _CPP_CIM_PackagePart_VersionId = "264" Then
+                            hasIt = True
+                        End If
+                    Case QuickQuoteHelperClass.QuickQuoteState.Ohio
+                        If _CPP_CIM_PackagePart_VersionId = "265" Then
+                            hasIt = True
+                        End If
+                    Case Else 'IN
+                        If _CPP_CIM_PackagePart_VersionId = "263" Then
+                            hasIt = True
+                        End If
+                End Select
+            Else 'IFM
+                Select Case qqState
+                    Case QuickQuoteHelperClass.QuickQuoteState.Illinois
+                        If _CPP_CIM_PackagePart_VersionId = "127" Then
+                            hasIt = True
+                        End If
+                    Case QuickQuoteHelperClass.QuickQuoteState.Ohio 'added 11/28/2022
+                        If _CPP_CIM_PackagePart_VersionId = "184" Then
+                            hasIt = True
+                        End If
+                    Case Else 'IN
+                        If _CPP_CIM_PackagePart_VersionId = "46" OrElse _CPP_CIM_PackagePart_VersionId = "114" Then
+                            hasIt = True
+                        End If
+                End Select
+            End If
+
+            Return hasIt
+        End Function
+        'updated 7/17/2018
+        Protected Friend Function Get_AdditionalInsuredsCount_Variable() As Integer
+            Return PolicyLevelInfoExtended.Get_AdditionalInsuredsCount_Variable()
+        End Function
+        Protected Friend Sub Set_AdditionalInsuredsCount_Variable(ByVal addlInsCount As Integer)
+            '_AdditionalInsuredsCount = addlInsCount
+            PolicyLevelInfoExtended.Set_AdditionalInsuredsCount_Variable(addlInsCount)
+        End Sub
+        Protected Friend Function Get_AdditionalInsuredsManualCharge_Variable() As String
+            Return PolicyLevelInfoExtended.Get_AdditionalInsuredsManualCharge_Variable()
+        End Function
+        Protected Friend Sub Set_AdditionalInsuredsManualCharge_Variable(ByVal addlInsManChg As String)
+            '_AdditionalInsuredsManualCharge = addlInsManChg
+            PolicyLevelInfoExtended.Set_AdditionalInsuredsManualCharge_Variable(addlInsManChg)
+        End Sub
+        Protected Friend Function Get_ContractorsToolsEquipmentScheduled_Variable() As String
+            Return PolicyLevelInfoExtended.Get_ContractorsToolsEquipmentScheduled_Variable()
+        End Function
+        Protected Friend Sub Set_ContractorsToolsEquipmentScheduled_Variable(ByVal contToolsEquipSch As String, Optional ByVal convertToLimitFormat As Boolean = False)
+            '_ContractorsToolsEquipmentScheduled = contToolsEquipSch
+            'If convertToLimitFormat = True Then
+            '    qqHelper.ConvertToLimitFormat(_ContractorsToolsEquipmentScheduled)
+            'End If
+            PolicyLevelInfoExtended.Set_ContractorsToolsEquipmentScheduled_Variable(contToolsEquipSch, convertToLimitFormat:=convertToLimitFormat)
+        End Sub
+        'added 7/19/2018
+        Protected Friend Sub Set_AdditionalInsuredsBackup_Variable(ByVal addlInsBkp As List(Of QuickQuoteAdditionalInsured))
+            '_AdditionalInsuredsBackup = addlInsBkp
+            PolicyLevelInfoExtended.Set_AdditionalInsuredsBackup_Variable(addlInsBkp)
+        End Sub
+        Protected Friend Sub Set_HasInclusionOfSoleProprietorsPartnersOfficersAndOthers_Variable(ByVal hasIt As Boolean)
+            '_HasInclusionOfSoleProprietorsPartnersOfficersAndOthers = hasIt
+            PolicyLevelInfoExtended.Set_HasInclusionOfSoleProprietorsPartnersOfficersAndOthers_Variable(hasIt)
+        End Sub
+        Protected Friend Sub Set_HasWaiverOfSubrogation_Variable(ByVal hasIt As Boolean)
+            '_HasWaiverOfSubrogation = hasIt
+            PolicyLevelInfoExtended.Set_HasWaiverOfSubrogation_Variable(hasIt)
+        End Sub
+        Protected Friend Sub Set_HasExclusionOfAmishWorkers_Variable(ByVal hasIt As Boolean)
+            '_HasExclusionOfAmishWorkers = hasIt
+            PolicyLevelInfoExtended.Set_HasExclusionOfAmishWorkers_Variable(hasIt)
+        End Sub
+        Protected Friend Sub Set_HasExclusionOfSoleProprietorsPartnersOfficersAndOthers_Variable(ByVal hasIt As Boolean)
+            '_HasExclusionOfSoleProprietorsPartnersOfficersAndOthers = hasIt
+            PolicyLevelInfoExtended.Set_HasExclusionOfSoleProprietorsPartnersOfficersAndOthers_Variable(hasIt)
+        End Sub
+        Protected Friend Sub Set_WaiverOfSubrogationNumberOfWaivers_Variable(ByVal num As Integer)
+            '_WaiverOfSubrogationNumberOfWaivers = num
+            PolicyLevelInfoExtended.Set_WaiverOfSubrogationNumberOfWaivers_Variable(num)
+        End Sub
+        Protected Friend Function Get_WaiverOfSubrogationNumberOfWaivers_Variable() As Integer
+            Return PolicyLevelInfoExtended.Get_WaiverOfSubrogationNumberOfWaivers_Variable()
+        End Function
+        Protected Friend Function Get_NeedsToUpdateWaiverOfSubrogationPremiumId_Variable() As Boolean
+            Return PolicyLevelInfoExtended.Get_NeedsToUpdateWaiverOfSubrogationPremiumId_Variable()
+        End Function
+        Protected Friend Function Get_WaiverOfSubrogationPremiumId_Variable() As String
+            Return PolicyLevelInfoExtended.Get_WaiverOfSubrogationPremiumId_Variable()
+        End Function
+        Protected Friend Sub Set_WaiverOfSubrogationPremiumId_Variable(ByVal premId As String) '7/19/2018 note: same as Property but without logic to set all in list
+            '_WaiverOfSubrogationPremiumId = premId
+            '_WaiverOfSubrogationPremium = ""
+            'If IsNumeric(_WaiverOfSubrogationPremiumId) = True Then
+            '    Select Case _WaiverOfSubrogationPremiumId
+            '        Case "0"
+            '            _WaiverOfSubrogationPremium = "Not Assigned"
+            '        Case "1"
+            '            _WaiverOfSubrogationPremium = "0"
+            '        Case "2"
+            '            _WaiverOfSubrogationPremium = "25"
+            '        Case "3"
+            '            _WaiverOfSubrogationPremium = "50"
+            '        Case "4"
+            '            _WaiverOfSubrogationPremium = "75"
+            '        Case "5"
+            '            _WaiverOfSubrogationPremium = "100"
+            '        Case "6"
+            '            _WaiverOfSubrogationPremium = "150"
+            '        Case "7"
+            '            _WaiverOfSubrogationPremium = "200"
+            '        Case "8"
+            '            _WaiverOfSubrogationPremium = "250"
+            '        Case "9"
+            '            _WaiverOfSubrogationPremium = "300"
+            '        Case "10"
+            '            _WaiverOfSubrogationPremium = "400"
+            '        Case "11"
+            '            _WaiverOfSubrogationPremium = "500"
+            '    End Select
+            'End If
+            PolicyLevelInfoExtended.Set_WaiverOfSubrogationPremiumId_Variable(premId)
+        End Sub
+        Protected Friend Sub Set_ContractorsEquipmentScheduledItemsBackup_variable(ByVal contEqipSchItems As List(Of QuickQuoteContractorsEquipmentScheduledItem))
+            '_ContractorsEquipmentScheduledItemsBackup = contEqipSchItems
+            PolicyLevelInfoExtended.Set_ContractorsEquipmentScheduledItemsBackup_variable(contEqipSchItems)
+        End Sub
+        'added 7/20/2018
+        Protected Friend Sub Set_ExclusionOfAmishWorkerRecordsBackup_Variable(ByVal exs As List(Of QuickQuoteExclusionOfAmishWorkerRecord))
+            '_ExclusionOfAmishWorkerRecordsBackup = exs
+            PolicyLevelInfoExtended.Set_ExclusionOfAmishWorkerRecordsBackup_Variable(exs)
+        End Sub
+        Protected Friend Sub Set_ExclusionOfSoleProprietorRecordsBackup_Variable(ByVal exs As List(Of QuickQuoteExclusionOfSoleProprietorRecord))
+            '_ExclusionOfSoleProprietorRecordsBackup = exs
+            PolicyLevelInfoExtended.Set_ExclusionOfSoleProprietorRecordsBackup_Variable(exs)
+        End Sub
+        Protected Friend Sub Set_InclusionOfSoleProprietorRecordsBackup_Variable(ByVal incs As List(Of QuickQuoteInclusionOfSoleProprietorRecord))
+            '_InclusionOfSoleProprietorRecordsBackup = incs
+            PolicyLevelInfoExtended.Set_InclusionOfSoleProprietorRecordsBackup_Variable(incs)
+        End Sub
+        Protected Friend Sub Set_WaiverOfSubrogationRecordsBackup_Variable(ByVal ws As List(Of QuickQuoteWaiverOfSubrogationRecord))
+            '_WaiverOfSubrogationRecordsBackup = ws
+            PolicyLevelInfoExtended.Set_WaiverOfSubrogationRecordsBackup_Variable(ws)
+        End Sub
+        'added 7/21/2018
+        Protected Friend Sub Set_GarageKeepersCollisionManualLimitAmount_Variable(ByVal lmt As String)
+            _GarageKeepersCollisionManualLimitAmount = lmt
+        End Sub
+        Protected Friend Sub Set_GarageKeepersOtherThanCollisionManualLimitAmount_Variable(ByVal lmt As String)
+            _GarageKeepersOtherThanCollisionManualLimitAmount = lmt
+        End Sub
+        Protected Friend Function Get_GarageKeepersCollisionManualLimitAmount_Variable() As String
+            Return _GarageKeepersCollisionManualLimitAmount
+        End Function
+        Protected Friend Function Get_GarageKeepersOtherThanCollisionManualLimitAmount_Variable() As String
+            Return _GarageKeepersOtherThanCollisionManualLimitAmount
+        End Function
+        Protected Friend Function Get_PremDiscountQuotedPremium_Variable() As String
+            Return PolicyLevelInfoExtended.PremDiscountQuotedPremium
+        End Function
+
+        'added 10/15/2018 for IL (similar to existing props w/o IL, but different form # and typeId)
+        Protected Friend Sub Set_HasExclusionOfSoleProprietorsPartnersOfficersAndOthers_IL_Variable(ByVal hasIt As Boolean)
+            PolicyLevelInfoExtended.Set_HasExclusionOfSoleProprietorsPartnersOfficersAndOthers_IL_Variable(hasIt)
+        End Sub
+        Protected Friend Sub Set_ExclusionOfSoleProprietorRecordsBackup_IL_Variable(ByVal exs As List(Of QuickQuoteExclusionOfSoleProprietorRecord_IL))
+            PolicyLevelInfoExtended.Set_ExclusionOfSoleProprietorRecordsBackup_IL_Variable(exs)
+        End Sub
+        'added 4/26/2019 for KY
+        Protected Friend Sub Set_HasKentuckyRejectionOfCoverageEndorsement_Variable(ByVal hasIt As Boolean)
+            PolicyLevelInfoExtended.Set_HasKentuckyRejectionOfCoverageEndorsement_Variable(hasIt)
+        End Sub
+        Protected Friend Sub Set_KentuckyRejectionOfCoverageEndorsementRecordsBackup_Variable(ByVal krces As List(Of QuickQuoteKentuckyRejectionOfCoverageEndorsement))
+            PolicyLevelInfoExtended.Set_KentuckyRejectionOfCoverageEndorsementRecordsBackup_Variable(krces)
+        End Sub
+
+        Public Overrides Function ToString() As String
+            Dim str As String = ""
+            If Me IsNot Nothing Then
+
+                'added 9/6/2018
+                Dim strVersionInfo As String = "VersionId: " & Me.VersionId
+                strVersionInfo &= "; LobId: " & Me.LobId
+                If Me.LobType <> QuickQuoteObject.QuickQuoteLobType.None Then
+                    strVersionInfo &= " (" & System.Enum.GetName(GetType(QuickQuoteObject.QuickQuoteLobType), Me.LobType) & ")"
+                End If
+                If String.IsNullOrWhiteSpace(Me.ActualLobId) = False AndAlso QuickQuoteHelperClass.isTextMatch(Me.LobId, Me.ActualLobId, matchType:=QuickQuoteHelperClass.TextMatchType.IntegerOrText_IgnoreCasing) = False Then
+                    strVersionInfo &= "; ActualLobId: " & Me.ActualLobId
+                End If
+                strVersionInfo &= "; StateId: " & Me.StateId
+                If Me.State <> QuickQuoteHelperClass.QuickQuoteState.None Then
+                    strVersionInfo &= " (" & System.Enum.GetName(GetType(QuickQuoteHelperClass.QuickQuoteState), Me.State) & ")"
+                End If
+
+                'added 11/26/2022
+                strVersionInfo &= "; CompanyId: " & Me.CompanyId
+                If Me.Company <> QuickQuoteHelperClass.QuickQuoteCompany.None Then
+                    strVersionInfo &= " (" & System.Enum.GetName(GetType(QuickQuoteHelperClass.QuickQuoteCompany), Me.Company) & ")"
+                End If
+
+                str = qqHelper.appendText(str, strVersionInfo, vbCrLf)
+
+                If Me.Applicants IsNot Nothing AndAlso Me.Applicants.Count > 0 Then
+                    str = qqHelper.appendText(str, Me.Applicants.Count.ToString & " Applicants", vbCrLf)
+                End If
+                If Me.Drivers IsNot Nothing AndAlso Me.Drivers.Count > 0 Then
+                    str = qqHelper.appendText(str, Me.Drivers.Count.ToString & " Drivers", vbCrLf)
+                End If
+                If Me.Locations IsNot Nothing AndAlso Me.Locations.Count > 0 Then
+                    str = qqHelper.appendText(str, Me.Locations.Count.ToString & " Locations", vbCrLf)
+                End If
+                If Me.Vehicles IsNot Nothing AndAlso Me.Vehicles.Count > 0 Then
+                    str = qqHelper.appendText(str, Me.Vehicles.Count.ToString & " Vehicles", vbCrLf)
+                End If
+                If Me.Operators IsNot Nothing AndAlso Me.Operators.Count > 0 Then
+                    str = qqHelper.appendText(str, Me.Operators.Count.ToString & " Operators", vbCrLf)
+                End If
+                If Me.Coverages IsNot Nothing AndAlso Me.Coverages.Count > 0 Then
+                    str = qqHelper.appendText(str, Me.Coverages.Count.ToString & " Coverages", vbCrLf)
+                End If
+                If Me.Modifiers IsNot Nothing AndAlso Me.Modifiers.Count > 0 Then
+                    str = qqHelper.appendText(str, Me.Modifiers.Count.ToString & " Modifiers", vbCrLf)
+                End If
+            Else
+                str = "Nothing"
+            End If
+            Return str
+        End Function
+
+        'added 7/6/2018 for _EffectiveDate and _QuoteTransactionType variables that were being used by various QuickQuoteObject Properties; could eventually update to pull from Parent Quote
+        Public Function QuoteEffectiveDate() As String
+            Dim effDate As String = ""
+
+            effDate = _QuoteEffectiveDate 'added 7/17/2018
+
+            Return effDate
+        End Function
+        Public Function QuoteTransactionType() As QuickQuoteObject.QuickQuoteTransactionType
+            Dim tranType As QuickQuoteObject.QuickQuoteTransactionType = QuickQuoteObject.QuickQuoteTransactionType.NewBusinessQuote
+
+            tranType = _QuoteTransactionType 'added 7/17/2018
+
+            Return tranType
+        End Function
+        'added 7/17/2018
+        Protected Friend Sub Set_QuoteTransactionType(ByVal qqTranType As QuickQuoteObject.QuickQuoteTransactionType)
+            _QuoteTransactionType = qqTranType
+            'added 7/24/2018
+            PolicyLevelInfoExtended.Set_QuoteTransactionType(qqTranType)
+            RiskLevelInfoExtended.Set_QuoteTransactionType(qqTranType)
+        End Sub
+        Protected Friend Sub Set_QuoteEffectiveDate(ByVal effDate As String)
+            _QuoteEffectiveDate = effDate
+            'added 7/24/2018
+            PolicyLevelInfoExtended.Set_QuoteEffectiveDate(effDate)
+            RiskLevelInfoExtended.Set_QuoteEffectiveDate(effDate)
+        End Sub
+
+        Protected Friend Sub Set_ActualLobId(ByVal actLobId As String) 'added 7/31/2018
+            _ActualLobId = actLobId
+        End Sub
+
+        'added 8/1/2018
+        Protected Friend Sub Set_VersionId_Variable(ByVal vId As String)
+            _VersionId = vId
+        End Sub
+        'added 9/24/2018
+        Protected Friend Sub Set_LobId_Variable(ByVal lId As String, Optional ByVal setLobType As Boolean = True, Optional ByVal onlyOverwriteLobTypeIfValid As Boolean = True)
+            _LobId = lId
+
+            If setLobType = True Then
+                Dim newLobType As QuickQuoteObject.QuickQuoteLobType = qqHelper.ConvertQQLobIdToQQLobType(_LobId)
+                If onlyOverwriteLobTypeIfValid = False OrElse (System.Enum.IsDefined(GetType(QuickQuoteObject.QuickQuoteLobType), newLobType) = True AndAlso newLobType <> QuickQuoteObject.QuickQuoteLobType.None) Then
+                    _LobType = newLobType
+                End If
+            End If
+        End Sub
+        Protected Friend Sub Set_StateId_Variable(ByVal sId As String)
+            _StateId = sId
+        End Sub
+        Protected Friend Sub Set_CompanyId_Variable(ByVal cId As String) 'added 11/26/2022
+            _CompanyId = cId
+        End Sub
+
+        'added 10/15/2018
+        Protected Friend Sub ResetStateLevelLocationsIfNeeded()
+            Dim topLevelQuoteObject As QuickQuoteObject = GetTopLevelQuoteObject()
+            If topLevelQuoteObject IsNot Nothing AndAlso topLevelQuoteObject.QuoteLevel = QuickQuoteHelperClass.QuoteLevel.TopLevel Then
+                If QuickQuoteHelperClass.CopyLocationsBetweenStateLevelAndTopLevelForMultiState(topLevelQuoteObject.LobType) = True Then
+                    qqHelper.CopyLocationsFromTopLevelToStateLevel(topLevelQuoteObject)
+                End If
+            End If
+        End Sub
+        Protected Friend Sub ResetStateLevelVehiclesIfNeeded()
+            Dim topLevelQuoteObject As QuickQuoteObject = GetTopLevelQuoteObject()
+            If topLevelQuoteObject IsNot Nothing AndAlso topLevelQuoteObject.QuoteLevel = QuickQuoteHelperClass.QuoteLevel.TopLevel Then
+                If QuickQuoteHelperClass.CopyVehiclesBetweenStateLevelAndTopLevelForMultiState(topLevelQuoteObject.LobType) = True Then
+                    qqHelper.CopyVehiclesFromTopLevelToStateLevel(topLevelQuoteObject)
+                End If
+            End If
+        End Sub
+
+        'added 5/19/2021; moved from QuickQuoteObject
+        Protected Friend Function CopiedAnySourceAIsToTopLevelOnLastCheck() As Boolean
+            Return PolicyLevelInfoExtended.CopiedAnySourceAIsToTopLevelOnLastCheck()
+        End Function
+        Protected Friend Function RemovedAnySourceAIsFromTopLevelOnLastCheck() As Boolean
+            Return PolicyLevelInfoExtended.RemovedAnySourceAIsFromTopLevelOnLastCheck()
+        End Function
+        'new 5/19/2021
+        Protected Friend Sub Set_CopiedAnySourceAIsToTopLevelOnLastCheck(ByVal val As Boolean)
+            PolicyLevelInfoExtended.Set_CopiedAnySourceAIsToTopLevelOnLastCheck(val)
+        End Sub
+        Protected Friend Sub Set_RemovedAnySourceAIsFromTopLevelOnLastCheck(ByVal val As Boolean)
+            PolicyLevelInfoExtended.Set_RemovedAnySourceAIsFromTopLevelOnLastCheck(val)
+        End Sub
+
+#Region "IDisposable Support"
+        Private disposedValue As Boolean ' To detect redundant calls
+
+        ' IDisposable
+        'Protected Overridable Sub Dispose(disposing As Boolean)
+        'updated w/ QuickQuoteBaseObject inheritance
+        Protected Overloads Sub Dispose(disposing As Boolean)
+            If Not Me.disposedValue Then
+                If disposing Then
+                    ' TODO: dispose managed state (managed objects).
+
+                    'If _LobInfo IsNot Nothing Then 'removed w/ inheritance change to QuickQuoteLobInfo
+                    '    _LobInfo.Dispose()
+                    '    _LobInfo = Nothing
+                    'End If
+
+                    'added 6/28/2018
+                    qqHelper.DisposeString(_AddFormsVersionId)
+                    qqHelper.DisposeString(_RatingVersionId)
+                    qqHelper.DisposeString(_UnderwritingVersionId)
+                    qqHelper.DisposeString(_VersionId)
+                    'these next ones aren't really stored; just determined by VersionId
+                    qqHelper.DisposeString(_LobId)
+                    qqHelper.DisposeString(_ActualLobId) 'added 7/31/2018
+                    If _LobType <> Nothing Then
+                        _LobType = Nothing
+                    End If
+                    qqHelper.DisposeString(_StateId)
+                    qqHelper.DisposeString(_CompanyId) 'added 11/26/2022; previously at TopLevelQuoteInfo.QuoteBase.CommonInfo
+                    'added 7/10/2018
+                    qqHelper.DisposeString(_CPP_CPR_PackagePart_VersionId)
+                    qqHelper.DisposeString(_CPP_CPR_PackagePart_AddFormsVersionId)
+                    qqHelper.DisposeString(_CPP_CPR_PackagePart_RatingVersionId)
+                    qqHelper.DisposeString(_CPP_CPR_PackagePart_UnderwritingVersionId)
+                    qqHelper.DisposeString(_CPP_CGL_PackagePart_VersionId)
+                    qqHelper.DisposeString(_CPP_CGL_PackagePart_AddFormsVersionId)
+                    qqHelper.DisposeString(_CPP_CGL_PackagePart_RatingVersionId)
+                    qqHelper.DisposeString(_CPP_CGL_PackagePart_UnderwritingVersionId)
+                    qqHelper.DisposeString(_CPP_Main_PackagePart_VersionId)
+                    qqHelper.DisposeString(_CPP_Main_PackagePart_AddFormsVersionId)
+                    qqHelper.DisposeString(_CPP_Main_PackagePart_RatingVersionId)
+                    qqHelper.DisposeString(_CPP_Main_PackagePart_UnderwritingVersionId)
+                    qqHelper.DisposeString(_CPP_CRM_PackagePart_VersionId)
+                    qqHelper.DisposeString(_CPP_CRM_PackagePart_AddFormsVersionId)
+                    qqHelper.DisposeString(_CPP_CRM_PackagePart_RatingVersionId)
+                    qqHelper.DisposeString(_CPP_CRM_PackagePart_UnderwritingVersionId)
+                    qqHelper.DisposeString(_CPP_CIM_PackagePart_VersionId)
+                    qqHelper.DisposeString(_CPP_CIM_PackagePart_AddFormsVersionId)
+                    qqHelper.DisposeString(_CPP_CIM_PackagePart_RatingVersionId)
+                    qqHelper.DisposeString(_CPP_CIM_PackagePart_UnderwritingVersionId)
+                    'added 7/11/2018
+                    If _AdditionalInterestNamesAndAddresses IsNot Nothing Then 'this isn't used w/ new look/feel, but would possibly need here if there could be separate lists per state
+                        If _AdditionalInterestNamesAndAddresses.Count > 0 Then
+                            For Each na As QuickQuoteGenericNameAddress In _AdditionalInterestNamesAndAddresses
+                                na.Dispose()
+                                na = Nothing
+                            Next
+                            _AdditionalInterestNamesAndAddresses.Clear()
+                        End If
+                        _AdditionalInterestNamesAndAddresses = Nothing
+                    End If
+                    qqHelper.DisposeString(_CPP_GL_PackagePart_QuotedPremium)
+                    qqHelper.DisposeString(_CPP_CPR_PackagePart_QuotedPremium)
+                    qqHelper.DisposeString(_CPP_CIM_PackagePart_QuotedPremium)
+                    qqHelper.DisposeString(_CPP_CRM_PackagePart_QuotedPremium)
+                    qqHelper.DisposeString(_CPP_GAR_PackagePart_QuotedPremium)
+                    'added 7/13/2018
+                    _CPP_Has_InlandMarine_PackagePart = Nothing
+                    _CPP_Has_Crime_PackagePart = Nothing
+                    _CPP_Has_Garage_PackagePart = Nothing
+                    _CPP_Has_Property_PackagePart = Nothing 'will likely always be on CPP
+                    _CPP_Has_GeneralLiability_PackagePart = Nothing 'typically on CPP but shouldn't be when Garage PackagePart is there
+                    'added 7/17/2018
+                    qqHelper.DisposeString(_QuoteEffectiveDate)
+                    _QuoteTransactionType = Nothing
+
+                    'removed 7/24/2018
+                    ''PolicyLevel
+                    ''added 7/11/2018
+                    'qqHelper.DisposeString(_CPP_CRM_ProgramTypeId)
+                    'qqHelper.DisposeString(_CPP_GAR_ProgramTypeId)
+                    'qqHelper.DisposeString(_RiskGradeLookupId_Original)
+                    'qqHelper.DisposeString(_CPP_CGL_RiskGrade)
+                    'qqHelper.DisposeString(_CPP_CGL_RiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CPR_RiskGrade)
+                    'qqHelper.DisposeString(_CPP_CPR_RiskGradeLookupId)
+                    'qqHelper.DisposeString(_ErrorRiskGradeLookupId)
+                    'qqHelper.DisposeString(_ReplacementRiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CGL_ErrorRiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CGL_ReplacementRiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CPR_ErrorRiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CPR_ReplacementRiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CIM_RiskGrade)
+                    'qqHelper.DisposeString(_CPP_CIM_RiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CIM_ErrorRiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CIM_ReplacementRiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CRM_RiskGrade)
+                    'qqHelper.DisposeString(_CPP_CRM_RiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CRM_ErrorRiskGradeLookupId)
+                    'qqHelper.DisposeString(_CPP_CRM_ReplacementRiskGradeLookupId)
+                    ''added 7/5/2018
+                    'qqHelper.DisposeString(_OccurrenceLiabilityLimit)
+                    'qqHelper.DisposeString(_OccurrenceLiabilityLimitId)
+                    'qqHelper.DisposeString(_OccurrencyLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_TenantsFireLiability)
+                    'qqHelper.DisposeString(_TenantsFireLiabilityId)
+                    'qqHelper.DisposeString(_TenantsFireLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_PropertyDamageLiabilityDeductible)
+                    'qqHelper.DisposeString(_PropertyDamageLiabilityDeductibleId)
+                    'qqHelper.DisposeString(_BlanketRatingQuotedPremium)
+                    '_HasEnhancementEndorsement = Nothing
+                    'qqHelper.DisposeString(_EnhancementEndorsementQuotedPremium)
+                    ''added 7/11/2018
+                    '_Has_PackageGL_EnhancementEndorsement = Nothing
+                    'qqHelper.DisposeString(_PackageGL_EnhancementEndorsementQuotedPremium)
+                    '_Has_PackageCPR_EnhancementEndorsement = Nothing
+                    'qqHelper.DisposeString(_PackageCPR_EnhancementEndorsementQuotedPremium)
+                    ''added 7/6/2018
+                    '_AdditionalInsuredsCount = Nothing
+                    '_AdditionalInsuredsCheckboxBOP = Nothing
+                    '_HasAdditionalInsuredsCheckboxBOP = Nothing
+                    'qqHelper.DisposeString(_AdditionalInsuredsManualCharge)
+                    'qqHelper.DisposeString(_AdditionalInsuredsQuotedPremium)
+                    'If _AdditionalInsureds IsNot Nothing Then
+                    '    If _AdditionalInsureds.Count > 0 Then
+                    '        For Each ai As QuickQuoteAdditionalInsured In _AdditionalInsureds
+                    '            ai.Dispose()
+                    '            ai = Nothing
+                    '        Next
+                    '        _AdditionalInsureds.Clear()
+                    '    End If
+                    '    _AdditionalInsureds = Nothing
+                    'End If
+                    'If _AdditionalInsuredsBackup IsNot Nothing Then
+                    '    If _AdditionalInsuredsBackup.Count > 0 Then
+                    '        For Each ai As QuickQuoteAdditionalInsured In _AdditionalInsuredsBackup
+                    '            ai.Dispose()
+                    '            ai = Nothing
+                    '        Next
+                    '        _AdditionalInsuredsBackup.Clear()
+                    '    End If
+                    '    _AdditionalInsuredsBackup = Nothing
+                    'End If
+                    'qqHelper.DisposeString(_EmployeeBenefitsLiabilityText)
+                    'qqHelper.DisposeString(_EmployeeBenefitsLiabilityOccurrenceLimit)
+                    'qqHelper.DisposeString(_EmployeeBenefitsLiabilityOccurrenceLimitId)
+                    'qqHelper.DisposeString(_EmployeeBenefitsLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_EmployeeBenefitsLiabilityRetroactiveDate)
+                    'qqHelper.DisposeString(_EmployeeBenefitsLiabilityAggregateLimit)
+                    'qqHelper.DisposeString(_EmployeeBenefitsLiabilityDeductible)
+                    'qqHelper.DisposeString(_ContractorsEquipmentInstallationLimit)
+                    'qqHelper.DisposeString(_ContractorsEquipmentInstallationLimitId)
+                    'qqHelper.DisposeString(_ContractorsEquipmentInstallationLimitQuotedPremium)
+                    'qqHelper.DisposeString(_ContractorsToolsEquipmentBlanket)
+                    'qqHelper.DisposeString(_ContractorsToolsEquipmentBlanketSubLimitId)
+                    'qqHelper.DisposeString(_ContractorsToolsEquipmentBlanketQuotedPremium)
+                    'qqHelper.DisposeString(_ContractorsToolsEquipmentScheduled)
+                    'qqHelper.DisposeString(_ContractorsToolsEquipmentScheduledQuotedPremium)
+                    'qqHelper.DisposeString(_ContractorsToolsEquipmentRented)
+                    'qqHelper.DisposeString(_ContractorsToolsEquipmentRentedQuotedPremium)
+                    'If _ContractorsEquipmentScheduledItems IsNot Nothing Then
+                    '    If _ContractorsEquipmentScheduledItems.Count > 0 Then
+                    '        For Each si As QuickQuoteContractorsEquipmentScheduledItem In _ContractorsEquipmentScheduledItems
+                    '            si.Dispose()
+                    '            si = Nothing
+                    '        Next
+                    '        _ContractorsEquipmentScheduledItems.Clear()
+                    '    End If
+                    '    _ContractorsEquipmentScheduledItems = Nothing
+                    'End If
+                    'If _ContractorsEquipmentScheduledItemsBackup IsNot Nothing Then
+                    '    If _ContractorsEquipmentScheduledItemsBackup.Count > 0 Then
+                    '        For Each si As QuickQuoteContractorsEquipmentScheduledItem In _ContractorsEquipmentScheduledItemsBackup
+                    '            si.Dispose()
+                    '            si = Nothing
+                    '        Next
+                    '        _ContractorsEquipmentScheduledItemsBackup.Clear()
+                    '    End If
+                    '    _ContractorsEquipmentScheduledItemsBackup = Nothing
+                    'End If
+                    'qqHelper.DisposeString(_ContractorsEmployeeTools)
+                    'qqHelper.DisposeString(_ContractorsEmployeeToolsQuotedPremium)
+                    'qqHelper.DisposeString(_CrimeEmpDisEmployeeText)
+                    'qqHelper.DisposeString(_CrimeEmpDisLocationText)
+                    'qqHelper.DisposeString(_CrimeEmpDisLimit)
+                    'qqHelper.DisposeString(_CrimeEmpDisLimitId)
+                    'qqHelper.DisposeString(_CrimeEmpDisQuotedPremium)
+                    'qqHelper.DisposeString(_CrimeForgeryLimit)
+                    'qqHelper.DisposeString(_CrimeForgeryLimitId)
+                    'qqHelper.DisposeString(_CrimeForgeryQuotedPremium)
+                    '_HasEarthquake = Nothing
+                    'qqHelper.DisposeString(_EarthquakeQuotedPremium)
+                    '_HasHiredAuto = Nothing
+                    'qqHelper.DisposeString(_HiredAutoQuotedPremium)
+                    '_HasNonOwnedAuto = Nothing
+                    '_NonOwnedAutoWithDelivery = Nothing
+                    'qqHelper.DisposeString(_NonOwnedAutoQuotedPremium)
+                    'qqHelper.DisposeString(_PropertyDeductibleId)
+                    'qqHelper.DisposeString(_EmployersLiability)
+                    'qqHelper.DisposeString(_EmployersLiabilityId)
+                    'qqHelper.DisposeString(_EmployersLiabilityQuotedPremium)
+                    ''added 7/9/2018
+                    'qqHelper.DisposeString(_GeneralAggregateLimit)
+                    'qqHelper.DisposeString(_GeneralAggregateLimitId)
+                    'qqHelper.DisposeString(_GeneralAggregateQuotedPremium)
+                    'qqHelper.DisposeString(_ProductsCompletedOperationsAggregateLimit)
+                    'qqHelper.DisposeString(_ProductsCompletedOperationsAggregateLimitId)
+                    'qqHelper.DisposeString(_ProductsCompletedOperationsAggregateQuotedPremium)
+                    'qqHelper.DisposeString(_PersonalAndAdvertisingInjuryLimit)
+                    'qqHelper.DisposeString(_PersonalAndAdvertisingInjuryLimitId)
+                    'qqHelper.DisposeString(_PersonalAndAdvertisingInjuryQuotedPremium)
+                    'qqHelper.DisposeString(_DamageToPremisesRentedLimit)
+                    'qqHelper.DisposeString(_DamageToPremisesRentedLimitId)
+                    'qqHelper.DisposeString(_DamageToPremisesRentedQuotedPremium)
+                    'qqHelper.DisposeString(_MedicalExpensesLimit)
+                    'qqHelper.DisposeString(_MedicalExpensesLimitId)
+                    'qqHelper.DisposeString(_MedicalExpensesQuotedPremium)
+                    '_HasExclusionOfAmishWorkers = Nothing
+                    '_HasExclusionOfSoleProprietorsPartnersOfficersAndOthers = Nothing
+                    '_HasInclusionOfSoleProprietorsPartnersOfficersAndOthers = Nothing
+                    '_HasWaiverOfSubrogation = Nothing
+                    '_WaiverOfSubrogationNumberOfWaivers = Nothing
+                    'qqHelper.DisposeString(_WaiverOfSubrogationPremium)
+                    'qqHelper.DisposeString(_WaiverOfSubrogationPremiumId)
+                    '_NeedsToUpdateWaiverOfSubrogationPremiumId = Nothing
+                    'If _ExclusionOfAmishWorkerRecords IsNot Nothing Then
+                    '    If _ExclusionOfAmishWorkerRecords.Count > 0 Then
+                    '        For Each aw As QuickQuoteExclusionOfAmishWorkerRecord In _ExclusionOfAmishWorkerRecords
+                    '            aw.Dispose()
+                    '            aw = Nothing
+                    '        Next
+                    '        _ExclusionOfAmishWorkerRecords.Clear()
+                    '    End If
+                    '    _ExclusionOfAmishWorkerRecords = Nothing
+                    'End If
+                    'If _ExclusionOfSoleProprietorRecords IsNot Nothing Then
+                    '    If _ExclusionOfSoleProprietorRecords.Count > 0 Then
+                    '        For Each sp As QuickQuoteExclusionOfSoleProprietorRecord In _ExclusionOfSoleProprietorRecords
+                    '            sp.Dispose()
+                    '            sp = Nothing
+                    '        Next
+                    '        _ExclusionOfSoleProprietorRecords.Clear()
+                    '    End If
+                    '    _ExclusionOfSoleProprietorRecords = Nothing
+                    'End If
+                    'If _InclusionOfSoleProprietorRecords IsNot Nothing Then
+                    '    If _InclusionOfSoleProprietorRecords.Count > 0 Then
+                    '        For Each sp As QuickQuoteInclusionOfSoleProprietorRecord In _InclusionOfSoleProprietorRecords
+                    '            sp.Dispose()
+                    '            sp = Nothing
+                    '        Next
+                    '        _InclusionOfSoleProprietorRecords.Clear()
+                    '    End If
+                    '    _InclusionOfSoleProprietorRecords = Nothing
+                    'End If
+                    'If _WaiverOfSubrogationRecords IsNot Nothing Then
+                    '    If _WaiverOfSubrogationRecords.Count > 0 Then
+                    '        For Each w As QuickQuoteWaiverOfSubrogationRecord In _WaiverOfSubrogationRecords
+                    '            w.Dispose()
+                    '            w = Nothing
+                    '        Next
+                    '        _WaiverOfSubrogationRecords.Clear()
+                    '    End If
+                    '    _WaiverOfSubrogationRecords = Nothing
+                    'End If
+                    ''added 10/10/2017
+                    'If _ExclusionOfAmishWorkerRecordsBackup IsNot Nothing Then
+                    '    If _ExclusionOfAmishWorkerRecordsBackup.Count > 0 Then
+                    '        For Each aw As QuickQuoteExclusionOfAmishWorkerRecord In _ExclusionOfAmishWorkerRecordsBackup
+                    '            aw.Dispose()
+                    '            aw = Nothing
+                    '        Next
+                    '        _ExclusionOfAmishWorkerRecordsBackup.Clear()
+                    '    End If
+                    '    _ExclusionOfAmishWorkerRecordsBackup = Nothing
+                    'End If
+                    'If _ExclusionOfSoleProprietorRecordsBackup IsNot Nothing Then
+                    '    If _ExclusionOfSoleProprietorRecordsBackup.Count > 0 Then
+                    '        For Each sp As QuickQuoteExclusionOfSoleProprietorRecord In _ExclusionOfSoleProprietorRecordsBackup
+                    '            sp.Dispose()
+                    '            sp = Nothing
+                    '        Next
+                    '        _ExclusionOfSoleProprietorRecordsBackup.Clear()
+                    '    End If
+                    '    _ExclusionOfSoleProprietorRecordsBackup = Nothing
+                    'End If
+                    'If _InclusionOfSoleProprietorRecordsBackup IsNot Nothing Then
+                    '    If _InclusionOfSoleProprietorRecordsBackup.Count > 0 Then
+                    '        For Each sp As QuickQuoteInclusionOfSoleProprietorRecord In _InclusionOfSoleProprietorRecordsBackup
+                    '            sp.Dispose()
+                    '            sp = Nothing
+                    '        Next
+                    '        _InclusionOfSoleProprietorRecordsBackup.Clear()
+                    '    End If
+                    '    _InclusionOfSoleProprietorRecordsBackup = Nothing
+                    'End If
+                    'If _WaiverOfSubrogationRecordsBackup IsNot Nothing Then
+                    '    If _WaiverOfSubrogationRecordsBackup.Count > 0 Then
+                    '        For Each w As QuickQuoteWaiverOfSubrogationRecord In _WaiverOfSubrogationRecordsBackup
+                    '            w.Dispose()
+                    '            w = Nothing
+                    '        Next
+                    '        _WaiverOfSubrogationRecordsBackup.Clear()
+                    '    End If
+                    '    _WaiverOfSubrogationRecordsBackup = Nothing
+                    'End If
+                    '_HasBarbersProfessionalLiability = False
+                    'qqHelper.DisposeString(_BarbersProfessionalLiabiltyQuotedPremium)
+                    'qqHelper.DisposeString(_BarbersProfessionalLiabilityFullTimeEmpNum)
+                    'qqHelper.DisposeString(_BarbersProfessionalLiabilityPartTimeEmpNum)
+                    'qqHelper.DisposeString(_BarbersProfessionalLiabilityDescription)
+                    '_HasBeauticiansProfessionalLiability = False
+                    'qqHelper.DisposeString(_BeauticiansProfessionalLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_BeauticiansProfessionalLiabilityFullTimeEmpNum)
+                    'qqHelper.DisposeString(_BeauticiansProfessionalLiabilityPartTimeEmpNum)
+                    'qqHelper.DisposeString(_BeauticiansProfessionalLiabilityDescription)
+                    '_HasFuneralDirectorsProfessionalLiability = False
+                    'qqHelper.DisposeString(_FuneralDirectorsProfessionalLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_FuneralDirectorsProfessionalLiabilityEmpNum)
+                    '_HasPrintersProfessionalLiability = False
+                    'qqHelper.DisposeString(_PrintersProfessionalLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_PrintersProfessionalLiabilityLocNum)
+                    '_HasSelfStorageFacility = False
+                    'qqHelper.DisposeString(_SelfStorageFacilityQuotedPremium)
+                    'qqHelper.DisposeString(_SelfStorageFacilityLimit)
+                    '_HasVeterinariansProfessionalLiability = False
+                    'qqHelper.DisposeString(_VeterinariansProfessionalLiabilityEmpNum)
+                    'qqHelper.DisposeString(_VeterinariansProfessionalLiabilityQuotedPremium)
+                    '_HasPharmacistProfessionalLiability = False
+                    'qqHelper.DisposeString(_PharmacistAnnualGrossSales)
+                    'qqHelper.DisposeString(_PharmacistQuotedPremium)
+                    '_HasOpticalAndHearingAidProfessionalLiability = False
+                    'qqHelper.DisposeString(_OpticalAndHearingAidProfessionalLiabilityEmpNum)
+                    'qqHelper.DisposeString(_OpticalAndHearingAidProfessionalLiabilityQuotedPremium)
+                    '_HasMotelCoverage = False
+                    'qqHelper.DisposeString(_MotelCoveragePerGuestLimitId)
+                    'qqHelper.DisposeString(_MotelCoveragePerGuestLimit)
+                    'qqHelper.DisposeString(_MotelCoveragePerGuestQuotedPremium)
+                    'qqHelper.DisposeString(_MotelCoverageSafeDepositLimitId)
+                    'qqHelper.DisposeString(_MotelCoverageSafeDepositDeductibleId)
+                    'qqHelper.DisposeString(_MotelCoverageSafeDepositLimit)
+                    'qqHelper.DisposeString(_MotelCoverageSafeDepositDeductible)
+                    'qqHelper.DisposeString(_MotelCoverageQuotedPremium)
+                    'qqHelper.DisposeString(_MotelCoverageSafeDepositQuotedPremium)
+                    '_HasPhotographyCoverage = False
+                    '_HasPhotographyCoverageScheduledCoverages = False
+                    'If _PhotographyScheduledCoverages IsNot Nothing Then
+                    '    If _PhotographyScheduledCoverages.Count > 0 Then
+                    '        For Each qqc As QuickQuoteCoverage In _PhotographyScheduledCoverages
+                    '            qqc.Dispose()
+                    '            qqc = Nothing
+                    '        Next
+                    '        _PhotographyScheduledCoverages.Clear()
+                    '    End If
+                    '    _PhotographyScheduledCoverages = Nothing
+                    'End If
+                    '_HasPhotographyMakeupAndHair = False
+                    'qqHelper.DisposeString(_PhotographyMakeupAndHairQuotedPremium)
+                    'qqHelper.DisposeString(_PhotographyCoverageQuotedPremium)
+                    '_HasLiquorLiability = False
+                    'qqHelper.DisposeString(_LiquorLiabilityClassCodeTypeId) '12 = 58161 - Restaurant Includes Package Sales, 13 = 59211 - Package Sales for Consumption Off Premises
+                    'qqHelper.DisposeString(_LiquorLiabilityAnnualGrossPackageSalesReceipts)
+                    'qqHelper.DisposeString(_LiquorLiabilityAnnualGrossAlcoholSalesReceipts)
+                    '_HasResidentialCleaning = False
+                    'qqHelper.DisposeString(_ResidentialCleaningQuotedPremium)
+                    'qqHelper.DisposeString(_LiquorLiabilityOccurrenceLimit)
+                    'qqHelper.DisposeString(_LiquorLiabilityOccurrenceLimitId)
+                    'qqHelper.DisposeString(_LiquorLiabilityClassification)
+                    'qqHelper.DisposeString(_LiquorLiabilityClassificationId)
+                    'qqHelper.DisposeString(_LiquorSales)
+                    'qqHelper.DisposeString(_LiquorLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_ProfessionalLiabilityCemetaryNumberOfBurials)
+                    'qqHelper.DisposeString(_ProfessionalLiabilityCemetaryQuotedPremium)
+                    'qqHelper.DisposeString(_ProfessionalLiabilityFuneralDirectorsNumberOfBodies)
+                    'qqHelper.DisposeString(_ProfessionalLiabilityPastoralNumberOfClergy)
+                    'qqHelper.DisposeString(_ProfessionalLiabilityPastoralQuotedPremium)
+                    'qqHelper.DisposeString(_IRPM_ManagementCooperation)
+                    'qqHelper.DisposeString(_IRPM_ManagementCooperationDesc)
+                    'qqHelper.DisposeString(_IRPM_Location)
+                    'qqHelper.DisposeString(_IRPM_LocationDesc)
+                    'qqHelper.DisposeString(_IRPM_BuildingFeatures)
+                    'qqHelper.DisposeString(_IRPM_BuildingFeaturesDesc)
+                    'qqHelper.DisposeString(_IRPM_Premises)
+                    'qqHelper.DisposeString(_IRPM_PremisesDesc)
+                    'qqHelper.DisposeString(_IRPM_Employees)
+                    'qqHelper.DisposeString(_IRPM_EmployeesDesc)
+                    'qqHelper.DisposeString(_IRPM_Protection)
+                    'qqHelper.DisposeString(_IRPM_ProtectionDesc)
+                    'qqHelper.DisposeString(_IRPM_CatostrophicHazards)
+                    'qqHelper.DisposeString(_IRPM_CatostrophicHazardsDesc)
+                    'qqHelper.DisposeString(_IRPM_ManagementExperience)
+                    'qqHelper.DisposeString(_IRPM_ManagementExperienceDesc)
+                    'qqHelper.DisposeString(_IRPM_Equipment)
+                    'qqHelper.DisposeString(_IRPM_EquipmentDesc)
+                    'qqHelper.DisposeString(_IRPM_MedicalFacilities)
+                    'qqHelper.DisposeString(_IRPM_MedicalFacilitiesDesc)
+                    'qqHelper.DisposeString(_IRPM_ClassificationPeculiarities)
+                    'qqHelper.DisposeString(_IRPM_ClassificationPeculiaritiesDesc)
+                    'qqHelper.DisposeString(_IRPM_GL_ManagementCooperation)
+                    'qqHelper.DisposeString(_IRPM_GL_ManagementCooperationDesc)
+                    'qqHelper.DisposeString(_IRPM_GL_Location)
+                    'qqHelper.DisposeString(_IRPM_GL_LocationDesc)
+                    'qqHelper.DisposeString(_IRPM_GL_Premises)
+                    'qqHelper.DisposeString(_IRPM_GL_PremisesDesc)
+                    'qqHelper.DisposeString(_IRPM_GL_Equipment)
+                    'qqHelper.DisposeString(_IRPM_GL_EquipmentDesc)
+                    'qqHelper.DisposeString(_IRPM_GL_Employees)
+                    'qqHelper.DisposeString(_IRPM_GL_EmployeesDesc)
+                    'qqHelper.DisposeString(_IRPM_GL_ClassificationPeculiarities)
+                    'qqHelper.DisposeString(_IRPM_GL_ClassificationPeculiaritiesDesc)
+                    'qqHelper.DisposeString(_IRPM_CAP_Management)
+                    'qqHelper.DisposeString(_IRPM_CAP_ManagementDesc)
+                    'qqHelper.DisposeString(_IRPM_CAP_Employees)
+                    'qqHelper.DisposeString(_IRPM_CAP_EmployeesDesc)
+                    'qqHelper.DisposeString(_IRPM_CAP_Equipment)
+                    'qqHelper.DisposeString(_IRPM_CAP_EquipmentDesc)
+                    'qqHelper.DisposeString(_IRPM_CAP_SafetyOrganization)
+                    'qqHelper.DisposeString(_IRPM_CAP_SafetyOrganizationDesc)
+                    'qqHelper.DisposeString(_IRPM_CPR_Management)
+                    'qqHelper.DisposeString(_IRPM_CPR_ManagementDesc)
+                    'qqHelper.DisposeString(_IRPM_CPR_PremisesAndEquipment)
+                    'qqHelper.DisposeString(_IRPM_CPR_PremisesAndEquipmentDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_CareConditionOfEquipPremises)
+                    'qqHelper.DisposeString(_IRPM_FAR_CareConditionOfEquipPremisesDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_Cooperation)
+                    'qqHelper.DisposeString(_IRPM_FAR_CooperationDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_DamageSusceptibility)
+                    'qqHelper.DisposeString(_IRPM_FAR_DamageSusceptibilityDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_DispersionOrConcentration)
+                    'qqHelper.DisposeString(_IRPM_FAR_DispersionOrConcentrationDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_SuperiorOrInferiorStructureFeatures)
+                    'qqHelper.DisposeString(_IRPM_FAR_SuperiorOrInferiorStructureFeaturesDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_UseOfRiceHullsOrFlameRetardantBedding)
+                    'qqHelper.DisposeString(_IRPM_FAR_UseOfRiceHullsOrFlameRetardantBeddingDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_Location)
+                    'qqHelper.DisposeString(_IRPM_FAR_LocationDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_MiscProtectFeaturesOrHazards)
+                    'qqHelper.DisposeString(_IRPM_FAR_MiscProtectFeaturesOrHazardsDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_RoofCondition)
+                    'qqHelper.DisposeString(_IRPM_FAR_RoofConditionDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_StoragePracticesAndHazardousOperations)
+                    'qqHelper.DisposeString(_IRPM_FAR_StoragePracticesAndHazardousOperationsDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_PastLosses)
+                    'qqHelper.DisposeString(_IRPM_FAR_PastLossesDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_SupportingBusiness)
+                    'qqHelper.DisposeString(_IRPM_FAR_SupportingBusinessDesc)
+                    'qqHelper.DisposeString(_IRPM_FAR_RegularOnsiteInspections)
+                    'qqHelper.DisposeString(_IRPM_FAR_RegularOnsiteInspectionsDesc)
+                    ''added 7/10/2018
+                    'qqHelper.DisposeString(_Dec_BOP_OptCovs_Premium)
+                    'qqHelper.DisposeString(_ExpModQuotedPremium)
+                    'qqHelper.DisposeString(_ScheduleModQuotedPremium)
+                    'qqHelper.DisposeString(_TerrorismQuotedPremium)
+                    'qqHelper.DisposeString(_PremDiscountQuotedPremium)
+                    'qqHelper.DisposeString(_MinimumQuotedPremium)
+                    'qqHelper.DisposeString(_MinimumPremiumAdjustment)
+                    'qqHelper.DisposeString(_TotalEstimatedPlanPremium)
+                    'qqHelper.DisposeString(_SecondInjuryFundQuotedPremium)
+                    'qqHelper.DisposeString(_Dec_LossConstantPremium)
+                    'qqHelper.DisposeString(_Dec_ExpenseConstantPremium)
+                    'qqHelper.DisposeString(_Dec_WC_TotalPremiumDue)
+                    'qqHelper.DisposeString(_GL_PremisesAndProducts_Deductible)
+                    'qqHelper.DisposeString(_GL_PremisesAndProducts_DeductibleId)
+                    'qqHelper.DisposeString(_GL_PremisesAndProducts_Description)
+                    'qqHelper.DisposeString(_GL_PremisesAndProducts_DeductibleCategoryType)
+                    'qqHelper.DisposeString(_GL_PremisesAndProducts_DeductibleCategoryTypeId)
+                    'qqHelper.DisposeString(_GL_PremisesAndProducts_DeductiblePerType)
+                    'qqHelper.DisposeString(_GL_PremisesAndProducts_DeductiblePerTypeId)
+                    '_Has_GL_PremisesAndProducts = Nothing
+                    'qqHelper.DisposeString(_GL_PremisesTotalQuotedPremium)
+                    'qqHelper.DisposeString(_GL_ProductsTotalQuotedPremium)
+                    'qqHelper.DisposeString(_GL_PremisesPolicyLevelQuotedPremium)
+                    'qqHelper.DisposeString(_GL_ProductsPolicyLevelQuotedPremium)
+                    'qqHelper.DisposeString(_GL_PremisesMinimumQuotedPremium)
+                    'qqHelper.DisposeString(_GL_PremisesMinimumPremiumAdjustment)
+                    'qqHelper.DisposeString(_GL_ProductsMinimumQuotedPremium)
+                    'qqHelper.DisposeString(_GL_ProductsMinimumPremiumAdjustment)
+                    'qqHelper.DisposeString(_Dec_GL_OptCovs_Premium)
+                    '_HasFarmPollutionLiability = Nothing
+                    'qqHelper.DisposeString(_FarmPollutionLiabilityQuotedPremium)
+                    '_HasHiredBorrowedNonOwned = Nothing
+                    '_HasNonOwnershipLiability = Nothing
+                    'qqHelper.DisposeString(_NonOwnershipLiabilityNumberOfEmployees)
+                    'qqHelper.DisposeString(_NonOwnership_ENO_RatingTypeId)
+                    'qqHelper.DisposeString(_NonOwnership_ENO_RatingType)
+                    'qqHelper.DisposeString(_NonOwnershipLiabilityQuotedPremium)
+                    '_HasHiredBorrowedLiability = Nothing
+                    'qqHelper.DisposeString(_HiredBorrowedLiabilityQuotedPremium)
+                    '_HasHiredCarPhysicalDamage = Nothing
+                    'qqHelper.DisposeString(_HiredBorrowedLossOfUseQuotedPremium)
+                    'qqHelper.DisposeString(_ComprehensiveDeductible)
+                    'qqHelper.DisposeString(_ComprehensiveDeductibleId)
+                    'qqHelper.DisposeString(_ComprehensiveQuotedPremium)
+                    'qqHelper.DisposeString(_CollisionDeductible)
+                    'qqHelper.DisposeString(_CollisionDeductibleId)
+                    'qqHelper.DisposeString(_CollisionQuotedPremium)
+                    'qqHelper.DisposeString(_Liability_UM_UIM_Limit)
+                    'qqHelper.DisposeString(_Liability_UM_UIM_LimitId)
+                    'qqHelper.DisposeString(_Liability_UM_UIM_QuotedPremium)
+                    'qqHelper.DisposeString(_MedicalPaymentsLimit)
+                    'qqHelper.DisposeString(_MedicalPaymentsLimitId)
+                    'qqHelper.DisposeString(_MedicalPaymentsQuotedPremium)
+                    '_QuoteOrIssueBound = Nothing
+                    'qqHelper.DisposeString(_IssueBoundEffectiveDate)
+                    'If _LiabilityAutoSymbolObject IsNot Nothing Then
+                    '    _LiabilityAutoSymbolObject.Dispose()
+                    '    _LiabilityAutoSymbolObject = Nothing
+                    'End If
+                    'If _MedicalPaymentsAutoSymbolObject IsNot Nothing Then
+                    '    _MedicalPaymentsAutoSymbolObject.Dispose()
+                    '    _MedicalPaymentsAutoSymbolObject = Nothing
+                    'End If
+                    'If _UninsuredMotoristAutoSymbolObject IsNot Nothing Then
+                    '    _UninsuredMotoristAutoSymbolObject.Dispose()
+                    '    _UninsuredMotoristAutoSymbolObject = Nothing
+                    'End If
+                    'If _UnderinsuredMotoristAutoSymbolObject IsNot Nothing Then
+                    '    _UnderinsuredMotoristAutoSymbolObject.Dispose()
+                    '    _UnderinsuredMotoristAutoSymbolObject = Nothing
+                    'End If
+                    'If _ComprehensiveCoverageAutoSymbolObject IsNot Nothing Then
+                    '    _ComprehensiveCoverageAutoSymbolObject.Dispose()
+                    '    _ComprehensiveCoverageAutoSymbolObject = Nothing
+                    'End If
+                    'If _CollisionCoverageAutoSymbolObject IsNot Nothing Then
+                    '    _CollisionCoverageAutoSymbolObject.Dispose()
+                    '    _CollisionCoverageAutoSymbolObject = Nothing
+                    'End If
+                    'If _NonOwnershipAutoSymbolObject IsNot Nothing Then
+                    '    _NonOwnershipAutoSymbolObject.Dispose()
+                    '    _NonOwnershipAutoSymbolObject = Nothing
+                    'End If
+                    'If _HiredBorrowedAutoSymbolObject IsNot Nothing Then
+                    '    _HiredBorrowedAutoSymbolObject.Dispose()
+                    '    _HiredBorrowedAutoSymbolObject = Nothing
+                    'End If
+                    'If _TowingAndLaborAutoSymbolObject IsNot Nothing Then
+                    '    _TowingAndLaborAutoSymbolObject.Dispose()
+                    '    _TowingAndLaborAutoSymbolObject = Nothing
+                    'End If
+                    '_UseDeveloperAutoSymbols = Nothing
+                    'qqHelper.DisposeString(_Dec_CAP_OptCovs_Premium)
+                    'qqHelper.DisposeString(_Dec_CAP_OptCovs_Premium_Without_GarageKeepers)
+                    ''added 7/11/2018
+                    '_CAP_Liability_WouldHaveSymbol8 = Nothing
+                    '_CAP_Liability_WouldHaveSymbol9 = Nothing
+                    '_CAP_Comprehensive_WouldHaveSymbol8 = Nothing
+                    '_CAP_Collision_WouldHaveSymbol8 = Nothing
+                    '_HasBlanketBuilding = Nothing
+                    '_HasBlanketContents = Nothing
+                    '_HasBlanketBuildingAndContents = Nothing
+                    '_HasBlanketBusinessIncome = Nothing
+                    'qqHelper.DisposeString(_BlanketBuildingQuotedPremium)
+                    'qqHelper.DisposeString(_BlanketContentsQuotedPremium)
+                    'qqHelper.DisposeString(_BlanketBuildingAndContentsQuotedPremium)
+                    'qqHelper.DisposeString(_BlanketBusinessIncomeQuotedPremium)
+                    'qqHelper.DisposeString(_BlanketBuildingCauseOfLossTypeId)
+                    'qqHelper.DisposeString(_BlanketBuildingCauseOfLossType)
+                    'qqHelper.DisposeString(_BlanketContentsCauseOfLossTypeId)
+                    'qqHelper.DisposeString(_BlanketContentsCauseOfLossType)
+                    'qqHelper.DisposeString(_BlanketBuildingAndContentsCauseOfLossTypeId)
+                    'qqHelper.DisposeString(_BlanketBuildingAndContentsCauseOfLossType)
+                    'qqHelper.DisposeString(_BlanketBusinessIncomeCauseOfLossTypeId)
+                    'qqHelper.DisposeString(_BlanketBusinessIncomeCauseOfLossType)
+                    'qqHelper.DisposeString(_BlanketBuildingLimit)
+                    'qqHelper.DisposeString(_BlanketBuildingCoinsuranceTypeId)
+                    'qqHelper.DisposeString(_BlanketBuildingCoinsuranceType)
+                    'qqHelper.DisposeString(_BlanketBuildingValuationId)
+                    'qqHelper.DisposeString(_BlanketBuildingValuation)
+                    'qqHelper.DisposeString(_BlanketContentsLimit)
+                    'qqHelper.DisposeString(_BlanketContentsCoinsuranceTypeId)
+                    'qqHelper.DisposeString(_BlanketContentsCoinsuranceType)
+                    'qqHelper.DisposeString(_BlanketContentsValuationId)
+                    'qqHelper.DisposeString(_BlanketContentsValuation)
+                    'qqHelper.DisposeString(_BlanketBuildingAndContentsLimit)
+                    'qqHelper.DisposeString(_BlanketBuildingAndContentsCoinsuranceTypeId)
+                    'qqHelper.DisposeString(_BlanketBuildingAndContentsCoinsuranceType)
+                    'qqHelper.DisposeString(_BlanketBuildingAndContentsValuationId)
+                    'qqHelper.DisposeString(_BlanketBuildingAndContentsValuation)
+                    'qqHelper.DisposeString(_BlanketBusinessIncomeLimit)
+                    'qqHelper.DisposeString(_BlanketBusinessIncomeCoinsuranceTypeId)
+                    'qqHelper.DisposeString(_BlanketBusinessIncomeCoinsuranceType)
+                    'qqHelper.DisposeString(_BlanketBusinessIncomeValuationId)
+                    'qqHelper.DisposeString(_BlanketBusinessIncomeValuation)
+                    'qqHelper.DisposeString(_CPR_BlanketCoverages_TotalPremium)
+                    'qqHelper.DisposeString(_BlanketCombinedEarthquake_QuotedPremium)
+                    '_BlanketBuildingIsAgreedValue = Nothing
+                    '_BlanketContentsIsAgreedValue = Nothing
+                    '_BlanketBuildingAndContentsIsAgreedValue = Nothing
+                    '_BlanketBusinessIncomeIsAgreedValue = Nothing
+                    '_UseTierOverride = Nothing
+                    'qqHelper.DisposeString(_TierAdjustmentTypeId)
+                    'qqHelper.DisposeString(_PersonalLiabilityLimitId)
+                    'qqHelper.DisposeString(_PersonalLiabilityQuotedPremium)
+                    '_HasConvertedCoverages = Nothing
+                    '_HasConvertedInclusionsExclusions = Nothing
+                    '_HasConvertedModifiers = Nothing
+                    '_HasConvertedScheduledRatings = Nothing
+                    '_CanUseExclusionNumForExclusionReconciliation = Nothing
+                    '_CanUseLossHistoryNumForLossHistoryReconciliation = Nothing
+                    '_HasEPLI = Nothing
+                    '_EPLI_Applied = Nothing
+                    'qqHelper.DisposeString(_EPLIPremium)
+                    'qqHelper.DisposeString(_EPLICoverageLimitId)
+                    'qqHelper.DisposeString(_EPLIDeductibleId)
+                    'qqHelper.DisposeString(_EPLICoverageTypeId)
+                    'qqHelper.DisposeString(_BlanketWaiverOfSubrogation)
+                    'qqHelper.DisposeString(_BlanketWaiverOfSubrogationQuotedPremium)
+                    '_HasCondoDandO = Nothing
+                    'qqHelper.DisposeString(_CondoDandOAssociatedName)
+                    'qqHelper.DisposeString(_CondoDandODeductibleId)
+                    'qqHelper.DisposeString(_CondoDandOPremium)
+                    'qqHelper.DisposeString(_CondoDandOManualLimit)
+                    '_CanUsePolicyUnderwritingNumForPolicyUnderwritingReconciliation = Nothing
+                    ''added 7/12/2018
+                    '_HasConvertedScheduledCoverages = Nothing
+                    '_CanUseScheduledCoverageNumForScheduledCoverageReconciliation = Nothing
+                    'If _ContractorsEquipmentScheduledCoverages IsNot Nothing Then
+                    '    If _ContractorsEquipmentScheduledCoverages.Count > 0 Then
+                    '        For Each c As QuickQuoteContractorsEquipmentScheduledCoverage In _ContractorsEquipmentScheduledCoverages
+                    '            c.Dispose()
+                    '            c = Nothing
+                    '        Next
+                    '        _ContractorsEquipmentScheduledCoverages.Clear()
+                    '    End If
+                    '    _ContractorsEquipmentScheduledCoverages = Nothing
+                    'End If
+                    'qqHelper.DisposeString(_ContractorsEquipmentScheduleCoinsuranceTypeId) 'may need static data placeholder; may be defaulted as there's just one value in dropdown (1 = per 100)
+                    'qqHelper.DisposeString(_ContractorsEquipmentScheduleDeductibleId) 'may need static data placeholder
+                    'qqHelper.DisposeString(_ContractorsEquipmentScheduleRate)
+                    'qqHelper.DisposeString(_ContractorsEquipmentScheduleQuotedPremium)
+                    'qqHelper.DisposeString(_ContractorsEquipmentLeasedRentedFromOthersLimit)
+                    'qqHelper.DisposeString(_ContractorsEquipmentLeasedRentedFromOthersCoverageLimitId)
+                    'qqHelper.DisposeString(_ContractorsEquipmentLeasedRentedFromOthersRate)
+                    'qqHelper.DisposeString(_ContractorsEquipmentLeasedRentedFromOthersQuotedPremium)
+                    'qqHelper.DisposeString(_ContractorsEquipmentRentalReimbursementLimit)
+                    'qqHelper.DisposeString(_ContractorsEquipmentRentalReimbursementRate)
+                    'qqHelper.DisposeString(_ContractorsEquipmentRentalReimbursementQuotedPremium)
+                    'qqHelper.DisposeString(_ContractorsEquipmentSmallToolsEndorsementPerOccurrenceLimit)
+                    'qqHelper.DisposeString(_ContractorsEquipmentSmallToolsEndorsementPerOccurrenceRate)
+                    'qqHelper.DisposeString(_ContractorsEquipmentSmallToolsEndorsementPerOccurrenceDeductibleId)
+                    'qqHelper.DisposeString(_ContractorsEquipmentSmallToolsEndorsementPerOccurrenceQuotedPremium)
+                    'qqHelper.DisposeString(_ContractorsEquipmentSmallToolsEndorsementPerToolLimit)
+                    'qqHelper.DisposeString(_ContractorsEquipmentSmallToolsEndorsementPerToolQuotedPremium)
+                    'qqHelper.DisposeString(_SmallToolsLimit)
+                    'qqHelper.DisposeString(_SmallToolsRate)
+                    'qqHelper.DisposeString(_SmallToolsDeductibleId)
+                    'qqHelper.DisposeAdditionalInterests(_SmallToolsAdditionalInterests)
+                    '_SmallToolsCanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    'qqHelper.DisposeString(_SmallToolsQuotedPremium)
+                    '_SmallToolsIsEmployeeTools = Nothing 'small tools floater
+                    '_SmallToolsIsToolsLeasedOrRented = Nothing 'small tools floater
+                    'qqHelper.DisposeString(_SmallToolsAnyOneLossCatastropheLimit)
+                    'qqHelper.DisposeString(_SmallToolsAnyOneLossCatastropheQuotedPremium)
+                    'If _InstallationScheduledLocations IsNot Nothing Then
+                    '    If _InstallationScheduledLocations.Count > 0 Then
+                    '        For Each isl As QuickQuoteInstallationScheduledLocation In _InstallationScheduledLocations
+                    '            isl.Dispose()
+                    '            isl = Nothing
+                    '        Next
+                    '        _InstallationScheduledLocations.Clear()
+                    '    End If
+                    '    _InstallationScheduledLocations = Nothing
+                    'End If
+                    'qqHelper.DisposeString(_InstallationQuotedPremium)
+                    'qqHelper.DisposeAdditionalInterests(_InstallationAdditionalInterests)
+                    '_InstallationCanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    'qqHelper.DisposeString(_InstallationBlanketLimit)
+                    'qqHelper.DisposeString(_InstallationBlanketCoinsuranceTypeId)
+                    'qqHelper.DisposeString(_InstallationBlanketDeductibleId)
+                    'qqHelper.DisposeString(_InstallationBlanketRate)
+                    'qqHelper.DisposeString(_InstallationBlanketQuotedPremium)
+                    'qqHelper.DisposeString(_InstallationBlanketAnyOneLossCatastropheLimit)
+                    'qqHelper.DisposeString(_InstallationBlanketAnyOneLossCatastropheQuotedPremium)
+                    'qqHelper.DisposeString(_InstallationAdditionalDebrisRemovalExpenseLimit)
+                    'qqHelper.DisposeString(_InstallationAdditionalDebrisRemovalExpenseQuotedPremium)
+                    'qqHelper.DisposeString(_InstallationStorageLocationsLimit)
+                    'qqHelper.DisposeString(_InstallationStorageLocationsQuotedPremium)
+                    'qqHelper.DisposeString(_InstallationTransitLimit)
+                    'qqHelper.DisposeString(_InstallationTransitQuotedPremium)
+                    'qqHelper.DisposeString(_InstallationTestingLimit)
+                    'qqHelper.DisposeString(_InstallationTestingQuotedPremium)
+                    'qqHelper.DisposeString(_InstallationSewerBackupLimit)
+                    'qqHelper.DisposeString(_InstallationSewerBackupDeductible)
+                    'qqHelper.DisposeString(_InstallationSewerBackupQuotedPremium)
+                    'qqHelper.DisposeString(_InstallationSewerBackupCatastropheLimit)
+                    'qqHelper.DisposeString(_InstallationSewerBackupCatastropheQuotedPremium)
+                    'qqHelper.DisposeString(_InstallationEarthquakeLimit)
+                    'qqHelper.DisposeString(_InstallationEarthquakeDeductible)
+                    'qqHelper.DisposeString(_InstallationEarthquakeQuotedPremium)
+                    'qqHelper.DisposeString(_InstallationEarthquakeCatastropheLimit)
+                    'qqHelper.DisposeString(_InstallationEarthquakeCatastropheQuotedPremium)
+                    'qqHelper.DisposeString(_BusinessPersonalPropertyLimit) 'shown in UI Installation Coverage Extensions section, but may not be specific to Installation
+                    'qqHelper.DisposeString(_BusinessPersonalPropertyQuotedPremium)
+                    'If _ScheduledPropertyItems IsNot Nothing Then
+                    '    If _ScheduledPropertyItems.Count > 0 Then
+                    '        For Each sp As QuickQuoteScheduledPropertyItem In _ScheduledPropertyItems
+                    '            sp.Dispose()
+                    '            sp = Nothing
+                    '        Next
+                    '        _ScheduledPropertyItems.Clear()
+                    '    End If
+                    '    _ScheduledPropertyItems = Nothing
+                    'End If
+                    'qqHelper.DisposeAdditionalInterests(_ScheduledPropertyAdditionalInterests)
+                    '_ScheduledPropertyCanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    'qqHelper.DisposeString(_ScheduledPropertyCoinsuranceTypeId)
+                    'qqHelper.DisposeString(_ScheduledPropertyDeductibleId)
+                    'qqHelper.DisposeString(_ScheduledPropertyRate)
+                    '_ScheduledPropertyNamedPerils = Nothing
+                    'qqHelper.DisposeString(_ScheduledPropertyQuotedPremium)
+                    'qqHelper.DisposeString(_ComputerCoinsuranceTypeId) 'cov also has CoverageBasisTypeId set to 1
+                    '_ComputerExcludeEarthquake = Nothing
+                    'qqHelper.DisposeString(_ComputerValuationMethodTypeId)
+                    'qqHelper.DisposeAdditionalInterests(_ComputerAdditionalInterests)
+                    '_ComputerCanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    'qqHelper.DisposeString(_ComputerQuotedPremium)
+                    'qqHelper.DisposeString(_ComputerAllPerilsDeductibleId) 'cov also has CoverageBasisTypeId set to 1
+                    'qqHelper.DisposeString(_ComputerAllPerilsQuotedPremium)
+                    'qqHelper.DisposeString(_ComputerEarthquakeVolcanicEruptionDeductible) 'cov also has CoverageBasisTypeId set to 1; example also has ApplyToWrittenPremiuim set to true
+                    'qqHelper.DisposeString(_ComputerEarthquakeVolcanicEruptionQuotedPremium)
+                    'qqHelper.DisposeString(_ComputerMechanicalBreakdownDeductible) 'cov also has CoverageBasisTypeId set to 1; example also has ApplyToWrittenPremiuim set to true
+                    'qqHelper.DisposeString(_ComputerMechanicalBreakdownQuotedPremium)
+                    'qqHelper.DisposeString(_BuildersRiskDeductibleId) 'cov also has CoverageBasisTypeId set to 1
+                    'qqHelper.DisposeString(_BuildersRiskRate)
+                    'qqHelper.DisposeAdditionalInterests(_BuildersRiskAdditionalInterests)
+                    '_BuildersRiskCanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    'qqHelper.DisposeString(_BuildersRiskQuotedPremium)
+                    'If _BuildersRiskScheduledLocations IsNot Nothing Then
+                    '    If _BuildersRiskScheduledLocations.Count > 0 Then
+                    '        For Each sl As QuickQuoteBuildersRiskScheduledLocation In _BuildersRiskScheduledLocations
+                    '            sl.Dispose()
+                    '            sl = Nothing
+                    '        Next
+                    '        _BuildersRiskScheduledLocations.Clear()
+                    '    End If
+                    '    _BuildersRiskScheduledLocations = Nothing
+                    'End If
+                    'qqHelper.DisposeString(_BuildersRiskScheduleStorageLocationsLimit)
+                    'qqHelper.DisposeString(_BuildersRiskScheduleStorageLocationsQuotedPremium)
+                    'qqHelper.DisposeString(_BuildersRiskScheduleTransitLimit)
+                    'qqHelper.DisposeString(_BuildersRiskScheduleTransitQuotedPremium)
+                    'qqHelper.DisposeString(_BuildersRiskScheduleTestingLimit)
+                    'qqHelper.DisposeString(_BuildersRiskScheduleTestingQuotedPremium)
+                    'qqHelper.DisposeString(_FineArtsDeductibleCategoryTypeId)
+                    'qqHelper.DisposeString(_FineArtsRate)
+                    'qqHelper.DisposeString(_FineArtsDeductibleId)
+                    'qqHelper.DisposeString(_FineArtsQuotedPremium)
+                    'qqHelper.DisposeAdditionalInterests(_FineArtsAdditionalInterests)
+                    '_FineArtsCanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    '_FineArtsBreakageMarringOrScratching = Nothing 'renamed from _HasFineArtsBreakageMarringOrScratching
+                    'qqHelper.DisposeString(_FineArtsBreakageMarringOrScratchingQuotedPremium)
+                    'qqHelper.DisposeString(_OwnersCargoAnyOneOwnedVehicleLimit)
+                    'qqHelper.DisposeString(_OwnersCargoAnyOneOwnedVehicleDeductibleId) 'static data
+                    'qqHelper.DisposeString(_OwnersCargoAnyOneOwnedVehicleRate)
+                    'qqHelper.DisposeString(_OwnersCargoAnyOneOwnedVehicleDescription)
+                    'qqHelper.DisposeAdditionalInterests(_OwnersCargoAnyOneOwnedVehicleAdditionalInterests)
+                    '_OwnersCargoAnyOneOwnedVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    '_OwnersCargoAnyOneOwnedVehicleLoadingUnloading = Nothing
+                    '_OwnersCargoAnyOneOwnedVehicleNamedPerils = Nothing
+                    'qqHelper.DisposeString(_OwnersCargoAnyOneOwnedVehicleQuotedPremium)
+                    'qqHelper.DisposeString(_OwnersCargoCatastropheLimit)
+                    'qqHelper.DisposeString(_OwnersCargoCatastropheQuotedPremium)
+                    'qqHelper.DisposeString(_TransportationCatastropheLimit)
+                    'qqHelper.DisposeString(_TransportationCatastropheDeductibleId) 'static data
+                    'qqHelper.DisposeString(_TransportationCatastropheDescription)
+                    'qqHelper.DisposeAdditionalInterests(_TransportationCatastropheAdditionalInterests)
+                    '_TransportationCatastropheCanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    '_TransportationCatastropheLoadingUnloading = Nothing
+                    '_TransportationCatastropheNamedPerils = Nothing
+                    'qqHelper.DisposeString(_TransportationCatastropheQuotedPremium)
+                    'qqHelper.DisposeString(_TransportationAnyOneOwnedVehicleLimit) 'note: cov also has CoverageBasisTypeId set to 1
+                    'qqHelper.DisposeString(_TransportationAnyOneOwnedVehicleNumberOfVehicles) 'CoverageDetail
+                    'qqHelper.DisposeString(_TransportationAnyOneOwnedVehicleRate)
+                    'qqHelper.DisposeString(_TransportationAnyOneOwnedVehicleQuotedPremium)
+                    'qqHelper.DisposeScheduledVehicles(_MotorTruckCargoScheduledVehicles)
+                    'qqHelper.DisposeAdditionalInterests(_MotorTruckCargoScheduledVehicleAdditionalInterests)
+                    '_MotorTruckCargoScheduledVehicleCanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    '_MotorTruckCargoScheduledVehicleLoadingUnloading = Nothing 'CoverageDetail
+                    '_MotorTruckCargoScheduledVehicleNamedPerils = Nothing 'CoverageDetail
+                    'qqHelper.DisposeString(_MotorTruckCargoScheduledVehicleOperatingRadius) 'CoverageDetail
+                    'qqHelper.DisposeString(_MotorTruckCargoScheduledVehicleRate) 'CoverageDetail
+                    'qqHelper.DisposeString(_MotorTruckCargoScheduledVehicleDeductibleId) 'static data
+                    'qqHelper.DisposeString(_MotorTruckCargoScheduledVehicleDescription)
+                    'qqHelper.DisposeString(_MotorTruckCargoScheduledVehicleQuotedPremium)
+                    'qqHelper.DisposeString(_MotorTruckCargoScheduledVehicleCatastropheLimit)
+                    'qqHelper.DisposeString(_MotorTruckCargoScheduledVehicleCatastropheQuotedPremium)
+                    'qqHelper.DisposeAdditionalInterests(_SignsAdditionalInterests)
+                    '_SignsCanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    'qqHelper.DisposeString(_SignsMaximumDeductible) 'CoverageDetail
+                    'qqHelper.DisposeString(_SignsMinimumDeductible) 'CoverageDetail
+                    'qqHelper.DisposeString(_SignsValuationMethodTypeId) 'CoverageDetail; static data
+                    'qqHelper.DisposeString(_SignsDeductibleId) 'static data
+                    'qqHelper.DisposeString(_SignsQuotedPremium)
+                    'qqHelper.DisposeString(_SignsAnyOneLossCatastropheLimit) 'note: cov also has CoverageBasisTypeId set to 1
+                    'qqHelper.DisposeString(_SignsAnyOneLossCatastropheQuotedPremium)
+                    'qqHelper.DisposeString(_ContractorsEquipmentCatastropheLimit)
+                    'qqHelper.DisposeString(_ContractorsEquipmentCatastropheQuotedPremium)
+                    '_CanUseClassificationCodeNumForClassificationCodeReconciliation = Nothing
+                    'qqHelper.DisposeString(_AggregateLimit)
+                    'qqHelper.DisposeString(_NumberOfEmployees)
+                    'qqHelper.DisposeString(_EmployeeTheftLimit) 'note: cov also has CoverageBasisTypeId 1
+                    'qqHelper.DisposeString(_EmployeeTheftDeductibleId) 'static data
+                    'qqHelper.DisposeString(_EmployeeTheftNumberOfRatableEmployees) 'CoverageDetail
+                    'qqHelper.DisposeString(_EmployeeTheftNumberOfAdditionalPremises) 'CoverageDetail
+                    'qqHelper.DisposeString(_EmployeeTheftFaithfulPerformanceOfDutyTypeId) 'CoverageDetail; static data
+                    'qqHelper.DisposeStrings(_EmployeeTheftScheduledEmployeeBenefitPlans)
+                    'qqHelper.DisposeStrings(_EmployeeTheftIncludedPersonsOrClasses)
+                    'qqHelper.DisposeStrings(_EmployeeTheftIncludedChairpersonsAndSpecifiedCommitteeMembers)
+                    'qqHelper.DisposeStrings(_EmployeeTheftScheduledPartners)
+                    'qqHelper.DisposeStrings(_EmployeeTheftScheduledLLCMembers)
+                    'qqHelper.DisposeStrings(_EmployeeTheftScheduledNonCompensatedOfficers)
+                    'qqHelper.DisposeStrings(_EmployeeTheftExcludedPersonsOrClasses)
+                    'qqHelper.DisposeString(_EmployeeTheftQuotedPremium)
+                    'qqHelper.DisposeString(_InsidePremisesTheftOfMoneyAndSecuritiesLimit) 'note: cov also has CoverageBasisTypeId 1
+                    'qqHelper.DisposeString(_InsidePremisesTheftOfMoneyAndSecuritiesDeductibleId) 'static data
+                    'qqHelper.DisposeString(_InsidePremisesTheftOfMoneyAndSecuritiesNumberOfPremises) 'CoverageDetail
+                    '_InsidePremisesTheftOfMoneyAndSecuritiesIncludeGuestsProperty = Nothing 'CoverageDetail
+                    '_InsidePremisesTheftOfMoneyAndSecuritiesRequireRecordOfChecks = Nothing 'CoverageDetail
+                    'qqHelper.DisposeString(_InsidePremisesTheftOfMoneyAndSecuritiesQuotedPremium)
+                    'qqHelper.DisposeString(_OutsideThePremisesLimit) 'note: cov also has CoverageBasisTypeId 1
+                    'qqHelper.DisposeString(_OutsideThePremisesDeductibleId) 'static data
+                    'qqHelper.DisposeString(_OutsideThePremisesNumberOfPremises) 'CoverageDetail
+                    '_OutsideThePremisesIncludeSellingPrice = Nothing 'CoverageDetail
+                    '_OutsideThePremisesLimitToRobberyOnly = Nothing 'CoverageDetail
+                    '_OutsideThePremisesRequireRecordOfChecks = Nothing 'CoverageDetail
+                    'qqHelper.DisposeString(_OutsideThePremisesQuotedPremium)
+                    ''added 7/13/2018
+                    '_HasConvertedFarmIncidentalLimitCoverages = Nothing
+                    '_HasConvertedScheduledPersonalPropertyCoverages = Nothing
+                    '_HasConvertedUnscheduledPersonalPropertyCoverages = Nothing
+                    '_CanUseScheduledFarmPersonalPropertyNumForScheduledPersonalPropertyReconciliation = Nothing
+                    '_CanUseUnscheduledFarmPersonalPropertyNumForUnscheduledPersonalPropertyReconciliation = Nothing
+                    '_HasConvertedOptionalCoverages = Nothing
+                    '_CanUseOptionalCoveragesNumForOptionalCoverageReconciliation = Nothing
+                    '_CanUseAdditionalInterestNumForAdditionalInterestReconciliation = Nothing
+                    'qqHelper.DisposeString(_Farm_F_and_G_DeductibleLimitId) 'static data
+                    'qqHelper.DisposeString(_Farm_F_and_G_DeductibleQuotedPremium)
+                    '_HasFarmEquipmentBreakdown = Nothing
+                    'qqHelper.DisposeString(_FarmEquipmentBreakdownQuotedPremium)
+                    '_HasFarmExtender = Nothing
+                    'qqHelper.DisposeString(_FarmExtenderQuotedPremium)
+                    'qqHelper.DisposeString(_FarmAllStarLimitId)
+                    'qqHelper.DisposeString(_FarmAllStarQuotedPremium)
+                    '_HasFarmEmployersLiability = Nothing
+                    'qqHelper.DisposeString(_FarmEmployersLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_FarmFireLegalLiabilityLimitId)
+                    'qqHelper.DisposeString(_FarmFireLegalLiabilityQuotedPremium)
+                    '_HasFarmPersonalAndAdvertisingInjury = Nothing
+                    'qqHelper.DisposeString(_FarmPersonalAndAdvertisingInjuryQuotedPremium)
+                    'qqHelper.DisposeString(_FarmContractGrowersCareCustodyControlLimitId)
+                    'qqHelper.DisposeString(_FarmContractGrowersCareCustodyControlDescription)
+                    'qqHelper.DisposeString(_FarmContractGrowersCareCustodyControlQuotedPremium)
+                    '_HasFarmExclusionOfProductsCompletedWork = Nothing
+                    'qqHelper.DisposeString(_FarmExclusionOfProductsCompletedWorkQuotedPremium)
+                    'If _FarmIncidentalLimits IsNot Nothing Then 'goes w/ FarmIncidentalLimitCoverages
+                    '    If _FarmIncidentalLimits.Count > 0 Then
+                    '        For Each fil As QuickQuoteFarmIncidentalLimit In _FarmIncidentalLimits
+                    '            fil.Dispose()
+                    '            fil = Nothing
+                    '        Next
+                    '        _FarmIncidentalLimits.Clear()
+                    '    End If
+                    '    _FarmIncidentalLimits = Nothing
+                    'End If
+                    ''for CPR/CPP Business Income ALS (eff 4/1/2015)
+                    '_HasBusinessIncomeALS = Nothing
+                    'qqHelper.DisposeString(_BusinessIncomeALSLimit)
+                    'qqHelper.DisposeString(_BusinessIncomeALSQuotedPremium)
+                    ''for CPP Contractors Enhancement Endorsement (CPR, CGL, CIM; eff 5/12/2015)
+                    '_HasContractorsEnhancement = Nothing
+                    'qqHelper.DisposeString(_ContractorsEnhancementQuotedPremium)
+                    'qqHelper.DisposeString(_CPP_CPR_ContractorsEnhancementQuotedPremium)
+                    'qqHelper.DisposeString(_CPP_CGL_ContractorsEnhancementQuotedPremium)
+                    'qqHelper.DisposeString(_CPP_CIM_ContractorsEnhancementQuotedPremium)
+                    ''for CPP Manufacturers Enhancement (CPR, CGL; eff 6/30/2015)
+                    '_HasManufacturersEnhancement = Nothing
+                    'qqHelper.DisposeString(_ManufacturersEnhancementQuotedPremium)
+                    'qqHelper.DisposeString(_CPP_CPR_ManufacturersEnhancementQuotedPremium)
+                    'qqHelper.DisposeString(_CPP_CGL_ManufacturersEnhancementQuotedPremium)
+                    'qqHelper.DisposeString(_FarmMachinerySpecialCoverageG_QuotedPremium)
+                    ''for new cov (PPA versionId 102; coverageCodeId 80443)
+                    '_HasAutoPlusEnhancement = Nothing
+                    'qqHelper.DisposeString(_AutoPlusEnhancement_QuotedPremium)
+                    '_HasApartmentBuildings = Nothing
+                    'qqHelper.DisposeString(_NumberOfLocationsWithApartments)
+                    'qqHelper.DisposeString(_ApartmentQuotedPremium)
+                    '_HasRestaurantEndorsement = Nothing
+                    'qqHelper.DisposeString(_RestaurantQuotedPremium)
+                    'If _ScheduledGolfCourses IsNot Nothing Then
+                    '    If _ScheduledGolfCourses.Count > 0 Then
+                    '        For Each c As QuickQuoteScheduledGolfCourse In _ScheduledGolfCourses
+                    '            If c IsNot Nothing Then
+                    '                c.Dispose()
+                    '                c = Nothing
+                    '            End If
+                    '        Next
+                    '        _ScheduledGolfCourses.Clear()
+                    '    End If
+                    '    _ScheduledGolfCourses = Nothing
+                    'End If
+                    'If _ScheduledGolfCartCourses IsNot Nothing Then
+                    '    If _ScheduledGolfCartCourses.Count > 0 Then
+                    '        For Each c As QuickQuoteScheduledGolfCartCourse In _ScheduledGolfCartCourses
+                    '            If c IsNot Nothing Then
+                    '                c.Dispose()
+                    '                c = Nothing
+                    '            End If
+                    '        Next
+                    '        _ScheduledGolfCartCourses.Clear()
+                    '    End If
+                    '    _ScheduledGolfCartCourses = Nothing
+                    'End If
+                    'qqHelper.DisposeString(_GolfCourseQuotedPremium) 'covCodeId 21341
+                    'qqHelper.DisposeString(_GolfCourseCoverageLimitId) 'covCodeId 21341
+                    'qqHelper.DisposeString(_GolfCourseDeductibleId) 'covCodeId 21341
+                    'qqHelper.DisposeString(_GolfCourseCoinsuranceTypeId) 'covCodeId 21341
+                    'qqHelper.DisposeString(_GolfCourseRate) 'covCodeId 21341
+                    'qqHelper.DisposeString(_GolfCartQuotedPremium) 'covCodeId 50121
+                    'qqHelper.DisposeString(_GolfCartManualLimitAmount) 'covCodeId 50121
+                    'qqHelper.DisposeString(_GolfCartDeductibleId) 'covCodeId 50121
+                    'qqHelper.DisposeString(_GolfCartCoinsuranceTypeId) 'covCodeId 50121
+                    'qqHelper.DisposeString(_GolfCartRate) 'covCodeId 50121
+                    'qqHelper.DisposeString(_GolfCartCatastropheManualLimitAmount) 'covCodeId 21343
+                    'qqHelper.DisposeString(_GolfCartDebrisRemovalCoverageLimitId) 'covCodeId 80223
+                    'qqHelper.DisposeString(_Liability_UM_UIM_AggregateLiabilityIncrementTypeId) 'covDetail; covCodeId 21552
+                    'qqHelper.DisposeString(_Liability_UM_UIM_DeductibleCategoryTypeId) 'covDetail; covCodeId 21552
+                    '_HasUninsuredMotoristPropertyDamage = Nothing 'covCodeId 21539
+                    'qqHelper.DisposeString(_UninsuredMotoristPropertyDamageQuotedPremium) 'covCodeId 21539; may not be populated
+                    'qqHelper.DisposeString(_MedicalPaymentsTypeId) 'covDetail; covCodeId 21540
+                    '_HasPhysicalDamageOtherThanCollision = Nothing 'covCodeId 21550
+                    'qqHelper.DisposeString(_PhysicalDamageOtherThanCollisionQuotedPremium) 'covCodeId 21550; may not be populated
+                    '_HasPhysicalDamageCollision = Nothing 'covCodeId 21551
+                    'qqHelper.DisposeString(_PhysicalDamageCollisionQuotedPremium) 'covCodeId 21551; may not be populated
+                    'qqHelper.DisposeString(_PhysicalDamageCollisionDeductibleId) 'covCodeId 21551
+                    '_HasGarageKeepersOtherThanCollision = Nothing 'covCodeId 21541
+                    'qqHelper.DisposeString(_GarageKeepersOtherThanCollisionQuotedPremium) 'covCodeId 21541
+                    ''qqHelper.DisposeString(_GarageKeepersOtherThanCollisionManualLimitAmount) 'covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+                    ''qqHelper.DisposeString(_GarageKeepersOtherThanCollisionBasisTypeId) 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+                    ''qqHelper.DisposeString(_GarageKeepersOtherThanCollisionDeductibleCategoryTypeId) 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+                    ''qqHelper.DisposeString(_GarageKeepersOtherThanCollisionTypeId) 'covDetail; covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+                    ''qqHelper.DisposeString(_GarageKeepersOtherThanCollisionDeductibleId) 'covCodeId 21541; moved to PolicyLevel and RiskLevel section 7/23/2018
+                    '_HasGarageKeepersCollision = Nothing 'covCodeId 21542
+                    'qqHelper.DisposeString(_GarageKeepersCollisionQuotedPremium) 'covCodeId 21542
+                    ''qqHelper.DisposeString(_GarageKeepersCollisionManualLimitAmount) 'covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+                    ''qqHelper.DisposeString(_GarageKeepersCollisionBasisTypeId) 'covDetail; covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+                    ''qqHelper.DisposeString(_GarageKeepersCollisionDeductibleId) 'covCodeId 21542; moved to PolicyLevel and RiskLevel section 7/23/2018
+                    'qqHelper.DisposeString(_CPP_MinPremAdj_CPR) 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+                    'qqHelper.DisposeString(_CPP_MinPremAdj_CGL) 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+                    'qqHelper.DisposeString(_CPP_MinPremAdj_CIM) 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+                    'qqHelper.DisposeString(_CPP_MinPremAdj_CRM) 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+                    'qqHelper.DisposeString(_CPP_MinPremAdj_GAR) 'covCodeId 10121; note: covCodeId good for CGL, PIM (not in VR yet), FAR, CAP, WCP, GAR, BOP, CRM, CPR, CIM
+                    'qqHelper.DisposeString(_CAP_GAR_PolicyLevelCovs_Premium)
+                    'qqHelper.DisposeString(_WCP_WaiverPremium) 'covCodeId 10124 CovAddInfo w/ "Waiver Premium" in desc
+                    ''added 7/14/2018
+                    'qqHelper.DisposeString(_MultiLineDiscountValue)
+                    'qqHelper.DisposeString(_PriorBodilyInjuryLimitId)
+
+                    'removed 7/24/2018
+                    ''RiskLevel
+                    ''added 7/10/2018
+                    'qqHelper.DisposeString(_Dec_BuildingLimit_All_Premium)
+                    'qqHelper.DisposeString(_Dec_BuildingPersPropLimit_All_Premium)
+                    '_HasLocation = Nothing
+                    '_HasLocationWithBuilding = Nothing
+                    '_HasLocationWithClassification = Nothing
+                    'qqHelper.DisposeString(_VehiclesTotal_CombinedSingleLimitLiablityQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_MedicalPaymentsQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_UninsuredMotoristLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_UM_UIM_CovsQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_ComprehensiveCoverageQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_CollisionCoverageQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_TowingAndLaborQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_RentalReimbursementQuotedPremium)
+                    ''added 7/11/2018
+                    'qqHelper.DisposeString(_CPR_BuildingsTotal_BuildingCovQuotedPremium)
+                    'qqHelper.DisposeString(_CPR_BuildingsTotal_PersPropCoverageQuotedPremium)
+                    'qqHelper.DisposeString(_CPR_BuildingsTotal_PersPropOfOthersQuotedPremium)
+                    'qqHelper.DisposeString(_CPR_BuildingsTotal_BusinessIncomeCovQuotedPremium)
+                    'qqHelper.DisposeString(_CPR_BuildingsTotal_EQ_QuotedPremium)
+                    'qqHelper.DisposeString(_LocationsTotal_EquipmentBreakdownQuotedPremium)
+                    'qqHelper.DisposeString(_LocationsTotal_PropertyInTheOpenRecords_QuotedPremium)
+                    'qqHelper.DisposeString(_LocationsTotal_PropertyInTheOpenRecords_EQ_Premium)
+                    'qqHelper.DisposeString(_LocationsTotal_PitoRecords_And_BuildingsTotal_Combined_EQ_Premium)
+                    'qqHelper.DisposeString(_VehiclesTotal_PremiumFullTerm)
+                    'qqHelper.DisposeString(_LocationsTotal_PremiumFullTerm)
+                    'qqHelper.DisposeString(_Locations_BuildingsTotal_PremiumFullTerm)
+                    '_CanUseDriverNumForDriverReconciliation = Nothing
+                    '_CanUseVehicleNumForVehicleReconciliation = Nothing
+                    '_CanUseLocationNumForLocationReconciliation = Nothing
+                    '_CanUseApplicantNumForApplicantReconciliation = Nothing
+                    'qqHelper.DisposeString(_VehiclesTotal_BodilyInjuryLiabilityQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_PropertyDamageQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_UninsuredCombinedSingleQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_UninsuredMotoristPropertyDamageQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_UninsuredMotoristPropertyDamageDeductibleQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_PollutionLiabilityBroadenedCoverageQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_TransportationExpenseQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_AutoLoanOrLeaseQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_TapesAndRecordsQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_SoundEquipmentQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_ElectronicEquipmentQuotedPremium)
+                    'qqHelper.DisposeString(_VehiclesTotal_TripInterruptionQuotedPremium)
+                    '_CanUseOperatorNumForOperatorReconciliation = Nothing
+                    'qqHelper.DisposeString(_Locations_InlandMarinesTotal_Premium)
+                    'qqHelper.DisposeString(_Locations_InlandMarinesTotal_CoveragePremium)
+                    'qqHelper.DisposeString(_Locations_RvWatercraftsTotal_Premium)
+                    'qqHelper.DisposeString(_Locations_RvWatercraftsTotal_CoveragesPremium)
+                    ''added 7/13/2018
+                    'qqHelper.DisposeString(_Locations_Farm_L_Liability_QuotedPremium)
+                    'qqHelper.DisposeString(_Locations_Farm_M_Medical_Payments_QuotedPremium)
+                    'qqHelper.DisposeString(_LocationsTotal_LiabilityQuotedPremium) 'loc covCodeId 10111
+                    'qqHelper.DisposeString(_LocationsTotal_MedicalPaymentsQuotedPremium) 'loc covCodeId 10112
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionStandardOpenLotsQuotedPremium) 'loc covCodeId 10116
+                    ''for GAR
+                    'qqHelper.DisposeString(_LocationsTotal_ClassIIEmployees25AndOlder)
+                    'qqHelper.DisposeString(_LocationsTotal_ClassIIEmployeesUnderAge25)
+                    'qqHelper.DisposeString(_LocationsTotal_ClassIOtherEmployees)
+                    'qqHelper.DisposeString(_LocationsTotal_ClassIRegularEmployees)
+                    'qqHelper.DisposeString(_LocationsTotal_NumberOfEmployees)
+                    'qqHelper.DisposeString(_LocationsTotal_Payroll)
+                    'qqHelper.DisposeString(_LocationsTotal_UninsuredUnderinsuredMotoristBIandPDNumberOfPlates) 'covCodeId 10113; covDetail
+                    'qqHelper.DisposeString(_LocationsTotal_ClassIEmployees)
+                    'qqHelper.DisposeString(_LocationsTotal_ClassIIEmployees)
+                    'qqHelper.DisposeString(_LocationsTotal_ClassIandIIEmployees)
+                    'qqHelper.DisposeString(_LocationsTotal_DealersBlanketCollisionQuotedPremium) 'loc covCodeId 10120
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionBuildingQuotedPremium) 'loc covCodeId 10115
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionBuildingManualLimitAmount) 'loc covCodeId 10115
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsQuotedPremium) 'loc covCodeId 10117
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionNonStandardOpenLotsManualLimitAmount) 'loc covCodeId 10117
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsQuotedPremium) 'loc covCodeId 10118
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousBuildingsManualLimitAmount) 'loc covCodeId 10118
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsQuotedPremium) 'loc covCodeId 10119
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionMiscellaneousOpenLotsManualLimitAmount) 'loc covCodeId 10119
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionTotalQuotedPremium) 'SUM of loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+                    'qqHelper.DisposeString(_LocationsTotal_PhysicalDamageOtherThanCollisionTotalManualLimitAmount) 'SUM of loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+                    'qqHelper.DisposeString(_Locations_PhysicalDamageOtherThanCollisionDeductibleCategoryTypeId) 'covDetail; loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+                    'qqHelper.DisposeString(_Locations_PhysicalDamageOtherThanCollisionTypeId) 'covDetail; loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+                    'qqHelper.DisposeString(_Locations_PhysicalDamageOtherThanCollisionDeductibleId) 'loc covCodeIds 10115, 10116, 10117, 10118, and 10119
+                    'qqHelper.DisposeString(_CAP_GAR_LocationLevelCovs_Premium)
+                    'qqHelper.DisposeString(_CAP_GAR_VehicleLevelCovs_Premium)
+                    'qqHelper.DisposeString(_LocationsTotal_UninsuredUnderinsuredMotoristBIandPDQuotedPremium) 'loc covCodeId 10113
+                    'qqHelper.DisposeString(_LocationsTotal_GarageKeepersOtherThanCollisionQuotedPremium) 'loc covCodeId 10086
+                    'qqHelper.DisposeString(_LocationsTotal_GarageKeepersCollisionQuotedPremium) 'loc covCodeId 10087
+                    'qqHelper.DisposeString(_LocationsTotal_GarageKeepersCoverageExtensionsQuotedPremium) 'loc covCodeId 10126
+                    'qqHelper.DisposeString(_VehiclesTotal_CAP_GAR_TotalCoveragesPremium) 'should essentially match CAP_GAR_VehicleLevelCovs_Premium
+                    'qqHelper.DisposeString(_VehiclesTotal_TotalCoveragesPremium)
+                    'qqHelper.DisposeString(_DriversTotal_TotalCoveragesPremium)
+
+                    'PolicyLevel and RiskLevel
+                    'added 7/13/2018
+                    qqHelper.DisposeString(_GarageKeepersTotalPremium) 'SUM of prems for policy (covCodeIds 21541 and 21542 - has prem) and loc (covCodeIds 10086, 10087, and 10126 - no prem) covs
+                    'for GAR (also CAP)
+                    qqHelper.DisposeString(_AutoLiabilityTotalPremium) 'SUM of prems for policy (covCodeId 21552 - CAP/GAR: Liability_UM_UIM_QuotedPremium), loc (covCodeId 10111 - GAR: LiabilityQuotedPremium), and veh (covCodeId 2 - PPA/CAP/GAR: Liability_UM_UIM_QuotedPremium) covs
+                    qqHelper.DisposeString(_AutoMedicalPaymentsTotalPremium) 'SUM of prems for policy (covCodeId 21540 - CAP/GAR: MedicalPaymentsQuotedPremium; could also be for 70072 - HOM/DFR, 70018 - FAR), loc (covCodeId 10112 - GAR: MedicalPaymentsQuotedPremium), and veh (covCodeId 60006 - CAP/GAR: MedicalPaymentsQuotedPremium; could also be for 6 - PPA) covs
+                    qqHelper.DisposeString(_Auto_UM_UIM_TotalPremium) 'SUM of prems for policy (covCodeId 21539 - CAP/GAR: UninsuredMotoristPropertyDamageQuotedPremium), loc (covCodeId 10113 - GAR: UninsuredUnderinsuredMotoristBIandPDQuotedPremium), and veh (covCodeIds 30013 - CAP/GAR: UnderinsuredMotoristBodilyInjuryLiabilityQuotedPremium and 8 - PPA/CAP/GAR: UninsuredMotoristLiabilityQuotedPremium) covs
+                    qqHelper.DisposeString(_AutoComprehensiveTotalPremium) 'SUM of prems for policy (covCodeId 21550 - CAP/GAR: PhysicalDamageOtherThanCollisionQuotedPremium; 10063 - CAP/GAR: ComprehensiveQuotedPremium as-of 6/19/2017), loc (covCodeId 10116 - GAR: PhysicalDamageOtherThanCollisionStandardOpenLotsQuotedPremium), and veh (covCodeId 3 - PPA/CAP/GAR: ComprehensiveQuotedPremium) covs
+                    qqHelper.DisposeString(_AutoCollisionTotalPremium) 'SUM of prems for policy (covCodeId 21551 - CAP/GAR: PhysicalDamageCollisionQuotedPremium; 10064 - CAP/GAR: CollisionQuotedPremium as-of 6/19/2017), loc (covCodeId 10120 - GAR: DealersBlanketCollisionQuotedPremium), and veh (covCodeId 5 - PPA/CAP/GAR: CollisionQuotedPremium) covs
+                    qqHelper.DisposeString(_CAP_GAR_OptCovs_Premium) 'diff of CAP/GAR totalPremium minus above premiums, towingLabor, rental, and garageKeepers; note: will also exclude (subtract) EnhancementEndorsement as-of 6/20/2017
+                    qqHelper.DisposeString(_CAP_GAR_PolicyAndLocationLevelCovs_Premium)
+                    '7/23/2018 - moved from PolicyLevel
+                    qqHelper.DisposeString(_GarageKeepersOtherThanCollisionManualLimitAmount) 'covCodeId 21541
+                    qqHelper.DisposeString(_GarageKeepersOtherThanCollisionBasisTypeId) 'covDetail; covCodeId 21541
+                    qqHelper.DisposeString(_GarageKeepersOtherThanCollisionDeductibleCategoryTypeId) 'covDetail; covCodeId 21541
+                    qqHelper.DisposeString(_GarageKeepersOtherThanCollisionTypeId) 'covDetail; covCodeId 21541
+                    qqHelper.DisposeString(_GarageKeepersOtherThanCollisionDeductibleId) 'covCodeId 21541
+                    qqHelper.DisposeString(_GarageKeepersCollisionManualLimitAmount) 'covCodeId 21542
+                    qqHelper.DisposeString(_GarageKeepersCollisionBasisTypeId) 'covDetail; covCodeId 21542
+                    qqHelper.DisposeString(_GarageKeepersCollisionDeductibleId) 'covCodeId 21542
+
+                    'added 4/20/2020 for PUP/FUP
+                    If _UnderlyingPolicies IsNot Nothing Then
+                        If _UnderlyingPolicies.Count > 0 Then
+                            For Each p As QuickQuoteUnderlyingPolicy In _UnderlyingPolicies
+                                If p IsNot Nothing Then
+                                    p.Dispose()
+                                    p = Nothing
+                                End If
+                            Next
+                            _UnderlyingPolicies.Clear()
+                        End If
+                        _UnderlyingPolicies = Nothing
+                    End If
+                    _CanUseUnderlyingPolicyNumForUnderlyingPolicyReconciliation = Nothing
+
+                    'added 7/24/2018
+                    If _PolicyLevelInfoExtended IsNot Nothing Then
+                        _PolicyLevelInfoExtended.Dispose()
+                        _PolicyLevelInfoExtended = Nothing
+                    End If
+                    If _RiskLevelInfoExtended IsNot Nothing Then
+                        _RiskLevelInfoExtended.Dispose()
+                        _RiskLevelInfoExtended = Nothing
+                    End If
+
+                    MyBase.Dispose()
+                End If
+
+                ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
+                ' TODO: set large fields to null.
+            End If
+            Me.disposedValue = True
+        End Sub
+
+        ' TODO: override Finalize() only if Dispose(ByVal disposing As Boolean) above has code to free unmanaged resources.
+        'Protected Overrides Sub Finalize()
+        '    ' Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
+        '    Dispose(False)
+        '    MyBase.Finalize()
+        'End Sub
+
+        ' This code added by Visual Basic to correctly implement the disposable pattern.
+        'Public Sub Dispose() Implements IDisposable.Dispose
+        'updated  w/ QuickQuoteBaseObject inheritance
+        Public Overrides Sub Dispose() 'Implements IDisposable.Dispose
+            ' Do not change this code.  Put cleanup code in Dispose(ByVal disposing As Boolean) above.
+            Dispose(True)
+            GC.SuppressFinalize(Me)
+        End Sub
+#End Region
+
+    End Class
+End Namespace

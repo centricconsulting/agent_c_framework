@@ -1,0 +1,32 @@
+﻿<tests>
+
+  <TestAddressInformation>
+    <address>46041</address>    
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestAddressInformation>
+
+  <TestAddressInformation>
+    <address>9010 N 500 W Thorntown, IN 46071</address>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestAddressInformation>
+  
+  <TestAddressInformation>
+    <address>10 W 106st Indianapolis, IN</address>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestAddressInformation>
+
+  <TestStraightLineDistance>
+    <address>10 W 106st Indianapolis, IN</address>
+    <address2>46041</address2>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestStraightLineDistance>
+
+</tests>

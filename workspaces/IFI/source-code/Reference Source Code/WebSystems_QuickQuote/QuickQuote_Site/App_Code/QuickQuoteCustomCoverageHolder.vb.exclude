@@ -1,0 +1,72 @@
+﻿Imports Microsoft.VisualBasic
+Imports QuickQuote.CommonMethods
+
+Namespace QuickQuote.CommonObjects
+    ''' <summary>
+    ''' objects used to store custom coverage information
+    ''' </summary>
+    ''' <remarks>typically found under QuickQuoteObject object (<see cref="QuickQuoteObject"/>) as a list</remarks>
+    <Serializable()> _
+    Public Class QuickQuoteCustomCoverageHolder 'added 3/3/2015 for testing
+        Inherits QuickQuoteCoverageHolder
+        Implements IDisposable
+        Implements IQuickQuoteCoverage 'note: didn't pull over interface members since they're already in base class
+
+        Dim qqHelper As New QuickQuoteHelperClass
+
+        Private _LimitId As String
+        Private _DeductibleId As String
+
+        Public Property LimitId As String
+            Get
+                Return _LimitId
+            End Get
+            Set(value As String)
+                _LimitId = value
+            End Set
+        End Property
+        Public Property DeductibleId As String
+            Get
+                Return _DeductibleId
+            End Get
+            Set(value As String)
+                _DeductibleId = value
+            End Set
+        End Property
+
+        Public Sub New()
+            MyBase.New()
+
+            _LimitId = ""
+            _DeductibleId = ""
+        End Sub
+
+        Protected Overrides Sub Dispose(disposing As Boolean)
+            qqHelper.DisposeString(_LimitId)
+            qqHelper.DisposeString(_DeductibleId)
+            MyBase.Dispose(disposing)
+        End Sub
+
+        'Public Overrides Sub SetCoverage(cov As QuickQuoteCoverage)
+        '    MyBase.SetCoverage(cov)
+        'End Sub
+        Public Overrides Function HasCoverage() As Boolean
+            Return MyBase.HasCoverage()
+        End Function
+        Public Overrides Function HasCoverageDetail() As Boolean
+            Return MyBase.HasCoverageDetail()
+        End Function
+
+        Protected Overloads Overrides Sub SetPropertiesFromCoverage()
+            If Coverage IsNot Nothing Then
+                With Coverage
+                    _LimitId = .CoverageLimitId
+                    _DeductibleId = .DeductibleId
+                End With
+            End If
+        End Sub
+        Public Overrides Sub SetCoverageFromProperties()
+            MyBase.SetCoverageFromProperties()
+        End Sub
+    End Class
+End Namespace

@@ -1,0 +1,153 @@
+﻿Imports QuickQuote.CommonObjects 'added 1/15/2014
+Imports QuickQuote.CommonMethods 'added 1/15/2014
+
+Partial Class ThirdPartyDataResults
+    Inherits System.Web.UI.Page
+
+    Dim qqHelper As New QuickQuoteHelperClass
+    Dim qqXml As New QuickQuoteXML
+
+    Protected Sub form1_Load(sender As Object, e As System.EventArgs) Handles form1.Load
+        If Page.IsPostBack = False Then
+            Page.MaintainScrollPositionOnPostBack = True
+            If qqHelper.IsHomeOfficeStaffUser = True Then
+                LoadResults()
+            Else
+                Me.dgrdResults.Visible = False
+                ShowError("You're not authorized to use this page")
+            End If
+        End If
+    End Sub
+    Private Sub LoadResults()
+        Me.dgrdResults.Visible = False
+        If ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath") IsNot Nothing AndAlso ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString <> "" Then
+            Dim FileList As String() = Nothing
+            Dim FileName As String = Nothing
+            Dim FullPath As String = Nothing
+            Dim CreateStamp As DateTime = Nothing
+            Dim ModifyStamp As DateTime = Nothing
+            Dim dt As Data.DataTable = Nothing
+
+            Try
+                FileList = IO.Directory.GetFiles(ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath")) 'Directory.GetFiles("C:\", "*.xml")
+
+                dt = New Data.DataTable()
+                dt.Columns.Add("filePath")
+                dt.Columns.Add("fileName")
+                dt.Columns.Add("modified")
+
+                If FileList.Length > 0 Then
+                    Me.dgrdResults.Visible = True
+
+                    For Each FileName In FileList
+                        Dim info As New IO.FileInfo(FileName)
+                        CreateStamp = info.CreationTime
+                        ModifyStamp = info.LastWriteTime
+                        FullPath = info.FullName
+
+                        Dim newRow As Data.DataRow
+                        newRow = dt.NewRow
+                        newRow.Item("filePath") = FullPath '"<a target=_blank href=" & FullPath & ">" & FileName & "</a>"
+                        If ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_WebPath") IsNot Nothing AndAlso ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_WebPath").ToString <> "" Then
+                            newRow.Item("fileName") = "<a target=""_blank"" href=""" & Replace(FullPath, ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString, ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_WebPath").ToString) & """>" & Replace(FullPath, ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath"), "") & "</a>"
+                        Else
+                            newRow.Item("fileName") = Replace(FullPath, ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath"), "")
+                        End If
+                        newRow.Item("modified") = ModifyStamp
+                        dt.Rows.Add(newRow)
+
+                    Next
+                    dt.DefaultView.Sort = "modified desc"
+
+                    Me.dgrdResults.DataSource = dt
+                    Me.dgrdResults.DataBind()
+                    Me.dgrdResults.SelectedIndex = -1
+                    SetUpGridButtons()
+                Else
+                    'Me.dgrdResults.Visible = False
+                    ShowError("No results files were found")
+                End If
+
+            Catch ex As Exception
+                Me.dgrdResults.Visible = False
+                ShowError("There was a problem loading the results grid")
+            End Try
+        Else
+            ShowError("The configuration key, QuickQuote_ThirdPartyData_SavePath, is either missing or empty")
+        End If
+    End Sub
+    Private Sub SetUpGridButtons()
+
+        For Each dgItem As DataGridItem In Me.dgrdResults.Items
+            Dim btnLoad As Button = dgItem.Cells(0).Controls(0)
+            
+            'btnLoad.Attributes.Add("onclick", "btnSubmit_Click(this, 'Loading...');") 'for disable button and server-side logic
+            btnLoad.Attributes.Add("onclick", "btnSubmit_Click(" & btnLoad.ClientID & ", 'Loading...');") 'for disable button and server-side logic
+
+        Next
+
+    End Sub
+    Protected Sub dgrdResults_ItemCommand(source As Object, e As System.Web.UI.WebControls.DataGridCommandEventArgs) Handles dgrdResults.ItemCommand
+        System.Threading.Thread.Sleep(500) 'delay 1/2 second
+
+        Select Case UCase(e.CommandName)
+            Case "LOAD"
+                Dim fileName As String = e.Item.Cells(1).Text
+                'LoadThirdPartyDataFromFile(fileName)
+                LoadCustomThirdPartyDataFromFile(fileName)
+        End Select
+    End Sub
+    Private Sub ShowError(ByVal message As String, Optional ByVal redirect As Boolean = False, Optional ByVal redirectPage As String = "")
+        message = Replace(message, "\", "\\")
+        message = Replace(message, "<br>", "\n")
+        message = Replace(message, vbCrLf, "\n")
+
+        Dim strScript As String = "<script language=JavaScript>"
+        strScript &= "alert(""" & message & """);"
+        If redirect = True Then
+            If redirectPage = "" Then
+                redirectPage = ConfigurationManager.AppSettings("QuickQuote_SavedQuotes").ToString
+            End If
+            strScript &= " window.location.href='" & redirectPage & "';"
+        End If
+        strScript &= "</script>"
+
+        Page.RegisterStartupScript("clientScript", strScript)
+
+    End Sub
+    Private Sub LoadThirdPartyDataFromFile(ByVal filePath As String)
+        Me.lblResults.Text = ""
+        If IO.File.Exists(filePath) = True Then
+            'Dim thirdPartyData As Diamond.Common.Objects.ThirdParty.ThirdPartyData
+            Dim thirdPartyData As New Diamond.Common.Objects.ThirdParty.ThirdPartyData
+            Try
+                'thirdPartyData.PolicyId = 395290 'doesn't seem to do anything
+                'thirdPartyData.PolicyImageNum = 1 'doesn't seem to do anything
+                thirdPartyData.LoadFromFile(filePath) 'got object reference error, so added instantiation above
+                qqXml.TestEvaluateThirdPartyData(thirdPartyData, Me.lblResults.Text)
+
+            Catch ex As Exception
+                Me.lblResults.Text = "Failed Load: <br />" & ex.ToString
+                ShowError("error loading file")
+            End Try
+        Else
+            ShowError("This file does not exist")
+        End If
+    End Sub
+    Private Sub LoadCustomThirdPartyDataFromFile(ByVal filePath As String)
+        Me.lblResults.Text = ""
+        If IO.File.Exists(filePath) = True Then
+            Dim thirdPartyData As QuickQuoteThirdPartyData
+            Try
+                qqXml.ParseThirdPartyDataXML(filePath, thirdPartyData)
+                qqXml.TestEvaluateCustomThirdPartyData(thirdPartyData, Me.lblResults.Text)
+
+            Catch ex As Exception
+                Me.lblResults.Text = "Failed Load: <br />" & ex.ToString
+                ShowError("error loading file")
+            End Try
+        Else
+            ShowError("This file does not exist")
+        End If
+    End Sub
+End Class

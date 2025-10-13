@@ -1,0 +1,175 @@
+{
+  "page_load_chain": {
+    "entry_point": "Page_Load",
+    "method_chain": [
+      "Page_Load",
+      "AttachControlEvents()",
+      "Populate()"
+    ],
+    "key_operations": [
+      "Me.MainAccordionDivId = Me.div_master_wcp_app.ClientID",
+      "Me.ListAccordionDivId = Me.divWorkplacesList.ClientID", 
+      "AttachControlEvents()",
+      "E-signature visibility check"
+    ],
+    "location": "Lines 19-29",
+    "data_flow": "Page → Control Setup → Event Binding → Population"
+  },
+  "populate_workflow": {
+    "entry_point": "Populate()",
+    "complexity": "HIGH",
+    "method_chain": [
+      "Populate()",
+      "Reset Repeaters → Data Binding",
+      "State-specific Logic Branches", 
+      "Control Property Setting",
+      "PopulateChildControls()"
+    ],
+    "major_sections": [
+      {
+        "section": "Named Individuals Reset",
+        "operations": [
+          "rptInclOfSoleProprieters.DataSource = Nothing",
+          "rptWaiverOfSubro.DataSource = Nothing", 
+          "rptExclOfAmish.DataSource = Nothing",
+          "rptExclOfSoleOfficer.DataSource = Nothing",
+          "rptExclOfSoleProprietorsEtc_IL.DataSource = Nothing"
+        ],
+        "location": "Lines 50-58"
+      },
+      {
+        "section": "Workplace Header Update",
+        "operation": "lblWorkplacesAccordHeader.Text = \"Workplace Addresses (\" & Quote.Locations.Count & \")\"",
+        "location": "Lines 60-63"
+      },
+      {
+        "section": "Initial Hide All Sections", 
+        "pattern": "divXXX.Attributes.Add(\"style\", \"display:none\")",
+        "location": "Lines 65-69"
+      },
+      {
+        "section": "Governing State Processing",
+        "method_calls": [
+          "Me.GoverningStateQuote",
+          "govStateQuote.HasInclusionOfSoleProprietorsPartnersOfficersAndOthers",
+          "govStateQuote.HasWaiverOfSubrogation"
+        ],
+        "location": "Lines 72-121"
+      },
+      {
+        "section": "Multi-State Processing",
+        "method_calls": [
+          "SubQuotesContainsState(\"IN\")",
+          "SubQuotesContainsState(\"KY\")",
+          "SubQuoteForState(QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteState.Indiana)",
+          "SubQuoteForState(QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteState.Kentucky)"
+        ],
+        "location": "Lines 122-162"
+      },
+      {
+        "section": "Workplaces Processing",
+        "method_calls": [
+          "rptWorkplaces.DataSource = Quote.Locations",
+          "Me.FindChildVrControls()",
+          "Me.GatherChildrenOfType(Of ctl_WCP_Workplace)",
+          "cnt.Populate()"
+        ],
+        "location": "Lines 254-276"
+      }
+    ]
+  },
+  "event_handler_chains": {
+    "workplace_events": {
+      "pattern": "AddHandler WPControl.EventName, AddressOf HandlerMethod",
+      "events_attached": [
+        "AddWorkplaceRequested → AddNewWorkplace",
+        "ClearWorkplaceRequested → ClearWorkplace", 
+        "DeleteWorkplaceRequested → DeleteWorkplace"
+      ],
+      "location": "Lines 281-284"
+    },
+    "named_individual_events": {
+      "pattern": "AddHandler NICtl.ChangeNIActiveAccordion, AddressOf SetNamedIndividualCurrentAccordion",
+      "repeaters_processed": [
+        "rptInclOfSoleProprieters",
+        "rptWaiverOfSubro",
+        "rptExclOfAmish", 
+        "rptExclOfSoleOfficer",
+        "rptExclOfSoleProprietorsEtc_IL",
+        "rptRejectionOfCoverageEndorsement"
+      ],
+      "location": "Lines 285-302"
+    }
+  },
+  "save_workflow": {
+    "entry_point": "Save()",
+    "method_chain": [
+      "Save()",
+      "Me.SaveChildControls()",
+      "Return True"
+    ],
+    "location": "Lines 306-309"
+  },
+  "validation_workflow": {
+    "entry_point": "ValidateControl(valArgs As VRValidationArgs)",
+    "method_chain": [
+      "MyBase.ValidateControl(valArgs)",
+      "Me.ValidationHelper.GroupName = \"Application\"",
+      "Me.MyAccordionList",
+      "Me.ValidateChildControls(valArgs)"
+    ],
+    "location": "Lines 311-318"
+  },
+  "workplace_management_chains": {
+    "add_workplace": {
+      "entry_point": "AddNewWorkplace()",
+      "method_chain": [
+        "AddNewWorkplace()",
+        "Quote.Locations.Add(New QuickQuote.CommonObjects.QuickQuoteLocation)",
+        "Me.Populate()",
+        "Save_FireSaveEvent(False)",
+        "Me.Populate()",
+        "Me.hdnAccordWorkplaceList.Value = Quote.Locations.Count - 1.ToString"
+      ],
+      "location": "Lines 320-332"
+    },
+    "delete_workplace": {
+      "entry_point": "DeleteWorkplace(WorkplaceIndex)",
+      "method_chain": [
+        "DeleteWorkplace()",
+        "Quote.Locations.RemoveAt(WorkplaceIndex)",
+        "Populate()",
+        "Save_FireSaveEvent(False)",
+        "Me.Populate()"
+      ],
+      "location": "Lines 334-340"
+    },
+    "clear_workplace": {
+      "entry_point": "ClearWorkplace(WorkplaceIndex)",
+      "method_chain": [
+        "ClearWorkplace()",
+        "Quote.Locations(WorkplaceIndex).Address = New QuickQuote.CommonObjects.QuickQuoteAddress",
+        "Populate()",
+        "Save_FireSaveEvent(False)",
+        "Populate()"
+      ],
+      "location": "Lines 342-348"
+    }
+  },
+  "accordion_state_management": {
+    "entry_point": "SetNamedIndividualCurrentAccordion(NIType, ItemIndex)",
+    "method_chain": [
+      "SetNamedIndividualCurrentAccordion()",
+      "Select Case NIType",
+      "Set hdnXXX.Value = recordCount - 1.ToString"
+    ],
+    "accordion_mappings": [
+      "InclusionOfSoleProprietersEtc → hdnInclSoleProprieterList",
+      "WaiverOfSubrogation → hdnWaiverOfSubroList", 
+      "ExclusionOfAmishWorkers → hdnExclOfAmishList",
+      "ExclusionOfSoleOfficer → hdnExclOfSoleOfficerList",
+      "ExclusionOfSoleProprietor_IL → hdnExclOfSoleProprietorList_IL"
+    ],
+    "location": "Lines 350-411"
+  }
+}

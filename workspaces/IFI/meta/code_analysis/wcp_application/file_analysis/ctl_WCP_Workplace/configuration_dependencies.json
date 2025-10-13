@@ -1,0 +1,135 @@
+{
+  "configuration_dependencies": [
+    {
+      "config_type": "AppSettings",
+      "config_key": "TestOrProd",
+      "location": "Line 46 (HandleError method)",
+      "usage": "Environment determination for error display",
+      "code_reference": "AppSettings(\"TestOrProd\").ToUpper <> \"PROD\"",
+      "purpose": "Control error message display based on environment",
+      "impact": "In production: throws exceptions, In test: displays errors in lblMsg",
+      "values_expected": ["PROD", "TEST", "DEV"],
+      "business_logic": "Error handling behavior varies by environment"
+    }
+  ],
+  "static_data_configuration": [
+    {
+      "data_type": "State Options",
+      "loading_method": "QQHelper.LoadStaticDataOptionsDropDown",
+      "location": "Line 66 (LoadStaticData method)",
+      "parameters": {
+        "class_name": "QuickQuoteClassName.QuickQuoteAddress",
+        "property_name": "QuickQuotePropertyName.StateId",
+        "sort_order": "SortBy.None",
+        "lob_filter": "Me.Quote.LobType"
+      },
+      "purpose": "Populate state dropdown with LOB-specific options",
+      "configuration_dependency": "⚠️ Unknown - requires analysis of QuickQuoteHelperClass",
+      "likely_config_sources": [
+        "Database table for state options",
+        "Configuration file with state mappings",
+        "Static data service configuration"
+      ]
+    }
+  ],
+  "imports_and_references": [
+    {
+      "import": "System.Configuration.ConfigurationManager",
+      "location": "Line 2",
+      "usage": "Access to configuration settings (AppSettings)",
+      "direct_usage": "AppSettings() calls in error handling"
+    },
+    {
+      "import": "QuickQuote.CommonObjects",
+      "location": "Line 4", 
+      "usage": "Data object classes",
+      "classes_used": ["QuickQuoteLocation", "QuickQuoteAddress"]
+    },
+    {
+      "import": "QuickQuote.CommonMethods.QuickQuoteHelperClass",
+      "location": "Line 5",
+      "usage": "Static data loading helper",
+      "methods_used": ["LoadStaticDataOptionsDropDown"]
+    },
+    {
+      "import": "QuickQuote.CommonObjects.QuickQuoteStaticDataOption",
+      "location": "Line 6",
+      "usage": "Static data enumeration values",
+      "enums_used": ["QuickQuoteClassName.QuickQuoteAddress", "QuickQuotePropertyName.StateId", "SortBy.None"]
+    },
+    {
+      "import": "IFM.VR.Common.Helpers.MultiState.Locations",
+      "location": "Referenced in line 31",
+      "usage": "Multi-state location logic",
+      "methods_used": ["IsFirstLocationForAnySubQuote"]
+    }
+  ],
+  "viewstate_configuration": [
+    {
+      "viewstate_key": "vs_WCPWorkplaceIndex",
+      "data_type": "Int32",
+      "default_value": "-1",
+      "location": "Lines 12, 16",
+      "purpose": "Persist workplace index across postbacks",
+      "scope": "Control instance specific"
+    }
+  ],
+  "base_class_dependencies": [
+    {
+      "base_class": "VRControlBase",
+      "inherited_properties": [
+        "Quote (QuickQuote object)",
+        "ValidationHelper",
+        "VRScript (JavaScript framework)"
+      ],
+      "inherited_methods": [
+        "PopulateChildControls",
+        "SaveChildControls", 
+        "ValidateChildControls",
+        "Save_FireSaveEvent"
+      ],
+      "configuration_impact": "⚠️ Base class may have additional configuration dependencies"
+    }
+  ],
+  "environment_specific_behavior": [
+    {
+      "behavior": "Error Display Mode",
+      "configuration_key": "TestOrProd", 
+      "production_behavior": "Throws exceptions (user-friendly error handling)", 
+      "development_behavior": "Displays full error details in lblMsg",
+      "security_implication": "Prevents information disclosure in production"
+    }
+  ],
+  "external_configuration_analysis_required": [
+    {
+      "component": "QuickQuoteHelperClass",
+      "analysis_needed": "Configuration sources for static data loading",
+      "priority": "Medium",
+      "reason": "State dropdown population depends on this configuration"
+    },
+    {
+      "component": "VRControlBase",
+      "analysis_needed": "Base class configuration dependencies",
+      "priority": "High", 
+      "reason": "Core functionality inherited from base class"
+    },
+    {
+      "component": "MultiState.Locations Helper",
+      "analysis_needed": "Multi-state logic configuration",
+      "priority": "Medium",
+      "reason": "Business rules for first location behavior"
+    }
+  ],
+  "configuration_completeness": {
+    "direct_config_references": 1,
+    "static_data_dependencies": 1,
+    "external_dependencies": 3,
+    "analysis_coverage": "75%",
+    "gaps": [
+      "Static data configuration source unknown",
+      "Base class configuration dependencies unknown",
+      "Multi-state logic configuration unknown"
+    ],
+    "content_status": "⚠️ External configuration analysis required for complete picture"
+  }
+}

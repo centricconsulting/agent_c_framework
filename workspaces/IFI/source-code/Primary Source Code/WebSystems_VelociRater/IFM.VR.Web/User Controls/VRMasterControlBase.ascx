@@ -1,0 +1,1 @@
+﻿<%@ Control Language="vb" AutoEventWireup="false" CodeBehind="VRMasterControlBase.ascx.vb" Inherits="IFM.VR.Web.VRMasterControlBase" %>

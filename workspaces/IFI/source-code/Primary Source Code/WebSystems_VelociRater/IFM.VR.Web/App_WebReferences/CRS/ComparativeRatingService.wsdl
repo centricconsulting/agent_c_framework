@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy" xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:tns="http://tempuri.org/" xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsx="http://schemas.xmlsoap.org/ws/2004/09/mex" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="ComparativeRatingService" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://tempuri.org/Imports">
+      <xsd:import schemaLocation="http://www.ifmig.net/RTRService/ComparativeRatingService.svc?xsd=xsd0" namespace="http://tempuri.org/" />
+      <xsd:import schemaLocation="http://www.ifmig.net/RTRService/ComparativeRatingService.svc?xsd=xsd1" namespace="http://schemas.microsoft.com/2003/10/Serialization/" />
+      <xsd:import schemaLocation="http://www.ifmig.net/RTRService/ComparativeRatingService.svc?xsd=xsd2" namespace="http://schemas.datacontract.org/2004/07/Diamond.IntegrationServices" />
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="ComparativeRatingService_GetAuthenticationToken_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetAuthenticationToken" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_GetAuthenticationToken_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetAuthenticationTokenResponse" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_GetAgencyWorkflowInformation_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetAgencyWorkflowInformation" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_GetAgencyWorkflowInformation_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetAgencyWorkflowInformationResponse" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_GetAgencyWorkflowInformationEncrypted_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetAgencyWorkflowInformationEncrypted" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_GetAgencyWorkflowInformationEncrypted_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetAgencyWorkflowInformationEncryptedResponse" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_SubmitAndRateEncrypted_InputMessage">
+    <wsdl:part name="parameters" element="tns:SubmitAndRateEncrypted" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_SubmitAndRateEncrypted_OutputMessage">
+    <wsdl:part name="parameters" element="tns:SubmitAndRateEncryptedResponse" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_SubmitAndRate_InputMessage">
+    <wsdl:part name="parameters" element="tns:SubmitAndRate" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_SubmitAndRate_OutputMessage">
+    <wsdl:part name="parameters" element="tns:SubmitAndRateResponse" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_VehicleInformationLookupEncrypted_InputMessage">
+    <wsdl:part name="parameters" element="tns:VehicleInformationLookupEncrypted" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_VehicleInformationLookupEncrypted_OutputMessage">
+    <wsdl:part name="parameters" element="tns:VehicleInformationLookupEncryptedResponse" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_VehicleInformationLookup_InputMessage">
+    <wsdl:part name="parameters" element="tns:VehicleInformationLookup" />
+  </wsdl:message>
+  <wsdl:message name="ComparativeRatingService_VehicleInformationLookup_OutputMessage">
+    <wsdl:part name="parameters" element="tns:VehicleInformationLookupResponse" />
+  </wsdl:message>
+  <wsdl:portType name="ComparativeRatingService">
+    <wsdl:operation name="GetAuthenticationToken">
+      <wsdl:input wsaw:Action="http://tempuri.org/ComparativeRatingService/GetAuthenticationToken" message="tns:ComparativeRatingService_GetAuthenticationToken_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/ComparativeRatingService/GetAuthenticationTokenResponse" message="tns:ComparativeRatingService_GetAuthenticationToken_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetAgencyWorkflowInformation">
+      <wsdl:input wsaw:Action="http://tempuri.org/ComparativeRatingService/GetAgencyWorkflowInformation" message="tns:ComparativeRatingService_GetAgencyWorkflowInformation_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/ComparativeRatingService/GetAgencyWorkflowInformationResponse" message="tns:ComparativeRatingService_GetAgencyWorkflowInformation_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetAgencyWorkflowInformationEncrypted">
+      <wsdl:input wsaw:Action="http://tempuri.org/ComparativeRatingService/GetAgencyWorkflowInformationEncrypted" message="tns:ComparativeRatingService_GetAgencyWorkflowInformationEncrypted_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/ComparativeRatingService/GetAgencyWorkflowInformationEncryptedResponse" message="tns:ComparativeRatingService_GetAgencyWorkflowInformationEncrypted_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="SubmitAndRateEncrypted">
+      <wsdl:input wsaw:Action="http://tempuri.org/ComparativeRatingService/SubmitAndRateEncrypted" message="tns:ComparativeRatingService_SubmitAndRateEncrypted_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/ComparativeRatingService/SubmitAndRateEncryptedResponse" message="tns:ComparativeRatingService_SubmitAndRateEncrypted_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="SubmitAndRate">
+      <wsdl:input wsaw:Action="http://tempuri.org/ComparativeRatingService/SubmitAndRate" message="tns:ComparativeRatingService_SubmitAndRate_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/ComparativeRatingService/SubmitAndRateResponse" message="tns:ComparativeRatingService_SubmitAndRate_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="VehicleInformationLookupEncrypted">
+      <wsdl:input wsaw:Action="http://tempuri.org/ComparativeRatingService/VehicleInformationLookupEncrypted" message="tns:ComparativeRatingService_VehicleInformationLookupEncrypted_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/ComparativeRatingService/VehicleInformationLookupEncryptedResponse" message="tns:ComparativeRatingService_VehicleInformationLookupEncrypted_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="VehicleInformationLookup">
+      <wsdl:input wsaw:Action="http://tempuri.org/ComparativeRatingService/VehicleInformationLookup" message="tns:ComparativeRatingService_VehicleInformationLookup_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/ComparativeRatingService/VehicleInformationLookupResponse" message="tns:ComparativeRatingService_VehicleInformationLookup_OutputMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="BasicHttpBinding_ComparativeRatingService" type="tns:ComparativeRatingService">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetAuthenticationToken">
+      <soap:operation soapAction="http://tempuri.org/ComparativeRatingService/GetAuthenticationToken" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetAgencyWorkflowInformation">
+      <soap:operation soapAction="http://tempuri.org/ComparativeRatingService/GetAgencyWorkflowInformation" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetAgencyWorkflowInformationEncrypted">
+      <soap:operation soapAction="http://tempuri.org/ComparativeRatingService/GetAgencyWorkflowInformationEncrypted" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SubmitAndRateEncrypted">
+      <soap:operation soapAction="http://tempuri.org/ComparativeRatingService/SubmitAndRateEncrypted" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SubmitAndRate">
+      <soap:operation soapAction="http://tempuri.org/ComparativeRatingService/SubmitAndRate" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="VehicleInformationLookupEncrypted">
+      <soap:operation soapAction="http://tempuri.org/ComparativeRatingService/VehicleInformationLookupEncrypted" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="VehicleInformationLookup">
+      <soap:operation soapAction="http://tempuri.org/ComparativeRatingService/VehicleInformationLookup" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ComparativeRatingService">
+    <wsdl:port name="BasicHttpBinding_ComparativeRatingService" binding="tns:BasicHttpBinding_ComparativeRatingService">
+      <soap:address location="http://www.ifmig.net/RTRService/ComparativeRatingService.svc" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

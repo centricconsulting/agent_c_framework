@@ -1,0 +1,567 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{7CAE39C0-50C2-4F23-A11A-4FD7057B94E7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>
+    </RootNamespace>
+    <AssemblyName>IFM.VR.Common</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>Windows</MyType>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <SccLocalPath>.</SccLocalPath>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
+    <TargetFrameworkProfile />
+    <SccProjectName>%24/Internet/Velocirater/VR_Personal/Staging/IFM.VR.Common</SccProjectName>
+    <SccAuxPath>http://ifmtfs1:8080/tfs/ifmdevelopment</SccAuxPath>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>IFM.VR.Common.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>IFM.VR.Common.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ghjg|AnyCPU'">
+    <OutputPath>bin\ghjg\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CommonClasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CommonClassesDeploy.2023.6.14-beta\lib\CommonClasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="DevDictionaryHelper, Version=2022.6.7.100, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DevDictionaryHelper.2022.6.7.100\lib\netstandard2.0\DevDictionaryHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Business.ThirdParty, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Business.ThirdParty.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.C0044.Common.Library, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.C0044.Common.Library.535.10.400\lib\Diamond.C0044.Common.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.ChoicePoint.Library, Version=4.2.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.ChoicePoint.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Diagnostics, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Diagnostics.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Interfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Interfaces.538.12.2000.1\lib\Diamond.Common.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Objects.538.12.2000.1\lib\Diamond.Common.Objects.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects.ConfigurableBook, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Objects.ConfigurableBook.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Rules.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Services.538.12.2000.1\lib\Diamond.Common.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.StaticDataManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Utility.538.12.2000.1\lib\Diamond.Common.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.Rules.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.StaticDataManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.BaseControls, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Web.Items.538.12.2000.1\lib\Diamond.Web.BaseControls.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Web.Items.538.12.2000.1\lib\Diamond.Web.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="DiamondWebClass, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.DiamondWebClass.2024.12.23.100\lib\DiamondWebClass.dll</HintPath>
+    </Reference>
+    <Reference Include="IFI.IntegrationHelper, Version=2025.9.9.1036, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFI.IntegrationHelper.2025.9.9.1036\lib\netstandard2.0\IFI.IntegrationHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.Common.InputValidation, Version=2020.9.14.100, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CommonInputValidation.2021.7.8.100\lib\net45\IFM.Common.InputValidation.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.PolicyLoader, Version=2025.5.27.1548, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PolicyLoader.2025.5.27.1548\lib\net48\IFM.PolicyLoader.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.PrimativeExtensions, Version=2019.4.24.100, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PrimativeExtensions.2021.7.23.400\lib\net45\IFM.PrimativeExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMDiamondServices, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.IFMDiamondServices.2014.4.17.100\lib\IFMDiamondServices.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMErrorLogging, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.IFMErrorLogging.2017.9.4.100\lib\IFMErrorLogging.dll</HintPath>
+    </Reference>
+    <Reference Include="Insuresoft.RuleEngine.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Insuresoft.RuleEngine.Common.538.12.2000.1\lib\Insuresoft.RuleEngine.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.6.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.8.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Caching.Abstractions.6.0.0\lib\net461\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Memory, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Caching.Memory.6.0.0\lib\net461\Microsoft.Extensions.Caching.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.6.0.0\lib\net461\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.FileProviders.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.FileProviders.Abstractions.6.0.0\lib\net461\Microsoft.Extensions.FileProviders.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.FileProviders.Physical, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.FileProviders.Physical.6.0.0\lib\net461\Microsoft.Extensions.FileProviders.Physical.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.FileSystemGlobbing, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.FileSystemGlobbing.6.0.0\lib\net461\Microsoft.Extensions.FileSystemGlobbing.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\lib\net461\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Options.6.0.0\lib\net461\Microsoft.Extensions.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Primitives, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Primitives.6.0.0\lib\net461\Microsoft.Extensions.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="MigraDoc.DocumentObjectModel, Version=1.32.3885.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFSharp_MigraDoc.2020.4.22.100\lib\MigraDoc.DocumentObjectModel.dll</HintPath>
+    </Reference>
+    <Reference Include="MigraDoc.Rendering, Version=1.32.3885.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFSharp_MigraDoc.2020.4.22.100\lib\MigraDoc.Rendering.dll</HintPath>
+    </Reference>
+    <Reference Include="MigraDoc.RtfRendering, Version=1.32.3885.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFSharp_MigraDoc.2020.4.22.100\lib\MigraDoc.RtfRendering.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp, Version=1.32.2608.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFSharp_MigraDoc.2020.4.22.100\lib\PdfSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp.Charting, Version=1.32.2608.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFSharp_MigraDoc.2020.4.22.100\lib\PdfSharp.Charting.dll</HintPath>
+    </Reference>
+    <Reference Include="PopupMessageClass, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PopupMessageClass.2021.2.4\lib\PopupMessageClass.dll</HintPath>
+    </Reference>
+    <Reference Include="QuickQuote_deploy, Version=2025.9.15.1550, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.QuickQuoteDeploy.2025.9.15.1550-beta\lib\net48\QuickQuote_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="SQLclasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.SQLClassesDeploy.2020.3.6.100\lib\SQLclasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.ConfigurationManager, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Configuration.ConfigurationManager.6.0.0\lib\net461\System.Configuration.ConfigurationManager.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IdentityModel.Tokens.Jwt, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IdentityModel.Tokens.Jwt.4.0.10819.1000\lib\System.IdentityModel.Tokens.Jwt.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.4.3.0\lib\net462\System.IO.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.4.3.0\lib\net462\System.Runtime.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security" />
+    <Reference Include="System.Security.AccessControl, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.AccessControl.6.0.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Algorithms, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Algorithms.4.3.1\lib\net463\System.Security.Cryptography.Algorithms.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Encoding, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Encoding.4.3.0\lib\net46\System.Security.Cryptography.Encoding.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Primitives, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Primitives.4.3.0\lib\net46\System.Security.Cryptography.Primitives.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Permissions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Permissions.6.0.0\lib\net461\System.Security.Permissions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.5.0.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="ZipCodeRef, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.ZipCodeRef.2014.9.2.100\lib\ZipCodeRef.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ApplicantSearch\ApplicantSearch.vb" />
+    <Compile Include="Helpers\AdditionalInterest.vb" />
+    <Compile Include="Helpers\AgencyProducers.vb" />
+    <Compile Include="Helpers\AllLines\CapeComRatingHelper.vb" />
+    <Compile Include="Helpers\AllLines\BetterViewRatingHelper.vb" />
+    <Compile Include="Helpers\AllLines\CleanseString.vb" />
+    <Compile Include="Helpers\AllLines\CommercialQuoteHelper.vb" />
+    <Compile Include="Helpers\AllLines\IRPM_ClasscodeCheck.vb" />
+    <Compile Include="Helpers\AllLines\IrpmVisibilityByClasscodeHelper.vb" />
+    <Compile Include="Helpers\AllLines\NewCoProtectionClassHelper.vb" />
+    <Compile Include="Helpers\AllLines\RequiredEmailHelper.vb" />
+    <Compile Include="Helpers\BOP\BOPNewCoEarthQuakeHelper.vb" />
+    <Compile Include="Helpers\BOP\BopNewCoIRPMHelper.vb" />
+    <Compile Include="Helpers\BOP\CyberCoverageHelper.vb" />
+    <Compile Include="Helpers\BOP\BopStpUwQuestionsHelper.vb" />
+    <Compile Include="Helpers\BOP\MinBldgLimitsHelper.vb" />
+    <Compile Include="Helpers\BOP\NaicsCodeHelper.vb" />
+    <Compile Include="Helpers\BOP\OnePctWindHailLessorsRiskHelper.vb" />
+    <Compile Include="Helpers\BOP\RemovePropDedBelow1k.vb" />
+    <Compile Include="Helpers\CAP\CAPCustomWrapOrPaintJobHelper.vb" />
+    <Compile Include="Helpers\CAP\CAPScheduledCredit.vb" />
+    <Compile Include="Helpers\CAP\CAP_UMPDLimitsHelper.vb" />
+    <Compile Include="Helpers\CAP\CompCollDeductibleHelper.vb" />
+    <Compile Include="Helpers\CAP\RACASymbolHelper.vb" />
+    <Compile Include="Helpers\CAP\UM_UIM_UMPDHelper.vb" />
+    <Compile Include="Helpers\CGL\CGLMedicalExpensesExcludedClassCodesHelper.vb" />
+    <Compile Include="Helpers\CGL\ClassCodeAssignmentHelper.vb" />
+    <Compile Include="Helpers\CGL\GenAggProducts3MHelper.vb" />
+    <Compile Include="Helpers\CGL\GenLiabilityPlusEnhancementEndorsement.vb" />
+    <Compile Include="Helpers\CL\HotelMotelRemovedRisks.vb" />
+    <Compile Include="Helpers\CL\YearBuiltValidationHelper.vb" />
+    <Compile Include="Helpers\CPP\CyberCoverageHelper.vb" />
+    <Compile Include="Helpers\CPP\FunctionalReplacementCostHelper.vb" />
+    <Compile Include="Helpers\CPP\OwnerOccupiedPercentageFieldHelper.vb" />
+    <Compile Include="Helpers\CPP\RemoveBuildingLevelDeductibleHelper.vb" />
+    <Compile Include="Helpers\CPP\UnScheduledMotorTruckCargoHelper.vb" />
+    <Compile Include="Helpers\CPR\CPRRemovePropDedBelow1k.vb" />
+    <Compile Include="Helpers\CPR\CPR_CPP_BlanketRatingMessagingHelper.vb" />
+    <Compile Include="Helpers\CPR\CPR_InflationGuardHelper.vb" />
+    <Compile Include="Helpers\CPR\CPR_PropertyPlusEnhancementEndorsement.vb" />
+    <Compile Include="Helpers\CPR\LocationWindHailHelper.vb" />
+    <Compile Include="Helpers\CPR\PIOClassCodeHelper.vb" />
+    <Compile Include="Helpers\CPR\PropertyAddressProtectionClassHelper.vb" />
+    <Compile Include="Helpers\CPR\ValuationACVHelper.vb" />
+    <Compile Include="Helpers\CPR\WindHailDefaultingHelper.vb" />
+    <Compile Include="Helpers\DFR\DFRLossHistoryKillQuestionHelper.vb" />
+    <Compile Include="Helpers\DFR\DFRStandaloneHelper.vb" />
+    <Compile Include="Helpers\DFR\PolicyDeductibleNotLessThan1k.vb" />
+    <Compile Include="Helpers\DFR\UnderConstructionEndorsementWarningHelper.vb" />
+    <Compile Include="Helpers\FARM\AddlResidenceRentedToOthersHelper.vb" />
+    <Compile Include="Helpers\FARM\CosDamHiddenHelper.vb" />
+    <Compile Include="Helpers\FARM\FarmBlanketAcreageHelper.vb" />
+    <Compile Include="Helpers\FARM\FarmBuildingtypeforbuildingHelper.vb" />
+    <Compile Include="Helpers\FARM\OutbuildingLivingQuartersHelper.vb" />
+    <Compile Include="Helpers\FARM\FarmAllStarHelper.vb" />
+    <Compile Include="Helpers\FARM\FarmClueHelper.vb" />
+    <Compile Include="Helpers\FARM\FarmCustomFeeding.vb" />
+    <Compile Include="Helpers\FARM\FarmExtenderHelper.vb" />
+    <Compile Include="Helpers\FARM\GasBreakageForCabsHelper.vb" />
+    <Compile Include="Helpers\FARM\CosmeticDamageExclusionHelper.vb" />
+    <Compile Include="Helpers\FARM\IndividualLegalEntityHelper.vb" />
+    <Compile Include="Helpers\FARM\LiabilityEnhancement1MHelper.vb" />
+    <Compile Include="Helpers\FARM\MiscFarmPersPropHelper.vb" />
+    <Compile Include="Helpers\FARM\PrivatePowerPolesHelper.vb" />
+    <Compile Include="Helpers\FARM\RefFoodSpoilageHelper.vb" />
+    <Compile Include="Helpers\FARM\ILMineSusidenceHelper.vb" />
+    <Compile Include="Helpers\FeatureFlagBase.vb" />
+    <Compile Include="Helpers\HOM\BuildingFactorHelper.vb" />
+    <Compile Include="Helpers\HOM\CovALimitIncreaseHelper.vb" />
+    <Compile Include="Helpers\HOM\FamilyCyberProtectionHelper.vb" />
+    <Compile Include="Helpers\HOM\HOMDwellingAgeHelper.vb" />
+    <Compile Include="Helpers\HOM\HOMExistingAutoHelper.vb" />
+    <Compile Include="Helpers\HOM\HOMTheftOfFirearmsIncrease.vb" />
+    <Compile Include="Helpers\HOM\HOMTheftOfJewelryIncrease.vb" />
+    <Compile Include="Helpers\HOM\AllHomeRatingHelper.vb" />
+    <Compile Include="Helpers\HOM\LossHistoryKillQuestionHelper.vb" />
+    <Compile Include="Helpers\HOM\PolicyDeductibleNotLessThan1kHelper.vb" />
+    <Compile Include="Helpers\HOM\RemoveValidationsHelper.vb" />
+    <Compile Include="Helpers\HOM\StructureTypeManufactureHelper.vb" />
+    <Compile Include="Helpers\HOM\UnitOwnersRentaltoOthers.vb" />
+    <Compile Include="Helpers\IntegrationHelper.vb" />
+    <Compile Include="Helpers\NewCompanyIdHelper.vb" />
+    <Compile Include="Helpers\NewFlagItem.vb" />
+    <Compile Include="Helpers\AvailabilityByDateOrVersion.vb" />
+    <Compile Include="Helpers\BlanketHelper_CPR_CPP.vb" />
+    <Compile Include="Helpers\BOP\QueryHelper.vb" />
+    <Compile Include="Helpers\BOP\ClassificationHelper.vb" />
+    <Compile Include="Helpers\BuildingsHelper.vb" />
+    <Compile Include="Helpers\CAP\CAPDriverListHelper.vb" />
+    <Compile Include="Helpers\CAP\Locations.vb" />
+    <Compile Include="Helpers\CGL\ClassCodeHelper.vb" />
+    <Compile Include="Helpers\CGL\CLIHelper.vb" />
+    <Compile Include="Helpers\CGL\CommRiskGradeHelper.vb" />
+    <Compile Include="Helpers\CGL\EPLIHelper.vb" />
+    <Compile Include="Helpers\ComparativeRaterRedirect.vb" />
+    <Compile Include="Helpers\CPP\CIMHelper.vb" />
+    <Compile Include="Helpers\CPP\CIM_Building.vb" />
+    <Compile Include="Helpers\CPP\CPPCrimeClassCodeHelper.vb" />
+    <Compile Include="Helpers\CPR\CPRBuildingClassCodeHelper.vb" />
+    <Compile Include="Helpers\CPR\CPREQClassificationHelper.vb" />
+    <Compile Include="Helpers\DumpQuoteXML.vb" />
+    <Compile Include="Helpers\EFTHelper.vb" />
+    <Compile Include="Helpers\Endorsements\EndorsementHelper.vb" />
+    <Compile Include="Helpers\EnumsHelper.vb" />
+    <Compile Include="Helpers\FARM\AcresOnlyHelper.vb" />
+    <Compile Include="Helpers\FARM\UndergroundServiceLineHelper.vb" />
+    <Compile Include="Helpers\FARM\PollutionLiability1MHelper.vb" />
+    <Compile Include="Helpers\FARM\TrampolineUnitsHelper.vb" />
+    <Compile Include="Helpers\FARM\SwimmingPoolUnitsHelper.vb" />
+    <Compile Include="Helpers\FARM\CanineExclusionHelper.vb" />
+    <Compile Include="Helpers\FARM\FarmAdditionalDwellingHelper.vb" />
+    <Compile Include="Helpers\FARM\FarmBuildingHelper.vb" />
+    <Compile Include="Helpers\FARM\FarmPersonalLiabilityGL9Helper.vb" />
+    <Compile Include="Helpers\FARM\FarmPersonalPropertyHelper.vb" />
+    <Compile Include="Helpers\FARM\FarmSummaryHelper.vb" />
+    <Compile Include="Helpers\FARM\Farm_General.vb" />
+    <Compile Include="Helpers\FARM\PeakSeasonHelper.vb" />
+    <Compile Include="Helpers\FARM\ResidentNameHelper.vb" />
+    <Compile Include="Helpers\FARM\TownshipLookup.vb" />
+    <Compile Include="Helpers\FARM\WoodburningStoveHelper.vb" />
+    <Compile Include="Helpers\FileUploadHelper.vb" />
+    <Compile Include="Helpers\GenericHelper.vb" />
+    <Compile Include="Helpers\GetCityCountyFromZipCode.vb" />
+    <Compile Include="Helpers\HOM\FamilyCyberDateHelper.vb" />
+    <Compile Include="Helpers\HOM\HomAppGapCoveragesHelper.vb" />
+    <Compile Include="Helpers\HOM\HOMCreditFactors.vb" />
+    <Compile Include="Helpers\HOM\HomSectionCoverage.vb" />
+    <Compile Include="Helpers\HOM\HOMSummaryHelper.vb" />
+    <Compile Include="Helpers\HOM\HOM_General.vb" />
+    <Compile Include="Helpers\HOM\LossHistoryHelper_HOM.vb" />
+    <Compile Include="Helpers\HOM\WaterBackupDateCrossing.vb" />
+    <Compile Include="Helpers\LOBHelper.vb" />
+    <Compile Include="Helpers\MineSubsidenceHelper.vb" />
+    <Compile Include="Helpers\MultiState\General.vb" />
+    <Compile Include="Helpers\MultiState\GlClassifications.vb" />
+    <Compile Include="Helpers\MultiState\Locations.vb" />
+    <Compile Include="Helpers\MultiState\Vehicles.vb" />
+    <Compile Include="Helpers\PPA\AutoSymbolHelpers.vb" />
+    <Compile Include="Helpers\PPA\CollisionAndUMPD.vb" />
+    <Compile Include="Helpers\PPA\CustomEquipmentHelper.vb" />
+    <Compile Include="Helpers\PPA\DriverListHelper.vb" />
+    <Compile Include="Helpers\PPA\NewRAPASymbolsHelper.vb" />
+    <Compile Include="Helpers\PPA\StatePoliceFundHelper.vb" />
+    <Compile Include="Helpers\PPA\PolicyTrainingFeeHelper.vb" />
+    <Compile Include="Helpers\PPA\RccOptionHelper.vb" />
+    <Compile Include="Helpers\PPA\MakeModelListLookup.vb" />
+    <Compile Include="Helpers\PPA\MVRHelper.vb" />
+    <Compile Include="Helpers\PPA\PPA_General.vb" />
+    <Compile Include="Helpers\PPA\PPA_Payplans.vb" />
+    <Compile Include="Helpers\PPA\PrefillHelper.vb" />
+    <Compile Include="Helpers\PPA\PriorBiHelper.vb" />
+    <Compile Include="Helpers\PPA\TransportationExpenseHelper.vb" />
+    <Compile Include="Helpers\PPA\UMPDLimitsHelper.vb" />
+    <Compile Include="Helpers\PPA\VehicleLookupPopupHelper.vb" />
+    <Compile Include="Helpers\PPA\VinLookup.vb" />
+    <Compile Include="Helpers\PPA\YMMLookup.vb" />
+    <Compile Include="Helpers\ProtectionClassLookupHelper.vb" />
+    <Compile Include="Helpers\QuickQuoteObjectHelper.vb" />
+    <Compile Include="Helpers\RvWaterCraftHelper.vb" />
+    <Compile Include="Helpers\SPManager.vb" />
+    <Compile Include="Helpers\States.vb" />
+    <Compile Include="Helpers\VehicleClassCodeLookup.vb" />
+    <Compile Include="Helpers\WCP\WCPClassCodeHelper.vb" />
+    <Compile Include="Helpers\WebValidationItem.vb" />
+    <Compile Include="Helpers\WindHailHelper.vb" />
+    <Compile Include="IRPMData\IRPMData.vb" />
+    <Compile Include="ListLibrary.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="PrintHistories\PrintHistories.vb" />
+    <Compile Include="QuoteSave\QuoteSaveHelpers.vb" />
+    <Compile Include="QuoteSearch\ClientSearch.vb" />
+    <Compile Include="QuoteSearch\QuoteSearcher.vb" />
+    <Compile Include="QuoteSearch\QuotingStats.vb" />
+    <Compile Include="ThirdPartyReporting\ThirdPartyReporting.vb" />
+    <Compile Include="UWQuestions\LOB\DFR_UnderwritingQuestionService.vb" />
+    <Compile Include="UWQuestions\UnderwritingQuestionServiceFactory.vb" />
+    <Compile Include="UWQuestions\UnderwritingQuestionsService.vb" />
+    <Compile Include="UWQuestions\UWQuestions.vb" />
+    <Compile Include="VRFeatures.vb" />
+    <Compile Include="WaterCraftOperatorHelper.vb" />
+    <Compile Include="Workflow\Workflow.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+    <Service Include="{94E38DFF-614B-4CBD-B67C-F211BB35CE8B}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ApplicantSearch\Extensions\" />
+    <Folder Include="Utils\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Properties\AssemblyInfo.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AssemblyInfo.tt</DependentUpon>
+    </Content>
+    <Content Include="Properties\AssemblyInfo.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AssemblyInfo.cs</LastGenOutput>
+    </Content>
+    <Content Include="Scripts\Chart.js" />
+    <Content Include="Scripts\Chart.min.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IFM.VR.Configuration\IFM.VR.Configuration.csproj">
+      <Project>{5e9c0757-da95-4f86-9f93-e78b0223d358}</Project>
+      <Name>IFM.VR.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IFM.VR.Flags\IFM.VR.Flags.csproj">
+      <Project>{ec6c5caa-0414-40cb-b130-8a0359bc6a37}</Project>
+      <Name>IFM.VR.Flags</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets'))" />
+  </Target>
+  <Import Project="..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets" Condition="Exists('..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets')" />
+  <!-- Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

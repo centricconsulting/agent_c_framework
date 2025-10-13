@@ -1,0 +1,14 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CGL_Velocirater_Proposal_CGL_Location_Control, VR_CGL_CPP_CPR_deploy" %>
+
+<%@ Register src="VR_Proposal_CGL_ClassificationControl.ascx" tagname="VR_Proposal_CGL_ClassificationControl" tagprefix="uc1" %>
+
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc2" %>
+
+<uc2:VR_PageBreakControl ID="VR_PageBreakControl1" runat="server" Visible="false" />
+<div>   
+    <asp:Label ID="lblLocationTitle" CssClass="p_SectionHead" runat="server" Text=""></asp:Label>
+    <div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+        <uc1:VR_Proposal_CGL_ClassificationControl ID="VR_Proposal_CGL_ClassificationControl1" 
+            runat="server" />
+        </div>
+</div>

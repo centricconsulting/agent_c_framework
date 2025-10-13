@@ -1,0 +1,172 @@
+{
+  "error_messages": {
+    "direct_messages": [
+      {
+        "message": "You must complete the Underwriting Questions before proceeding.",
+        "context": "UW questions validation - checking if existing policyunderwritings are unanswered",
+        "location": "line 278",
+        "trigger_condition": "Any existing PolicyUnderwritings have empty PolicyUnderwritingAnswer.Trim",
+        "method": "ctlTreeView_ShowApplication"
+      },
+      {
+        "message": "You must complete the Underwriting Question before proceeding.", 
+        "context": "UW questions validation - checking if only kill questions answered",
+        "location": "line 286",
+        "trigger_condition": "Quote.PolicyUnderwritings count <= 6 (only kill questions)",
+        "method": "ctlTreeView_ShowApplication",
+        "business_rule": "WCP has 6 kill questions, need more than 6 total to proceed"
+      }
+    ],
+    "dynamic_error_sources": [
+      {
+        "source_method": "Me.ValidationHelper.AddError(saveErr)",
+        "context": "Rating service save errors",
+        "location": "line 104",
+        "error_variable": "saveErr from SaveAndRate service call"
+      },
+      {
+        "source_method": "Me.ValidationHelper.AddError(loadErr)",
+        "context": "Rating service load errors", 
+        "location": "line 107",
+        "error_variable": "loadErr from SaveAndRate service call"
+      },
+      {
+        "source_method": "WebHelper_Personal.GatherRatingErrorsAndWarnings(ratedQuote, Me.ValidationHelper)",
+        "context": "Rating validation errors and warnings from quote object",
+        "location": "line 114",
+        "content_status": "⚠️ EXTERNAL SERVICE - Dynamic errors from rating engine"
+      }
+    ],
+    "validation_errors": [
+      {
+        "source": "IFM.VR.Validation.ObjectValidation.PolicyLevelValidator.PolicyValidation",
+        "context": "Policy level validation - Effective Date",
+        "location": "line 152-158",
+        "field_id": "IFM.VR.Validation.ObjectValidation.PolicyLevelValidator.EffectiveDate",
+        "condition": "validateEffectiveDate = True"
+      },
+      {
+        "source": "IFM.VR.Validation.ObjectValidation.CommLines.LOB.WC.PolicyLevelValidations.ValidatePolicyLevel",
+        "context": "WC LOB-specific policy validation",
+        "location": "line 161-169", 
+        "supports_warnings": true,
+        "condition": "validateEffectiveDate = True"
+      }
+    ]
+  },
+  "business_rules": {
+    "underwriting_progression_rules": [
+      {
+        "rule": "UW Questions must be completed before accessing Application section",
+        "validation": "All existing PolicyUnderwritings must have non-empty PolicyUnderwritingAnswer",
+        "location": "line 272-278",
+        "lob_specific": false
+      },
+      {
+        "rule": "WCP requires more than kill questions to proceed to Application",
+        "validation": "Quote.PolicyUnderwritings.Count > 6",
+        "location": "line 280-287",
+        "lob_specific": "WorkersCompensation",
+        "kill_question_count": 6,
+        "business_context": "WCP has 6 kill questions, additional questions needed for app access"
+      }
+    ],
+    "quote_status_rules": [
+      {
+        "rule": "Killed/Stopped quotes trigger redirect handling",
+        "statuses": ["QuoteKilled", "AppKilled"],
+        "location": "line 81-83",
+        "action": "CheckQuoteForKillorStopEvent with page redirect"
+      },
+      {
+        "rule": "Stopped quotes during rating stay in current workflow",
+        "statuses": ["QuoteStopped", "AppStopped"], 
+        "location": "line 116-118",
+        "action": "Don't show summary, stop message in validation"
+      },
+      {
+        "rule": "Successful rating transitions to Summary workflow",
+        "condition": "ratedQuote.Success = True AND NOT stopped status",
+        "location": "line 115, 119-121",
+        "action": "SetCurrentWorkFlow to summary + RefreshRatedQuote"
+      }
+    ],
+    "save_type_rules": [
+      {
+        "rule": "All rating operations use AppGap save type",
+        "save_type": "QuickQuoteXML.QuickQuoteSaveType.AppGap",
+        "applies_to": ["Regular quotes", "Endorsements", "Read-only reloads"],
+        "hardcoded": true,
+        "location": "Multiple locations - lines 76, 74, 87, 89, 91"
+      }
+    ],
+    "validation_type_rules": [
+      {
+        "rule": "App page uses appRate validation, others use quoteRate",
+        "condition": "If(Me.IsOnAppPage, appRate, quoteRate)",
+        "location": "line 60",
+        "validation_types": ["appRate", "quoteRate"]
+      }
+    ]
+  },
+  "workflow_identifiers": {
+    "workflow_sections": [
+      "na", "app", "uwQuestions", "summary", "fileUpload", "farmIRPM", "documentPrinting", "drivers"
+    ],
+    "workflow_enum_namespace": "IFM.VR.Common.Workflow.Workflow.WorkflowSection",
+    "current_workflow_tracking": "Me.CurrentWorkFlow property"
+  },
+  "control_identifiers": {
+    "child_controls": [
+      "ctl_AppSection_WCP",
+      "ctlCommercialUWQuestionList", 
+      "ctl_AttachmentUpload",
+      "ctl_WCP_QuoteSummary",
+      "ctlCommercial_IRPM",
+      "ctlCommercial_DocPrint",
+      "Ctl_WCP_PFSummary",
+      "ctlTreeView",
+      "ctl_ReturnToQuoteSide",
+      "wf_returnButton",
+      "ctlDisplayDiamondRatingErrors"
+    ],
+    "validation_controls": [
+      "ctlCommercialUWQuestionList",
+      "ctlCommercial_IRPM", 
+      "ctl_AppSection_WCP"
+    ]
+  },
+  "configuration_dependencies": {
+    "save_type_configuration": {
+      "hardcoded_value": "QuickQuoteXML.QuickQuoteSaveType.AppGap",
+      "usage": "All SaveAndRate operations",
+      "content_status": "✅ HARDCODED - No external configuration"
+    },
+    "validation_group": {
+      "hardcoded_value": "Application Rate",
+      "location": "line 147",
+      "content_status": "✅ HARDCODED - No external configuration"
+    },
+    "lob_specific_constants": {
+      "wcp_kill_questions": 6,
+      "location": "line 283",
+      "business_context": "WCP has 6 kill questions",
+      "content_status": "✅ HARDCODED - No external configuration"
+    }
+  },
+  "javascript_integration": {
+    "script_injection": [
+      {
+        "script": "$(\"#divAppEditControls\").fadeIn('fast');",
+        "method": "AddScriptWhenRendered",
+        "location": "line 14",
+        "purpose": "Show app edit controls with fade-in animation"
+      }
+    ],
+    "dirty_form_tracking": {
+      "div_target": "divAppEditControls", 
+      "location": "line 52",
+      "purpose": "Track form changes for dirty form warning"
+    }
+  }
+}

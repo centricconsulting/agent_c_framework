@@ -1,0 +1,117 @@
+{
+  "file_analysis": {
+    "file_name": "ctl_WCP_NamedIndividual.ascx.vb",
+    "file_path": "//project/workspaces/IFI/source-code/Primary Source Code/WebSystems_VelociRater/IFM.VR.Web/User Controls/VR Commercial/Application/WCP/ctl_WCP_NamedIndividual.ascx.vb",
+    "lines_of_code": 400,
+    "complexity_level": "high",
+    "analysis_date": "2024-12-19"
+  },
+  "business_logic_patterns": {
+    "named_individual_types": {
+      "enum_values": [
+        "NotSet",
+        "InclusionOfSoleProprietersEtc", 
+        "WaiverOfSubrogation",
+        "ExclusionOfAmishWorkers",
+        "ExclusionOfSoleOfficer",
+        "ExclusionOfSoleProprietor_IL",
+        "RejectionOfCoverageEndorsement"
+      ],
+      "pattern_type": "enumerated_business_rules",
+      "location": "lines 83-91",
+      "business_purpose": "Defines different types of named individual endorsements/exclusions for WCP policies"
+    },
+    "state_specific_logic": {
+      "supported_states": ["Indiana", "Illinois", "Kentucky"],
+      "pattern_type": "multi_state_business_logic",
+      "locations": [
+        {"method": "MyNamedIndividual", "lines": "25-75"},
+        {"method": "lnkNew_Click", "lines": "380-440"},
+        {"method": "lnkDelete_Click", "lines": "450-520"}
+      ],
+      "contamination_risk": "high",
+      "business_purpose": "State-specific data storage and retrieval for WCP named individuals"
+    },
+    "data_storage_patterns": {
+      "governing_state_records": [
+        "InclusionOfSoleProprietorRecords",
+        "WaiverOfSubrogationRecords"
+      ],
+      "indiana_specific_records": [
+        "ExclusionOfAmishWorkerRecords", 
+        "ExclusionOfSoleProprietorRecords"
+      ],
+      "illinois_specific_records": [
+        "ExclusionOfSoleProprietorRecords_IL"
+      ],
+      "kentucky_specific_records": [
+        "ExclusionOfSoleProprietorRecords",
+        "KentuckyRejectionOfCoverageEndorsementRecords"
+      ],
+      "pattern_type": "state_segregated_data_storage",
+      "business_purpose": "Separate data collections for different states and endorsement types"
+    },
+    "validation_patterns": {
+      "required_field_validation": {
+        "fields": ["txtName", "ddlType"],
+        "validation_messages": ["Missing Name", "Missing Type"],
+        "location": "ValidateControl method, lines 310-335",
+        "pattern_type": "conditional_field_validation"
+      },
+      "type_specific_validation": {
+        "inclusion_sole_proprietors": "requires ddlType selection",
+        "other_types": "only requires name field",
+        "pattern_type": "business_rule_conditional_validation"
+      }
+    },
+    "ui_control_patterns": {
+      "dynamic_display_logic": {
+        "method": "SetControlType",
+        "location": "lines 105-130",
+        "pattern": "show/hide UI elements based on NIType",
+        "controlled_elements": ["trTypeRow", "trInfoRow"]
+      },
+      "accordion_header_management": {
+        "method": "UpdateAccordHeader",
+        "location": "lines 140-155",
+        "pattern": "dynamic text generation based on type and index"
+      }
+    }
+  },
+  "architectural_patterns": {
+    "inheritance_pattern": {
+      "base_class": "VRControlBase",
+      "pattern_type": "web_user_control_inheritance",
+      "overridden_methods": ["AddScriptAlways", "AddScriptWhenRendered", "LoadStaticData", "Populate", "Save", "ValidateControl"]
+    },
+    "event_driven_pattern": {
+      "custom_events": ["ChangeNIActiveAccordion"],
+      "ui_events": ["Page_Load", "lnkSave_Click", "lnkNew_Click", "lnkDelete_Click"],
+      "pattern_type": "event_driven_ui_control"
+    },
+    "viewstate_management": {
+      "stored_values": ["vs_WCPNIIndex", "hdnNIType"],
+      "pattern_type": "asp_net_viewstate_persistence"
+    }
+  },
+  "integration_patterns": {
+    "quickquote_integration": {
+      "accessed_objects": [
+        "QuickQuoteInclusionOfSoleProprietorRecord",
+        "QuickQuoteWaiverOfSubrogationRecord", 
+        "QuickQuoteExclusionOfAmishWorkerRecord",
+        "QuickQuoteExclusionOfSoleProprietorRecord",
+        "QuickQuoteExclusionOfSoleProprietorRecord_IL",
+        "QuickQuoteKentuckyRejectionOfCoverageEndorsement"
+      ],
+      "pattern_type": "external_object_dependency",
+      "business_purpose": "Data persistence and retrieval through QuickQuote system"
+    },
+    "static_data_integration": {
+      "method": "QQHelper.LoadStaticDataOptionsDropDown",
+      "location": "LoadStaticData method, line 124",
+      "parameters": ["QuickQuoteClassName.QuickQuoteInclusionExclusionScheduledItem", "QuickQuotePropertyName.PositionTitleTypeId"],
+      "pattern_type": "external_static_data_loading"
+    }
+  }
+}
