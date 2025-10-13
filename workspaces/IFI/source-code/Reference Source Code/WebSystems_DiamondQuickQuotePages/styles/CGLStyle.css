@@ -1,0 +1,50 @@
+﻿       
+        
+        
+        .trBorder
+        {
+            border: thin double #000000;
+        }
+        .trBorder
+        {
+            border-style:double;        
+        }
+        
+        .PanelTitle 
+        {
+            font-size: 20px;
+	        text-align: center; 
+            font-weight: bold;
+            border: thin double #000000;	
+            background-color: #dfdada;
+            background-image: radial-gradient(circle,#dfdada, transparent);                 
+        }  
+
+        .Panel 
+        {	
+            border: thin double #000000;	                    
+        }
+        
+        .CPR_BI_Row {	   
+
+            height:50px;
+      }
+      
+      .SaveDialogStartingState 
+	{
+	    float: left; 
+	    position: fixed;	
+	    color: white;
+	    background-color: Black;	
+	    display: none;	      
+	    height: 75px;  
+	    vertical-align: middle; 
+	    text-align: center;   	    
+  }
+  
+  .SaveDialogStartingStateText {
+	margin: 20px;		
+}
+
+
+  

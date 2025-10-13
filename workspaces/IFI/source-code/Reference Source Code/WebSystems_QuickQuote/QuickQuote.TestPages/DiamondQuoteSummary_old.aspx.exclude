@@ -1,0 +1,821 @@
+﻿<%@ Page Language="VB" AutoEventWireup="false" MasterPageFile="~/DiamondQuickQuote.master" CodeFile="DiamondQuoteSummary_old.aspx.vb" Inherits="DiamondQuoteSummary_old_new_website" %>
+
+<asp:Content ID="Content2" ContentPlaceHolderID="Scripts" runat="server">
+    <title>Diamond Quote Summary Old</title>
+    <link href="DiamondQuickQuoteStyles.css" rel="stylesheet" type="text/css" />
+</asp:Content>
+<asp:Content ID="Content1" ContentPlaceHolderID="Application" Runat="Server">
+    <br />
+    <div>
+        <table class="tableField" align="center" border="1" cellpadding="4">
+            <tr>
+                <td align="center" class="tableRowHeaderLarger">Indiana Farmers Mutual Quote Summary<asp:Label runat="server" ID="lblAppGapText" Visible="false"></asp:Label></td>
+            </tr>
+            <tr class="tableRowSpacer">
+                <td></td>
+            </tr>
+            <tr runat="server" id="QuoteErrorSection" visible="false">
+                <td>
+                    <table class="tableField" align="center" border="1" cellpadding="4">
+                        <tr>
+                            <td colspan="6" align="center" class="tableFieldHeaderLarger">The following errors were encountered with your quote<asp:Label runat="server" ID="lblErrorQuoteNumber" Visible="false"></asp:Label>:</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" align="left" class="tableFieldValueLarger"><asp:Label runat="server" ID="lblQuoteErrors"></asp:Label></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr runat="server" id="QuoteSummarySection" visible="false">
+                <td>
+                    <table class="tableField" align="center" border="1" cellpadding="4">
+                        <tr>
+                            <td colspan="6" align="left" class="tableRowHeader">General Information</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" align="right" class="tableFieldHeader">Quote Number:</td>
+                            <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblQuoteNumber"></asp:Label></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" align="right" class="tableFieldHeader">Name:</td>
+                            <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblName"></asp:Label></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" align="right" class="tableFieldHeader">Quote Description:</td>
+                            <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblQuoteDescription"></asp:Label></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" align="right" class="tableFieldHeader">State:</td>
+                            <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblState"></asp:Label></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" align="right" class="tableFieldHeader">Effective Date:</td>
+                            <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblEffectiveDate"></asp:Label></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" align="right" class="tableFieldHeader">Total Quoted Premium:</td>
+                            <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblTotalQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="LegalEntityTypeRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Legal Entity Type:</td>
+                            <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLegalEntityType"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="EmployersLiabilityRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Employer's Liability:</td>
+                            <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblEmployersLiability"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="ExperienceModificationRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Experience Modification:</td>
+                            <td colspan="1" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblExperienceModification"></asp:Label></td>
+                            <td colspan="1" align="right" class="tableFieldHeader">Exp Mod Eff. Date:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblExperienceModificationEffDate"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="OccLiabRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Occurrence Liability Limit:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblOccLiabilityLimit"></asp:Label></td>
+                            <td colspan="2" align="left" class="tableFieldHeaderSmaller">Quoted Premium</td>
+                        </tr>
+                        <tr runat="server" id="TenFireLiabRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Tenants Fire Liability:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblTenFireLiability"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblTenFireLiabilityQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="PropDamLiabDeductRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Property Damage Liability Deductible:</td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblPropDamLiabilityDeduct"></asp:Label></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblPropDamLiabilityDeductPerClaimOrOccur"></asp:Label></td>
+                            <td colspan="2" align="right"></td>
+                        </tr>
+                        <tr runat="server" id="BusMasterEnhRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Business Master Enhancement:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBusMasterEnhancement"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblBusMasterEnhancementQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="BlanketRatingRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Blanket Rating:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBlanketRating"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblBlanketRatingQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <!--end general info-->
+                        <tr class="tableRowSpacer" runat="server" id="PolicyLevelCovOptionsSpacerRow">
+                            <td colspan="6"></td>
+                        </tr>
+                        <!--policy level coverage info-->
+                        <tr runat="server" id="PolicyLevelCovOptionsMainRow">
+                            <td colspan="6" align="left" class="tableRowHeader">Policy Level Coverage Options</td>
+                        </tr>
+                        <tr runat="server" id="PolicyLevelCovOptionsQuotedPremRow">
+                            <td colspan="4" align="left"></td>
+                            <td colspan="2" align="left" class="tableFieldHeaderSmaller">Quoted Premium</td>
+                        </tr>
+                        <tr runat="server" id="AdditionalInsuredsRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Additional Insureds:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblAddInsureds"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblAddInsuredsQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="EmpBenLiabRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Employee Benefits Liability:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblEmpBenLiability"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblEmpBenLiabilityQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="ContractorsEquipInstallRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Contractors Equipment/Installation:</td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblContractEquipInstallLimit"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Contractors Installation Limit</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblContractEquipInstallLimitQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="ContractorsEquipBlanketRow">
+                            <td colspan="2" align="right"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblContractEquipBlanket"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Contractors Tools and Equipment - Blanket</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblContractEquipBlanketQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="ContractorsEquipScheduledRow">
+                            <td colspan="2" align="right"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblContractEquipScheduled"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Contractors Tools and Equipment - Scheduled</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblContractEquipScheduledQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="ContractorsEquipRentedRow">
+                            <td colspan="2" align="right"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblContractEquipRented"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Rented/Leased Tools and Equipment</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblContractEquipRentedQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="ContractorsEmpToolsRow">
+                            <td colspan="2" align="right"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblContractEquipEmp"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Contractors Employee Tools</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblContractEquipEmpQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="CrimeEmpDishonestyRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Crime:</td>
+                            <td colspan="2" align="left" class="tableFieldHeaderSmaller">Employee Dishonesty</td>
+                            <td colspan="2" align="right"></td>
+                        </tr>
+                        <tr runat="server" id="CrimeEmpDishonestyEmpNumRow">
+                            <td colspan="2" align="right"></td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblCrimeEmp"></asp:Label></td>
+                            <td colspan="2" align="right"></td>
+                        </tr>
+                        <tr runat="server" id="CrimeEmpDishonestyLocNumRow">
+                            <td colspan="2" align="right"></td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblCrimeLoc"></asp:Label></td>
+                            <td colspan="2" align="right"></td>
+                        </tr>
+                        <tr runat="server" id="CrimeEmpDishonestyLimitRow">
+                            <td colspan="2" align="right"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblCrimeLimit"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Total Limit</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblCrimeLimitQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="CrimeForgeryRow">
+                            <td colspan="2" align="right"></td>
+                            <td colspan="2" align="left" class="tableFieldHeaderSmaller">Forgery and Alteration Optional Limits</td>
+                            <td colspan="2" align="right"></td>
+                        </tr>
+                        <tr runat="server" id="CrimeForgeryLimitRow">
+                            <td colspan="2" align="right"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblForgeLimit"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Limit</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblForgeLimitQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="EarthquakeRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Earthquake:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblEarthquake"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblEarthquakeQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="HiredAutoRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Hired Auto:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblHiredAuto"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblHiredAutoQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="NonOwnedAutoRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Non-Owned Auto:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblNonOwnedAuto"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblNonOwnedAutoQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <!--end policy level info-->
+                        <tr class="tableRowSpacer">
+                            <td colspan="6"></td>
+                        </tr>
+                        <!--location info-->            
+                        <tr runat="server" id="LocationInformationRepeaterRow">
+                            <td colspan="6" align="center">
+                                <asp:Repeater ID="rptLocations" runat="server">
+                                    <HeaderTemplate>
+                                        <table width="100%" align="center" border="1px" cellpadding="4">
+                                            <tr>
+                                                <td colspan="6" align="left" class="tableRowHeader">Location Information</td>
+                                            </tr>
+                                    </HeaderTemplate>
+                                    <ItemTemplate>
+                                            <%--<tr>
+                                                <td align="left" class="tableRowHeaderSmaller">Default Address&nbsp;<asp:Label runat="server" ID="lblLocIndex" Text='<%# DataBinder.Eval(Container.DataItem,"LocIndex") %>' Visible="false"></asp:Label></td>
+                                                <td align="right" class="tableFieldHeader">Description:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocDescription" Text='<%# DataBinder.Eval(Container.DataItem,"LocDescription") %>'></asp:Label></td>
+                                            </tr>--%>
+                                            <tr runat="server" id="LocDescriptionRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">Description:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocDescription" Text='<%# DataBinder.Eval(Container.DataItem,"LocDescription") %>'></asp:Label><asp:Label runat="server" ID="lblLocIndex" Text='<%# DataBinder.Eval(Container.DataItem,"LocIndex") %>' Visible="false"></asp:Label></td>
+                                            </tr>
+                                            <tr runat="server" id="LocNameRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">Name:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocName" Text='<%# DataBinder.Eval(Container.DataItem,"LocName") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr runat="server" id="LocStreetNumRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">Street #:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocHouseNum" Text='<%# DataBinder.Eval(Container.DataItem,"LocHouseNum") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr runat="server" id="LocStreetNameRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">Street:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocStreet" Text='<%# DataBinder.Eval(Container.DataItem,"LocStreet") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr runat="server" id="LocPoBoxRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">PO Box:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocPoBox" Text='<%# DataBinder.Eval(Container.DataItem,"LocPoBox") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" align="right" class="tableFieldHeader">City:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocCity" Text='<%# DataBinder.Eval(Container.DataItem,"LocCity") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" align="right" class="tableFieldHeader">State:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocState" Text='<%# DataBinder.Eval(Container.DataItem,"LocState") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" align="right" class="tableFieldHeader">Zip:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocZip" Text='<%# DataBinder.Eval(Container.DataItem,"LocZip") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" align="right" class="tableFieldHeader">County:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocCounty" Text='<%# DataBinder.Eval(Container.DataItem,"LocCounty") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr runat="server" id="LocProtClassRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">Protection Class:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocProtClass" Text='<%# DataBinder.Eval(Container.DataItem,"LocProtClass") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr runat="server" id="LocNumberOfPoolsRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">Number of Pools:</td>
+                                                <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblLocNumOfPools" Text='<%# DataBinder.Eval(Container.DataItem,"LocNumOfPools") %>'></asp:Label></td>
+                                            </tr>
+                                            <!--end location info-->
+                                            <tr class="tableRowSpacer" runat="server" id="OptionalLocationCoveragesSpacerRow">
+                                                <td colspan="6"></td>
+                                            </tr>
+                                            <!--optional location coverages info-->
+                                            <tr runat="server" id="OptionalLocationCoveragesMainRow">
+                                                <td colspan="6" align="left" class="tableRowHeaderSmaller">Optional Location Coverages</td>
+                                            </tr>
+                                            <tr runat="server" id="OptionalLocationCoveragesQuotedPremRow">
+                                                <td colspan="4" align="left"></td>
+                                                <td colspan="2" align="left" class="tableFieldHeaderSmaller">Quoted Premium</td>
+                                            </tr>
+                                            <tr runat="server" id="LocEquipBreakDeductRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">Equipment Breakdown Deductible:</td>
+                                                <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblEquipBreakDeduct" Text='<%# DataBinder.Eval(Container.DataItem,"EquipBreakDeduct") %>'></asp:Label></td>
+                                                <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblEquipBreakDeductQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"EquipBreakDeductQuotedPremium") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr runat="server" id="LocMoneySecuritiesOnPremisesRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">Money and Securities/ On Premises:</td>
+                                                <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblMoneyOnPrem" Text='<%# DataBinder.Eval(Container.DataItem,"MoneyOnPrem") %>'></asp:Label></td>
+                                                <td align="left" class="tableFieldHeaderSmaller">Total Limit</td>
+                                                <%--<td colspan="2" align="right" class="tableFieldValueSmaller"></td>--%>
+                                                <td colspan="2" rowspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblMoneyOnOffPremQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"MoneyOnOffPremQuotedPremium") %>'></asp:Label></td>
+                                            </tr>
+                                            <tr runat="server" id="LocMoneySecuritiesOffPremisesRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">Money and Securities/ Off Premises:</td>
+                                                <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblMoneyOffPrem" Text='<%# DataBinder.Eval(Container.DataItem,"MoneyOffPrem") %>'></asp:Label></td>
+                                                <td align="left" class="tableFieldHeaderSmaller">Total Limit</td>
+                                                <%--<td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblMoneyOnOffPremQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"MoneyOnOffPremQuotedPremium") %>'></asp:Label></td>--%>
+                                            </tr>
+                                            <tr runat="server" id="LocOutdoorSignsRow">
+                                                <td colspan="2" align="right" class="tableFieldHeader">Outdoor Signs:</td>
+                                                <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblOutdoorSigns" Text='<%# DataBinder.Eval(Container.DataItem,"OutdoorSigns") %>'></asp:Label></td>
+                                                <td align="left" class="tableFieldHeaderSmaller">Total Limit</td>
+                                                <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblOutdoorSignsQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"OutdoorSignsQuotedPremium") %>'></asp:Label></td>
+                                            </tr>
+                                            <!--end optional location info-->
+                                            <tr runat="server" id="BuildingInformationRepeaterRow">
+                                                <td colspan="6" align="center">
+                                                    <asp:Repeater ID="rptBuildings" runat="server">
+                                                        <HeaderTemplate>
+                                                            <table width="100%" align="center" border="1px" cellpadding="4">
+                                                                <tr class="tableRowSpacer">
+                                                                    <td colspan="6"></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan="6" align="left" class="tableRowHeader">Building Information</td>
+                                                                </tr>
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+                                                                <!--building info-->
+                                                                <tr>
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Description:</td>
+                                                                    <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingDescription" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingDescription") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildProgramRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Program:</td>
+                                                                    <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingProgram" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingProgram") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildClassificationRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Classification:</td>
+                                                                    <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingClassification" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingClassification") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildClassCodeRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Class Code:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingClassCode" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingClassCode") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="left" class="tableFieldHeaderSmaller">Quoted Premium</td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildOccupancyRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Occupancy:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingOccupancy" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingOccupancy") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildConstructionRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Construction:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingConstruction" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingConstruction") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildAutoIncreaseRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Automatic Increase:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingAutoIncrease" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingAutoIncrease") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildPropDeductRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Property Deductible:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingPropDeduct" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingPropDeduct") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildLimitRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Building Limit:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingLimit" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingLimit") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblBuildingLimitQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingLimitQuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildValuationRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Building Valuation:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingValuation" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingValuation") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildValuationBlanketRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Included in Blanket Rating:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingIncludedInBlanket" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingIncludedInBlanket") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildMineSubsidenceRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Mine Subsidence:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingMineSubsidence" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingMineSubsidence") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblBuildingMineSubsidenceQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingMineSubsidenceQuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildSprinkleredRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Sprinklered:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingSprinklered" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingSprinklered") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildPersPropLimitRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Personal Property Limit:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblPersPropLimit" Text='<%# DataBinder.Eval(Container.DataItem,"PersPropLimit") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblPersPropLimitQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"PersPropLimitQuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildValuationMethodRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Valuation Method:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingValuationMethod" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingValuationMethod") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildValuationMethodBlanketRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Included in Blanket Rating:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBuildingIncludedInBlanket2" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingIncludedInBlanket2") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <!--end building info-->
+                                                                <tr class="tableRowSpacer">
+                                                                    <td colspan="6"></td>
+                                                                </tr>
+                                                                <!--optional building coverages info-->
+                                                                <tr>
+                                                                    <td colspan="6" align="left" class="tableRowHeaderSmaller">Optional Building Coverages</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan="4" align="left"></td>
+                                                                    <td colspan="2" align="left" class="tableFieldHeaderSmaller">Quoted Premium</td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildAcctsRecOnPremisesRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Accounts Receivable:</td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblAcctsRecOnPrem" Text='<%# DataBinder.Eval(Container.DataItem,"AcctsRecOnPrem") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">On Premises</td>
+                                                                    <%--<td colspan="2" align="right" class="tableFieldValueSmaller"></td>--%>
+                                                                    <td colspan="2" rowspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblAcctsRecQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"AcctsRecQuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildAcctsRecOffPremisesRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblAcctsRecOffPrem" Text='<%# DataBinder.Eval(Container.DataItem,"AcctsRecOffPrem") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Off Premises</td>
+                                                                    <%--<td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblAcctsRecQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"AcctsRecQuotedPremium") %>'></asp:Label></td>--%>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildValuablePapersOnPremisesRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Valuable Papers:</td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblValPapersOnPrem" Text='<%# DataBinder.Eval(Container.DataItem,"ValPapersOnPrem") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">On Premises</td>
+                                                                    <%--<td colspan="2" align="right" class="tableFieldValueSmaller"></td>--%>
+                                                                    <td colspan="2" rowspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblValPapersQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"ValPapersQuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildValuablePapersOffPremisesRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblValPapersOffPrem" Text='<%# DataBinder.Eval(Container.DataItem,"ValPapersOffPrem") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Off Premises</td>
+                                                                    <%--<td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblValPapersQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"ValPapersQuotedPremium") %>'></asp:Label></td>--%>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildCondoCommercialUnitLimitRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Condo Commercial Unit Owners:</td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblCondoCommUnitOwners" Text='<%# DataBinder.Eval(Container.DataItem,"CondoCommUnitOwners") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Limit</td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblCondoCommUnitOwnersQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"CondoCommUnitOwnersQuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildOrdOrLawMainRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Ordinance or Law:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblOrdOrLaw" Text='<%# DataBinder.Eval(Container.DataItem,"OrdOrLaw") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildOrdOrLawUndamagedRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblOrdOrLawCov1" Text='<%# DataBinder.Eval(Container.DataItem,"OrdOrLawCov1") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Loss to the Undamaged Portion of the Building</td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblOrdOrLawCov1QuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"OrdOrLawCov1QuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildOrdOrLawDemoRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblOrdOrLawCov2" Text='<%# DataBinder.Eval(Container.DataItem,"OrdOrLawCov2") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Demolition Cost</td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblOrdOrLawCov2QuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"OrdOrLawCov2QuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildOrdOrLawIncreasedCostRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblOrdOrLawCov3" Text='<%# DataBinder.Eval(Container.DataItem,"OrdOrLawCov3") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Increased Cost of Construction</td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblOrdOrLawCov3QuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"OrdOrLawCov3QuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildOrdOrLawDemoAndIncreasedCostRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblOrdOrLawCov4" Text='<%# DataBinder.Eval(Container.DataItem,"OrdOrLawCov4") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Demolition and Increased Cost Combined</td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblOrdOrLawCov4QuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"OrdOrLawCov4QuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildSpoilageMainRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Spoilage:</td>
+                                                                    <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblSpoilage" Text='<%# DataBinder.Eval(Container.DataItem,"Spoilage") %>'></asp:Label></td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblSpoilageQuotedPremium" Text='<%# DataBinder.Eval(Container.DataItem,"SpoilageQuotedPremium") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildSpoilagePropClassificationRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblSpoilagePropClass" Text='<%# DataBinder.Eval(Container.DataItem,"SpoilagePropClass") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Property Classification</td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildSpoilageLimitRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblSpoilageTotLimit" Text='<%# DataBinder.Eval(Container.DataItem,"SpoilageTotLimit") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Total Limit</td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildSpoilageRefrigRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblSpoilageRefrig" Text='<%# DataBinder.Eval(Container.DataItem,"SpoilageRefrig") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Refrigeration Maintenance Agreement</td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildSpoilageBreakdownRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblSpoilageBreakdown" Text='<%# DataBinder.Eval(Container.DataItem,"SpoilageBreakdown") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Breakdown or Contamination</td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <tr runat="server" id="BuildSpoilagePowerOutageRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader"></td>
+                                                                    <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblSpoilagePowerOutage" Text='<%# DataBinder.Eval(Container.DataItem,"SpoilagePowerOutage") %>'></asp:Label></td>
+                                                                    <td align="left" class="tableFieldHeaderSmaller">Power Outage</td>
+                                                                    <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                                                                </tr>
+                                                                <!--end optional building info-->
+                                                        </ItemTemplate>
+                                                        <SeparatorTemplate>
+                                                            <tr class="tableRowSpacer">
+                                                                <td colspan="6"><b>--Next Building--</b></td>
+                                                            </tr>                        
+                                                        </SeparatorTemplate>
+                                                        <FooterTemplate>
+                                                                <%--<tr class="tableRowSpacer">
+                                                                    <td colspan="6"></td>
+                                                                </tr>--%>
+                                                            </table>
+                                                        </FooterTemplate>
+                                                    </asp:Repeater>
+                                                </td>
+                                            </tr>
+                                            <tr runat="server" id="ClassCodesInformationRepeaterRow">
+                                                <td colspan="6" align="center">
+                                                    <asp:Repeater ID="rptClassCodes" runat="server">
+                                                        <HeaderTemplate>
+                                                            <table width="100%" align="center" border="1px" cellpadding="4">
+                                                                <tr class="tableRowSpacer">
+                                                                    <td colspan="6"></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan="6" align="left" class="tableRowHeader">Class Codes Information</td>
+                                                                </tr>
+                                                        </HeaderTemplate>
+                                                        <ItemTemplate>
+                                                                <!--class code info-->
+                                                                <tr runat="server" id="ClassCodeRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Class Code:</td>
+                                                                    <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblClassCode" Text='<%# DataBinder.Eval(Container.DataItem,"ClassCode") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="ClassCodeDescriptionRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Description:</td>
+                                                                    <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblClassCodeDescription" Text='<%# DataBinder.Eval(Container.DataItem,"ClassCodeDescription") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="ClassCodeEmpPayrollRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Employee Payroll:</td>
+                                                                    <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblClassCodeEmpPayroll" Text='<%# DataBinder.Eval(Container.DataItem,"ClassCodeEmpPayroll") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <tr runat="server" id="ClassCodeEmpNumRow">
+                                                                    <td colspan="2" align="right" class="tableFieldHeader">Total Number of Employees:</td>
+                                                                    <td colspan="4" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblClassCodeEmpNum" Text='<%# DataBinder.Eval(Container.DataItem,"ClassCodeEmpNum") %>'></asp:Label></td>
+                                                                </tr>
+                                                                <!--end class codes info-->
+                                                        </ItemTemplate>
+                                                        <SeparatorTemplate>
+                                                            <tr class="tableRowSpacer">
+                                                                <td colspan="6"><b>--Next Class Code--</b></td>
+                                                            </tr>                        
+                                                        </SeparatorTemplate>
+                                                        <FooterTemplate>
+                                                                <%--<tr class="tableRowSpacer">
+                                                                    <td colspan="6"></td>
+                                                                </tr>--%>
+                                                            </table>
+                                                        </FooterTemplate>
+                                                    </asp:Repeater>
+                                                </td>
+                                            </tr>
+                                    </ItemTemplate>
+                                    <SeparatorTemplate>
+                                        <tr class="tableRowSpacer">
+                                            <td colspan="6"><b>--Next Location--</b></td>
+                                        </tr>
+                                    </SeparatorTemplate>
+                                    <FooterTemplate>
+                                            <%--<tr class="tableRowSpacer">
+                                                <td colspan="6"></td>
+                                            </tr>--%>
+                                        </table>
+                                    </FooterTemplate>
+                                </asp:Repeater>
+                            </td>
+                        </tr>            
+            
+                        <!--additional optional coverages info-->
+                        <tr class="tableRowSpacer" runat="server" id="AdditionalOptionalCovsSpacerRow">
+                            <td colspan="6"></td>
+                        </tr>
+                        <tr runat="server" id="AdditionalOptionalCovsMainRow">
+                            <td colspan="6" align="left" class="tableRowHeader">Additional Optional Coverages</td>                
+                        </tr>
+                        <tr runat="server" id="AdditionalOptionalCovsQuotedPremRow">
+                            <td colspan="4" align="left"></td>
+                            <td colspan="2" align="left" class="tableFieldHeaderSmaller">Quoted Premium</td>
+                        </tr>
+                        <tr runat="server" id="BarbProfLiabMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Barbers Professional Liability:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBarbProfLiab"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblBarbProfLiabQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="BarbProfLiabFullTimeEmpNumRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBarbProfLiabFullEmpNum"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Number of Full Time Employees</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="BarbProfLiabPartTimeEmpNumRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBarbProfLiabPartEmpNum"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Number of Part Time Employees</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="BeautProfLiabMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Beauticians Professional Liability:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBeautProfLiab"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblBeautProfLiabQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="BeautProfLiabFullTimeEmpNumRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBeautProfLiabFullEmpNum"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Number of Full Time Employees</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="BeautProfLiabPartTimeEmpNumRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblBeautProfLiabPartEmpNum"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Number of Part Time Employees</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="FuneralDirectProfLiabMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Funeral Directors Professional Liability:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblFunDirProfLiab"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblFunDirProfLiabQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="FuneralDirectProfLiabEmpNumRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblFunDirProfLiabEmpNum"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Number of Employees</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="PrintersProfLiabMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Printers Professional Liability:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblPrintProfLiab"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblPrintProfLiabQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="PrintersProfLiabLocNumRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblPrintProfLiabLocNum"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Number of Locations</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="SelfStorageFacilityMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Self Storage Facility:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblSelfStoreFac"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblSelfStoreFacQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <%--<tr>
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblSelfStoreFacLocNum"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Number of Locations</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>--%>
+                        <tr runat="server" id="SelfStorageFacilityLimitRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblSelfStoreFacLimit"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Limit</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="VetProfLiabMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Veterinarians Professional Liability:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblVetProfLiab"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblVetProfLiabQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="VetProfLiabEmpNumRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblVetProfLiabEmpNum"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Number of Employees</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="OptAndHearingProfLiabMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Optical and Hearing Aid Professional Liability:</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblOptAndHearProfLiab"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller">&nbsp;<asp:Label runat="server" ID="lblOptAndHearProfLiabQuotedPremium"></asp:Label></td>
+                        </tr>
+                        <tr runat="server" id="OptAndHearingProfLiabEmpNumRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblOptAndHearProfLiabEmpNum"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Number of Employees</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <!--end additional optional info-->
+                        <tr class="tableRowSpacer" runat="server" id="NamedIndividualsSpacerRow">
+                            <td colspan="6"></td>
+                        </tr>
+                        <!--Named Individuals-->
+                        <tr runat="server" id="NamedIndividualsMainRow">
+                            <td colspan="6" align="left" class="tableRowHeader">Named Individuals</td>                
+                        </tr>
+                        <tr runat="server" id="NamedIndividualsIncOfSolePropMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Inclusion of Sole Proprietors, Partners,<br />and LLC members<br />(WC 00 03 10)</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblNamedIndividualsIncOfSoleProp"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="NamedIndividualsWaiverOfSubroMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Waiver of Subrogation<br />(WC 00 03 13)</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblNamedIndividualsWaiverOfSubro"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="NamedIndividualsWaiverOfSubroWaiverNumRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblNamedIndividualsWaiverOfSubroWaiverNum"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Number of Waivers</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="NamedIndividualsWaiverOfSubroWaiverAmtRow">
+                            <td colspan="2" align="right" class="tableFieldHeader"></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblNamedIndividualsWaiverOfSubroWaiverAmt"></asp:Label></td>
+                            <td align="left" class="tableFieldHeaderSmaller">Amount per Waiver</td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="NamedIndividualsExcOfAmishMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Exclusion of Amish Workers<br />(WC 00 03 08)</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblNamedIndividualsExcOfAmish"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="NamedIndividualsExcOfSolePropMainRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Exclusion of Sole Officer<br />(WC 00 03 08)</td>
+                            <td colspan="2" align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblNamedIndividualsExcOfSoleProp"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>                        
+                        <!--end Named Individuals-->
+                        <tr class="tableRowSpacer" runat="server" id="IrpmSpacerRow">
+                            <td colspan="6"></td>
+                        </tr>
+                        <!--IRPM info-->
+                        <tr runat="server" id="IrpmMainRow">
+                            <td colspan="6" align="left" class="tableRowHeader">IRPM</td>                
+                        </tr>
+                        <tr runat="server" id="IrpmMgmtCoopRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Management/Cooperation:</td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_MgmtCoop"></asp:Label></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_MgmtCoopDesc"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="IrpmLocationRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Location:</td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_Loc"></asp:Label></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_LocDesc"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="IrpmBuildingFeaturesRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Building Features:</td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_BuildFeat"></asp:Label></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_BuildFeatDesc"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="IrpmPremisesRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Premises:</td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_Premises"></asp:Label></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_PremisesDesc"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="IrpmEmployeesRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Employees:</td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_Emp"></asp:Label></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_EmpDesc"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="IrpmProtectionRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Protection:</td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_Prot"></asp:Label></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_ProtDesc"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="IrpmCatHazRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Catastrophic Hazards:</td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_CatHaz"></asp:Label></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_CatHazDesc"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <tr runat="server" id="IrpmMgmtExpRow">
+                            <td colspan="2" align="right" class="tableFieldHeader">Management Experience:</td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_MgmtExp"></asp:Label></td>
+                            <td align="left" class="tableFieldValue">&nbsp;<asp:Label runat="server" ID="lblIRPM_MgmtExpDesc"></asp:Label></td>
+                            <td colspan="2" align="right" class="tableFieldValueSmaller"></td>
+                        </tr>
+                        <!--end IRPM info-->
+                        <!--start validation items-->
+                        <tr class="tableRowSpacer" runat="server" id="QuoteMessagesSpacerRow" visible="false">
+                            <td colspan="6"></td>
+                        </tr>
+                        <tr runat="server" id="QuoteMessagesHeaderRow" visible="false">
+                            <td colspan="6" align="center" class="tableFieldHeaderLarger">The following messages came back with your quote:</td>
+                        </tr>
+                        <tr runat="server" id="QuoteMessagesValueRow" visible="false">
+                            <td colspan="6" align="left" class="tableFieldValueLarger"><asp:Label runat="server" ID="lblQuoteMessages"></asp:Label></td>
+                        </tr>
+                        <!--end validation items-->
+                    </table>
+                </td>
+            </tr>
+            <tr runat="server" id="PrintHistoryRow" visible="false">
+                <td align="center">
+                    <%--<asp:Label runat="server" ID="lblByteString" Visible="false"></asp:Label>--%>
+                    <asp:Button runat="server" ID="btnGoToPrintHistory" Text="View Diamond Print" />
+                </td>
+            </tr>
+            <tr>
+                <td align="center">                    
+                    <asp:Label runat="server" ID="lblReturnToQuoteLink" Visible="false"></asp:Label>
+                    <asp:Button runat="server" ID="btnReturnToQuote" Text="Return to Saved Quotes" />
+                    &nbsp;
+                    <asp:Label runat="server" ID="lblGoToPortalLink" Visible="false"></asp:Label>
+                    <asp:Button runat="server" ID="btnGoToPortal" Text="Go to Diamond Portal" />
+                </td>
+            </tr>
+            <tr runat="server" id="QuoteSuccessButtonsRow" visible="false">
+                <td align="center">
+                    <asp:Label runat="server" ID="lblCreditsDebitsLink" Visible="false"></asp:Label>
+                    <asp:Button runat="server" ID="btnCreditDebits" Text="Credits/Debits" />
+                    &nbsp;
+                    <asp:Label runat="server" ID="lblAppGapLink" Visible="false"></asp:Label>
+                    <asp:Button runat="server" ID="btnContinueToAppGap" Text="Continue to Application" Enabled="false" />
+                </td>
+            </tr>
+        </table>
+        
+        
+    </div>
+    </asp:Content>

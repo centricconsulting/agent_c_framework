@@ -1,0 +1,170 @@
+{
+  "data_access_patterns": {
+    "sub_quote_access": {
+      "pattern_type": "Object Property Access",
+      "description": "No direct database queries - uses pre-loaded sub-quote objects",
+      "access_methods": [
+        {
+          "method": "Me.GoverningStateQuote",
+          "returns": "QuickQuote.CommonObjects.QuickQuoteObject",
+          "purpose": "Access governing state coverage data",
+          "location": "Multiple locations",
+          "data_accessed": [
+            "HasInclusionOfSoleProprietorsPartnersOfficersAndOthers",
+            "HasWaiverOfSubrogation",
+            "InclusionOfSoleProprietorRecords",
+            "WaiverOfSubrogationRecords"
+          ]
+        },
+        {
+          "method": "SubQuoteForState(QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteState.Indiana)",
+          "returns": "QuickQuote.CommonObjects.QuickQuoteObject",
+          "purpose": "Access Indiana-specific coverage data",
+          "location": "Lines 124, 164",
+          "data_accessed": [
+            "HasExclusionOfSoleProprietorsPartnersOfficersAndOthers",
+            "HasExclusionOfAmishWorkers",
+            "ExclusionOfSoleProprietorRecords",
+            "ExclusionOfAmishWorkerRecords"
+          ]
+        },
+        {
+          "method": "SubQuoteForState(QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteState.Kentucky)",
+          "returns": "QuickQuote.CommonObjects.QuickQuoteObject", 
+          "purpose": "Access Kentucky-specific coverage data",
+          "location": "Lines 146, 230",
+          "data_accessed": [
+            "HasExclusionOfSoleProprietorsPartnersOfficersAndOthers",
+            "ExclusionOfSoleProprietorRecords",
+            "HasKentuckyRejectionOfCoverageEndorsement",
+            "KentuckyRejectionOfCoverageEndorsementRecords"
+          ]
+        },
+        {
+          "method": "SubQuoteForState(QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteState.Illinois)",
+          "returns": "QuickQuote.CommonObjects.QuickQuoteObject",
+          "purpose": "Access Illinois-specific coverage data", 
+          "location": "Line 205",
+          "data_accessed": [
+            "HasExclusionOfSoleProprietorsPartnersOfficersAndOthers_IL",
+            "ExclusionOfSoleProprietorRecords_IL"
+          ]
+        }
+      ]
+    },
+    "main_quote_access": {
+      "pattern_type": "Direct Property Access",
+      "access_points": [
+        {
+          "property": "Quote.Locations",
+          "purpose": "Workplace/location data for repeater binding",
+          "usage": "Data source for rptWorkplaces repeater",
+          "location": "Lines 255-276",
+          "content_type": "List(Of QuickQuote.CommonObjects.QuickQuoteLocation)"
+        },
+        {
+          "property": "Quote.EffectiveDate", 
+          "purpose": "Date-based feature availability checks",
+          "usage": "Multistate capability and Kentucky WCP effective date validation",
+          "location": "Lines 203, 229",
+          "content_type": "DateTime"
+        }
+      ]
+    }
+  },
+  "data_collection_access": {
+    "named_individual_records": [
+      {
+        "collection_name": "InclusionOfSoleProprietorRecords",
+        "source_quote": "GoverningStateQuote",
+        "repeater_binding": "rptInclOfSoleProprieters.DataSource",
+        "content_status": "⚠️ Collection from sub-quote - content needs validation",
+        "estimated_records": "Variable based on coverage selection"
+      },
+      {
+        "collection_name": "WaiverOfSubrogationRecords", 
+        "source_quote": "GoverningStateQuote",
+        "repeater_binding": "rptWaiverOfSubro.DataSource",
+        "content_status": "⚠️ Collection from sub-quote - content needs validation",
+        "estimated_records": "Variable based on coverage selection"
+      },
+      {
+        "collection_name": "ExclusionOfAmishWorkerRecords",
+        "source_quote": "INQuote",
+        "repeater_binding": "rptExclOfAmish.DataSource", 
+        "content_status": "⚠️ Collection from IN sub-quote - content needs validation",
+        "estimated_records": "Variable based on Indiana coverage selection"
+      },
+      {
+        "collection_name": "ExclusionOfSoleProprietorRecords",
+        "source_quote": "INQuote or KYQuote",
+        "repeater_binding": "rptExclOfSoleOfficer.DataSource",
+        "content_status": "⚠️ Collection from IN/KY sub-quote - content needs validation", 
+        "estimated_records": "Variable based on IN/KY coverage selection"
+      },
+      {
+        "collection_name": "ExclusionOfSoleProprietorRecords_IL",
+        "source_quote": "ILQuote",
+        "repeater_binding": "rptExclOfSoleProprietorsEtc_IL.DataSource",
+        "content_status": "⚠️ Collection from IL sub-quote - content needs validation",
+        "estimated_records": "Variable based on Illinois coverage selection"
+      },
+      {
+        "collection_name": "KentuckyRejectionOfCoverageEndorsementRecords",
+        "source_quote": "KYQuote", 
+        "repeater_binding": "rptRejectionOfCoverageEndorsement.DataSource",
+        "content_status": "⚠️ Collection from KY sub-quote - content needs validation",
+        "estimated_records": "Variable based on Kentucky rejection endorsement selection"
+      }
+    ],
+    "workplace_records": [
+      {
+        "collection_name": "Quote.Locations",
+        "repeater_binding": "rptWorkplaces.DataSource",
+        "content_status": "⚠️ Collection from main quote - workplace data needs validation",
+        "estimated_records": "Variable based on workplace count"
+      }
+    ]
+  },
+  "helper_method_queries": {
+    "state_check_methods": [
+      {
+        "method": "SubQuotesContainsState(state)",
+        "purpose": "Check if sub-quote exists for specified state",
+        "parameters": ["IN", "KY", "IL"],
+        "return_type": "Boolean",
+        "content_status": "⚠️ Method queries sub-quote collection - implementation needs analysis"
+      },
+      {
+        "method": "SubQuoteForState(QuickQuoteState)",
+        "purpose": "Retrieve sub-quote object for specific state",
+        "parameters": "QuickQuoteState enum values",
+        "return_type": "QuickQuote.CommonObjects.QuickQuoteObject",
+        "content_status": "⚠️ Method accesses sub-quote data - implementation needs analysis"
+      }
+    ],
+    "effective_date_helpers": [
+      {
+        "method": "IFM.VR.Common.Helpers.MultiState.General.IsMultistateCapableEffectiveDate(Quote.EffectiveDate)",
+        "purpose": "Check if effective date supports multistate features",
+        "location": "Line 203",
+        "content_status": "⚠️ Helper method - implementation needs analysis"
+      },
+      {
+        "method": "IFM.VR.Common.Helpers.MultiState.General.KentuckyWCPEffectiveDate",
+        "purpose": "Get Kentucky WCP effective date threshold",
+        "location": "Line 229",
+        "content_status": "⚠️ Configuration property - value needs validation"
+      }
+    ]
+  },
+  "no_direct_database_queries": {
+    "observation": "This control does not contain direct SQL queries or database commands",
+    "data_access_pattern": "Uses pre-loaded sub-quote objects and collections",
+    "upstream_dependencies": [
+      "Sub-quote loading logic (external to this control)",
+      "Main quote object population (external to this control)",
+      "Named Individual record collections (populated externally)"
+    ]
+  }
+}

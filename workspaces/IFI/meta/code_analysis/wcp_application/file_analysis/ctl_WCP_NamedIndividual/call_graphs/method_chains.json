@@ -1,0 +1,163 @@
+{
+  "method_call_chains": [
+    {
+      "chain_id": "page_load_initialization",
+      "entry_point": "Page_Load",
+      "method_chain": [
+        "Page_Load (line 365)",
+        "→ hdnNIType.Value check",
+        "→ NIType setter (line 68)", 
+        "→ SetControlType (line 105)",
+        "→ UpdateAccordHeader (line 140)"
+      ],
+      "terminal_operation": "UI element style modification and text setting",
+      "data_source": "ViewState and UI controls",
+      "location": "Page_Load event handler",
+      "purpose": "Initialize control display based on NIType"
+    },
+    {
+      "chain_id": "population_workflow",
+      "entry_point": "Populate",
+      "method_chain": [
+        "Populate (line 160)",
+        "→ LoadStaticData (line 120)",
+        "→ QQHelper.LoadStaticDataOptionsDropDown",
+        "→ ddlType dropdown population",
+        "→ ClearInputFields (line 330)",
+        "→ MyNamedIndividual property access (line 25)",
+        "→ State-specific object retrieval",
+        "→ PopulateChildControls"
+      ],
+      "terminal_operation": "Database query via QQHelper + object property access",
+      "data_source": "Database (static data) + QuickQuote objects",
+      "location": "Populate method",
+      "purpose": "Load and display existing named individual data"
+    },
+    {
+      "chain_id": "save_workflow",
+      "entry_point": "Save",
+      "method_chain": [
+        "Save (line 200)",
+        "→ MyNamedIndividual property access",
+        "→ State/type-specific object casting",
+        "→ Object property updates (Name, TypeId)",
+        "→ SaveChildControls"
+      ],
+      "terminal_operation": "Object property assignment",
+      "data_source": "UI controls → QuickQuote objects",
+      "location": "Save method",
+      "purpose": "Persist named individual data changes"
+    },
+    {
+      "chain_id": "validation_workflow", 
+      "entry_point": "ValidateControl",
+      "method_chain": [
+        "ValidateControl (line 275)",
+        "→ MyBase.ValidateControl",
+        "→ MyAccordionList property access",
+        "→ ValidationHelper.GroupName setting",
+        "→ Field validation checks",
+        "→ ValidationHelper.AddError",
+        "→ ValidateChildControls"
+      ],
+      "terminal_operation": "ValidationHelper error collection", 
+      "data_source": "UI control values",
+      "location": "ValidateControl method",
+      "purpose": "Validate required fields and business rules"
+    },
+    {
+      "chain_id": "new_record_creation",
+      "entry_point": "lnkNew_Click",
+      "method_chain": [
+        "lnkNew_Click (line 375)",
+        "→ State/type-specific quote object access",
+        "→ Collection null check and initialization",
+        "→ Collection.AddNew()",
+        "→ Save_FireSaveEvent(False)",
+        "→ Populate_FirePopulateEvent()",
+        "→ Save_FireSaveEvent(False)",
+        "→ RaiseEvent ChangeNIActiveAccordion"
+      ],
+      "terminal_operation": "Collection manipulation + event raising",
+      "data_source": "QuickQuote state-specific collections",
+      "location": "lnkNew_Click event handler",
+      "purpose": "Create new named individual record in appropriate state collection"
+    },
+    {
+      "chain_id": "record_deletion",
+      "entry_point": "lnkDelete_Click", 
+      "method_chain": [
+        "lnkDelete_Click (line 450)",
+        "→ MyNamedIndividual null check",
+        "→ State/type-specific quote object access", 
+        "→ Collection.RemoveAt(NamedIndividualIndex)",
+        "→ Populate()",
+        "→ Save_FireSaveEvent(False)",
+        "→ Populate_FirePopulateEvent()",
+        "→ RaiseEvent ChangeNIActiveAccordion"
+      ],
+      "terminal_operation": "Collection manipulation + UI refresh",
+      "data_source": "QuickQuote state-specific collections",
+      "location": "lnkDelete_Click event handler", 
+      "purpose": "Remove named individual record and refresh UI"
+    },
+    {
+      "chain_id": "static_data_loading",
+      "entry_point": "LoadStaticData",
+      "method_chain": [
+        "LoadStaticData (line 120)",
+        "→ ddlType.Items.Count check",
+        "→ QQHelper.LoadStaticDataOptionsDropDown",
+        "→ Database query execution",
+        "→ Dropdown binding"
+      ],
+      "terminal_operation": "Database query via QQHelper",
+      "data_source": "Database (QuickQuoteInclusionExclusionScheduledItem table)",
+      "location": "LoadStaticData method",
+      "purpose": "Load position/title types for dropdown"
+    }
+  ],
+  "data_flow_analysis": {
+    "viewstate_flows": [
+      {
+        "variable": "NamedIndividualIndex",
+        "source_type": "ViewState",
+        "source_details": "ViewState.GetInt32('vs_WCPNIIndex', -1)",
+        "data_flow_path": "ViewState → Property → Business Logic",
+        "location": "Property getter, lines 17-23"
+      },
+      {
+        "variable": "NIType", 
+        "source_type": "HiddenField",
+        "source_details": "hdnNIType.Value",
+        "data_flow_path": "HiddenField → Property → SetControlType → UI Updates",
+        "location": "Property getter, lines 62-70"
+      }
+    ],
+    "object_flows": [
+      {
+        "variable": "MyNamedIndividual",
+        "source_type": "QuickQuote Objects",
+        "source_details": "State-specific record collections based on NIType",
+        "data_flow_path": "Quote → SubQuote → RecordCollection → Individual Record",
+        "location": "Property getter, lines 25-75"
+      }
+    ],
+    "ui_control_flows": [
+      {
+        "variable": "txtName.Text",
+        "source_type": "User Input / Object Property",
+        "source_details": "UI input or DisplayName from NamedIndividual object",
+        "data_flow_path": "User/Object → TextBox → Save Method → Object Property",
+        "location": "Multiple locations in Populate and Save methods"
+      },
+      {
+        "variable": "ddlType.SelectedValue",
+        "source_type": "Database / User Selection",
+        "source_details": "Static data via QQHelper + user selection",
+        "data_flow_path": "Database → Dropdown → User Selection → Save → Object Property",
+        "location": "LoadStaticData, Populate, Save methods"
+      }
+    ]
+  }
+}

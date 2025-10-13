@@ -1,0 +1,227 @@
+{
+  "rating_service_integration": {
+    "entry_point": {
+      "method": "RateWasRequested()",
+      "line_reference": "58",
+      "override_type": "Protected Overrides Sub"
+    },
+    "validation_setup": {
+      "step_1": {
+        "action": "ControlsToValidate_Custom.Add(Me)",
+        "line_reference": "59"
+      },
+      "step_2": {
+        "action": "Create VRValidationArgs with conditional ValidationType",
+        "logic": "If IsOnAppPage Then appRate Else quoteRate",
+        "line_reference": "60"
+      },
+      "step_3": {
+        "action": "Save_FireSaveEvent with validation args",
+        "line_reference": "62"
+      }
+    },
+    "save_and_rate_branching": {
+      "condition_1": {
+        "check": "ValidationSummmary.HasErrors() = False",
+        "line_reference": "63",
+        "success_path": "save_and_rate_execution",
+        "failure_path": "exit_with_validation_errors"
+      }
+    },
+    "save_and_rate_execution": {
+      "initialization": {
+        "declare_error_variables": {
+          "saveErr": "String = Nothing",
+          "loadErr": "String = Nothing",
+          "line_reference": "64-65"
+        },
+        "declare_result_variable": {
+          "ratedQuote": "QuickQuote.CommonObjects.QuickQuoteObject = Nothing",
+          "line_reference": "70"
+        }
+      },
+      "quote_type_branching": {
+        "readonly_policy_check": {
+          "condition": "String.IsNullOrWhiteSpace(Me.ReadOnlyPolicyIdAndImageNum) = False",
+          "line_reference": "71-72",
+          "action": "Skip rating - no rate for read-only policies"
+        },
+        "endorsement_policy_check": {
+          "condition": "String.IsNullOrWhiteSpace(Me.EndorsementPolicyIdAndImageNum) = False",
+          "line_reference": "73",
+          "service_call": {
+            "method": "Common.QuoteSave.QuoteSaveHelpers.SuccessfullySavedAndRatedEndorsementQuoteFromContext",
+            "parameters": [
+              "Me.EndorsementPolicyId",
+              "Me.EndorsementPolicyImageNum", 
+              "qqEndorsementResults:=ratedQuote",
+              "errorMessage:=saveErr",
+              "saveTypeView:=QuickQuoteXML.QuickQuoteSaveType.AppGap"
+            ],
+            "return_value": "Boolean (successfulEndorsementRate)",
+            "line_reference": "74"
+          }
+        },
+        "regular_quote_path": {
+          "condition": "Default case - not readonly, not endorsement",
+          "line_reference": "75-77",
+          "service_call": {
+            "method": "Common.QuoteSave.QuoteSaveHelpers.SaveAndRate",
+            "parameters": [
+              "Me.QuoteId",
+              "saveErr",
+              "loadErr", 
+              "QuickQuoteXML.QuickQuoteSaveType.AppGap"
+            ],
+            "return_value": "QuickQuote.CommonObjects.QuickQuoteObject",
+            "hardcoded_save_type": "QuickQuoteXML.QuickQuoteSaveType.AppGap"
+          }
+        }
+      }
+    },
+    "quote_status_management": {
+      "kill_stop_check": {
+        "condition": "Quote IsNot Nothing AndAlso (Quote.QuoteStatus = QuoteKilled OrElse Quote.QuoteStatus = AppKilled)",
+        "line_reference": "81-82",
+        "action": {
+          "method": "IFM.VR.Common.Helpers.QuickQuoteObjectHelper.CheckQuoteForKillorStopEvent",
+          "parameters": ["Me.Quote", "Me.Page", "Response", "Session"],
+          "line_reference": "83"
+        }
+      }
+    },
+    "quote_reload_branching": {
+      "readonly_policy_reload": {
+        "condition": "String.IsNullOrWhiteSpace(Me.ReadOnlyPolicyIdAndImageNum) = False",
+        "method": "Common.QuoteSave.QuoteSaveHelpers.ForceReadOnlyImageReloadByPolicyIdAndImageNum",
+        "parameters": ["Me.ReadOnlyPolicyId", "Me.ReadOnlyPolicyImageNum", "saveTypeView:=QuickQuoteXML.QuickQuoteSaveType.AppGap"],
+        "line_reference": "87"
+      },
+      "endorsement_reload": {
+        "condition": "String.IsNullOrWhiteSpace(Me.EndorsementPolicyIdAndImageNum) = False",
+        "method": "Common.QuoteSave.QuoteSaveHelpers.ForceEndorsementReloadByPolicyIdAndImageNum", 
+        "parameters": ["Me.EndorsementPolicyId", "Me.EndorsementPolicyImageNum", "saveTypeView:=QuickQuoteXML.QuickQuoteSaveType.AppGap"],
+        "line_reference": "89"
+      },
+      "regular_quote_reload": {
+        "condition": "Default case",
+        "method": "Common.QuoteSave.QuoteSaveHelpers.ForceQuoteReloadById",
+        "parameters": ["Me.QuoteId", "saveType:=QuickQuoteXML.QuickQuoteSaveType.AppGap"],
+        "line_reference": "91"
+      }
+    },
+    "cache_management": {
+      "rated_quote_cache_update": {
+        "condition": "ratedQuote IsNot Nothing",
+        "line_reference": "94-96",
+        "action": {
+          "method": "DirectCast(Me.Page.Master, VelociRater).GetRatedQuotefromCache",
+          "parameters": ["False", "ratedQuote"],
+          "description": "Sets the rated quote cache"
+        }
+      },
+      "cache_refresh_fallback": {
+        "condition": "ratedQuote Is Nothing",
+        "line_reference": "97-99",
+        "action": {
+          "method": "DirectCast(Me.Page.Master, VelociRater).GetRatedQuotefromCache",
+          "parameters": ["True"],
+          "description": "Let it find out for itself that the last rated quote was nothing"
+        }
+      }
+    },
+    "error_handling_and_workflow": {
+      "service_error_check": {
+        "condition": "String.IsNullOrWhiteSpace(saveErr) = False Or String.IsNullOrWhiteSpace(loadErr) = False",
+        "line_reference": "101",
+        "error_processing": {
+          "save_error": {
+            "condition": "String.IsNullOrWhiteSpace(saveErr) = False",
+            "action": "Me.ValidationHelper.AddError(saveErr)",
+            "line_reference": "103-105"
+          },
+          "load_error": {
+            "condition": "String.IsNullOrWhiteSpace(loadErr) = False", 
+            "action": "Me.ValidationHelper.AddError(loadErr)",
+            "line_reference": "106-108"
+          }
+        }
+      },
+      "success_path_processing": {
+        "condition": "No service errors",
+        "line_reference": "111",
+        "rating_validation": {
+          "condition": "ratedQuote IsNot Nothing",
+          "line_reference": "113",
+          "gather_errors": {
+            "method": "WebHelper_Personal.GatherRatingErrorsAndWarnings",
+            "parameters": ["ratedQuote", "Me.ValidationHelper"],
+            "line_reference": "114"
+          },
+          "success_workflow": {
+            "condition": "ratedQuote.Success",
+            "line_reference": "115",
+            "stop_status_check": {
+              "condition": "ratedQuote.QuoteStatus = QuoteStopped OrElse ratedQuote.QuoteStatus = AppStopped",
+              "line_reference": "116",
+              "action": "stay where you are - don't show summary",
+              "message_source": "stop message will be contained in validation messages"
+            },
+            "success_workflow_transition": {
+              "condition": "Not stopped status",
+              "line_reference": "119-121",
+              "actions": [
+                "SetCurrentWorkFlow(IFM.VR.Common.Workflow.Workflow.WorkflowSection.summary, \"\")",
+                "ctlTreeView.RefreshRatedQuote()"
+              ]
+            }
+          },
+          "failure_workflow": {
+            "condition": "NOT ratedQuote.Success",
+            "line_reference": "123",
+            "action": "stay where you are - probably coverages"
+          }
+        }
+      }
+    }
+  },
+  "service_dependencies": {
+    "external_services": [
+      {
+        "service": "Common.QuoteSave.QuoteSaveHelpers.SaveAndRate",
+        "purpose": "Primary rating service for regular quotes",
+        "parameters_required": ["QuoteId", "saveErr", "loadErr", "SaveType"],
+        "save_type": "QuickQuoteXML.QuickQuoteSaveType.AppGap"
+      },
+      {
+        "service": "Common.QuoteSave.QuoteSaveHelpers.SuccessfullySavedAndRatedEndorsementQuoteFromContext", 
+        "purpose": "Rating service for endorsement quotes",
+        "parameters_required": ["PolicyId", "ImageNum", "qqEndorsementResults", "errorMessage", "saveTypeView"]
+      },
+      {
+        "service": "IFM.VR.Common.Helpers.QuickQuoteObjectHelper.CheckQuoteForKillorStopEvent",
+        "purpose": "Handle killed or stopped quotes with redirects",
+        "parameters_required": ["Quote", "Page", "Response", "Session"]
+      },
+      {
+        "service": "WebHelper_Personal.GatherRatingErrorsAndWarnings",
+        "purpose": "Extract rating validation errors and warnings",
+        "parameters_required": ["ratedQuote", "ValidationHelper"]
+      }
+    ],
+    "quote_reload_services": [
+      {
+        "service": "Common.QuoteSave.QuoteSaveHelpers.ForceReadOnlyImageReloadByPolicyIdAndImageNum",
+        "purpose": "Reload read-only policy images"
+      },
+      {
+        "service": "Common.QuoteSave.QuoteSaveHelpers.ForceEndorsementReloadByPolicyIdAndImageNum", 
+        "purpose": "Reload endorsement policy images"
+      },
+      {
+        "service": "Common.QuoteSave.QuoteSaveHelpers.ForceQuoteReloadById",
+        "purpose": "Reload regular quotes"
+      }
+    ]
+  }
+}

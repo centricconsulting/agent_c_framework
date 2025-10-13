@@ -1,0 +1,168 @@
+﻿Imports helper = QuickQuote.CommonMethods.QuickQuoteHelperClass
+Imports DC = Diamond.Common
+Imports DCO = Diamond.Common.Objects
+Imports Services.Diamond
+Partial Class bobtest
+    Inherits System.Web.UI.Page
+
+
+    Protected Sub Page_Load(sender As Object, e As EventArgs) Handles Me.Load
+        Page.Trace.IsEnabled = True
+
+
+        Dim t As DCO.Policy.Policy
+
+        Dim policyID As String = ""
+        Dim policyImgNum As String = ""
+        Dim policyNum As String = "PPA2010888"
+
+        helper.SetPolicyIdAndImageNumberForPolicyNumber(policyNum, policyID, policyImgNum)
+        Dim q As New QuickQuote.CommonMethods.QuickQuoteXML
+        Dim img As New Diamond.Common.Objects.Policy.Image
+        Dim err As System.Exception = Nothing
+        Dim test As Boolean = Nothing
+        img = helper.GetPolicyImage(policyNum)
+
+
+
+        Dim returnImg As Diamond.Common.Objects.Policy.Image = Nothing
+        img.TransactionTypeId = 13
+        img.TransactionEffectiveDate = Date.Now.AddDays(120)
+        img.LOB.PolicyLevel.AutoHome = True
+
+
+
+        '*******Test proxy for policy loadimage
+        Dim p As New DC.Services.Proxies.PolicyServices.PolicyServiceProxy
+        Dim res As New DC.Services.Messages.PolicyService.LoadImage.Response
+        Dim req As New DC.Services.Messages.PolicyService.LoadImage.Request
+
+        req.RequestData.ImageNumber = Integer.Parse("14")
+        req.RequestData.PolicyId = Integer.Parse("3932")
+
+        res = p.LoadImage(req)
+        If res IsNot Nothing Then
+            Trace.Write("Connection Successful: " + res.ConnectivityTestSuccessful.ToString)
+            If res.ResponseData.Image IsNot Nothing Then
+                img = res.ResponseData.Image
+                Trace.Write("Img: " + img.AccountingDate.ToString)
+                Trace.Write("Img: " + img.Agency.AgencyName)
+                Trace.Write("Img: " + img.PolicyHolder.Name.DisplayName)
+
+            End If
+        End If
+
+
+
+
+
+        'test = RateOnly(img, returnImg)
+        'test = RateOnly(img, returnImg,
+        '            New DC.Objects.Transactions.SubmitVersion With {
+        '                .TransEffDate = Date.Now.AddDays(60),
+        '                .TransTypeId = 13}, err)
+
+        'Trace.Write("test: " + test.ToString)
+        'Trace.Write("Img transeffdate: " + img.TransactionEffectiveDate.ToString)
+        'Trace.Write("Img transTypeid: " + img.TransactionTypeId.ToString)
+        'Trace.Write("Img premium: " + img.FullTermPremium.ToString)
+        'Try
+        '    Trace.Write("premium: " + returnImg.FullTermPremium.ToString)
+        '    Trace.Write("effectiveDate: " + returnImg.TransactionEffectiveDate.ToString)
+        '    Trace.Write("TransType: " + returnImg.TransactionTypeId.ToString)
+        '    Trace.Write("ex: " + err.Message)
+        '    Trace.Write("StackTrace: " + err.StackTrace)
+        'Catch ex As Exception
+        '    Trace.Write("oopsie")
+        'End Try
+
+
+
+
+
+
+
+
+
+
+
+        'test = q.SubmitTransaction(policyID,
+        '                           policyImgNum,
+        '                           Date.Now,
+        '                           10002,
+        '                           "hehehehehehe",
+        '                           1,
+        '                           Diamond.Common.Enums.TransType.Endt,
+        '                           3751, img, Date.Now, True, err)
+
+        'Trace.Write("test: " + test.ToString)
+
+        'Try
+        '    Trace.Warn("err: " + err.Message)
+        '    Trace.Warn("StackTace: " + err.StackTrace)
+        'Catch ex As Exception
+
+        'End Try
+
+
+
+        'q.AddAttachment()
+
+        'If Diamond.Web.BaseControls.SignedOnUserID > 0 Then
+        '    'okay
+        'ElseIf ConfigurationManager.AppSettings("TestOrProd") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("TestOrProd").ToString) = "TEST" AndAlso ConfigurationManager.AppSettings("QuickQuote_UseTestVariables") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("QuickQuote_UseTestVariables").ToString) = "YES" Then
+        '    Dim loginName As String = ""
+        '    Dim loginPassword As String = ""
+        '    If System.Web.HttpContext.Current.Session("DiamondUsername") IsNot Nothing AndAlso System.Web.HttpContext.Current.Session("DiamondUsername").ToString <> "" Then
+        '        loginName = System.Web.HttpContext.Current.Session("DiamondUsername").ToString
+        '    ElseIf ConfigurationManager.AppSettings("TestOrProd") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("TestOrProd").ToString) = "TEST" AndAlso ConfigurationManager.AppSettings("QuickQuote_UseTestVariables") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("QuickQuote_UseTestVariables").ToString) = "YES" Then
+        '        loginName = ConfigurationManager.AppSettings("QuickQuoteTestUsername").ToString
+        '    End If
+        '    If System.Web.HttpContext.Current.Session("DiamondPassword") IsNot Nothing AndAlso System.Web.HttpContext.Current.Session("DiamondPassword").ToString <> "" Then
+        '        loginPassword = System.Web.HttpContext.Current.Session("DiamondPassword").ToString
+        '    ElseIf ConfigurationManager.AppSettings("TestOrProd") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("TestOrProd").ToString) = "TEST" AndAlso ConfigurationManager.AppSettings("QuickQuote_UseTestVariables") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("QuickQuote_UseTestVariables").ToString) = "YES" Then
+        '        loginPassword = ConfigurationManager.AppSettings("QuickQuoteTestPassword").ToString
+        '    End If
+        '    If loginName <> "" AndAlso loginPassword <> "" Then
+        '        'Using dia As New DiamondWebClass.DiamondPrinting
+        '        '    .DiamondSecurityToken = dia.loginDiamond(loginName, loginPassword)
+        '        'End Using
+        '        Dim messageText As String = String.Empty
+        '        Diamond.Web.BaseControls.LoginDiamondUser(loginName, loginPassword, messageText)
+        '        If Diamond.Web.BaseControls.SignedOnUserID <= 0 Then
+        '            If String.IsNullOrEmpty(messageText) = False Then
+
+        '            End If
+        '        End If
+        '    End If
+        'End If
+
+
+
+
+        'Dim path As String = "C:\Users\boall\Downloads\test.jpg"
+        'Dim theFile As Byte() = System.IO.File.ReadAllBytes(path)
+        'Dim attachcmentID As Integer = Nothing
+        'Dim test As Boolean = Nothing
+        'Dim err As Exception = Nothing
+        'test = q.AddAttachment(Integer.Parse(policyID),
+        '                       Integer.Parse(policyImgNum),
+        '                       "test.jpg",
+        '                       theFile,
+        '                       Diamond.Common.Enums.Attachments.AttachmentType.Policy_Attachment,
+        '                       Diamond.Common.Enums.Attachments.LevelDisplay.All_Levels,
+        '                       attachcmentID,
+        '                       "testing the file attachment service",
+        '                       err)
+
+        'Trace.Write("test: " + test.ToString)
+        'Try
+        '    Trace.Warn("Err: " + err.Message)
+        '    Trace.Warn("StackTrace: " + err.StackTrace)
+        'Catch ex As Exception
+        '    Trace.Write("nothing")
+        'End Try
+
+
+    End Sub
+End Class

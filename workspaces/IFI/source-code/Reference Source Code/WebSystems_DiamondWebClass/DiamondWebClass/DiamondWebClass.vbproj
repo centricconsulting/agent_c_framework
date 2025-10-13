@@ -1,0 +1,1145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{BBC69BA6-A1DB-44A6-B7EC-E38628BC9046}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <StartupObject>
+    </StartupObject>
+    <RootNamespace>DiamondWebClass</RootNamespace>
+    <AssemblyName>DiamondWebClass</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>Windows</MyType>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionCompare>Binary</OptionCompare>
+    <OptionStrict>Off</OptionStrict>
+    <OptionInfer>On</OptionInfer>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <PublishUrl>http://localhost/DiamondWebClass/</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>DiamondWebClass.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022,42353,42354,42355</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>DiamondWebClass.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022,42353,42354,42355</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AjaxControlToolkit, Version=3.0.20820.16598, Culture=neutral, PublicKeyToken=28f01b0e84b6d53e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>K:\Bin.Net\AjaxControlToolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="CommonClasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CommonClassesDeploy.2023.10.25.1721\lib\CommonClasses_deploy.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Business.ThirdParty, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Business.ThirdParty.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.C0044.Business.ObjectFactorySupport, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="Diamond.Common.ChoicePoint.Library, Version=4.2.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Common.ChoicePoint.Library.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Common.Diagnostics, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Common.Diagnostics.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Common.Interfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Common.Interfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Common.Objects.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects.ConfigurableBook, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Common.Objects.ConfigurableBook.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Common.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Common.Rules.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Common.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Common.Services.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Common.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Common.StaticDataManager.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Common.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Common.Utility.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.UI.BaseControls, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.UI.BaseControls.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.UI.Claims.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.UI.Claims.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.UI.Interfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.UI.Interfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.UI.Renderers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.UI.Renderers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.UI.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.UI.Rules.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.UI.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.UI.StaticDataManager.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.UI.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.UI.Utility.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Web.BaseControls, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Web.BaseControls.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Web.Policy, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>K:\Bin.Net\Diamond.Web.Policy.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.Security, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Web.Security.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Diamond.Web.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Diamond.Web.Services.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="IFM.Common.InputValidation, Version=2020.9.14.100, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CommonInputValidation.2021.7.8.100\lib\net45\IFM.Common.InputValidation.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.PrimitiveExtensions, Version=2022.12.1.1449, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PrimitiveExtensions.2022.12.1.1449\lib\netstandard2.0\IFM.PrimitiveExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMDataServicesClientModels, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.DataServicesClientModels.2024.10.22.837-beta\lib\IFMDataServicesClientModels.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMDataServicesCore, Version=2019.5.9.100, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.IFMDataServicesCore_Models.2024.10.22.100\lib\net472\IFMDataServicesCore.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMErrorLogging, Version=1.1.6980.37119, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.Logging.1.1.6980.37119\lib\net35\IFMErrorLogging.dll</HintPath>
+    </Reference>
+    <Reference Include="Insuresoft.RuleEngine.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondServicesBuildOnly.538.12.0\lib\Insuresoft.RuleEngine.Common.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="InsuresoftServices, Version=531.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\InsuresoftServices.531.9.2200.1\lib\net461\InsuresoftServices.dll</HintPath>
+    </Reference>
+    <Reference Include="JsonProxyClient, Version=2022.4.25.100, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.JsonProxyClient.2022.4.25.100\lib\netstandard2.0\JsonProxyClient.dll</HintPath>
+    </Reference>
+    <Reference Include="Mapster">
+      <HintPath>..\packages\Mapster.3.2.0\lib\net45\Mapster.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling, Version=5.0.414.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>K:\Bin.Net\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.Logging, Version=5.0.414.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>K:\Bin.Net\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="SQLclasses_deploy, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>G:\ClassFiles\SQLclasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="DCE = Diamond.Common.Enums" />
+    <Import Include="DCO = Diamond.Common.Objects" />
+    <Import Include="DCS = Diamond.Common.Services" />
+    <Import Include="DCSDM = Diamond.Common.StaticDataManager" />
+    <Import Include="DUSDM = Diamond.UI.StaticDataManager" />
+    <Import Include="DUU = Diamond.UI.Utility" />
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="Proxies = Diamond.Common.Services.Proxies" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Configuration" />
+    <Import Include="System.Configuration.ConfigurationManager" />
+    <Import Include="System.Data" />
+    <Import Include="System.Data.SqlClient" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows.Forms" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml" />
+    <Import Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Agency.vb" />
+    <Compile Include="AgencyUserObject.vb" />
+    <Compile Include="DiamondClaims_FNOL_Address.vb" />
+    <Compile Include="DiamondClaims_FNOL_Claimant.vb" />
+    <Compile Include="DiaException.vb" />
+    <Compile Include="DiamondBilling.vb" />
+    <Compile Include="DiamondClaims.vb" />
+    <Compile Include="DiamondClaims_FNOL.vb" />
+    <Compile Include="DiamondClaims_FNOL_ContactInfo.vb" />
+    <Compile Include="DiamondClaims_FNOL_Insured.vb" />
+    <Compile Include="DiamondClaims_FNOL_Name.vb" />
+    <Compile Include="DiamondClaims_FNOL_Property.vb" />
+    <Compile Include="DiamondClaims_FNOL_Reporter.vb" />
+    <Compile Include="DiamondClaims_FNOL_Vehicle.vb" />
+    <Compile Include="DiamondClaims_FNOL_Witness.vb" />
+    <Compile Include="DiamondPrinting.vb" />
+    <Compile Include="DiamondSecurity.vb" />
+    <Compile Include="DiamondSecurityProducer.vb" />
+    <Compile Include="DiamondSecurityQuestion.vb" />
+    <Compile Include="eft.vb" />
+    <Compile Include="Enums.vb" />
+    <Compile Include="ErrorObject.vb" />
+    <Compile Include="FNOLCommonLibrary.vb" />
+    <Compile Include="LocationObject.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="DiamondClaims_FNOL_Person.vb" />
+    <Compile Include="WebUser.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="bin\Debug\DiamondWebClass.dll.config" />
+    <None Include="bin\Debug\DiamondWebClass.vshost.exe.manifest" />
+    <None Include="bin\Debug\Lic.lic" />
+    <None Include="bin\Release\DiamondWebClass.dll.config" />
+    <None Include="bin\Release\Lic.lic" />
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="bin\Debug\AB.dll" />
+    <Content Include="bin\Debug\ABActX.dll" />
+    <Content Include="bin\Debug\AddressBrokerDotNetClient.dll" />
+    <Content Include="bin\Debug\AjaxControlToolkit.dll" />
+    <Content Include="bin\Debug\amqmdnet.dll" />
+    <Content Include="bin\Debug\Aspose.Words.dll" />
+    <Content Include="bin\Debug\CommonClasses_deploy.dll" />
+    <Content Include="bin\Debug\CommonClasses_deploy.xml" />
+    <Content Include="bin\Debug\DevExpress.Charts.v13.2.Core.dll" />
+    <Content Include="bin\Debug\DevExpress.Data.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.Docs.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.PivotGrid.v13.2.Core.dll" />
+    <Content Include="bin\Debug\DevExpress.Printing.v13.2.Core.dll" />
+    <Content Include="bin\Debug\DevExpress.RichEdit.v13.2.Core.dll" />
+    <Content Include="bin\Debug\DevExpress.SpellChecker.v13.2.Core.dll" />
+    <Content Include="bin\Debug\DevExpress.Utils.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.Web.ASPxHtmlEditor.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.Web.ASPxPivotGrid.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.Web.ASPxScheduler.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.Web.ASPxSpellChecker.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.Web.ASPxThemes.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.Web.ASPxTreeList.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.Web.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.Xpf.Charts.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.XtraCharts.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.XtraCharts.v13.2.Web.dll" />
+    <Content Include="bin\Debug\DevExpress.XtraReports.v13.2.dll" />
+    <Content Include="bin\Debug\DevExpress.XtraReports.v13.2.Web.dll" />
+    <Content Include="bin\Debug\DevExpress.XtraScheduler.v13.2.Core.dll" />
+    <Content Include="bin\Debug\DevExpress.XtraScheduler.v13.2.dll" />
+    <Content Include="bin\Debug\Diamond.Business.AccidentViolations.dll" />
+    <Content Include="bin\Debug\Diamond.Business.AccidentViolations.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.AdditionalInterest.dll" />
+    <Content Include="bin\Debug\Diamond.Business.AdditionalInterest.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Administrator.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Administrator.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Attachments.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Attachments.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Attachments.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Base.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Base.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Billing.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Billing.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Billing.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Checks.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Checks.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Checks.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Activity.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Activity.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Activity.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Appraisal.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Appraisal.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Catastrophe.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Catastrophe.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Catastrophe.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Claimant.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Claimant.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Claimant.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.ClaimControl.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.ClaimControl.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.ClaimControl.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Core.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Core.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Core.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Feature.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Feature.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Feature.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Financials.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Financials.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Financials.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Form.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Form.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Form.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.LossNotice.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.LossNotice.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.LossNotice.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.NotifyUnderwriting.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.NotifyUnderwriting.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.NotifyUnderwriting.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Payee.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Payee.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Payee.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Personnel.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Personnel.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Personnel.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Transaction.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Transaction.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Transaction.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Witness.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Witness.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Claims.Witness.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Common.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Common.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Common.xml" />
+    <Content Include="bin\Debug\Diamond.Business.ConfigurableBookEngine.dll" />
+    <Content Include="bin\Debug\Diamond.Business.ConfigurableBookEngine.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.ConfigurableBookEngine.xml" />
+    <Content Include="bin\Debug\Diamond.Business.ConfigurableBookManager.dll" />
+    <Content Include="bin\Debug\Diamond.Business.ConfigurableBookManager.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.CreditCard.dll" />
+    <Content Include="bin\Debug\Diamond.Business.CreditCard.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.CreditCard.xml" />
+    <Content Include="bin\Debug\Diamond.Business.CurrentCarrier.dll" />
+    <Content Include="bin\Debug\Diamond.Business.CurrentCarrier.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.DataObjects.dll" />
+    <Content Include="bin\Debug\Diamond.Business.DataObjects.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.DataObjects.xml" />
+    <Content Include="bin\Debug\Diamond.Business.EFT.dll" />
+    <Content Include="bin\Debug\Diamond.Business.EFT.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.EFT.xml" />
+    <Content Include="bin\Debug\Diamond.Business.EndOfPeriod.dll" />
+    <Content Include="bin\Debug\Diamond.Business.EndOfPeriod.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.EndOfPeriod.xml" />
+    <Content Include="bin\Debug\Diamond.Business.FutureEvents.dll" />
+    <Content Include="bin\Debug\Diamond.Business.FutureEvents.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.FutureEvents.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Imaging.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Imaging.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Interfaces.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Interfaces.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Interfaces.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Lookup.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Lookup.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Notes.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Notes.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.ObjectFactorySupport.dll" />
+    <Content Include="bin\Debug\Diamond.Business.ObjectFactorySupport.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.ObjectFactorySupport.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Policy.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Policy.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Policy.xml" />
+    <Content Include="bin\Debug\Diamond.Business.PolicyForm.dll" />
+    <Content Include="bin\Debug\Diamond.Business.PolicyForm.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.PolicyForm.xml" />
+    <Content Include="bin\Debug\Diamond.Business.RuleEngine.dll" />
+    <Content Include="bin\Debug\Diamond.Business.RuleEngine.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.RuleEngine.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Rules.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Rules.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Rules.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Sagent.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Sagent.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.ScheduleRunner.dll" />
+    <Content Include="bin\Debug\Diamond.Business.ScheduleRunner.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.ScheduleRunner.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Security.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Security.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.StaticDataManager.dll" />
+    <Content Include="bin\Debug\Diamond.Business.StaticDataManager.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.SystemSettings.dll" />
+    <Content Include="bin\Debug\Diamond.Business.SystemSettings.xml" />
+    <Content Include="bin\Debug\Diamond.Business.ThirdParty.dll" />
+    <Content Include="bin\Debug\Diamond.Business.ThirdParty.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.ThirdParty.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Transaction.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Transaction.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Transaction.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Transport.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Transport.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Transport.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Utility.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Utility.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Utility.xml" />
+    <Content Include="bin\Debug\Diamond.Business.Workflow.dll" />
+    <Content Include="bin\Debug\Diamond.Business.Workflow.pdb" />
+    <Content Include="bin\Debug\Diamond.Business.Workflow.xml" />
+    <Content Include="bin\Debug\Diamond.C0044.Business.Claims.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Business.Claims.pdb" />
+    <Content Include="bin\Debug\Diamond.C0044.Business.Claims.xml" />
+    <Content Include="bin\Debug\Diamond.C0044.Business.ObjectFactorySupport.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Business.ObjectFactorySupport.pdb" />
+    <Content Include="bin\Debug\Diamond.C0044.Business.ObjectFactorySupport.xml" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.BOP.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.CA.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.CC.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.CG.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.CGL.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.CIM.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.CP.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.CPP.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.CU.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.CWC.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Detail.PIM.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Library.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.Library.pdb" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.VDet.PA.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.VDet.PDF.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.VDet.PF.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.VDet.PH.v01.dll" />
+    <Content Include="bin\Debug\Diamond.C0044.Common.VDet.PU.v01.dll" />
+    <Content Include="bin\Debug\Diamond.Common.ACORD.dll" />
+    <Content Include="bin\Debug\Diamond.Common.ChoicePoint.Library.dll" />
+    <Content Include="bin\Debug\Diamond.Common.ChoicePoint.Library.pdb" />
+    <Content Include="bin\Debug\Diamond.Common.ChoicePoint.Library.xml" />
+    <Content Include="bin\Debug\Diamond.Common.Diagnostics.dll" />
+    <Content Include="bin\Debug\Diamond.Common.Diagnostics.pdb" />
+    <Content Include="bin\Debug\Diamond.Common.Diagnostics.xml" />
+    <Content Include="bin\Debug\Diamond.Common.EventBroker.dll" />
+    <Content Include="bin\Debug\Diamond.Common.Interfaces.dll" />
+    <Content Include="bin\Debug\Diamond.Common.Interfaces.pdb" />
+    <Content Include="bin\Debug\Diamond.Common.Interfaces.xml" />
+    <Content Include="bin\Debug\Diamond.Common.Objects.ConfigurableBook.dll" />
+    <Content Include="bin\Debug\Diamond.Common.Objects.ConfigurableBook.pdb" />
+    <Content Include="bin\Debug\Diamond.Common.Objects.dll" />
+    <Content Include="bin\Debug\Diamond.Common.Objects.pdb" />
+    <Content Include="bin\Debug\Diamond.Common.Objects.xml" />
+    <Content Include="bin\Debug\Diamond.Common.Rules.dll" />
+    <Content Include="bin\Debug\Diamond.Common.Rules.pdb" />
+    <Content Include="bin\Debug\Diamond.Common.Rules.xml" />
+    <Content Include="bin\Debug\Diamond.Common.ScheduleRunner.dll" />
+    <Content Include="bin\Debug\Diamond.Common.Services.dll" />
+    <Content Include="bin\Debug\Diamond.Common.Services.pdb" />
+    <Content Include="bin\Debug\Diamond.Common.Services.xml" />
+    <Content Include="bin\Debug\Diamond.Common.StaticDataManager.dll" />
+    <Content Include="bin\Debug\Diamond.Common.StaticDataManager.pdb" />
+    <Content Include="bin\Debug\Diamond.Common.Transport.dll" />
+    <Content Include="bin\Debug\Diamond.Common.Utility.dll" />
+    <Content Include="bin\Debug\Diamond.Common.Utility.pdb" />
+    <Content Include="bin\Debug\Diamond.Common.Utility.xml" />
+    <Content Include="bin\Debug\Diamond.Common.WorkflowActivities.dll" />
+    <Content Include="bin\Debug\Diamond.DataAccess.DiamondDataAccess.dll" />
+    <Content Include="bin\Debug\Diamond.DataAccess.DiamondDataAccess.pdb" />
+    <Content Include="bin\Debug\Diamond.dll" />
+    <Content Include="bin\Debug\Diamond.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Agency.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Agency.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Agency.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Attachments.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Attachments.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.BaseControls.dll" />
+    <Content Include="bin\Debug\Diamond.UI.BaseControls.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.BaseControls.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Billing.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Billing.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Activity.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Activity.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Activity.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.AdditionalInterest.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.AdditionalInterest.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.AdditionalInterest.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Appraisal.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Appraisal.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Appraisal.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Catastrophe.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Catastrophe.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Claim.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Claim.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Claim.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Claimant.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Claimant.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Claimant.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Core.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Core.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Financials.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Financials.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Form.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Form.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Form.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.List.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.List.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.List.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.LossNotice.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.LossNotice.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.LossNotice.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Maintenance.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Maintenance.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Maintenance.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.NotifyUnderwriting.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.NotifyUnderwriting.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.NotifyUnderwriting.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Personnel.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Personnel.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Personnel.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.PoliceFire.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.PoliceFire.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.PoliceFire.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Property.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Property.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Property.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.ReportedBy.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.ReportedBy.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.ReportedBy.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Vehicle.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Vehicle.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Vehicle.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Witness.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Witness.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Claims.Witness.xml" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControls.dll" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControls.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControls.xml" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsCommercial.dll" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsCommercial.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsCore.dll" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsCore.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsCore.xml" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsNonProperty.dll" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsNonProperty.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsNonProperty.xml" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsProperty.dll" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsProperty.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.DetailControlsProperty.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Documentation.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Documentation.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Documentation.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Interfaces.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Interfaces.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Interfaces.xml" />
+    <Content Include="bin\Debug\Diamond.UI.LOB.dll" />
+    <Content Include="bin\Debug\Diamond.UI.LOB.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Notes.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Notes.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Policy.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Policy.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Renderers.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Renderers.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Reports.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Reports.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Reports.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Rules.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Rules.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Rules.xml" />
+    <Content Include="bin\Debug\Diamond.UI.StaticDataManager.dll" />
+    <Content Include="bin\Debug\Diamond.UI.StaticDataManager.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.ThirdParty.dll" />
+    <Content Include="bin\Debug\Diamond.UI.ThirdParty.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.ThirdParty.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Utility.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Utility.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Utility.xml" />
+    <Content Include="bin\Debug\Diamond.UI.VisualTree.dll" />
+    <Content Include="bin\Debug\Diamond.UI.VisualTree.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.VisualTree.xml" />
+    <Content Include="bin\Debug\Diamond.UI.Workflow.dll" />
+    <Content Include="bin\Debug\Diamond.UI.Workflow.pdb" />
+    <Content Include="bin\Debug\Diamond.UI.Workflow.xml" />
+    <Content Include="bin\Debug\Diamond.Web.Accounting.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Accounting.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Administration.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Administration.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Attachments.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Attachments.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Attachments.xml" />
+    <Content Include="bin\Debug\Diamond.Web.BaseControls.dll" />
+    <Content Include="bin\Debug\Diamond.Web.BaseControls.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.BaseControls.xml" />
+    <Content Include="bin\Debug\Diamond.Web.Billing.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Billing.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Billing.xml" />
+    <Content Include="bin\Debug\Diamond.Web.C44Controls.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Activity.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Activity.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.AdditionalInterest.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.AdditionalInterest.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Appraisal.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Appraisal.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Catastrophe.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Catastrophe.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Claim.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Claim.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Claimant.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Claimant.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Configure.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Configure.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Core.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Core.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Core.xml" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Dashboard.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Dashboard.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Detail.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Detail.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Feature.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Feature.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Financials.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Financials.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Form.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Form.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Inquiry.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Inquiry.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.List.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.List.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Lookup.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Lookup.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.LossNotice.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.LossNotice.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Maintenance.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Maintenance.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.NotifyUnderwriting.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.NotifyUnderwriting.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Payee.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Payee.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Personnel.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Personnel.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.PoliceFire.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.PoliceFire.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Property.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Property.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.ReportedBy.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.ReportedBy.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Salvage.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Salvage.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Transaction.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Transaction.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Vehicle.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Vehicle.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Witness.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Claims.Witness.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.ConfigurationTools.dll" />
+    <Content Include="bin\Debug\Diamond.Web.ConfigurationTools.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.ContactManagement.Core.dll" />
+    <Content Include="bin\Debug\Diamond.Web.ContactManagement.Core.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Core.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Core.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControls.dll" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControls.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControlsCommercial.dll" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControlsCommercial.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControlsCore.dll" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControlsCore.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControlsCore.xml" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControlsNonProperty.dll" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControlsNonProperty.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControlsProperty.dll" />
+    <Content Include="bin\Debug\Diamond.Web.DetailControlsProperty.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Inspections.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Inspections.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Navigation.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Navigation.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Notes.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Notes.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Notes.xml" />
+    <Content Include="bin\Debug\Diamond.Web.Policy.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Policy.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Policy.xml" />
+    <Content Include="bin\Debug\Diamond.Web.PortalControls.dll" />
+    <Content Include="bin\Debug\Diamond.Web.PortalControls.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.PreconfiguredControls.dll" />
+    <Content Include="bin\Debug\Diamond.Web.PreconfiguredControls.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Reports.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Reports.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Security.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Security.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Services.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Services.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.ThirdParty.dll" />
+    <Content Include="bin\Debug\Diamond.Web.ThirdParty.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Workflow.dll" />
+    <Content Include="bin\Debug\Diamond.Web.Workflow.pdb" />
+    <Content Include="bin\Debug\Diamond.Web.Workflow.xml" />
+    <Content Include="bin\Debug\Diamond.Web.WriteLetter.dll" />
+    <Content Include="bin\Debug\Diamond.Web.WriteLetter.pdb" />
+    <Content Include="bin\Debug\DiamondWebClass.dll" />
+    <Content Include="bin\Debug\DiamondWebClass.pdb" />
+    <Content Include="bin\Debug\DiamondWebClass.vshost.exe" />
+    <Content Include="bin\Debug\DiamondWebClass.xml" />
+    <Content Include="bin\Debug\DocumentFormat.OpenXml.dll" />
+    <Content Include="bin\Debug\ICSharpCode.SharpZipLib.dll" />
+    <Content Include="bin\Debug\Iesi.Collections.dll" />
+    <Content Include="bin\Debug\Insuresoft.RuleEngine.Business.dll" />
+    <Content Include="bin\Debug\Insuresoft.RuleEngine.Business.pdb" />
+    <Content Include="bin\Debug\Insuresoft.RuleEngine.Business.xml" />
+    <Content Include="bin\Debug\Insuresoft.RuleEngine.Common.dll" />
+    <Content Include="bin\Debug\Insuresoft.RuleEngine.Common.pdb" />
+    <Content Include="bin\Debug\Insuresoft.RuleEngine.Common.xml" />
+    <Content Include="bin\Debug\Insuresoft.RuleEngineV1.Business.dll" />
+    <Content Include="bin\Debug\Insuresoft.RuleEngineV1.Common.dll" />
+    <Content Include="bin\Debug\Insuresoft.RuleEngineV1.UI.dll" />
+    <Content Include="bin\Debug\Interop.Excel.dll" />
+    <Content Include="bin\Debug\Interop.QMSABACTXLib.dll" />
+    <Content Include="bin\Debug\libbf.dll" />
+    <Content Include="bin\Debug\Microsoft.Office.Interop.Excel.dll" />
+    <Content Include="bin\Debug\Microsoft.Office.Interop.SmartTag.dll" />
+    <Content Include="bin\Debug\Microsoft.Office.Interop.Word.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Caching.Cryptography.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Caching.Database.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Caching.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Common.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Configuration.Design.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Configuration.Design.HostAdapter.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Configuration.EnvironmentalOverrides.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Data.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Data.SqlCe.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.Logging.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.WCF.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Logging.Database.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Logging.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.PolicyInjection.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Security.Cache.CachingStore.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Security.Cryptography.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Security.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Validation.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Validation.Integration.AspNet.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Validation.Integration.WCF.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.EnterpriseLibrary.Validation.Integration.WinForms.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.Prism.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.Prism.Interactivity.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.Prism.UnityExtensions.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.ServiceLocation.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.Unity.Configuration.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.Unity.dll" />
+    <Content Include="bin\Debug\Microsoft.Practices.Unity.Interception.dll" />
+    <Content Include="bin\Debug\Microsoft.ReportViewer.Common.dll" />
+    <Content Include="bin\Debug\Microsoft.ReportViewer.ProcessingObjectModel.dll" />
+    <Content Include="bin\Debug\Microsoft.ReportViewer.WebForms.dll" />
+    <Content Include="bin\Debug\Microsoft.Web.Services2.dll" />
+    <Content Include="bin\Debug\Microsoft.Web.Services3.dll" />
+    <Content Include="bin\Debug\Microsoft.Windows.Shell.dll" />
+    <Content Include="bin\Debug\MSVCP71.DLL" />
+    <Content Include="bin\Debug\msvcr71.dll" />
+    <Content Include="bin\Debug\Payflow_dotNET.dll" />
+    <Content Include="bin\Debug\RibbonControlsLibrary.dll" />
+    <Content Include="bin\Debug\SQLclasses_deploy.dll" />
+    <Content Include="bin\Debug\SQLclasses_deploy.xml" />
+    <Content Include="bin\Debug\TSWizards.dll" />
+    <Content Include="bin\Debug\WPFToolkit.dll" />
+    <Content Include="bin\Debug\wwHoverPanel.dll" />
+    <Content Include="bin\Release\AB.dll" />
+    <Content Include="bin\Release\ABActX.dll" />
+    <Content Include="bin\Release\AddressBrokerDotNetClient.dll" />
+    <Content Include="bin\Release\AjaxControlToolkit.dll" />
+    <Content Include="bin\Release\amqmdnet.dll" />
+    <Content Include="bin\Release\Aspose.Words.dll" />
+    <Content Include="bin\Release\CommonClasses_deploy.dll" />
+    <Content Include="bin\Release\CommonClasses_deploy.xml" />
+    <Content Include="bin\Release\DevExpress.Charts.v13.2.Core.dll" />
+    <Content Include="bin\Release\DevExpress.Data.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.Docs.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.PivotGrid.v13.2.Core.dll" />
+    <Content Include="bin\Release\DevExpress.Printing.v13.2.Core.dll" />
+    <Content Include="bin\Release\DevExpress.RichEdit.v13.2.Core.dll" />
+    <Content Include="bin\Release\DevExpress.SpellChecker.v13.2.Core.dll" />
+    <Content Include="bin\Release\DevExpress.Utils.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.Web.ASPxHtmlEditor.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.Web.ASPxPivotGrid.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.Web.ASPxScheduler.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.Web.ASPxSpellChecker.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.Web.ASPxThemes.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.Web.ASPxTreeList.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.Web.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.Xpf.Charts.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.XtraCharts.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.XtraCharts.v13.2.Web.dll" />
+    <Content Include="bin\Release\DevExpress.XtraReports.v13.2.dll" />
+    <Content Include="bin\Release\DevExpress.XtraReports.v13.2.Web.dll" />
+    <Content Include="bin\Release\DevExpress.XtraScheduler.v13.2.Core.dll" />
+    <Content Include="bin\Release\DevExpress.XtraScheduler.v13.2.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.BOP.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.CA.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.CC.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.CG.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.CGL.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.CIM.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.CP.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.CPP.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.CU.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.CWC.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Detail.PIM.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.Library.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.VDet.PA.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.VDet.PDF.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.VDet.PF.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.VDet.PH.v01.dll" />
+    <Content Include="bin\Release\Diamond.C0044.Common.VDet.PU.v01.dll" />
+    <Content Include="bin\Release\Diamond.Common.ACORD.dll" />
+    <Content Include="bin\Release\Diamond.Common.ChoicePoint.Library.dll" />
+    <Content Include="bin\Release\Diamond.Common.ChoicePoint.Library.pdb" />
+    <Content Include="bin\Release\Diamond.Common.Diagnostics.dll" />
+    <Content Include="bin\Release\Diamond.Common.Diagnostics.pdb" />
+    <Content Include="bin\Release\Diamond.Common.EventBroker.dll" />
+    <Content Include="bin\Release\Diamond.Common.Interfaces.dll" />
+    <Content Include="bin\Release\Diamond.Common.Interfaces.pdb" />
+    <Content Include="bin\Release\Diamond.Common.Objects.ConfigurableBook.dll" />
+    <Content Include="bin\Release\Diamond.Common.Objects.ConfigurableBook.pdb" />
+    <Content Include="bin\Release\Diamond.Common.Objects.dll" />
+    <Content Include="bin\Release\Diamond.Common.Objects.pdb" />
+    <Content Include="bin\Release\Diamond.Common.Objects.xml" />
+    <Content Include="bin\Release\Diamond.Common.Rules.dll" />
+    <Content Include="bin\Release\Diamond.Common.Rules.pdb" />
+    <Content Include="bin\Release\Diamond.Common.ScheduleRunner.dll" />
+    <Content Include="bin\Release\Diamond.Common.Services.dll" />
+    <Content Include="bin\Release\Diamond.Common.Services.pdb" />
+    <Content Include="bin\Release\Diamond.Common.Services.xml" />
+    <Content Include="bin\Release\Diamond.Common.StaticDataManager.dll" />
+    <Content Include="bin\Release\Diamond.Common.StaticDataManager.pdb" />
+    <Content Include="bin\Release\Diamond.Common.Transport.dll" />
+    <Content Include="bin\Release\Diamond.Common.Utility.dll" />
+    <Content Include="bin\Release\Diamond.Common.Utility.pdb" />
+    <Content Include="bin\Release\Diamond.Common.WorkflowActivities.dll" />
+    <Content Include="bin\Release\Diamond.DataAccess.DiamondDataAccess.dll" />
+    <Content Include="bin\Release\Diamond.dll" />
+    <Content Include="bin\Release\Diamond.pdb" />
+    <Content Include="bin\Release\Diamond.UI.Attachments.dll" />
+    <Content Include="bin\Release\Diamond.UI.BaseControls.dll" />
+    <Content Include="bin\Release\Diamond.UI.BaseControls.pdb" />
+    <Content Include="bin\Release\Diamond.UI.Claims.Core.dll" />
+    <Content Include="bin\Release\Diamond.UI.Claims.Core.pdb" />
+    <Content Include="bin\Release\Diamond.UI.DetailControlsCommercial.dll" />
+    <Content Include="bin\Release\Diamond.UI.DetailControlsCore.dll" />
+    <Content Include="bin\Release\Diamond.UI.Interfaces.dll" />
+    <Content Include="bin\Release\Diamond.UI.Interfaces.pdb" />
+    <Content Include="bin\Release\Diamond.UI.LOB.dll" />
+    <Content Include="bin\Release\Diamond.UI.LOB.pdb" />
+    <Content Include="bin\Release\Diamond.UI.Renderers.dll" />
+    <Content Include="bin\Release\Diamond.UI.Renderers.pdb" />
+    <Content Include="bin\Release\Diamond.UI.Rules.dll" />
+    <Content Include="bin\Release\Diamond.UI.Rules.pdb" />
+    <Content Include="bin\Release\Diamond.UI.StaticDataManager.dll" />
+    <Content Include="bin\Release\Diamond.UI.StaticDataManager.pdb" />
+    <Content Include="bin\Release\Diamond.UI.Utility.dll" />
+    <Content Include="bin\Release\Diamond.UI.Utility.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Accounting.dll" />
+    <Content Include="bin\Release\Diamond.Web.Accounting.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Administration.dll" />
+    <Content Include="bin\Release\Diamond.Web.Administration.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Attachments.dll" />
+    <Content Include="bin\Release\Diamond.Web.Attachments.pdb" />
+    <Content Include="bin\Release\Diamond.Web.BaseControls.dll" />
+    <Content Include="bin\Release\Diamond.Web.BaseControls.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Billing.dll" />
+    <Content Include="bin\Release\Diamond.Web.Billing.pdb" />
+    <Content Include="bin\Release\Diamond.Web.C44Controls.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Activity.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Activity.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.AdditionalInterest.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.AdditionalInterest.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Appraisal.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Appraisal.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Catastrophe.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Catastrophe.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Claim.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Claim.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Claimant.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Claimant.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Configure.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Configure.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Core.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Core.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Dashboard.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Dashboard.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Detail.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Detail.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Feature.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Feature.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Financials.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Financials.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Form.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Form.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Inquiry.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Inquiry.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.List.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.List.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Lookup.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Lookup.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.LossNotice.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.LossNotice.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Maintenance.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Maintenance.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.NotifyUnderwriting.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.NotifyUnderwriting.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Payee.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Payee.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Personnel.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Personnel.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.PoliceFire.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.PoliceFire.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Property.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Property.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.ReportedBy.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.ReportedBy.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Salvage.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Salvage.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Transaction.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Transaction.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Vehicle.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Vehicle.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Witness.dll" />
+    <Content Include="bin\Release\Diamond.Web.Claims.Witness.pdb" />
+    <Content Include="bin\Release\Diamond.Web.ConfigurationTools.dll" />
+    <Content Include="bin\Release\Diamond.Web.ConfigurationTools.pdb" />
+    <Content Include="bin\Release\Diamond.Web.ContactManagement.Core.dll" />
+    <Content Include="bin\Release\Diamond.Web.ContactManagement.Core.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Core.dll" />
+    <Content Include="bin\Release\Diamond.Web.Core.pdb" />
+    <Content Include="bin\Release\Diamond.Web.DetailControls.dll" />
+    <Content Include="bin\Release\Diamond.Web.DetailControls.pdb" />
+    <Content Include="bin\Release\Diamond.Web.DetailControlsCommercial.dll" />
+    <Content Include="bin\Release\Diamond.Web.DetailControlsCommercial.pdb" />
+    <Content Include="bin\Release\Diamond.Web.DetailControlsCore.dll" />
+    <Content Include="bin\Release\Diamond.Web.DetailControlsCore.pdb" />
+    <Content Include="bin\Release\Diamond.Web.DetailControlsNonProperty.dll" />
+    <Content Include="bin\Release\Diamond.Web.DetailControlsNonProperty.pdb" />
+    <Content Include="bin\Release\Diamond.Web.DetailControlsProperty.dll" />
+    <Content Include="bin\Release\Diamond.Web.DetailControlsProperty.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Inspections.dll" />
+    <Content Include="bin\Release\Diamond.Web.Inspections.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Navigation.dll" />
+    <Content Include="bin\Release\Diamond.Web.Navigation.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Notes.dll" />
+    <Content Include="bin\Release\Diamond.Web.Notes.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Policy.dll" />
+    <Content Include="bin\Release\Diamond.Web.Policy.pdb" />
+    <Content Include="bin\Release\Diamond.Web.PortalControls.dll" />
+    <Content Include="bin\Release\Diamond.Web.PortalControls.pdb" />
+    <Content Include="bin\Release\Diamond.Web.PreconfiguredControls.dll" />
+    <Content Include="bin\Release\Diamond.Web.PreconfiguredControls.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Reports.dll" />
+    <Content Include="bin\Release\Diamond.Web.Reports.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Security.dll" />
+    <Content Include="bin\Release\Diamond.Web.Security.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Services.dll" />
+    <Content Include="bin\Release\Diamond.Web.Services.pdb" />
+    <Content Include="bin\Release\Diamond.Web.ThirdParty.dll" />
+    <Content Include="bin\Release\Diamond.Web.ThirdParty.pdb" />
+    <Content Include="bin\Release\Diamond.Web.Workflow.dll" />
+    <Content Include="bin\Release\Diamond.Web.Workflow.pdb" />
+    <Content Include="bin\Release\Diamond.Web.WriteLetter.dll" />
+    <Content Include="bin\Release\Diamond.Web.WriteLetter.pdb" />
+    <Content Include="bin\Release\DiamondWebClass.dll" />
+    <Content Include="bin\Release\DiamondWebClass.pdb" />
+    <Content Include="bin\Release\DiamondWebClass.xml" />
+    <Content Include="bin\Release\DocumentFormat.OpenXml.dll" />
+    <Content Include="bin\Release\ICSharpCode.SharpZipLib.dll" />
+    <Content Include="bin\Release\Iesi.Collections.dll" />
+    <Content Include="bin\Release\Insuresoft.RuleEngine.Common.dll" />
+    <Content Include="bin\Release\Insuresoft.RuleEngine.Common.pdb" />
+    <Content Include="bin\Release\Insuresoft.RuleEngineV1.Business.dll" />
+    <Content Include="bin\Release\Insuresoft.RuleEngineV1.Common.dll" />
+    <Content Include="bin\Release\Insuresoft.RuleEngineV1.UI.dll" />
+    <Content Include="bin\Release\Interop.Excel.dll" />
+    <Content Include="bin\Release\Interop.QMSABACTXLib.dll" />
+    <Content Include="bin\Release\libbf.dll" />
+    <Content Include="bin\Release\Microsoft.Office.Interop.Excel.dll" />
+    <Content Include="bin\Release\Microsoft.Office.Interop.SmartTag.dll" />
+    <Content Include="bin\Release\Microsoft.Office.Interop.Word.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Caching.Cryptography.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Caching.Database.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Caching.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Common.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Configuration.Design.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Configuration.Design.HostAdapter.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Configuration.EnvironmentalOverrides.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Data.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Data.SqlCe.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.Logging.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.WCF.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Logging.Database.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Logging.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.PolicyInjection.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Security.Cache.CachingStore.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Security.Cryptography.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Security.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Validation.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Validation.Integration.AspNet.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Validation.Integration.WCF.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.EnterpriseLibrary.Validation.Integration.WinForms.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.Prism.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.Prism.Interactivity.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.Prism.UnityExtensions.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.ServiceLocation.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.Unity.Configuration.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.Unity.dll" />
+    <Content Include="bin\Release\Microsoft.Practices.Unity.Interception.dll" />
+    <Content Include="bin\Release\Microsoft.ReportViewer.Common.dll" />
+    <Content Include="bin\Release\Microsoft.ReportViewer.ProcessingObjectModel.dll" />
+    <Content Include="bin\Release\Microsoft.ReportViewer.WebForms.dll" />
+    <Content Include="bin\Release\Microsoft.Web.Services2.dll" />
+    <Content Include="bin\Release\Microsoft.Web.Services3.dll" />
+    <Content Include="bin\Release\Microsoft.Windows.Shell.dll" />
+    <Content Include="bin\Release\MSVCP71.DLL" />
+    <Content Include="bin\Release\msvcr71.dll" />
+    <Content Include="bin\Release\Payflow_dotNET.dll" />
+    <Content Include="bin\Release\RibbonControlsLibrary.dll" />
+    <Content Include="bin\Release\SQLclasses_deploy.dll" />
+    <Content Include="bin\Release\SQLclasses_deploy.xml" />
+    <Content Include="bin\Release\TSWizards.dll" />
+    <Content Include="bin\Release\WPFToolkit.dll" />
+    <Content Include="bin\Release\wwHoverPanel.dll" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <Import Project="..\packages\NETStandard.Library.2.0.0\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.0\build\netstandard2.0\NETStandard.Library.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\NETStandard.Library.2.0.0\build\netstandard2.0\NETStandard.Library.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NETStandard.Library.2.0.0\build\netstandard2.0\NETStandard.Library.targets'))" />
+  </Target>
+</Project>

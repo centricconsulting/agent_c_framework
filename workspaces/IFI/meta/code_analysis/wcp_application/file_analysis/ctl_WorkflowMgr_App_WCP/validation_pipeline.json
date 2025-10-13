@@ -1,0 +1,159 @@
+{
+  "validation_pipeline": {
+    "validation_coordination": {
+      "entry_point": {
+        "method": "ValidateControl(valArgs As VRValidationArgs)",
+        "override": "Public Overrides Sub",
+        "line_reference": "135"
+      },
+      "validation_sequence": [
+        {
+          "step": 1,
+          "action": "Me.ValidateChildControls(valArgs)",
+          "description": "Validate all child VR controls",
+          "line_reference": "136"
+        },
+        {
+          "step": 2,
+          "action": "Me.ValidationHelper.GroupName = \"Application Rate\"",
+          "description": "Set validation group name",
+          "line_reference": "147"
+        },
+        {
+          "step": 3,
+          "action": "MyBase.ValidateControl(valArgs)",
+          "description": "Call base class validation",
+          "line_reference": "148"
+        },
+        {
+          "step": 4,
+          "action": "Conditional effective date validation",
+          "condition": "validateEffectiveDate = True",
+          "line_reference": "150"
+        }
+      ]
+    },
+    "child_control_validation": {
+      "commented_out_validations": {
+        "note": "Individual child validations are commented out in favor of ValidateChildControls",
+        "line_reference": "137-143",
+        "controls": [
+          "ctlCommercialUWQuestionList",
+          "ctl_AttachmentUpload", 
+          "ctl_WCP_QuoteSummary",
+          "ctlCommercial_IRPM",
+          "ctlCommercial_DocPrint",
+          "ctl_AppSection_WCP"
+        ]
+      },
+      "active_validation_setup": {
+        "method": "Save_FireSaveEvent with validation controls",
+        "controls_to_validate": [
+          "ctlCommercialUWQuestionList",
+          "ctlCommercial_IRPM",
+          "ctl_AppSection_WCP"
+        ],
+        "line_reference": "317-319",
+        "trigger": "ctl_AppSection_WCP_SaveRequested event"
+      }
+    },
+    "effective_date_validation": {
+      "conditional_trigger": {
+        "variable": "validateEffectiveDate As Boolean = False",
+        "description": "Only validate effective date when explicitly requested",
+        "line_reference": "56, 150"
+      },
+      "policy_level_validation": {
+        "method": "IFM.VR.Validation.ObjectValidation.PolicyLevelValidator.PolicyValidation",
+        "parameters": ["Me.Quote", "Me.DefaultValidationType"],
+        "line_reference": "151",
+        "field_processing": {
+          "target_field": "IFM.VR.Validation.ObjectValidation.PolicyLevelValidator.EffectiveDate",
+          "action": "Me.ValidationHelper.AddError(v.Message)",
+          "line_reference": "153-157"
+        }
+      },
+      "wc_specific_validation": {
+        "method": "IFM.VR.Validation.ObjectValidation.CommLines.LOB.WC.PolicyLevelValidations.ValidatePolicyLevel", 
+        "parameters": ["Me.Quote", "valArgs.ValidationType"],
+        "line_reference": "160",
+        "supports_warnings": true,
+        "processing": {
+          "warnings": "Me.ValidationHelper.AddWarning(v.Message)",
+          "errors": "Me.ValidationHelper.AddError(v.Message)",
+          "line_reference": "163-167"
+        }
+      }
+    },
+    "validation_types": {
+      "conditional_logic": {
+        "expression": "If(Me.IsOnAppPage, IFM.VR.Validation.ObjectValidation.ValidationItem.ValidationType.appRate, VR.Validation.ObjectValidation.ValidationItem.ValidationType.quoteRate)",
+        "line_reference": "60",
+        "types": [
+          "IFM.VR.Validation.ObjectValidation.ValidationItem.ValidationType.appRate",
+          "VR.Validation.ObjectValidation.ValidationItem.ValidationType.quoteRate"
+        ]
+      },
+      "default_validation_type": {
+        "property": "Me.DefaultValidationType",
+        "used_in": "Policy level validation",
+        "line_reference": "151"
+      }
+    },
+    "validation_error_aggregation": {
+      "validation_summary": {
+        "check": "Me.ValidationSummmary.HasErrors() = False",
+        "location": "RateWasRequested method",
+        "line_reference": "63",
+        "blocks_rating": "Rating only proceeds if no validation errors"
+      },
+      "validation_helper": {
+        "group_name": "Application Rate",
+        "methods": [
+          "ValidationHelper.AddError(message)",
+          "ValidationHelper.AddWarning(message)"
+        ],
+        "integration": "Used throughout for error collection"
+      }
+    }
+  },
+  "uw_questions_validation": {
+    "business_logic": {
+      "unanswered_check": {
+        "condition": "q.PolicyUnderwritingAnswer.Trim = \"\"",
+        "action": "Set Unanswered = True",
+        "line_reference": "274-277",
+        "error_message": "You must complete the Underwriting Questions before proceeding."
+      },
+      "kill_questions_check": {
+        "lob": "WorkersCompensation",
+        "kill_question_count": 6,
+        "condition": "Quote.PolicyUnderwritings.Count > 6",
+        "line_reference": "280-287",
+        "error_message": "You must complete the Underwriting Question before proceeding.",
+        "business_rule": "WCP has 6 kill questions, need additional questions"
+      }
+    }
+  },
+  "validation_dependencies": {
+    "external_validators": [
+      {
+        "validator": "IFM.VR.Validation.ObjectValidation.PolicyLevelValidator",
+        "purpose": "Policy level validation including effective date",
+        "content_status": "⚠️ EXTERNAL SERVICE - Validation rules in separate assembly"
+      },
+      {
+        "validator": "IFM.VR.Validation.ObjectValidation.CommLines.LOB.WC.PolicyLevelValidations",
+        "purpose": "WC LOB-specific policy validation",
+        "content_status": "⚠️ EXTERNAL SERVICE - LOB-specific validation rules"
+      }
+    ],
+    "validation_helpers": [
+      {
+        "helper": "ctlDisplayDiamondRatingErrors.ValidationHelper",
+        "purpose": "Check for rating errors before summary transition",
+        "line_reference": "29"
+      }
+    ]
+  }
+}

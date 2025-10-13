@@ -1,0 +1,130 @@
+{
+  "configuration_file_dependencies": [
+    {
+      "config_type": "Application Settings",
+      "config_source": "ConfigurationManager.AppSettings",
+      "import_statement": "System.Configuration.ConfigurationManager (line 2)",
+      "usage_locations": [
+        {
+          "location": "HandleError method, line 100",
+          "code": "AppSettings(\"TestOrProd\").ToUpper",
+          "key": "TestOrProd",
+          "purpose": "Environment detection for error handling",
+          "business_logic": "If not PROD, show error in lblMsg, else throw exception",
+          "values_expected": ["PROD", "TEST", "DEV", etc.]
+        }
+      ],
+      "content_status": "⚠️ Config file content requires validation",
+      "follow_up_needed": "Check web.config/app.config for TestOrProd setting",
+      "business_impact": "Controls error display vs exception throwing behavior"
+    }
+  ],
+  "import_dependencies": [
+    {
+      "import": "IFM.PrimativeExtensions",
+      "location": "line 1",
+      "purpose": "Extension methods for primitive types",
+      "usage_in_file": "ViewState.GetInt32() extension method",
+      "dependency_type": "Internal Library",
+      "content_status": "✅ Extension methods - no config content"
+    },
+    {
+      "import": "QuickQuote.CommonMethods.QuickQuoteHelperClass",
+      "location": "line 3", 
+      "purpose": "Helper methods for QuickQuote operations",
+      "usage_in_file": "QQHelper.LoadStaticDataOptionsDropDown",
+      "dependency_type": "External Library",
+      "content_status": "⚠️ Requires QQHelper analysis for complete data flow"
+    },
+    {
+      "import": "QuickQuote.CommonObjects.QuickQuoteStaticDataOption",
+      "location": "line 4",
+      "purpose": "Static data option objects", 
+      "usage_in_file": "Enum values for QQHelper method parameters",
+      "dependency_type": "External Library",
+      "content_status": "✅ Enum definitions - no dynamic content"
+    },
+    {
+      "import": "System.Data.SqlClient",
+      "location": "line 5",
+      "purpose": "SQL Server database connectivity",
+      "usage_in_file": "Not directly used - imported but no SqlClient code found",
+      "dependency_type": "Framework Library",
+      "content_status": "❓ Imported but not used - may indicate unused reference"
+    }
+  ],
+  "viewstate_dependencies": [
+    {
+      "viewstate_key": "vs_WCPNIIndex",
+      "purpose": "Store Named Individual index across postbacks",
+      "data_type": "Int32",
+      "default_value": -1,
+      "location": "NamedIndividualIndex property, lines 17-23",
+      "business_purpose": "Track which Named Individual record this control represents"
+    }
+  ],
+  "hidden_field_dependencies": [
+    {
+      "hidden_field": "hdnNIType",
+      "purpose": "Store NIType enum value across postbacks",
+      "data_type": "NIType_Enum",
+      "location": "NIType property, lines 62-70",
+      "business_purpose": "Maintain Named Individual type across page lifecycle"
+    }
+  ],
+  "static_data_configuration": [
+    {
+      "static_data_source": "QuickQuoteInclusionExclusionScheduledItem",
+      "accessed_via": "QQHelper.LoadStaticDataOptionsDropDown",
+      "property_name": "PositionTitleTypeId",
+      "sort_order": "TextDescending",
+      "lob_filtering": "Yes - filtered by Me.Quote.LobType",
+      "purpose": "Position/title options for Named Individual inclusion/exclusion",
+      "content_status": "⚠️ Database content - requires static data table analysis",
+      "business_impact": "Provides dropdown options for position selection"
+    }
+  ],
+  "external_service_dependencies": [],
+  "resource_file_dependencies": [
+    {
+      "resource_access": "None identified",
+      "note": "No direct .resx or resource file access found in this control",
+      "content_status": "✅ No resource dependencies"
+    }
+  ],
+  "configuration_completeness_assessment": {
+    "config_files_identified": 1,
+    "config_keys_found": 1,
+    "static_data_sources": 1,
+    "external_dependencies": 3,
+    "analysis_confidence": "High",
+    "gaps_identified": [
+      "Actual TestOrProd configuration value unknown",
+      "QQHelper class implementation not analyzed",
+      "Static data table schema not available",
+      "SqlClient import unused - may indicate refactoring opportunity"
+    ],
+    "follow_up_actions": [
+      {
+        "action": "Validate TestOrProd config setting in web.config/app.config",
+        "priority": "Medium",
+        "impact": "Error handling behavior"
+      },
+      {
+        "action": "Analyze QQHelper class for complete data loading patterns", 
+        "priority": "High",
+        "impact": "Understanding dropdown population mechanism"
+      },
+      {
+        "action": "Map QuickQuoteInclusionExclusionScheduledItem database table",
+        "priority": "High", 
+        "impact": "Complete static data understanding"
+      },
+      {
+        "action": "Review SqlClient import usage - remove if unused",
+        "priority": "Low",
+        "impact": "Code cleanup opportunity"
+      }
+    ]
+  }
+}

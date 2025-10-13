@@ -1,0 +1,235 @@
+﻿.mnlobNm
+{
+    height:30px;
+    font-size:13px;
+    color:#990033;
+    font-family:Arial, Helvetica, sans-serif;
+    font-weight:bold;
+}
+
+.mnlobNmX
+{
+    color:#ffffff;
+    background-image: url('../images/grad5.png');
+    background-repeat:repeat-x;
+    background-position:0px 0px;
+    border-bottom-left-radius:6px;
+    border-bottom-right-radius:6px;
+    padding:4px 14px 4px 14px; /*top, left, bottom, right*/
+}
+
+.mnItmHdr
+{
+    height:30px;
+    font-size:12px;
+    color:#CD853F;
+    font-family:Arial, Helvetica, sans-serif;
+    font-weight:bold;
+}
+
+.mnItm1_Ok, .mnItm1_X, .mnItm2_Ok, .mnItm2_X
+{
+    min-height:30px;
+    padding-left:28px;
+    padding-top:5px;
+    background-repeat:no-repeat;
+    margin-left:10px;
+}
+
+.mnItm1_Ok, .mnItm1_X
+{
+    background-position:-1px 0px;
+    border-left:1px solid #C0C0C0;
+}
+
+.mnItm1_Ok
+{
+    background-image: url('../images/arm.png');
+}
+
+.mnItm1_X
+{
+    background-image: url('../images/armX.png');
+}
+
+.mnItm2_Ok, .mnItm2_X
+{
+    background-position:0px 0px;
+}
+
+.mnItm2_Ok
+{
+    background-image: url('../images/arm2.png');
+}
+
+.mnItm2_X
+{
+    background-image: url('../images/arm2X.png');
+}
+
+.mnL, .mnBar
+{
+    padding-top:5px;
+    margin-left:-10px;
+    background-repeat:no-repeat;
+    background-position:0px 0px;
+}
+
+.mnL
+{
+    padding-left:10px;
+    padding-bottom:6px;
+    background-image: url('../images/arm2_.png');
+}
+
+.mnBar
+{
+    padding-left:8px;
+    margin-top:5px;
+    background-image: url('../images/arm_.png');
+    border-left:1px solid #C0C0C0;
+}
+
+.qtItm, .qtItmX, .qtItmA,.qtNotes
+{
+    height:30px;
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:11px;
+    font-weight: normal;
+    color:#444444;
+}
+
+.qtItm, .qtItmX
+{
+    color:#333;
+}
+
+.qtItm
+{
+    text-decoration:underline;
+}
+
+.qtItmX
+{
+    text-decoration:none;
+}
+
+.qtItmA
+{
+    color:#6699FF;
+    text-decoration:none;
+}
+.qtNotes
+{
+    font-style: italic;
+    color: #999999;
+    text-decoration:none;
+}
+
+/*------------------------*/
+
+.treeMain
+{
+}
+
+.treeSub
+{
+    height:34px;
+    background-repeat:no-repeat;
+    padding-left:15px;
+    padding-top:0px;
+    padding-bottom:0px;
+    vertical-align:middle;
+}
+.treeSub1
+{
+    background-image: url('/VelociRater/images/arm1.png');
+}
+.treeSub2
+{
+    background-image: url('/VelociRater/images/arm2.png');
+}
+
+.subIcon
+{
+    width:20px;
+}
+.subIcon img
+{
+    width:18px;
+}
+
+._arm
+{
+    padding-left:8px;
+    padding-top:5px;
+    margin-left:-10px;
+    margin-top:5px;
+    background-repeat:no-repeat;
+    background-image: url('/VelociRater/images/arm_.png');
+    background-position:0px 0px;
+}
+._arm2
+{
+    padding-left:10px;
+    padding-top:5px;
+    padding-bottom:6px;
+    margin-left:-10px;
+    background-repeat:no-repeat;
+    background-image: url('/VelociRater/images/arm2_.png');
+    background-position:0px 0px;
+}
+.arm
+{
+    min-height:30px;
+    padding-left:28px;
+    padding-top:5px;
+    background-repeat:no-repeat;
+    background-image: url('/VelociRater/images/arm.png');
+    background-position:-1px 0px;
+}
+.arm2
+{
+    min-height:30px;
+    padding-left:25px;
+    padding-top:5px;
+    background-repeat:no-repeat;
+    background-image: url('/VelociRater/images/arm2.png');
+    background-position:0px 0px;
+}
+.armX
+{
+    min-height:30px;
+    padding-left:28px;
+    padding-top:5px;
+    background-repeat:no-repeat;
+    background-image: url('/VelociRater/images/armX.png');
+    background-position:-1px 0px;
+}
+.arm2X
+{
+    min-height:30px;
+    padding-left:28px;
+    padding-top:5px;
+    background-repeat:no-repeat;
+    background-image: url('/VelociRater/images/arm2X.png');
+    background-position:0px 0px;
+}
+
+.treeHdr
+{
+    height:30px;
+    font-size:13px;
+    color:#990033;
+    font-family:Arial;
+    font-weight:bold;
+}
+
+.treeSubHdr
+{
+    height:30px;
+    font-size:11px;
+    color:#CC9966;
+    font-family:Arial;
+    font-weight:bold;
+}

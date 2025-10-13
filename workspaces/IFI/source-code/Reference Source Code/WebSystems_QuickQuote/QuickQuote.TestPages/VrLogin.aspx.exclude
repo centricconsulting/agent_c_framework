@@ -1,0 +1,60 @@
+﻿<%@ Page Language="VB" AutoEventWireup="false" CodeFile="VrLogin.aspx.vb" Inherits="VrLogin" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VR Login</title>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+    <br />
+
+<div class="headline">Agency Login</div><br />
+
+<div class="normaltext"><b>You must be an authorized user to view the requested information.</b><br /><br />
+
+Please enter your username and password.</div>
+
+<table>
+    <tr>
+        <td class="normaltext">Username</td><td class="normaltext"><asp:TextBox ID="txtUsername" runat="server" Width="175px" MaxLength="20"></asp:TextBox></td>
+    </tr>
+    <tr>
+        <td class="normaltext">Password</td><td class="normaltext"><asp:TextBox ID="txtPassword" runat="server" TextMode="Password" Width="175px" MaxLength="20"></asp:TextBox></td>
+    </tr>
+    <%--<tr id="RememberRow" runat="server" visible="false">
+        <td colspan="2" align="center" class="normaltext"><asp:CheckBox ID="cbRemember" runat="server" Text="Remember Login" ToolTip="If you check this option, your login information will be stored on your computer.  For security reasons, this would not be recommended if others have access to your computer login." /></td>
+    </tr>
+    <tr id="DontRememberRow" runat="server" visible="false">
+        <td colspan="2" align="center" class="normaltext"><asp:CheckBox ID="cbDontRemember" runat="server" Text="Don't Remember Login" ToolTip="If you check this option, your login information will no longer be stored on your computer.  For security reasons, this would be recommended if others have access to your computer login." /></td>
+    </tr>--%>
+    <tr>
+        <td colspan="2" align="center"><asp:Button ID="btnLogin" runat="server" Text="Log In" /></td>
+    </tr>
+    <%--<tr>
+        <td colspan="2" align="center"><asp:HyperLink ID="hlForgotPass" runat="server" Text="Forgot Your Password?" /></td>
+    </tr>--%>
+</table>
+
+<br />
+<asp:Label ID="lblError" runat="server" Visible="False"></asp:Label>
+
+
+<% If Me.lblError.Visible = True Then%>       
+<script language="JavaScript">
+     document.getElementById('<%=lblError.ClientID%>').style.visibility = "hidden";
+</script>
+<%end if%>
+<asp:Label ID="lblPage" runat="server" Visible="False" Text=""></asp:Label>
+<asp:Label ID="lblTStation" runat="server" Visible="False" Text=""></asp:Label>
+<asp:Label ID="lblNxTech" runat="server" Visible="False" Text=""></asp:Label>
+<asp:Label ID="lblTestNxTech" runat="server" Visible="False" Text=""></asp:Label>
+<asp:Label ID="lblPassThruSystem" runat="server" Visible="False" Text=""></asp:Label>
+
+<asp:Label ID="lblAutoReLoginFlag" runat="server" Visible="False" Text=""></asp:Label>
+    </div>
+    </form>
+</body>
+</html>

@@ -1,0 +1,7 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CPR_VR_Proposal_CPR_Location_List_Control, VR_CGL_CPP_CPR_deploy" %>
+<%@ Register src="VR_Proposal_CPR_LocationControl.ascx" tagname="VR_Proposal_CPR_LocationControl" tagprefix="uc1" %>
+<asp:Panel ID="pnlLocations" runat="server">
+</asp:Panel>
+
+
+

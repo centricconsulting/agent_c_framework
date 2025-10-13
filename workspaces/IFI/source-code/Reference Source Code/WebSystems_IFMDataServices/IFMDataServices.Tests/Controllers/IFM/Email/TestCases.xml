@@ -1,0 +1,12 @@
+﻿<tests>  
+
+  <TestEmailDocument>
+    <toAddress>mamonett@indianafarmers.com;cflint@indianafarmers.com</toAddress>
+    <subject>Test Email</subject>
+    <body>Sent from integration testing.</body>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestEmailDocument>
+  
+</tests>

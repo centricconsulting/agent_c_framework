@@ -1,0 +1,195 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CGL_VR_Proposal_CGL_Coverages_Control, VR_CGL_CPP_CPR_deploy" %>
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc1" %>
+
+<style type="text/css">
+    .auto-style1 {
+        width: 255px;
+    }
+    .auto-style2 {
+        width: 448px;
+    }
+    .indent {
+        width: 50px;
+    }
+</style>
+
+<uc1:VR_PageBreakControl ID="VR_PageBreakControl1" Visible="false"  runat="server" />
+<div style="text-align:left">    
+<span class="p_SectionHead">Policy Coverages</span>
+<div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+<table class="basictbl">
+<tr runat="server" id="tr1" style="border-bottom: 1px solid black;">
+        <td class="p_ListHead">
+            Coverage</td>
+        <td class="auto-style1" style="text-align:right; ">
+            Detail</td>
+        <td class="p_ListHead" style="width:120px; text-align:right;">
+            Premium</td>
+    </tr>
+    <tr runat="server" id="trCondoDandO">
+        <td>
+            Condo Directors and Officers
+        </td>
+        <td style="text-align:right;" class="auto-style1">
+            <asp:Label ID="lblCondoDandODetails" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px; text-align:right;">
+            <asp:Label ID="lblCondoDandOSum" runat="server" Text=""></asp:Label>
+        </td>
+    </tr>
+    <tr runat="server" id="trAdditionalInsured">
+        <td>
+            Additional Insured</td>
+        <td style="text-align:right;" class="auto-style1">
+            Included</td>
+        <td style="width:120px; text-align:right;">
+            <asp:Label ID="lblAdditionalInsuredSum" runat="server" Text=""></asp:Label></td>
+    </tr>
+    <tr runat="server" id="trEmployeeBenifits">
+        <td>
+            Employee Benefits Liability</td>
+        <td style="text-align:right;" class="auto-style1">
+            <asp:Label ID="lblNumEmployees" runat="server" Text=""></asp:Label></td>
+        <td style="width:120px; text-align:right;">
+            <asp:Label ID="lblEmployeeBenifitsSum" runat="server" Text=""></asp:Label></td>
+    </tr>
+    <tr runat="server" id="trELPI">
+        <td>Employment Practices Liability - Claims-Made Basis</td>
+        <td style=" text-align:right;" class="auto-style1">
+            <asp:Label ID="lblELPIDetails" runat="server" Text="$100,000 $5,000 Deductible"></asp:Label></td>
+        <td style="width:120px; text-align:right;">
+            <asp:Label ID="lblELPIPremium" runat="server" Text=""></asp:Label></td>
+    </tr>
+    <tr runat="server" id="trCLI">
+        <td>Cyber Liability</td>
+        <td style=" text-align:right;" class="auto-style1">
+            <asp:Label ID="lblCLILimit" runat="server" Text="$50,000"></asp:Label>
+            <asp:Label ID="lblCLIDedAmt" runat="server" Text="$2,500"></asp:Label>
+            <asp:Label ID="lblCLIDedTxt" runat="server" Text="Deductible"></asp:Label>
+        </td>
+        <td style="width:120px; text-align:right;">
+            <asp:Label ID="lblCLIPremium" runat="server" Text=""></asp:Label>
+        </td>
+    </tr>
+    <tr runat="server" id="trILContractorsHomeRepair" visible="false">
+        <td>IL Contractors - Home Repair & Remodeling</td>
+        <td style=" text-align:right;" class="auto-style1">
+            <asp:Label ID="ilContractorsHomeRepairDetails" runat="server" Text="$10,000 $500 Deductible"></asp:Label></td>
+        <td style="width:120px; text-align:right;">
+            <asp:Label ID="ilContractorsHomeRepairPremium" runat="server" Text=""></asp:Label></td>
+    </tr>
+    <tr runat="server" id="trHiredauto">
+    <td> Hired Auto Liability</td>
+    <td style="text-align:right;" class="auto-style1">Included</td>
+    <td style="width:120px; text-align:right;">
+        <asp:Label ID="lblHiredAutoPrem" runat="server" Text=""></asp:Label>
+        </td>
+    </tr>
+    <tr runat="server" id="trNonOwnerAuto">
+    <td>Non-Owner Auto</td>
+    <td style="text-align:right;" class="auto-style1">Included</td>
+    <td style="width:120px; text-align:right;">
+    <asp:Label ID="lblNonOwnerAuto" runat="server" Text=""></asp:Label>
+    </td>
+    </tr>
+    <tr runat="server" id="trILLiquor" visible="false">
+        <td><asp:Label ID="llILtag" runat="server" Text="Liquor Liability"></asp:Label></td>
+        <td style="text-align:right;" class="auto-style1">
+            Illinois - Sales of <asp:Label ID="lblILLiquorSales" runat="server" Text=""></asp:Label></td>
+        <td style="width:120px; text-align:right;">
+            <asp:Label ID="lblILLiquorSum" runat="server" Text=""></asp:Label></td>
+    </tr>
+    <tr runat="server" id="trINLiquor" visible="false">
+        <td><asp:Label ID="llINtag" runat="server" Text="Liquor Liability"></asp:Label></td>
+        <td style="text-align:right;" class="auto-style1">
+            Indiana - Sales of <asp:Label ID="lblINLiquorSales" runat="server" Text=""></asp:Label></td>
+        <td style="width:120px; text-align:right;">
+            <asp:Label ID="lblINLiquorSum" runat="server" Text=""></asp:Label></td>
+    </tr>
+    <tr runat="server" id="trILOccurrenceLimitExtra" visible="false">
+        <td colspan="3">
+            <table>
+                <tr><td class="indent"></td><td style="text-align:left;" class="auto-style2"><asp:Label ID="lblILBILimit" runat="server" Text=""></asp:Label> Each Person Bodily Injury Limit - Illinois</td></tr>
+                <tr><td class="indent"></td><td style="text-align:left;" class="auto-style2"><asp:Label ID="lblILPDLimit" runat="server" Text=""></asp:Label> Each Person Property Damage Limit - Illinois</td></tr>
+                <tr><td class="indent"></td><td style="text-align:left;" class="auto-style2"><asp:Label ID="lblILLOMLimit" runat="server" Text=""></asp:Label> Loss of Means of Support or Loss of Society Limit - Illinois</td></tr>
+                <tr><td class="indent"></td><td style="text-align:left;" class="auto-style2"><asp:Label ID="lblILCOLimit" runat="server" Text=""></asp:Label> Each Common Occurrence - Other than Illinois</td></tr>
+                <tr><td class="indent"></td><td style="text-align:left;" class="auto-style2"><asp:Label ID="lblLiquorLiabilityAggregate" runat="server" Text=""></asp:Label> Liquor Liability Aggregate - All states</td></tr>
+            </table>
+        </td>
+    </tr>
+    <tr runat="server" id="trProfessional">
+        <td style="vertical-align: middle">
+           Professional Liability</td>
+        <td style="text-align:right;" class="auto-style1">
+            <asp:Label ID="lblBodies" runat="server" Text=""></asp:Label>
+        </td>
+       <td style="width:120px; text-align:right;">
+            <asp:Label ID="lblProfessionalSum" runat="server" Text=""></asp:Label></td>
+    </tr>
+     <tr runat="server" id="trEnhancement">
+        <td style="vertical-align: middle">
+           Enhancement Endorsement</td>
+        <td style="text-align:right;" class="auto-style1">
+            
+            Included</td>
+       <td style="width:120px; text-align:right;">
+            <asp:Label ID="lblEnhacementSum" runat="server" Text=""></asp:Label>
+         </td>
+    </tr>    
+     <tr runat="server" id="trBlanketWaiverOfSubro">
+        <td style="vertical-align: middle">
+            <asp:Label ID="lblBlanketWaiverTitle" runat="server" Text="Blanket Waiver of Subro"></asp:Label>
+        </td>
+        <td style="text-align:right;" class="auto-style1">
+            
+            Included</td>
+       <td style="width:120px; text-align:right;">
+            <asp:Label ID="lblBlanketWaiverOfSubroAmt" runat="server" Text=""></asp:Label>
+         </td>
+    </tr>    
+    <tr runat="server" id="trMinPremAdj">
+        <td style="vertical-align: middle">
+            Minimum Premium Adjustment(s)
+        </td>
+        <td style="text-align:right;" class="auto-style1">
+            Included
+        </td>
+        <td style="width:120px; text-align:right;">
+            <asp:Label runat="server" ID="lblMinPremAdj"></asp:Label>
+        </td>
+    </tr>
+    <tr style="border-top: 1px solid black;font-weight:bold" >
+    <td> Total</td>
+    <td style="text-align:right;" class="auto-style1"></td>
+    <td style="width:120px; text-align:right;">
+        <asp:Label ID="lblPolicyCoverageTotals" runat="server" Text=""></asp:Label>
+    </td>
+    </tr>
+</table>
+
+<table class="basictbl" style="margin-top: 15px;" runat="server" id="tblAdditionalCharges" >
+<tr runat="server" id="tr2" style="border-bottom: 1px solid black;">
+        <td class="p_ListHead">
+            Description</td>
+        <td class="p_ListHead" style="width:120px; text-align:right;">
+            Detail</td>
+        <td class="p_ListHead" style="width:120px; text-align:right;">
+            Premium</td>
+    </tr>
+    <tr id="trMiscCharges" runat="server">
+    <td style="vertical-align: middle">
+           Additional Coverages</td>
+        <td style="width:120px; text-align:right;">
+            
+            Included
+            
+        </td>
+       <td style="width:120px; text-align:right; font-weight:bold;">
+            <asp:Label ID="lblMiscCharges" runat="server" Text=""></asp:Label>
+         </td>
+    
+    </tr>
+    </table>
+
+</div>
+</div>

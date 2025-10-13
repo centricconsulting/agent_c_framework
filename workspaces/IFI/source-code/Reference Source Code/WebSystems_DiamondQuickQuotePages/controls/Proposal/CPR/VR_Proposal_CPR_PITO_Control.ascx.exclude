@@ -1,0 +1,42 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CPR_VR_Proposal_CPR_PITO_Control, VR_CGL_CPP_CPR_deploy" %>
+
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc1" %>
+
+<uc1:VR_PageBreakControl ID="VR_PageBreakControl1" Visible="false" runat="server" />
+<div>   
+
+    <asp:Label ID="lblLocationTitle" CssClass="p_SectionHead panelIndentationSmall" runat="server" Text=""></asp:Label><%--updated 12/18/2017 w/ new panelIndentation class--%>
+    
+    <div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+        <table class="basictbl" style="margin-top: 15px;" >
+<tr runat="server" id="tr2" style="border-bottom: 1px solid black;">
+        <td class="p_ListHead">
+            Description</td>
+        <td class="p_ListHead" style="width:150px; text-align:right;">
+            Limit</td>        
+            <td class="p_ListHead" style="width:220px; text-align:right;">
+            Deductible/Windhail</td>
+            <td class="p_ListHead" style="width:120px; text-align:right;">
+            Premium</td>
+    </tr>
+    <tr>
+    <td>
+        <asp:Label ID="lblDescription" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="width:150px; text-align:right;">
+        <asp:Label ID="lblLimit" runat="server" Text=""></asp:Label>
+        </td>
+    <td style="width:180px; text-align:right;">
+        <asp:Label ID="lblDed" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px; text-align:right;font-weight:bold;">
+        <asp:Label ID="lblPremium" runat="server" Text=""></asp:Label>
+        </td>
+    </tr>
+    </table>
+
+    <br />
+    * Included in blanket limit
+
+    </div>
+    </div>

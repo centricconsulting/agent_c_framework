@@ -1,0 +1,129 @@
+{
+  "javascript_dependencies": [
+    {
+      "dependency_id": "city_county_lookup",
+      "function_name": "DoCityCountyLookup",
+      "location_called": "Line 59 (AddScriptWhenRendered method)",
+      "event_binding": "onkeyup event on ZIP code field",
+      "parameters": [
+        {
+          "parameter_name": "zipcode_field_id",
+          "server_control": "Me.txtZipcode.ClientID",
+          "purpose": "Source field for ZIP code input"
+        },
+        {
+          "parameter_name": "city_dropdown_id", 
+          "server_control": "Me.ddCityName.ClientID",
+          "purpose": "Hidden dropdown for city options (display:none)",
+          "note": "Always hidden from user view"
+        },
+        {
+          "parameter_name": "city_text_field_id",
+          "server_control": "Me.txtCity.ClientID", 
+          "purpose": "Text field to populate with selected city"
+        },
+        {
+          "parameter_name": "county_field_id",
+          "server_control": "Me.txtCounty.ClientID",
+          "purpose": "Text field to populate with county data"
+        },
+        {
+          "parameter_name": "state_dropdown_id",
+          "server_control": "Me.ddState.ClientID",
+          "purpose": "State dropdown for state context"
+        }
+      ],
+      "functionality": {
+        "trigger": "User types in ZIP code field",
+        "expected_behavior": "Automatically populate city and county fields based on ZIP code",
+        "data_flow": "ZIP code → JavaScript lookup → City/County population",
+        "user_experience": "Auto-complete functionality for address entry"
+      },
+      "integration_pattern": "Server-side control ID passing to client-side JavaScript",
+      "content_status": "⚠️ External JavaScript function - requires client-side analysis"
+    }
+  ],
+  "client_side_ui_interactions": [
+    {
+      "interaction_id": "event_propagation_control",
+      "location": "Line 55",
+      "control_affected": "lnkSave (save link)",
+      "javascript_method": "VRScript.StopEventPropagation",
+      "purpose": "Prevent event bubbling for save operations",
+      "implementation": "Me.VRScript.StopEventPropagation(Me.lnkSave.ClientID)"
+    },
+    {
+      "interaction_id": "delete_confirmation",
+      "location": "Line 56", 
+      "control_affected": "lnkDelete (delete link)",
+      "javascript_method": "VRScript.CreateConfirmDialog",
+      "purpose": "Show confirmation dialog before deletion",
+      "message": "Delete?",
+      "implementation": "Me.VRScript.CreateConfirmDialog(Me.lnkDelete.ClientID, \"Delete?\")"
+    },
+    {
+      "interaction_id": "clear_confirmation",
+      "location": "Line 57",
+      "control_affected": "lnkClear (clear link)", 
+      "javascript_method": "VRScript.CreateConfirmDialog",
+      "purpose": "Show confirmation dialog before clearing",
+      "message": "Clear?",
+      "implementation": "Me.VRScript.CreateConfirmDialog(Me.lnkClear.ClientID, \"Clear?\")"
+    }
+  ],
+  "vrscript_framework_usage": [
+    {
+      "framework_method": "StopEventPropagation",
+      "usage_count": 1,
+      "purpose": "Control event flow",
+      "controls_affected": ["lnkSave"]
+    },
+    {
+      "framework_method": "CreateConfirmDialog",
+      "usage_count": 2,
+      "purpose": "User confirmation dialogs",
+      "controls_affected": ["lnkDelete", "lnkClear"]
+    },
+    {
+      "framework_method": "CreateJSBinding",
+      "usage_count": 1,
+      "purpose": "Event binding to external JavaScript function",
+      "controls_affected": ["txtZipcode"],
+      "events_bound": ["onkeyup"]
+    }
+  ],
+  "external_javascript_analysis_required": [
+    {
+      "function_name": "DoCityCountyLookup",
+      "analysis_priority": "High",
+      "reason": "Core address functionality - auto-populates city/county from ZIP",
+      "expected_location": "Client-side JavaScript files or inline scripts",
+      "data_source_unknown": "Function likely calls external service or database for ZIP code lookup",
+      "business_impact": "Critical for user experience - address entry automation"
+    }
+  ],
+  "ui_behavior_patterns": [
+    {
+      "pattern": "Hidden Control Usage",
+      "location": "Line 84",
+      "implementation": "ddCityName.Attributes.Add(\"style\", \"display:none\")",
+      "purpose": "City dropdown hidden but used by JavaScript lookup function",
+      "business_rule": "User sees populated text field, not dropdown options"
+    },
+    {
+      "pattern": "Conditional UI Elements",
+      "location": "Lines 78-83",
+      "implementation": "First location restrictions",
+      "controls_affected": ["lnkDelete", "lnkClear", "ddState"],
+      "business_rule": "First workplace location has restricted edit capabilities"
+    }
+  ],
+  "client_side_dependencies_summary": {
+    "critical_functions": 1,
+    "ui_interactions": 3,
+    "framework_methods": 3,
+    "external_analysis_required": 1,
+    "completeness": "JavaScript dependencies identified - external function requires analysis",
+    "content_status": "⚠️ DoCityCountyLookup function analysis needed for complete functionality understanding"
+  }
+}

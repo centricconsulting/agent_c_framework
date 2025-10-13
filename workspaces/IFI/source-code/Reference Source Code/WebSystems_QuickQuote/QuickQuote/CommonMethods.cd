@@ -1,0 +1,1010 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" GroupingSetting="Access" MembersFormat="NameAndType">
+  <Class Name="QuickQuote.CommonMethods.QuickQuoteCompressionHelperClass">
+    <Position X="0.5" Y="2.5" Width="5.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAAAAAAAAAAAAAAIAAAAABAAACAAAAAACAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteCompressionHelperClass.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="QuickQuote.CommonMethods.QuickQuoteHelperClass">
+    <Position X="0.5" Y="24.75" Width="10" />
+    <Members>
+      <Field Name="_ForceLob" Hidden="true" />
+      <Method Name="CompareStaticDataOptions" Hidden="true" />
+      <Method Name="DiamondLobAndPropertiesForImage" Hidden="true" />
+      <Method Name="DiamondLobAndPropertiesForPackagePart" Hidden="true" />
+      <Method Name="GetIFMLOBVersionKeyNameFromEnum" Hidden="true" />
+      <Method Name="GetIFMLOBVersionLOBTypeRelationKeyNameFromEnum" Hidden="true" />
+      <Method Name="GetIFMLOBVersionRequiredStateKeyNameFromEnum" Hidden="true" />
+      <Method Name="GetShortFormNameCore" Hidden="true" />
+      <Method Name="HasIFMLOBVersionRequiredState" Hidden="true" />
+      <Method Name="HasIFMLOBVersionUncrossableDateLineBeforeEffectiveDate" Hidden="true" />
+      <Method Name="HasMatchOnAllAttributes" Hidden="true" />
+      <Method Name="IsAttributeValidForList" Hidden="true" />
+      <Method Name="PaymentOptionComparerForSortBy" Hidden="true" />
+      <Field Name="qqCompressionHelper" Hidden="true" />
+      <Method Name="QuoteContainsRequiredIFMVersionState" Hidden="true" />
+      <Method Name="SetNewClientIdsInSessionFromDiamondSave" Hidden="true" />
+      <Method Name="SortStaticDataOptions2" Hidden="true" />
+      <Method Name="StaticDataOptionComparerForSortBy" Hidden="true" />
+      <Method Name="TestUmbrellaObjectCode" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.DeductibleToUse">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.AssignedOrUnassigned">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.FirstOrLast">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.PremiumType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.MultiStateLevel">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.DiamondImageToPackagePartSyncType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.StatusMatchType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteEmptyStringReplacementType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.PositionInsertType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.LOBIFMVersions">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.DiamondImageToPackagePartSyncLogicExecutionSpot">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.MasterPackagePartObjectStorageType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.TypeToVerify">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteYesNoMaybeType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.StringPairType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.WhenToSetType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteMultiStateError">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.AlreadyExistedOrAddedNew">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.IntegerPairType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteEnvironment">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.QuoteLevel">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuotePropertyName">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.IsoTransmissionListOrderType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteClassName">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.PersOrComm">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.MasterPackagePartCopyType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteState">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.MissingEffectiveDateDateToUseType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.StreetAddressEvaluationType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.StaticDataOptionSearchType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.DiamondServiceXmlType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.ActivateOrDeactivate">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.TextMatchType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.FirstLastOrAll">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteHelperClass.RoundUpOrDown">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>///+//////////////////f///////////////9///8=</HashCode>
+      <FileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="QuickQuote.CommonMethods.VinLookupResult">
+    <Position X="6.25" Y="0.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>QAAQAAAABAAgAAAAgIAAAEAAEAAAQBAAgIwAQAIAAAA=</HashCode>
+      <FileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="QuickQuote.CommonMethods.QuickQuoteThirdPartyReportHelperClass">
+    <Position X="0.5" Y="5" Width="8" />
+    <Members>
+      <Field Name="qqHelper" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteThirdPartyReportHelperClass.ThirdPartyReportType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteThirdPartyReportHelperClass.ThirdPartyReportTypeCategory">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteThirdPartyReportHelperClass.ThirdPartyValidationType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteThirdPartyReportHelperClass.ThirdPartyReportEntityType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteThirdPartyReportHelperClass.ThirdPartyComparisonType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportHelperClass.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AQEghAAVIIARAIgGQCACAAAAAAIAg0EACQQAAIJHkBA=</HashCode>
+      <FileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportHelperClass.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="QuickQuote.CommonMethods.QuickQuoteXML">
+    <Position X="11" Y="0.5" Width="7.75" />
+    <Members>
+      <Field Name="_createDiamondImageXmlsForTesting" Hidden="true" />
+      <Field Name="_diamondImageXmlsFilePathDirectory" Hidden="true" />
+      <Field Name="_useComparativeRaterService" Hidden="true" />
+      <Method Name="AddAccidentViolationToList" Hidden="true" />
+      <Method Name="AddChoicePointTransmissionToList" Hidden="true" />
+      <Method Name="AddClaimHistoryToList" Hidden="true" />
+      <Method Name="AddCreditScoreReasonToList" Hidden="true" />
+      <Method Name="AddCreditScoreToList" Hidden="true" />
+      <Method Name="AddDhiTransmissionToList" Hidden="true" />
+      <Method Name="AdditionalInterestManagerTesting" Hidden="true" />
+      <Method Name="AddLossHistoryToList" Hidden="true" />
+      <Method Name="AddSaqImportedDriverToList" Hidden="true" />
+      <Method Name="AddSaqImportedVehicleToList" Hidden="true" />
+      <Field Name="agencyIdUsedForSavingOrRating" Hidden="true" />
+      <Field Name="allowReRateOnLoadThirdPartyDataForQuote" Hidden="true" />
+      <Field Name="AlwaysUseCodeIdAndLevelIdForPolicyUnderwritingReconciliation" Hidden="true" />
+      <Method Name="AppGapRatingValidation" Hidden="true" />
+      <Field Name="CLUE_Auto_LookForMatchOnPolicyholderWhenVehicleOperatorIsBlank" Hidden="true" />
+      <Field Name="CLUE_Auto_SetUnitNumOnLossHistoriesForNewReports" Hidden="true" />
+      <Field Name="CLUE_Auto_StoreUnassignedClueLossesAtPolicyLevel" Hidden="true" />
+      <Field Name="CLUE_Auto_WeedOutDuplicateLossHistoriesForNewReports" Hidden="true" />
+      <Field Name="CLUE_Property_SetUnitNumOnLossHistoriesForNewReports" Hidden="true" />
+      <Field Name="CLUE_Property_StoreUnassignedClueLossesAtPolicyLevel" Hidden="true" />
+      <Field Name="CLUE_Property_WeedOutDuplicateLossHistoriesForNewReports" Hidden="true" />
+      <Field Name="COMPUTER_FRAUD_COVERAGE_CODE_ID" Hidden="true" />
+      <Method Name="ConvertDeveloperAutoSymbols" Hidden="true" />
+      <Method Name="ConvertQuoteObjectToDiamondImage" Hidden="true" />
+      <Method Name="CopyAccidentsViolationsFromListToList" Hidden="true" />
+      <Method Name="CopyChoicePointTransmissionsFromListToList" Hidden="true" />
+      <Method Name="CopyClaimHistoriesFromListToList" Hidden="true" />
+      <Method Name="CopyCreditScoreReasonsFromListToList" Hidden="true" />
+      <Method Name="CopyCreditScoresFromListToList" Hidden="true" />
+      <Method Name="CopyDhiTransmissionsFromListToList" Hidden="true" />
+      <Method Name="CopyImageInformationToQuoteObject" Hidden="true" />
+      <Method Name="CopyLossHistoriesFromListToList" Hidden="true" />
+      <Method Name="CopyRatedQuoteInformationToQuoteObject" Hidden="true" />
+      <Method Name="CopySaqImportedDriversFromListToList" Hidden="true" />
+      <Method Name="CopySaqImportedVehiclesFromListToList" Hidden="true" />
+      <Method Name="CopyThirdPartyDataToThirdPartyData" Hidden="true" />
+      <Method Name="CreateAutoSymbolsFromDeveloperProps" Hidden="true" />
+      <Method Name="CreateDiamondImageXmlsForTesting" Hidden="true" />
+      <Field Name="CUSTOMFEEDING_CATTLE_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="CUSTOMFEEDING_EQUINE_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="CUSTOMFEEDING_POULTRY_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="CUSTOMFEEDING_SWINE_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="definitelyNotCurrentDiamondImage" Hidden="true" />
+      <Method Name="DiamondImageForPromotedQuote" Hidden="true" />
+      <Field Name="diamondImageHasNewDiaNumObjectsOrItemsFlaggedForDelete" Hidden="true" />
+      <Method Name="DiamondImageXmlsFilePathDirectory" Hidden="true" />
+      <Method Name="DiamondService_SuccessfullyOrderedCreditReportForRating" Hidden="true" />
+      <Method Name="DiamondService_SuccessfullyOrderedCreditReportForRating_Old" Hidden="true" />
+      <Method Name="DiamondService_SuccessfullySavedAndReplacedImageAndUpdatedQuickQuote" Hidden="true" />
+      <Method Name="DiamondService_SuccessfullySavedAndReplacedImageAndUpdatedQuickQuote_WithOptionalSync" Hidden="true" />
+      <Method Name="DiamondService_SuccessfulSave" Hidden="true" />
+      <Method Name="DisposeQuickQuoteAccidentsViolations" Hidden="true" />
+      <Method Name="DisposeQuickQuoteLossHistories" Hidden="true" />
+      <Field Name="effectiveDateUsedForSavingOrRating" Hidden="true" />
+      <Field Name="expirationDateUsedForSavingOrRating" Hidden="true" />
+      <Field Name="FAMILY_CYBER_PROTECTION_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="FORGERY_ALTERATION_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="FUNDS_TRANSFER_FRAUD_COVERAGE_CODE_ID" Hidden="true" />
+      <Method Name="GetAuthToken" Hidden="true" />
+      <Method Name="GetDevDictionaryFromDB" Hidden="true" />
+      <Method Name="GetDiamondImageInfoFromDatabase" Hidden="true" />
+      <Method Name="GetEndorsementInfoFromDatabase" Hidden="true" />
+      <Method Name="GetFilteredChoicePointTransmissions" Hidden="true" />
+      <Method Name="GetQuickQuoteObjectFromDiamondImageAndOrImageInfo" Hidden="true" />
+      <Method Name="GetQuote" Hidden="true" />
+      <Method Name="GetQuote_PrepObjectListsIfNecessary" Hidden="true" />
+      <Method Name="GetQuote_PrepObjectListsIfNecessary_ForSaveType" Hidden="true" />
+      <Method Name="GetQuote_SetQuoteObjectItemsFromDBRecord" Hidden="true" />
+      <Method Name="GetQuote_TrackDBInfo" Hidden="true" />
+      <Method Name="GetRatedXml" Hidden="true" />
+      <Method Name="GetRatedXml_DiamondService" Hidden="true" />
+      <Method Name="GetRatedXmlForQuoteImage_DiamondService_Rate" Hidden="true" />
+      <Method Name="GetRatedXmlForQuoteImage_DiamondService_RateOnly" Hidden="true" />
+      <Method Name="GetRatedXmlForQuoteImage_DiamondService_Save" Hidden="true" />
+      <Method Name="GetRatedXmlForQuoteImage_DiamondService_SaveRate" Hidden="true" />
+      <Method Name="GetRatedXmlForQuoteImage_DiamondService_SubmitRate" Hidden="true" />
+      <Method Name="GetValidationStringFromDiamondValidation" Hidden="true" />
+      <Field Name="getVersionIdWhenRatingWithDiamondServices" Hidden="true" />
+      <Method Name="GetWorkflowInformation" Hidden="true" />
+      <Field Name="hasExecutedPrepareQuickQuoteForImageConversion" Hidden="true" />
+      <Method Name="InitialAppGapValidation" Hidden="true" />
+      <Method Name="InitialQuickQuoteCleanup" Hidden="true" />
+      <Method Name="InitialSaveOrRateCleanup" Hidden="true" />
+      <Method Name="InitialSaveOrRateValidation" Hidden="true" />
+      <Method Name="InsertDiamondQuote" Hidden="true" />
+      <Method Name="InsertQuote" Hidden="true" />
+      <Method Name="InsertQuoteXml" Hidden="true" />
+      <Method Name="InstantiateAutoSymbolsIfNeeded" Hidden="true" />
+      <Field Name="justPerformedDiamondPackageSync" Hidden="true" />
+      <Method Name="LoadPolicyImageFromDiamond" Hidden="true" />
+      <Field Name="lobTypeUsedForBuildXml" Hidden="true" />
+      <Field Name="lobTypeUsedForDiamondServiceCall" Hidden="true" />
+      <Field Name="lobTypeUsedForSavingOrRating" Hidden="true" />
+      <Method Name="loginDiamond" Hidden="true" />
+      <Field Name="LogThirdPartyReportOrdering" Hidden="true" />
+      <Method Name="NewQuickQuoteEndorsementForPolicyIdAndTransactionDate_NormalOrBillingUpdate" Hidden="true" />
+      <Method Name="OkayToUseDiamondImageXmlAndSetDiamondNumsAndUseAppOrRatedXmlOnQuote" Hidden="true" />
+      <Method Name="OkayToWriteDiamondNumsForReconciliationInBuildXml" Hidden="true" />
+      <Method Name="OrderAdditionalReportsBeforeQuoteRate" Hidden="true" />
+      <Field Name="originalEffectiveDateUsedForSavingOrRating" Hidden="true" />
+      <Field Name="originalExpirationDateUsedForSavingOrRating" Hidden="true" />
+      <Field Name="originalTransactionEffectiveDateUsedForSavingOrRating" Hidden="true" />
+      <Field Name="originalTransactionExpirationDateUsedForSavingOrRating" Hidden="true" />
+      <Method Name="ParseAccidentViolation" Hidden="true" />
+      <Method Name="ParseAccidentViolations" Hidden="true" />
+      <Method Name="ParseAccount" Hidden="true" />
+      <Method Name="ParseAcreage" Hidden="true" />
+      <Method Name="ParseAcreages" Hidden="true" />
+      <Method Name="ParseAdditionalInterest" Hidden="true" />
+      <Method Name="ParseAdditionalInterestList" Hidden="true" />
+      <Method Name="ParseAdditionalInterestListIntoListObject" Hidden="true" />
+      <Method Name="ParseAdditionalInterestListLink" Hidden="true" />
+      <Method Name="ParseAdditionalInterestListLinks" Hidden="true" />
+      <Method Name="ParseAdditionalInterests" Hidden="true" />
+      <Method Name="ParseAdditionalPolicyholder" Hidden="true" />
+      <Method Name="ParseAdditionalPolicyholders" Hidden="true" />
+      <Method Name="ParseAddress" Hidden="true" />
+      <Method Name="ParseAgency" Hidden="true" />
+      <Method Name="ParseAgencyProducer" Hidden="true" />
+      <Method Name="ParseAgencyProducers" Hidden="true" />
+      <Method Name="ParseApplicant" Hidden="true" />
+      <Method Name="ParseApplicants" Hidden="true" />
+      <Method Name="ParseArrayOfPayPlanPreview" Hidden="true" />
+      <Method Name="ParseAutoDataPrefill" Hidden="true" />
+      <Method Name="ParseAutoSubjectIdentification" Hidden="true" />
+      <Method Name="ParseAutoSubjectIdentifications" Hidden="true" />
+      <Method Name="ParseAutoSymbol" Hidden="true" />
+      <Method Name="ParseAutoSymbols" Hidden="true" />
+      <Method Name="ParseBarnBuilding" Hidden="true" />
+      <Method Name="ParseBarnBuildingUpdates" Hidden="true" />
+      <Method Name="ParseBarnsBuildings" Hidden="true" />
+      <Method Name="ParseBillingAddressee" Hidden="true" />
+      <Method Name="ParseBillingData" Hidden="true" />
+      <Method Name="ParseBlanketRating" Hidden="true" />
+      <Method Name="ParseBlanketRatingIntoVersionAndLobPolicyLevelInfo" Hidden="true" />
+      <Method Name="ParseChoicePointTransmission" Hidden="true" />
+      <Method Name="ParseChoicePointTransmissions" Hidden="true" />
+      <Method Name="ParseClassification" Hidden="true" />
+      <Method Name="ParseClassificationCode" Hidden="true" />
+      <Method Name="ParseClassificationCodes" Hidden="true" />
+      <Method Name="ParseClassifications" Hidden="true" />
+      <Method Name="ParseClient" Hidden="true" />
+      <Method Name="ParseClueAuto" Hidden="true" />
+      <Method Name="ParseClueProperty" Hidden="true" />
+      <Method Name="ParseCoverage" Hidden="true" />
+      <Method Name="ParseCoverageAdditionalInfoRecord" Hidden="true" />
+      <Method Name="ParseCoverageAdditionalInfoRecords" Hidden="true" />
+      <Method Name="ParseCoverageDetail" Hidden="true" />
+      <Method Name="ParseCoverages" Hidden="true" />
+      <Method Name="ParseCreditLocation" Hidden="true" />
+      <Method Name="ParseCreditScore" Hidden="true" />
+      <Method Name="ParseCreditScores" Hidden="true" />
+      <Method Name="ParseCreditVehicle" Hidden="true" />
+      <Method Name="ParseDetail" Hidden="true" />
+      <Method Name="ParseDetails" Hidden="true" />
+      <Method Name="ParseDiamondValidation" Hidden="true" />
+      <Method Name="ParseDiamondValidationItem" Hidden="true" />
+      <Method Name="ParseDiamondValidationItems" Hidden="true" />
+      <Method Name="ParseDriver" Hidden="true" />
+      <Method Name="ParseDrivers" Hidden="true" />
+      <Method Name="ParseDriversLicenseInfo" Hidden="true" />
+      <Method Name="ParseEFT" Hidden="true" />
+      <Method Name="ParseEmail" Hidden="true" />
+      <Method Name="ParseEmails" Hidden="true" />
+      <Method Name="ParseEmployment" Hidden="true" />
+      <Method Name="ParseExclusion" Hidden="true" />
+      <Method Name="ParseExclusions" Hidden="true" />
+      <Method Name="ParseExperienceModification" Hidden="true" />
+      <Method Name="ParseExperienceModification_QuickQuoteObject" Hidden="true" />
+      <Method Name="ParseExperienceModifications" Hidden="true" />
+      <Method Name="ParseExperienceModifications_QuickQuoteObject" Hidden="true" />
+      <Method Name="ParseFarmLiabilities" Hidden="true" />
+      <Method Name="ParseFarmLiability" Hidden="true" />
+      <Method Name="ParseFormerSection" Hidden="true" />
+      <Method Name="ParseGaragingAddress" Hidden="true" />
+      <Method Name="ParseGLClassification" Hidden="true" />
+      <Method Name="ParseGLClassifications" Hidden="true" />
+      <Method Name="ParseGroupSearchSec" Hidden="true" />
+      <Method Name="ParseHeader" Hidden="true" />
+      <Method Name="ParseHouseholdMember" Hidden="true" />
+      <Method Name="ParseHouseholdMembers" Hidden="true" />
+      <Method Name="ParseImage" Hidden="true" />
+      <Method Name="ParseInclusionExclusion" Hidden="true" />
+      <Method Name="ParseInclusionExclusionScheduledItem" Hidden="true" />
+      <Method Name="ParseInclusionExclusionScheduledItems" Hidden="true" />
+      <Method Name="ParseInclusionsExclusions" Hidden="true" />
+      <Method Name="ParseIncomeLoss" Hidden="true" />
+      <Method Name="ParseIncomeLosses" Hidden="true" />
+      <Method Name="ParseInlandMarine" Hidden="true" />
+      <Method Name="ParseInlandMarines" Hidden="true" />
+      <Method Name="ParseInquiryIdentification" Hidden="true" />
+      <Method Name="ParseInquirySection" Hidden="true" />
+      <Method Name="ParseInstallment" Hidden="true" />
+      <Method Name="ParseInstallments" Hidden="true" />
+      <Method Name="ParseLOB" Hidden="true" />
+      <Method Name="ParseLOBIntoVersionAndLobInfo" Hidden="true" />
+      <Method Name="ParseLocation" Hidden="true" />
+      <Method Name="ParseLocations" Hidden="true" />
+      <Method Name="ParseLossHistories" Hidden="true" />
+      <Method Name="ParseLossHistory" Hidden="true" />
+      <Method Name="ParseLossHistoryDetail" Hidden="true" />
+      <Method Name="ParseLossHistoryDetailGroup" Hidden="true" />
+      <Method Name="ParseMailingSection" Hidden="true" />
+      <Method Name="ParseMiscellaneousLiabilities" Hidden="true" />
+      <Method Name="ParseMiscellaneousLiability" Hidden="true" />
+      <Method Name="ParseModifier" Hidden="true" />
+      <Method Name="ParseModifiers" Hidden="true" />
+      <Method Name="ParseMortgageInfo" Hidden="true" />
+      <Method Name="ParseMortgageSection" Hidden="true" />
+      <Method Name="ParseMVR" Hidden="true" />
+      <Method Name="ParseName" Hidden="true" />
+      <Method Name="ParseOperator" Hidden="true" />
+      <Method Name="ParseOperators" Hidden="true" />
+      <Method Name="ParseOptionalCoverage" Hidden="true" />
+      <Method Name="ParseOptionalCoverageE" Hidden="true" />
+      <Method Name="ParseOptionalCoverageEs" Hidden="true" />
+      <Method Name="ParseOptionalCoverages" Hidden="true" />
+      <Method Name="ParsePackagePart" Hidden="true" />
+      <Method Name="ParsePackagePartBlanketRating" Hidden="true" />
+      <Method Name="ParsePackagePartLob" Hidden="true" />
+      <Method Name="ParsePackagePartLobPolicyLevel" Hidden="true" />
+      <Method Name="ParsePackagePartLobRiskLevel" Hidden="true" />
+      <Method Name="ParsePackagePartPolicy" Hidden="true" />
+      <Method Name="ParsePackageParts" Hidden="true" />
+      <Method Name="ParsePaymentOption" Hidden="true" />
+      <Method Name="ParsePaymentOptions" Hidden="true" />
+      <Method Name="ParsePayPlanPreview" Hidden="true" />
+      <Method Name="ParsePersonalIdentification" Hidden="true" />
+      <Method Name="ParsePersonalLiabilities" Hidden="true" />
+      <Method Name="ParsePersonalLiability" Hidden="true" />
+      <Method Name="ParsePhone" Hidden="true" />
+      <Method Name="ParsePhones" Hidden="true" />
+      <Method Name="ParsePolicy" Hidden="true" />
+      <Method Name="ParsePolicyholder" Hidden="true" />
+      <Method Name="ParsePolicyInfo" Hidden="true" />
+      <Method Name="ParsePolicyInfos" Hidden="true" />
+      <Method Name="ParsePolicyLevel" Hidden="true" />
+      <Method Name="ParsePolicyLevelIntoVersionAndLobPolicyLevelInfo" Hidden="true" />
+      <Method Name="ParsePolicySection" Hidden="true" />
+      <Method Name="ParsePolicyUnderwriting" Hidden="true" />
+      <Method Name="ParsePolicyUnderwritings" Hidden="true" />
+      <Method Name="ParsePriorCarrier" Hidden="true" />
+      <Method Name="ParseProfessionalLiabilities" Hidden="true" />
+      <Method Name="ParseProfessionalLiability" Hidden="true" />
+      <Method Name="ParsePropSubjectIdentification" Hidden="true" />
+      <Method Name="ParsePropSubjectIdentifications" Hidden="true" />
+      <Method Name="ParseRequest" Hidden="true" />
+      <Method Name="ParseRequestorIdentification" Hidden="true" />
+      <Method Name="ParseResidenceInfo" Hidden="true" />
+      <Method Name="ParseResidenceInfoDetail" Hidden="true" />
+      <Method Name="ParseResidenceInfoDetails" Hidden="true" />
+      <Method Name="ParseResidentName" Hidden="true" />
+      <Method Name="ParseResidentNames" Hidden="true" />
+      <Method Name="ParseRiskLevel" Hidden="true" />
+      <Method Name="ParseRiskLevelIntoVersionAndLobRiskLevelInfo" Hidden="true" />
+      <Method Name="ParseRiskSection" Hidden="true" />
+      <Method Name="ParseRvWatercraft" Hidden="true" />
+      <Method Name="ParseRvWatercraftMotor" Hidden="true" />
+      <Method Name="ParseRvWatercraftMotors" Hidden="true" />
+      <Method Name="ParseRvWatercrafts" Hidden="true" />
+      <Method Name="ParseSAQ" Hidden="true" />
+      <Method Name="ParseSAQImportedDriver" Hidden="true" />
+      <Method Name="ParseSAQImportedDrivers" Hidden="true" />
+      <Method Name="ParseSAQImportedVehicle" Hidden="true" />
+      <Method Name="ParseSAQImportedVehicles" Hidden="true" />
+      <Method Name="ParseScheduledCoverage" Hidden="true" />
+      <Method Name="ParseScheduledCoverages" Hidden="true" />
+      <Method Name="ParseScheduledItem" Hidden="true" />
+      <Method Name="ParseScheduledItems" Hidden="true" />
+      <Method Name="ParseScheduledPersonalPropertyCoverage" Hidden="true" />
+      <Method Name="ParseScheduledPersonalPropertyCoverages" Hidden="true" />
+      <Method Name="ParseScheduledRating" Hidden="true" />
+      <Method Name="ParseScheduledRatings" Hidden="true" />
+      <Method Name="ParseScheduledText" Hidden="true" />
+      <Method Name="ParseScheduledTextCollection" Hidden="true" />
+      <Method Name="ParseSectionCoverage" Hidden="true" />
+      <Method Name="ParseSectionCoverages" Hidden="true" />
+      <Method Name="ParseSubjectSection" Hidden="true" />
+      <Method Name="ParseSubUnitQuotebackInfo" Hidden="true" />
+      <Method Name="ParseSupplementA" Hidden="true" />
+      <Method Name="ParseSupplementC" Hidden="true" />
+      <Method Name="ParseThirdPartyData" Hidden="true" />
+      <Method Name="ParseThirdPartyDataAddress" Hidden="true" />
+      <Method Name="ParseThirdPartyPolicyInfo" Hidden="true" />
+      <Method Name="ParseTieringInformation" Hidden="true" />
+      <Method Name="ParseUnderlyingPolicies" Hidden="true" />
+      <Method Name="ParseUnderlyingPolicy" Hidden="true" />
+      <Method Name="ParseUnscheduledPersonalPropertyCoverage" Hidden="true" />
+      <Method Name="ParseUnscheduledPersonalPropertyCoverages" Hidden="true" />
+      <Method Name="ParseUpdates" Hidden="true" />
+      <Method Name="ParseVehicle" Hidden="true" />
+      <Method Name="ParseVehicles" Hidden="true" />
+      <Method Name="ParseVehicleSection" Hidden="true" />
+      <Method Name="ParseVehicleSymbol" Hidden="true" />
+      <Method Name="ParseVehicleSymbols" Hidden="true" />
+      <Method Name="ParseXML_OptionallySetQuoteTransactionType" Hidden="true" />
+      <Method Name="ParseXmlString_OptionallySetQuoteTransactionType" Hidden="true" />
+      <Method Name="PerformQuoteRatingValidation" Hidden="true" />
+      <Field Name="policyIdUsedForSavingOrRating" Hidden="true" />
+      <Field Name="policyImageNumUsedForSavingOrRating" Hidden="true" />
+      <Field Name="policyNumberUsedForDiamondServiceCall" Hidden="true" />
+      <Field Name="policyNumberUsedForSavingOrRating" Hidden="true" />
+      <Method Name="PrepareQuickQuoteForImageConversion" Hidden="true" />
+      <Field Name="qqCompressionHelper" Hidden="true" />
+      <Field Name="qqHelper" Hidden="true" />
+      <Method Name="QuickQuoteObjectForDiamondPolicyImage" Hidden="true" />
+      <Field Name="quoteNumberUsedForBuildXml" Hidden="true" />
+      <Field Name="quoteNumberUsedForDiamondServiceCall" Hidden="true" />
+      <Field Name="quoteNumberUsedForSavingOrRating" Hidden="true" />
+      <Method Name="QuoteObjectConversion_BuildingClassifications" Hidden="true" />
+      <Method Name="QuoteObjectConversion_BuildingCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_BuildingModifiers" Hidden="true" />
+      <Method Name="QuoteObjectConversion_BuildingOptionalCoverageEs" Hidden="true" />
+      <Method Name="QuoteObjectConversion_BuildingScheduledCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_LocationCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_LocationIncidentalDwellingCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_LocationIncomeLosses" Hidden="true" />
+      <Method Name="QuoteObjectConversion_LocationModifiers" Hidden="true" />
+      <Method Name="QuoteObjectConversion_LocationScheduledCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_LocationSectionCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_PolicyCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_PolicyExperienceModifications" Hidden="true" />
+      <Method Name="QuoteObjectConversion_PolicyFarmIncidentalLimitCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_PolicyInclusionsExclusions" Hidden="true" />
+      <Method Name="QuoteObjectConversion_PolicyModifiers" Hidden="true" />
+      <Method Name="QuoteObjectConversion_PolicyOptionalCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_PolicyScheduledCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_PolicyScheduledPersonalPropertyCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_PolicyUnscheduledPersonalPropertyCoverage" Hidden="true" />
+      <Method Name="QuoteObjectConversion_PolicyUnscheduledPersonalPropertyCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_RvWatercraftAssignedOperators" Hidden="true" />
+      <Method Name="QuoteObjectConversion_RvWatercraftCoverages" Hidden="true" />
+      <Method Name="QuoteObjectConversion_VehicleCoverages" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AccidentViolation" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AccidentViolations" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Account" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Acreage" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Acreages" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AdditionalInterest" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AdditionalInterestList" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AdditionalInterestListLink" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AdditionalInterestListLinks" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AdditionalInterests" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AdditionalPolicyholder" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AdditionalPolicyholders" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AdditionalPolicyholders_NameOnly" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Address" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Agency" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Applicant" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Applicants" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AutoSymbol" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_AutoSymbols" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_BillingAddressee" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Building" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Buildings" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Classification" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ClassificationCode" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ClassificationCodes" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Classifications" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Client" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Coverage" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_CoverageDetail" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Coverages" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Driver" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Drivers" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Eft" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Email" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Emails" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Employment" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Exclusion" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Exclusions" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ExperienceModification" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ExperienceModifications" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ExperienceModifications_QuickQuote" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_GarageAddress" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_GlClassification" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_GlClassifications" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_HouseholdMember" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_HouseholdMembers" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_InclusionExclusion" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_InclusionExclusionScheduledItem" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_InclusionExclusionScheduledItems" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_InclusionsExclusions" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_IncomeLoss" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_IncomeLosses" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_InlandMarine" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_InlandMarines" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_LOB" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_LOB_and_PackageParts" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Location" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Locations" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_LossHistories" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_LossHistory" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_LossHistoryDetail" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_LossHistoryDetails" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Modifier" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Modifiers" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Name" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Operator" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Operators" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Operators_Added_And_Removed" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_OptionalCoverage" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_OptionalCoverageE" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_OptionalCoverageEs" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_OptionalCoverages" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PackagePart" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PackageParts" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PersonalLiabilities" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PersonalLiability" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Phone" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Phones" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Policy" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Policyholder" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PolicyInfo" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PolicyInfos" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PolicyLevel" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PolicyUnderwriting" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PolicyUnderwritings" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PolicyUnderwritings_UpdateAllWithTheSamePolicyUnderwritingCodeAndLevelIds" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_PriorCarrier" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ResidenceInfo" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ResidenceInfoDetail" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ResidenceInfoDetails" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ResidentName" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ResidentNames" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_RiskLevel" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_RvWatercraft" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_RvWatercraftMotor" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_RvWatercraftMotors" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_RvWatercrafts" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ScheduledCoverage" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ScheduledCoverages" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ScheduledItem" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ScheduledItems" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ScheduledPersonalPropertyCoverage" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ScheduledPersonalPropertyCoverages" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ScheduledRating" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ScheduledRatings" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ScheduledText" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_ScheduledTextCollection" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_SectionCoverage" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_SectionCoverages" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_TieringInformation" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_UnderlyingPolicies" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_UnderlyingPolicy" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_UnscheduledPersonalPropertyCoverage" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_UnscheduledPersonalPropertyCoverages" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_UpdatesRecord" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Vehicle" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_Vehicles" Hidden="true" />
+      <Method Name="QuoteObjectToDiamondImageConversion_VehicleSymbol" Hidden="true" />
+      <Field Name="quoteTransactionType" Hidden="true" />
+      <Method Name="RateQuickQuote_Core" Hidden="true" />
+      <Method Name="RateQuoteAndSave" Hidden="true" />
+      <Method Name="RateQuoteAndSave_Core" Hidden="true" />
+      <Method Name="RateQuoteAndSave_New" Hidden="true" />
+      <Field Name="ReloadImageAfterOrderingCreditForRating" Hidden="true" />
+      <Method Name="RemoveValuesFromDeveloperSymbol" Hidden="true" />
+      <Method Name="ReviewAutoSymbols" Hidden="true" />
+      <Method Name="ReviewAutoSymbolsForStateQuote" Hidden="true" />
+      <Field Name="RvWatercraftOperators_Use_Added_and_Removed_Lists" Hidden="true" />
+      <Method Name="SaveDevDictionaryItems" Hidden="true" />
+      <Method Name="SaveDiamondImageInfo" Hidden="true" />
+      <Method Name="SaveDiamondImageInfoUsingQuickQuoteObjectAndDiamondImage" Hidden="true" />
+      <Method Name="SaveNewDiamondImageInfo" Hidden="true" />
+      <Method Name="SaveQuote_New" Hidden="true" />
+      <Method Name="SetDevDictionaryForQuickQuote" Hidden="true" />
+      <Method Name="SetDevDictionaryForSave" Hidden="true" />
+      <Method Name="SetVariablesForDiamondServiceCall" Hidden="true" />
+      <Method Name="SetVariablesForSavingOrRating" Hidden="true" />
+      <Method Name="SuccessfullyArchivedQuoteDiamondImageForPolicyIdAndImageNum" Hidden="true" />
+      <Method Name="SuccessfullyDeletedPendingDiamondImage_PendingDiamondImageValidationOptional" Hidden="true" />
+      <Method Name="SuccessfullyDeletedPendingDiamondImageForPolicyId" Hidden="true" />
+      <Method Name="SuccessfullyDeletedQuoteDiamondImageForPolicyIdAndImageNum" Hidden="true" />
+      <Method Name="SuccessfullyRatedExistingDiamondImageWithoutSave_PendingDiamondImageValidationOptional" Hidden="true" />
+      <Method Name="SuccessfullyReloadedImage" Hidden="true" />
+      <Method Name="SuccessfullySavedAndRatedExistingDiamondImage_PendingDiamondImageValidationOptional" Hidden="true" />
+      <Method Name="SuccessfullySavedAndRatedExistingDiamondImageWithSeparateServiceCalls_PendingDiamondImageValidationOptional" Hidden="true" />
+      <Method Name="SuccessfullySavedExistingDiamondImage_PendingDiamondImageValidationOptional" Hidden="true" />
+      <Field Name="SUFFOCATION_CATTLE_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="SUFFOCATION_EQUINE_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="SUFFOCATION_POULTRY_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="SUFFOCATION_SWINE_COVERAGE_CODE_ID" Hidden="true" />
+      <Method Name="TestProcessViewImported" Hidden="true" />
+      <Field Name="ToDataContractXML_emitDefaultValue" Hidden="true" />
+      <Field Name="tprHelper" Hidden="true" />
+      <Field Name="transactionEffectiveDateUsedForSavingOrRating" Hidden="true" />
+      <Field Name="transactionExpirationDateUsedForSavingOrRating" Hidden="true" />
+      <Field Name="UMBRELLA_PERSONAL_SELF_INSURED_RETENTION_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="UMBRELLA_PERSONAL_UMBERLLA_AUTO_UmUim_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="UMBRELLA_PERSONAL_UMBERLLA_COVERAGE_CODE_ID" Hidden="true" />
+      <Field Name="UpdateAllPolicyUnderwritingsWithTheSameCodeAndLevelIds" Hidden="true" />
+      <Field Name="UpdateAllVehicleSymbolsWithTheSameCoverageTypeId" Hidden="true" />
+      <Method Name="UpdatedOrRatedText" Hidden="true" />
+      <Method Name="UpdateQuote" Hidden="true" />
+      <Method Name="UpdateQuoteXml" Hidden="true" />
+      <Field Name="UpdateTieringInformationAfterOrderingCredit" Hidden="true" />
+      <Field Name="UpdateTieringInformationFromRatedQuote" Hidden="true" />
+      <Field Name="UpdateVehicleClassCodeFromRatedQuote" Hidden="true" />
+      <Method Name="UseComparativeRaterService" Hidden="true" />
+      <Method Name="ValidateDeveloperSymbol" Hidden="true" />
+      <Field Name="validateThatAgencyCodeMatchesAgencyId" Hidden="true" />
+      <Method Name="WriteAccidentsViolationsNode" Hidden="true" />
+      <Method Name="WriteAcreageNode" Hidden="true" />
+      <Method Name="WriteAcreagesNode" Hidden="true" />
+      <Method Name="WriteAddedOperators" Hidden="true" />
+      <Method Name="WriteAdditionalInterestListLinkNode" Hidden="true" />
+      <Method Name="WriteAdditionalInterestListLinksNode" Hidden="true" />
+      <Method Name="WriteAdditionalInterestsNode" Hidden="true" />
+      <Method Name="WriteAdditionalPolicyholderNode" Hidden="true" />
+      <Method Name="WriteAdditionalPolicyholdersNode" Hidden="true" />
+      <Method Name="WriteAddressNode" Hidden="true" />
+      <Method Name="WriteApplicantsNode" Hidden="true" />
+      <Method Name="WriteAutoSymbolsNode" Hidden="true" />
+      <Method Name="WriteBillingAddresseeNode" Hidden="true" />
+      <Method Name="WriteBuildingsSubNodes" Hidden="true" />
+      <Method Name="WriteBuildingsSubNodes_Old" Hidden="true" />
+      <Method Name="WriteClassificationCodeNode" Hidden="true" />
+      <Method Name="WriteClassificationCodesNode" Hidden="true" />
+      <Method Name="WriteClassificationsNode" Hidden="true" />
+      <Method Name="WriteCoverageDetailNode" Hidden="true" />
+      <Method Name="WriteCoverageNode" Hidden="true" />
+      <Method Name="WriteCoveragesNode" Hidden="true" />
+      <Method Name="WriteDriversNode" Hidden="true" />
+      <Method Name="WriteEmailsNode" Hidden="true" />
+      <Method Name="WriteEmploymentNode" Hidden="true" />
+      <Method Name="WriteExclusionsNode" Hidden="true" />
+      <Method Name="WriteExperienceModificationNode" Hidden="true" />
+      <Method Name="WriteExperienceModificationsNode" Hidden="true" />
+      <Method Name="WriteFarmIncidentalLimitCoveragesNode" Hidden="true" />
+      <Method Name="WriteGLClassificationsNode" Hidden="true" />
+      <Method Name="WriteHouseholdMembersNode" Hidden="true" />
+      <Method Name="WriteInclusionExclusionNode" Hidden="true" />
+      <Method Name="WriteInclusionExclusionScheduledItemNode" Hidden="true" />
+      <Method Name="WriteInclusionExclusionScheduledItemsNode" Hidden="true" />
+      <Method Name="WriteInclusionsExclusionsNode" Hidden="true" />
+      <Method Name="WriteIncomeLossesNode" Hidden="true" />
+      <Method Name="WriteIncomeLossNode" Hidden="true" />
+      <Method Name="WriteInlandMarinesNode" Hidden="true" />
+      <Method Name="WriteLob_After_Coverages" Hidden="true" />
+      <Method Name="WriteLob_After_Coverages_Old" Hidden="true" />
+      <Method Name="WriteLob_Before_Coverages" Hidden="true" />
+      <Method Name="WriteLob_Coverages" Hidden="true" />
+      <Method Name="WriteLob_Coverages_Old" Hidden="true" />
+      <Method Name="WriteLobNode" Hidden="true" />
+      <Method Name="WriteLobNode_CPP" Hidden="true" />
+      <Method Name="WriteLobNode_NonCPP" Hidden="true" />
+      <Method Name="WriteLocationsSubNodes" Hidden="true" />
+      <Method Name="WriteLocationsSubNodes_Old" Hidden="true" />
+      <Method Name="WriteLossHistoriesNode" Hidden="true" />
+      <Method Name="WriteLossHistoryDetailsNode" Hidden="true" />
+      <Method Name="WriteModifierNode" Hidden="true" />
+      <Method Name="WriteModifiersNode" Hidden="true" />
+      <Method Name="WriteNameSubNodes" Hidden="true" />
+      <Method Name="WriteNoteLine" Hidden="true" />
+      <Method Name="WriteOperators" Hidden="true" />
+      <Method Name="WriteOptionalCoverageENode" Hidden="true" />
+      <Method Name="WriteOptionalCoverageEsNode" Hidden="true" />
+      <Method Name="WriteOptionalCoverageNode" Hidden="true" />
+      <Method Name="WriteOptionalCoveragesNode" Hidden="true" />
+      <Method Name="WritePersonalLiabilities" Hidden="true" />
+      <Method Name="WritePersonalLiability" Hidden="true" />
+      <Method Name="WritePhonesNode" Hidden="true" />
+      <Method Name="WritePolicyholderSubNodes" Hidden="true" />
+      <Method Name="WritePolicyInfo" Hidden="true" />
+      <Method Name="WritePolicyInfos" Hidden="true" />
+      <Method Name="WritePolicyUnderwritingsNode" Hidden="true" />
+      <Method Name="WritePriorCarrierNode" Hidden="true" />
+      <Method Name="WriteResidenceInfoDetailsNode" Hidden="true" />
+      <Method Name="WriteResidenceInfoNode" Hidden="true" />
+      <Method Name="WriteResidentNameNode" Hidden="true" />
+      <Method Name="WriteResidentNamesNode" Hidden="true" />
+      <Method Name="WriteRvWatercraftMotorsNode" Hidden="true" />
+      <Method Name="WriteRvWatercraftsNode" Hidden="true" />
+      <Method Name="WriteScheduledCoverageNode" Hidden="true" />
+      <Method Name="WriteScheduledCoveragesNode" Hidden="true" />
+      <Method Name="WriteScheduledItemsNode" Hidden="true" />
+      <Method Name="WriteScheduledPersonalPropertyCoverageNode" Hidden="true" />
+      <Method Name="WriteScheduledPersonalPropertyCoveragesNode" Hidden="true" />
+      <Method Name="WriteScheduledRatingNode" Hidden="true" />
+      <Method Name="WriteScheduledRatings" Hidden="true" />
+      <Method Name="WriteScheduledRatings_Old" Hidden="true" />
+      <Method Name="WriteScheduledRatingsNode" Hidden="true" />
+      <Method Name="WriteScheduledText" Hidden="true" />
+      <Method Name="WriteScheduledTextCollection" Hidden="true" />
+      <Method Name="WriteSectionCoveragesNode" Hidden="true" />
+      <Method Name="WriteTieringInformationNode" Hidden="true" />
+      <Method Name="WriteUnderlyingPoliciesNode" Hidden="true" />
+      <Method Name="WriteUnderlyingPolicyNode" Hidden="true" />
+      <Method Name="WriteUnscheduledPersonalPropertyCoverageNode" Hidden="true" />
+      <Method Name="WriteUnscheduledPersonalPropertyCoveragesNode" Hidden="true" />
+      <Method Name="WriteUpdatesNode" Hidden="true" />
+      <Method Name="WriteVehiclesNode" Hidden="true" />
+      <Method Name="WriteVehiclesNode_Old" Hidden="true" />
+      <Method Name="WriteVehicleSymbolsNode" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuickQuoteSaveType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuickQuotePackagePartType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuickQuoteArchiveType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.ChoicePointClearOrNoHitEvaluationType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuoteOrRatedXml">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuickQuoteStatusType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuickQuoteValidationType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.IsoTransmissionSearchType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.PolicyOriginType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.ThirdPartyDataType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.PolicyTypeRequirement">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuoteMessageType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.HistoryType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuickQuoteSaveOrRateType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuoteOrAppXml">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.DiamondNumType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.ImageReloadMethod">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuickQuoteXmlType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.OperatorUsageType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.ChoicePointCopyOverwriteType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.PolicyholderType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuickQuoteStatusResetType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.ChoicePointClearOrNoHitType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.SecondaryUserWriteType">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="QuickQuote.CommonMethods.QuickQuoteXML.QuickQuoteRatingServices">
+        <TypeIdentifier>
+          <NewMemberFileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>//7//73f//v/////////////v///3///+///f/7///8=</HashCode>
+      <FileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteXML.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Module Name="QuickQuoteExtensions">
+    <Position X="0.5" Y="1" Width="5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\Source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\QuickQuoteExtensions.vb</FileName>
+    </TypeIdentifier>
+  </Module>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

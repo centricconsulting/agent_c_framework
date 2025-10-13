@@ -1,0 +1,1627 @@
+﻿Imports System.Data
+Imports QuickQuote.CommonObjects
+Imports QuickQuote.CommonMethods
+
+Partial Class QuickQuoteTreeView
+    Inherits System.Web.UI.UserControl
+
+    Enum TreeViewSection 'added 1/22/2014
+        None = 0
+        Policyholders = 1
+        Drivers = 2
+        Vehicles = 3
+        Locations = 4
+        Coverages = 5
+    End Enum
+
+    Dim qqHelper As New QuickQuoteHelperClass
+    Dim qqxml As New QuickQuoteXML 'added 1/9/2014
+
+    Private _QuoteObject As QuickQuoteObject
+    Private _QuoteId As String 'added 1/9/2014
+    Private _InEditMode As Boolean 'added 1/13/2014
+
+    'added event stuff 1/3/2014
+    Public Delegate Sub QuoteUpdatedEventHandler(ByVal sender As Object, ByVal e As EventArgs)
+    Event QuoteUpdated As QuoteUpdatedEventHandler
+
+    Public Delegate Sub EditPolicyholderEventHandler(ByVal policyholderNumber As Integer)
+    Event EditPolicyholder As EditPolicyholderEventHandler
+
+    Public Delegate Sub EditDriverEventHandler(ByVal driverNumber As Integer)
+    Event EditDriver As EditDriverEventHandler
+
+    Public Delegate Sub EditVehicleEventHandler(ByVal vehicleNumber As Integer)
+    Event EditVehicle As EditVehicleEventHandler
+
+    Public Delegate Sub EditLocationEventHandler(ByVal locationNumber As Integer)
+    Event EditLocation As EditLocationEventHandler
+
+    'added more events 1/8/2014; could also just raise QuoteUpdated event when any of these happen
+    'Public Delegate Sub PolicyholderDeletedEventHandler(ByVal policyholderNumber As Integer)
+    'Event PolicyholderDeleted As PolicyholderDeletedEventHandler
+
+    'Public Delegate Sub DriverDeletedEventHandler(ByVal driverNumber As Integer)
+    'Event DriverDeleted As DriverDeletedEventHandler
+
+    'Public Delegate Sub VehicleDeletedEventHandler(ByVal vehicleNumber As Integer)
+    'Event VehicleDeleted As VehicleDeletedEventHandler
+
+    'Public Delegate Sub LocationDeletedEventHandler(ByVal locationNumber As Integer)
+    'Event LocationDeleted As LocationDeletedEventHandler
+
+    'added more 1/9/2014
+    Public Delegate Sub NewPolicyholderEventHandler(ByVal policyholderNumber As Integer)
+    Event NewPolicyholder As NewPolicyholderEventHandler
+
+    Public Delegate Sub NewDriverEventHandler(ByVal driverNumber As Integer)
+    Event NewDriver As NewDriverEventHandler
+
+    Public Delegate Sub NewVehicleEventHandler(ByVal vehicleNumber As Integer)
+    Event NewVehicle As NewVehicleEventHandler
+
+    Public Delegate Sub NewLocationEventHandler(ByVal locationNumber As Integer)
+    Event NewLocation As NewLocationEventHandler
+
+    'added more 1/22/2014
+    Public Delegate Sub ShowPolicyholdersEventHandler(ByVal sender As Object, ByVal e As EventArgs)
+    Event ShowPolicyholders As ShowPolicyholdersEventHandler
+
+    Public Delegate Sub ShowDriversEventHandler(ByVal sender As Object, ByVal e As EventArgs)
+    Event ShowDrivers As ShowDriversEventHandler
+
+    Public Delegate Sub ShowVehiclesEventHandler(ByVal sender As Object, ByVal e As EventArgs)
+    Event ShowVehicles As ShowVehiclesEventHandler
+
+    Public Delegate Sub ShowLocationsEventHandler(ByVal sender As Object, ByVal e As EventArgs)
+    Event ShowLocations As ShowLocationsEventHandler
+
+    Public Delegate Sub ShowCoveragesEventHandler(ByVal sender As Object, ByVal e As EventArgs)
+    Event ShowCoverages As ShowCoveragesEventHandler
+
+    Public Property QuoteObject As QuickQuoteObject
+        Get
+            'added viewstate stuff 1/3/2014
+            If _QuoteObject Is Nothing AndAlso ViewState("QuoteObject") IsNot Nothing Then
+                _QuoteObject = CType(ViewState("QuoteObject"), QuickQuoteObject)
+            End If
+            Return _QuoteObject
+        End Get
+        Set(value As QuickQuoteObject)
+            _QuoteObject = value
+            'added viewstate stuff 1/3/2014
+            AddQuoteObjectToViewstate() 'changed to method call 1/10/2014
+            'added quoteId logic 1/9/2014
+            GetQuoteIdFromQuoteObjectAndAddToViewstate()
+            LoadTreeView()
+        End Set
+    End Property
+    Public ReadOnly Property QuoteId As String 'added 1/9/2014
+        Get
+            If _QuoteId Is Nothing Then
+                If ViewState("QuoteId") IsNot Nothing Then
+                    _QuoteId = ViewState("QuoteId").ToString
+                ElseIf QuoteObject IsNot Nothing AndAlso _QuoteObject.Database_QuoteId <> "" AndAlso IsNumeric(_QuoteObject.Database_QuoteId) = True Then '1st checks QuoteObject property since it will be loaded from viewstate if needed; then checks private variable
+                    _QuoteId = _QuoteObject.Database_QuoteId
+                    AddQuoteIdToViewstate()
+                End If
+            End If
+            Return _QuoteId
+        End Get
+    End Property
+    Public Property InEditMode As Boolean 'added 1/13/2014
+        Get
+            If _InEditMode = Nothing Then
+                'If ViewState("InEditMode") IsNot Nothing Then
+                '    _InEditMode = qqHelper.BitToBoolean(ViewState("InEditMode").ToString)
+                'Else
+                '    _InEditMode = False
+                'End If
+                '1/24/2014 - removed ViewState to just use hidden field
+                If Me.hdnInEditModeFlag.Value IsNot Nothing Then
+                    _InEditMode = qqHelper.BitToBoolean(Me.hdnInEditModeFlag.Value)
+                Else
+                    _InEditMode = False
+                End If
+            End If
+            Return _InEditMode
+        End Get
+        Set(value As Boolean)
+            _InEditMode = value
+            '1/24/2014 - removed ViewState to just use hidden field
+            'If ViewState("InEditMode") Is Nothing Then
+            '    ViewState("InEditMode") = _InEditMode
+            'Else
+            '    ViewState.Add("InEditMode", _InEditMode)
+            'End If
+            'added 1/22/2014
+            If _InEditMode <> Nothing AndAlso _InEditMode = True Then
+                Me.hdnInEditModeFlag.Value = "true" 'changed from yes to true 1/24/2014
+            Else
+                Me.hdnInEditModeFlag.Value = "false" 'changed from no to false 1/24/2014
+            End If
+        End Set
+    End Property
+
+    Private Sub LoadTreeView()
+        Dim hasPHs As Boolean = False
+        Dim hasDrivers As Boolean = False
+        Dim hasVehicles As Boolean = False
+        Dim hasLocations As Boolean = False
+        Dim hasCoverages As Boolean = False 'added 1/27/2014
+        Dim hasTreeCoverages As Boolean = False 'added 1/27/2014
+        Me.pnlTreeView.Visible = False
+        Me.pnlTreeViewError.Visible = False
+        'added 1/9/2014
+        Me.lblNumberOfDrivers.Text = "0"
+        Me.lblNumberOfVehicles.Text = "0"
+        Me.lblNumberOfLocations.Text = "0"
+        'added 1/13/2014
+        Me.lblQuoteDescription.Text = ""
+        Me.lblEffectiveDate.Text = ""
+        InEditMode = False
+        Me.QuoteDescriptionViewSection.Visible = True
+        Me.QuoteDescriptionEditSection.Visible = False
+        Me.EffectiveDateViewSection.Visible = True
+        Me.EffectiveDateEditSection.Visible = False
+        Me.lblQuoteNumber.Text = ""
+        Me.lblOriginalQuoteDescription.Text = ""
+        Me.lblOriginalEffectiveDate.Text = ""
+        'added 1/14/2014
+        Me.liDrivers.Visible = False
+        Me.liVehicles.Visible = False
+        Me.liLocations.Visible = False
+        'added 1/22/2014
+        Me.liCoverages.Visible = False
+
+        If _QuoteObject IsNot Nothing Then
+            Me.pnlTreeView.Visible = True
+            With _QuoteObject
+                'added 1/13/2014
+                Me.lblQuoteNumber.Text = .QuoteNumber
+                Me.lblOriginalQuoteDescription.Text = .QuoteDescription
+                Me.lblOriginalEffectiveDate.Text = .EffectiveDate
+                'Me.lblQuoteDescription.Text = qqHelper.appendText(.QuoteNumber, .QuoteDescription, " - ")
+                'Me.lblEffectiveDate.Text = .EffectiveDate
+                ResetQuoteDescriptionAndEffectiveDateToOriginalLabels()
+
+                'added 1/14/2014
+                If .LobType <> Nothing AndAlso .LobType <> QuickQuoteObject.QuickQuoteLobType.None Then
+                    Select Case .LobType
+                        Case QuickQuoteObject.QuickQuoteLobType.AutoPersonal, QuickQuoteObject.QuickQuoteLobType.CommercialAuto
+                            Me.liDrivers.Visible = True
+                            Me.liVehicles.Visible = True
+                            'added 1/22/2014
+                            Me.liCoverages.Visible = True
+                        Case QuickQuoteObject.QuickQuoteLobType.HomePersonal, QuickQuoteObject.QuickQuoteLobType.CommercialBOP, QuickQuoteObject.QuickQuoteLobType.CommercialGeneralLiability, QuickQuoteObject.QuickQuoteLobType.CommercialPackage, QuickQuoteObject.QuickQuoteLobType.CommercialProperty, QuickQuoteObject.QuickQuoteLobType.DwellingFirePersonal, QuickQuoteObject.QuickQuoteLobType.WorkersCompensation
+                            Me.liLocations.Visible = True
+                    End Select
+                End If
+
+                'insureds/policyholders (may also check clients)
+                Dim dtPolicyholders As New DataTable
+                dtPolicyholders.Columns.Add("PolicyholderDescription", System.Type.GetType("System.String"))
+                dtPolicyholders.Columns.Add("PolicyholderNumber", System.Type.GetType("System.String")) 'added 1/3/2014
+                Dim drPH1 As DataRow
+                drPH1 = dtPolicyholders.NewRow
+                'drPH1.Item("PolicyholderDescription") = "Policyholder #1: "
+                'drPH1.Item("PolicyholderDescription") = "<u>#1:</u> "
+                drPH1.Item("PolicyholderDescription") = "1: "
+                drPH1.Item("PolicyholderNumber") = "1" 'added 1/3/2014
+                If .Policyholder IsNot Nothing AndAlso .Policyholder.HasData = True Then
+                    'has ph1
+                    'hasPHs = True
+                    'updated 1/27/2014
+                    If (.Policyholder.Name IsNot Nothing AndAlso .Policyholder.Name.HasData = True) OrElse (.Policyholder.Address IsNot Nothing AndAlso .Policyholder.Address.HasData = True) Then 'might just look at name
+                        hasPHs = True
+                    End If
+                    drPH1.Item("PolicyholderDescription") &= .Policyholder.Name.DisplayName
+                Else
+                    'no ph1
+                End If
+                dtPolicyholders.Rows.Add(drPH1)
+                Dim drPH2 As DataRow
+                drPH2 = dtPolicyholders.NewRow
+                'drPH2.Item("PolicyholderDescription") = "Policyholder #2: "
+                'drPH2.Item("PolicyholderDescription") = "<u>#2:</u> "
+                drPH2.Item("PolicyholderDescription") = "2: "
+                drPH2.Item("PolicyholderNumber") = "2" 'added 1/3/2014
+                If .Policyholder2 IsNot Nothing AndAlso .Policyholder2.HasData = True Then
+                    'had ph2
+                    'hasPHs = True
+                    'updated 1/27/2014
+                    If (.Policyholder2.Name IsNot Nothing AndAlso .Policyholder2.Name.HasData = True) OrElse (.Policyholder2.Address IsNot Nothing AndAlso .Policyholder2.Address.HasData = True) Then 'might just look at name
+                        hasPHs = True
+                    End If
+                    drPH2.Item("PolicyholderDescription") &= .Policyholder2.Name.DisplayName
+                Else
+                    'no ph2
+                End If
+                dtPolicyholders.Rows.Add(drPH2)
+                Me.rptPolicyholders.DataSource = dtPolicyholders
+                Me.rptPolicyholders.DataBind()
+
+                'drivers
+                If .Drivers IsNot Nothing AndAlso .Drivers.Count > 0 Then
+                    Me.lblNumberOfDrivers.Text = _QuoteObject.Drivers.Count.ToString 'added 1/9/2014
+                    hasDrivers = True
+                    Dim dtDrivers As New DataTable
+                    dtDrivers.Columns.Add("DriverDescription", System.Type.GetType("System.String"))
+                    dtDrivers.Columns.Add("DriverNumber", System.Type.GetType("System.String")) 'added 1/3/2014
+                    Dim driverNum As Integer = 0
+                    For Each d As QuickQuoteDriver In .Drivers
+                        driverNum += 1
+                        Dim drDriver As DataRow
+                        drDriver = dtDrivers.NewRow
+                        'drDriver.Item("DriverDescription") = "Driver #" & driverNum.ToString & ": " & d.Name.DisplayName
+                        'drDriver.Item("DriverDescription") = "<u>#" & driverNum.ToString & ":</u> " & d.Name.DisplayName
+                        drDriver.Item("DriverDescription") = "" & driverNum.ToString & ": " & d.Name.DisplayName
+                        drDriver.Item("DriverNumber") = driverNum.ToString 'added 1/3/2014
+                        dtDrivers.Rows.Add(drDriver)
+                    Next
+                    Me.rptDrivers.DataSource = dtDrivers
+                    Me.rptDrivers.DataBind()
+                Else 'added 1/15/2014; so repeater is bound and Add button is displayed (remove if add button is moved to header)
+                    Me.rptDrivers.DataSource = New DataTable
+                    Me.rptDrivers.DataBind()
+                End If
+
+                'vehicles
+                If .Vehicles IsNot Nothing AndAlso .Vehicles.Count > 0 Then
+                    Me.lblNumberOfVehicles.Text = _QuoteObject.Vehicles.Count.ToString 'added 1/9/2014
+                    hasVehicles = True
+                    Dim dtVehicles As New DataTable
+                    dtVehicles.Columns.Add("VehicleDescription", System.Type.GetType("System.String"))
+                    dtVehicles.Columns.Add("VehicleNumber", System.Type.GetType("System.String")) 'added 1/3/2014
+                    Dim vehicleNum As Integer = 0
+                    For Each v As QuickQuoteVehicle In .Vehicles
+                        vehicleNum += 1
+                        Dim drVehicle As DataRow
+                        drVehicle = dtVehicles.NewRow
+                        'drVehicle.Item("VehicleDescription") = "Vehicle #" & vehicleNum.ToString & ": " & qqHelper.appendText(v.Year, qqHelper.appendText(v.Make, v.Model, " "), " ")
+                        'drVehicle.Item("VehicleDescription") = "<u>#" & vehicleNum.ToString & ":</u> " & qqHelper.appendText(v.Year, qqHelper.appendText(v.Make, v.Model, " "), " ")
+                        drVehicle.Item("VehicleDescription") = "" & vehicleNum.ToString & ": " & qqHelper.appendText(v.Year, qqHelper.appendText(v.Make, v.Model, " "), " ")
+                        drVehicle.Item("VehicleNumber") = vehicleNum.ToString 'added 1/3/2014
+                        dtVehicles.Rows.Add(drVehicle)
+                    Next
+                    Me.rptVehicles.DataSource = dtVehicles
+                    Me.rptVehicles.DataBind()
+                Else 'added 1/15/2014; so repeater is bound and Add button is displayed (remove if add button is moved to header)
+                    Me.rptVehicles.DataSource = New DataTable
+                    Me.rptVehicles.DataBind()
+                End If
+
+                'locations
+                If .Locations IsNot Nothing AndAlso .Locations.Count > 0 Then
+                    Me.lblNumberOfLocations.Text = _QuoteObject.Locations.Count.ToString 'added 1/9/2014
+                    hasLocations = True
+                    Dim dtLocations As New DataTable
+                    dtLocations.Columns.Add("LocationDescription", System.Type.GetType("System.String"))
+                    dtLocations.Columns.Add("LocationNumber", System.Type.GetType("System.String")) 'added 1/3/2014
+                    Dim locationNum As Integer = 0
+                    For Each l As QuickQuoteLocation In .Locations
+                        locationNum += 1
+                        Dim drLocation As DataRow
+                        drLocation = dtLocations.NewRow
+                        'drLocation.Item("LocationDescription") = "Location #" & locationNum.ToString & ": " & l.Address.DisplayAddress
+                        'drLocation.Item("LocationDescription") = "<u>#" & locationNum.ToString & ":</u> " & l.Address.DisplayAddress
+                        drLocation.Item("LocationDescription") = "" & locationNum.ToString & ": " & l.Address.DisplayAddress
+                        drLocation.Item("LocationNumber") = locationNum.ToString 'added 1/3/2014
+                        dtLocations.Rows.Add(drLocation)
+                    Next
+                    Me.rptLocations.DataSource = dtLocations
+                    Me.rptLocations.DataBind()
+                Else 'added 1/15/2014; so repeater is bound and Add button is displayed (remove if add button is moved to header)
+                    Me.rptLocations.DataSource = New DataTable
+                    Me.rptLocations.DataBind()
+                End If
+
+                'added 1/27/2014
+                If .LobType = QuickQuoteObject.QuickQuoteLobType.AutoPersonal Then
+                    Dim dtCoverages As New DataTable
+                    dtCoverages.Columns.Add("CoverageDescription", System.Type.GetType("System.String"))
+
+                    If .HasBusinessMasterEnhancement = True Then
+                        hasCoverages = True
+                        hasTreeCoverages = True
+                        Dim drCoverage As DataRow
+                        drCoverage = dtCoverages.NewRow
+                        drCoverage.Item("CoverageDescription") = "Auto Enhancement"
+                        dtCoverages.Rows.Add(drCoverage)
+                    End If
+                    If .SelectMarketCredit = True Then
+                        hasCoverages = True
+                        hasTreeCoverages = True
+                        Dim drCoverage As DataRow
+                        drCoverage = dtCoverages.NewRow
+                        drCoverage.Item("CoverageDescription") = "Select Market Credit"
+                        dtCoverages.Rows.Add(drCoverage)
+                    End If
+                    If .AutoHome = True Then
+                        hasCoverages = True
+                        hasTreeCoverages = True
+                        Dim drCoverage As DataRow
+                        drCoverage = dtCoverages.NewRow
+                        drCoverage.Item("CoverageDescription") = "Multi Policy Discount"
+                        dtCoverages.Rows.Add(drCoverage)
+                    End If
+                    If .EmployeeDiscount = True Then
+                        hasCoverages = True
+                        hasTreeCoverages = True
+                        Dim drCoverage As DataRow
+                        drCoverage = dtCoverages.NewRow
+                        drCoverage.Item("CoverageDescription") = "Employee Discount"
+                        dtCoverages.Rows.Add(drCoverage)
+                    End If
+                    If .FacultativeReinsurance = True Then
+                        hasCoverages = True
+                        hasTreeCoverages = True
+                        Dim drCoverage As DataRow
+                        drCoverage = dtCoverages.NewRow
+                        drCoverage.Item("CoverageDescription") = "Falcultative"
+                        dtCoverages.Rows.Add(drCoverage)
+                    End If
+
+                    'If hasCoverages = True Then
+                    'can probably bind every time... may not add vehicle coverages to repeater, but should probably use them w/ HasCoverages
+                    Me.rptCoverages.DataSource = dtCoverages
+                    Me.rptCoverages.DataBind()
+                    'End If
+
+                    If hasCoverages = False Then
+                        If .Vehicles IsNot Nothing AndAlso .Vehicles.Count > 0 Then
+                            For Each v As QuickQuoteVehicle In .Vehicles
+                                With v
+                                    If .Liability_UM_UIM_LimitId <> "" OrElse .MedicalPaymentsLimitId <> "" OrElse .ComprehensiveDeductibleLimitId <> "" OrElse .CollisionDeductibleLimitId <> "" OrElse .TowingAndLaborDeductibleLimitId <> "" OrElse .UninsuredMotoristLiabilityLimitId <> "" OrElse .BodilyInjuryLiabilityLimitId <> "" OrElse .PropertyDamageLimitId <> "" OrElse .UninsuredCombinedSingleLimitId <> "" OrElse .UninsuredMotoristPropertyDamageLimitId <> "" OrElse .UninsuredMotoristPropertyDamageDeductibleLimitId <> "" OrElse .HasPollutionLiabilityBroadenedCoverage = True OrElse .TransportationExpenseLimitId <> "" OrElse .HasAutoLoanOrLease = True OrElse .TapesAndRecordsLimitId <> "" OrElse .SoundEquipmentLimit <> "" OrElse .ElectronicEquipmentLimit <> "" OrElse .TripInterruptionLimitId <> "" Then
+                                        hasCoverages = True
+                                        'could exit for here
+                                    End If
+                                End With
+
+                                If hasCoverages = True Then
+                                    Exit For
+                                End If
+                            Next
+                        End If
+                    End If
+                End If
+            End With
+
+            If hasPHs = True Then
+                Me.pnlPolicyholders.Visible = True
+                Me.ph_expandCollapseImageArea.Visible = True
+                Me.ph_xImageArea.Visible = False
+            Else
+                'Me.pnlPolicyholders.Visible = False
+                'updated to always make visible so user can add; undo if add button is moved to header
+                Me.pnlPolicyholders.Visible = True
+                Me.ph_expandCollapseImageArea.Visible = False
+                Me.ph_xImageArea.Visible = True
+            End If
+            If hasDrivers = True Then
+                Me.pnlDrivers.Visible = True
+                Me.d_expandCollapseImageArea.Visible = True
+                Me.d_xImageArea.Visible = False
+            Else
+                'Me.pnlDrivers.Visible = False
+                'updated to always make visible so user can add; undo if add button is moved to header
+                Me.pnlDrivers.Visible = True
+                Me.d_expandCollapseImageArea.Visible = False
+                Me.d_xImageArea.Visible = True
+            End If
+            If hasVehicles = True Then
+                Me.pnlVehicles.Visible = True
+                Me.v_expandCollapseImageArea.Visible = True
+                Me.v_xImageArea.Visible = False
+            Else
+                'Me.pnlVehicles.Visible = False
+                'updated to always make visible so user can add; undo if add button is moved to header
+                Me.pnlVehicles.Visible = True
+                Me.v_expandCollapseImageArea.Visible = False
+                Me.v_xImageArea.Visible = True
+            End If
+            If hasLocations = True Then
+                Me.pnlLocations.Visible = True
+                Me.l_expandCollapseImageArea.Visible = True
+                Me.l_xImageArea.Visible = False
+            Else
+                'Me.pnlLocations.Visible = False
+                'updated to always make visible so user can add; undo if add button is moved to header
+                Me.pnlLocations.Visible = True
+                Me.l_expandCollapseImageArea.Visible = False
+                Me.l_xImageArea.Visible = True
+            End If
+            If hasCoverages = True Then 'added 1/27/2014; has separate span for CheckMark image
+                Me.pnlCoverages.Visible = True
+                If hasTreeCoverages = True Then
+                    Me.c_expandCollapseImageArea.Visible = True
+                Else
+                    Me.c_expandCollapseImageArea.Visible = False
+                End If
+                Me.c_xImageArea.Visible = False
+                Me.c_checkMarkArea.Visible = True
+            Else
+                'Me.pnlCoverages.Visible = False
+                'updated to always make visible so user can add; undo if add button is moved to header
+                Me.pnlCoverages.Visible = True
+                Me.c_expandCollapseImageArea.Visible = False
+                Me.c_xImageArea.Visible = True
+                Me.c_checkMarkArea.Visible = False
+            End If
+            Me.hdnExpandOrCollapseAllFlag.Value = "expand"
+            Me.hdnDeselectAllListItemsFlag.Value = "yes" 'added 1/22/2014
+        Else
+            'hide everything
+            Me.pnlTreeViewError.Visible = True
+            Me.hdnExpandOrCollapseAllFlag.Value = ""
+            Me.hdnDeselectAllListItemsFlag.Value = "" 'added 1/22/2014
+        End If
+
+    End Sub
+
+    Protected Sub Page_Load(sender As Object, e As System.EventArgs) Handles Me.Load
+        'Page.Header.DataBind() 'not needed since js isn't in header
+        Page.MaintainScrollPositionOnPostBack = True
+        If Page.IsPostBack = False Then
+            'test PPA quote: quoteId 1887
+            'test HOM quote: quoteId 1960
+
+            'test code 1/3/2014
+            'RaiseEvent QuoteUpdated(Me, Nothing)
+            'RaiseEvent EditDriver(3)
+        End If
+        'testing 1/3/2014 (makes it work like it did when it always expanded on load via js); need to just maintain which image is showing in between postbacks (since both will currently show whenever the js doesn't run); new hidden fields should take care of it
+        'Me.hdnExpandOrCollapseAllFlag.Value = "expand"
+    End Sub
+    'Protected Sub imgBtnPolicyholder_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+    '    If TypeOf sender Is ImageButton Then
+    '        Dim currIB As ImageButton = CType(sender, ImageButton)
+    '        Dim lblPolicyholderDescription As Label = currIB.Parent.FindControl("lblPolicyholderDescription")
+    '        If lblPolicyholderDescription IsNot Nothing Then
+    '            ShowError("you just clicked a policyholder..." & lblPolicyholderDescription.Text)
+    '        End If
+    '    End If
+    'End Sub
+    'Protected Sub imgBtnDriver_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+    '    If TypeOf sender Is ImageButton Then
+    '        Dim currIB As ImageButton = CType(sender, ImageButton)
+    '        Dim lblDriverDescription As Label = currIB.Parent.FindControl("lblDriverDescription")
+    '        If lblDriverDescription IsNot Nothing Then
+    '            ShowError("you just clicked a driver..." & lblDriverDescription.Text)
+    '        End If
+    '    End If
+    'End Sub
+    'Protected Sub imgBtnVehicle_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+    '    If TypeOf sender Is ImageButton Then
+    '        Dim currIB As ImageButton = CType(sender, ImageButton)
+    '        Dim lblVehicleDescription As Label = currIB.Parent.FindControl("lblVehicleDescription")
+    '        If lblVehicleDescription IsNot Nothing Then
+    '            ShowError("you just clicked a vehicle..." & lblVehicleDescription.Text)
+    '        End If
+    '    End If
+    'End Sub
+    'Protected Sub imgBtnLocation_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+    '    If TypeOf sender Is ImageButton Then
+    '        Dim currIB As ImageButton = CType(sender, ImageButton)
+    '        Dim lblLocationDescription As Label = currIB.Parent.FindControl("lblLocationDescription")
+    '        If lblLocationDescription IsNot Nothing Then
+    '            ShowError("you just clicked a location..." & lblLocationDescription.Text)
+    '        End If
+    '    End If
+    'End Sub
+
+    'updated button clicks 1/3/2014
+    Protected Sub imgBtnEditPolicyholder_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblPolicyholderNumber As Label = currIB.Parent.FindControl("lblPolicyholderNumber")
+            'If lblPolicyholderNumber IsNot Nothing Then
+            '    ShowError("you want to edit policyholder # " & lblPolicyholderNumber.Text)
+            'End If
+            If lblPolicyholderNumber IsNot Nothing AndAlso IsNumeric(lblPolicyholderNumber.Text) = True Then
+                RaiseEvent EditPolicyholder(CInt(lblPolicyholderNumber.Text))
+            End If
+        End If
+    End Sub
+    Protected Sub imgBtnEditDriver_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblDriverNumber As Label = currIB.Parent.FindControl("lblDriverNumber")
+            'If lblDriverNumber IsNot Nothing Then
+            '    ShowError("you want to edit driver # " & lblDriverNumber.Text)
+            'End If
+            If lblDriverNumber IsNot Nothing AndAlso IsNumeric(lblDriverNumber.Text) = True Then
+                RaiseEvent EditDriver(CInt(lblDriverNumber.Text))
+            End If
+        End If
+    End Sub
+    Protected Sub imgBtnEditVehicle_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblVehicleNumber As Label = currIB.Parent.FindControl("lblVehicleNumber")
+            'If lblVehicleNumber IsNot Nothing Then
+            '    ShowError("you want to edit vehicle # " & lblVehicleNumber.Text)
+            'End If
+            If lblVehicleNumber IsNot Nothing AndAlso IsNumeric(lblVehicleNumber.Text) = True Then
+                RaiseEvent EditVehicle(CInt(lblVehicleNumber.Text))
+            End If
+        End If
+    End Sub
+    Protected Sub imgBtnEditLocation_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblLocationNumber As Label = currIB.Parent.FindControl("lblLocationNumber")
+            'If lblLocationNumber IsNot Nothing Then
+            '    ShowError("you want to edit location # " & lblLocationNumber.Text)
+            'End If
+            If lblLocationNumber IsNot Nothing AndAlso IsNumeric(lblLocationNumber.Text) = True Then
+                RaiseEvent EditLocation(CInt(lblLocationNumber.Text))
+            End If
+        End If
+    End Sub
+    'added remove button clicks 1/9/2014
+    Protected Sub imgBtnRemovePolicyholder_Click(ByVal sender As Object, ByVal e As System.EventArgs) 'not being used yet
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblPolicyholderNumber As Label = currIB.Parent.FindControl("lblPolicyholderNumber")
+            'If lblPolicyholderNumber IsNot Nothing Then
+            '    ShowError("you want to remove policyholder # " & lblPolicyholderNumber.Text)
+            'End If
+            If lblPolicyholderNumber IsNot Nothing AndAlso IsNumeric(lblPolicyholderNumber.Text) = True Then
+                If CInt(lblPolicyholderNumber.Text) = 1 OrElse CInt(lblPolicyholderNumber.Text) = 2 Then
+                    If QuoteObject IsNot Nothing Then
+                        If CInt(lblPolicyholderNumber.Text) = 2 Then
+                            If _QuoteObject.Policyholder2.HasData = False Then
+                                ShowError("Policyholder 2 is already blank")
+                            Else
+                                'clear data (can't delete)
+
+                                'this save block should probably be a method
+                                'Dim saveError As String = String.Empty
+                                'If SuccessfulSave(saveError) = True Then
+                                '    QuoteObject = _QuoteObject 'so same code is executed as when normally set thru property; could also call same code separately or create a method to do it for both
+                                '    RaiseEvent QuoteUpdated(sender, e)
+                                'Else
+                                '    _QuoteObject = Nothing 'so it will be reloaded from viewstate next time
+                                '    If String.IsNullOrEmpty(saveError) = True Then
+                                '        saveError = "There was a problem saving the quote."
+                                '    End If
+                                '    ShowError(saveError)
+                                'End If
+                                SaveCurrentQuoteObjectAndRaiseUpdatedEvent(sender, e, TreeViewSection.Policyholders) 'updated 1/22/2014 to send new optional param
+                            End If
+                        Else
+                            If _QuoteObject.Policyholder.HasData = False Then
+                                ShowError("Policyholder 1 is already blank")
+                            Else
+                                'clear data (can't delete)
+
+                                'this save block should probably be a method
+                                'Dim saveError As String = String.Empty
+                                'If SuccessfulSave(saveError) = True Then
+                                '    QuoteObject = _QuoteObject 'so same code is executed as when normally set thru property; could also call same code separately or create a method to do it for both
+                                '    RaiseEvent QuoteUpdated(sender, e)
+                                'Else
+                                '    _QuoteObject = Nothing 'so it will be reloaded from viewstate next time
+                                '    If String.IsNullOrEmpty(saveError) = True Then
+                                '        saveError = "There was a problem saving the quote."
+                                '    End If
+                                '    ShowError(saveError)
+                                'End If
+                                SaveCurrentQuoteObjectAndRaiseUpdatedEvent(sender, e, TreeViewSection.Policyholders) 'updated 1/22/2014 to send new optional param
+                            End If
+                        End If
+                    End If
+                End If
+            End If
+        End If
+    End Sub
+    Protected Sub imgBtnRemoveDriver_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblDriverNumber As Label = currIB.Parent.FindControl("lblDriverNumber")
+            'If lblDriverNumber IsNot Nothing Then
+            '    ShowError("you want to remove driver # " & lblDriverNumber.Text)
+            'End If
+            If lblDriverNumber IsNot Nothing AndAlso IsNumeric(lblDriverNumber.Text) = True Then
+                If QuoteObject IsNot Nothing Then
+                    If _QuoteObject.Drivers IsNot Nothing AndAlso _QuoteObject.Drivers.Count >= CInt(lblDriverNumber.Text) Then
+                        'see if any vehicles have driver assigned
+                        If _QuoteObject.Vehicles IsNot Nothing AndAlso _QuoteObject.Vehicles.Count > 0 Then
+                            For Each v As QuickQuoteVehicle In _QuoteObject.Vehicles
+                                'If v.PrincipalDriverNum <> "" AndAlso IsNumeric(v.PrincipalDriverNum) = True AndAlso CInt(v.PrincipalDriverNum) = CInt(lblDriverNumber.Text) Then
+                                '    v.PrincipalDriverNum = ""
+                                'End If
+                                'If v.OccasionalDriver1Num <> "" AndAlso IsNumeric(v.OccasionalDriver1Num) = True AndAlso CInt(v.OccasionalDriver1Num) = CInt(lblDriverNumber.Text) Then
+                                '    v.OccasionalDriver1Num = ""
+                                'End If
+                                'If v.OccasionalDriver2Num <> "" AndAlso IsNumeric(v.OccasionalDriver2Num) = True AndAlso CInt(v.OccasionalDriver2Num) = CInt(lblDriverNumber.Text) Then
+                                '    v.OccasionalDriver2Num = ""
+                                'End If
+                                'If v.OccasionalDriver3Num <> "" AndAlso IsNumeric(v.OccasionalDriver3Num) = True AndAlso CInt(v.OccasionalDriver3Num) = CInt(lblDriverNumber.Text) Then
+                                '    v.OccasionalDriver3Num = ""
+                                'End If
+
+                                'or this is better suited to move drivers up (at least occasional drivers)
+                                If v.OccasionalDriver3Num <> "" AndAlso IsNumeric(v.OccasionalDriver3Num) = True AndAlso CInt(v.OccasionalDriver3Num) = CInt(lblDriverNumber.Text) Then
+                                    v.OccasionalDriver3Num = ""
+                                End If
+                                If v.OccasionalDriver2Num <> "" AndAlso IsNumeric(v.OccasionalDriver2Num) = True AndAlso CInt(v.OccasionalDriver2Num) = CInt(lblDriverNumber.Text) Then
+                                    v.OccasionalDriver2Num = ""
+                                End If
+                                If v.OccasionalDriver1Num <> "" AndAlso IsNumeric(v.OccasionalDriver1Num) = True AndAlso CInt(v.OccasionalDriver1Num) = CInt(lblDriverNumber.Text) Then
+                                    v.OccasionalDriver1Num = ""
+                                End If
+                                If v.PrincipalDriverNum <> "" AndAlso IsNumeric(v.PrincipalDriverNum) = True AndAlso CInt(v.PrincipalDriverNum) = CInt(lblDriverNumber.Text) Then
+                                    v.PrincipalDriverNum = ""
+                                End If
+                                'now move up occasional drivers if necessary
+                                'If v.OccasionalDriver2Num = "" AndAlso v.OccasionalDriver3Num <> "" Then
+                                '    v.OccasionalDriver2Num = v.OccasionalDriver3Num
+                                '    v.OccasionalDriver3Num = ""
+                                'End If
+                                'If v.OccasionalDriver1Num = "" AndAlso v.OccasionalDriver2Num <> "" Then
+                                '    v.OccasionalDriver1Num = v.OccasionalDriver2Num
+                                '    v.OccasionalDriver2Num = ""
+                                'End If
+                                ''this is optional (to replace principal w/ occasional)
+                                ''If v.PrincipalDriverNum = "" AndAlso v.OccasionalDriver1Num <> "" Then
+                                ''    v.PrincipalDriverNum = v.OccasionalDriver1Num
+                                ''    v.OccasionalDriver1Num = ""
+                                ''    If v.OccasionalDriver2Num <> "" Then
+                                ''        v.OccasionalDriver1Num = v.OccasionalDriver2Num
+                                ''        v.OccasionalDriver2Num = ""
+                                ''        If v.OccasionalDriver3Num <> "" Then
+                                ''            v.OccasionalDriver2Num = v.OccasionalDriver3Num
+                                ''            v.OccasionalDriver3Num = ""
+                                ''        End If
+                                ''    End If
+                                ''End If
+                                'now using common method 1/10/2014
+                                MoveUpVehicleDrivers(v)
+                            Next
+                        End If
+
+                        'both should do the same thing
+                        '_QuoteObject.Drivers.Remove(_QuoteObject.Drivers.Item(CInt(lblDriverNumber.Text) - 1))
+                        _QuoteObject.Drivers.RemoveAt(CInt(lblDriverNumber.Text) - 1)
+
+                        'this save block should probably be a method
+                        'Dim saveError As String = String.Empty
+                        'If SuccessfulSave(saveError) = True Then
+                        '    QuoteObject = _QuoteObject 'so same code is executed as when normally set thru property; could also call same code separately or create a method to do it for both
+                        '    RaiseEvent QuoteUpdated(sender, e)
+                        'Else
+                        '    _QuoteObject = Nothing 'so it will be reloaded from viewstate next time
+                        '    If String.IsNullOrEmpty(saveError) = True Then
+                        '        saveError = "There was a problem saving the quote."
+                        '    End If
+                        '    ShowError(saveError)
+                        'End If
+                        SaveCurrentQuoteObjectAndRaiseUpdatedEvent(sender, e, TreeViewSection.Drivers) 'updated 1/22/2014 to send new optional param
+                    End If
+                End If
+            End If
+        End If
+    End Sub
+    Private Sub MoveUpVehicleDrivers(ByRef vehicle As QuickQuoteVehicle)
+        If vehicle IsNot Nothing Then
+            With vehicle
+                If .OccasionalDriver2Num = "" AndAlso .OccasionalDriver3Num <> "" Then
+                    .OccasionalDriver2Num = .OccasionalDriver3Num
+                    .OccasionalDriver3Num = ""
+                End If
+                If .OccasionalDriver1Num = "" AndAlso .OccasionalDriver2Num <> "" Then
+                    .OccasionalDriver1Num = .OccasionalDriver2Num
+                    .OccasionalDriver2Num = ""
+                End If
+                'this is optional (to replace principal w/ occasional)
+                'If .PrincipalDriverNum = "" AndAlso .OccasionalDriver1Num <> "" Then
+                '    .PrincipalDriverNum = .OccasionalDriver1Num
+                '    .OccasionalDriver1Num = ""
+                '    If .OccasionalDriver2Num <> "" Then
+                '        .OccasionalDriver1Num = .OccasionalDriver2Num
+                '        .OccasionalDriver2Num = ""
+                '        If .OccasionalDriver3Num <> "" Then
+                '            .OccasionalDriver2Num = .OccasionalDriver3Num
+                '            .OccasionalDriver3Num = ""
+                '        End If
+                '    End If
+                'End If
+            End With
+        End If
+    End Sub
+    Protected Sub imgBtnRemoveVehicle_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblVehicleNumber As Label = currIB.Parent.FindControl("lblVehicleNumber")
+            'If lblVehicleNumber IsNot Nothing Then
+            '    ShowError("you want to remove vehicle # " & lblVehicleNumber.Text)
+            'End If
+            If lblVehicleNumber IsNot Nothing AndAlso IsNumeric(lblVehicleNumber.Text) = True Then
+                If QuoteObject IsNot Nothing Then
+                    If _QuoteObject.Vehicles IsNot Nothing AndAlso _QuoteObject.Vehicles.Count >= CInt(lblVehicleNumber.Text) Then
+                        'both should do the same thing
+                        '_QuoteObject.Vehicles.Remove(_QuoteObject.Vehicles.Item(CInt(lblVehicleNumber.Text) - 1))
+                        _QuoteObject.Vehicles.RemoveAt(CInt(lblVehicleNumber.Text) - 1)
+
+                        'this save block should probably be a method
+                        'Dim saveError As String = String.Empty
+                        'If SuccessfulSave(saveError) = True Then
+                        '    QuoteObject = _QuoteObject 'so same code is executed as when normally set thru property; could also call same code separately or create a method to do it for both
+                        '    RaiseEvent QuoteUpdated(sender, e)
+                        'Else
+                        '    _QuoteObject = Nothing 'so it will be reloaded from viewstate next time
+                        '    If String.IsNullOrEmpty(saveError) = True Then
+                        '        saveError = "There was a problem saving the quote."
+                        '    End If
+                        '    ShowError(saveError)
+                        'End If
+                        SaveCurrentQuoteObjectAndRaiseUpdatedEvent(sender, e, TreeViewSection.Vehicles) 'updated 1/22/2014 to send new optional param
+                    End If
+                End If
+            End If
+        End If
+    End Sub
+    Protected Sub imgBtnRemoveLocation_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblLocationNumber As Label = currIB.Parent.FindControl("lblLocationNumber")
+            'If lblLocationNumber IsNot Nothing Then
+            '    ShowError("you want to remove location # " & lblLocationNumber.Text)
+            'End If
+            If lblLocationNumber IsNot Nothing AndAlso IsNumeric(lblLocationNumber.Text) = True Then
+                If QuoteObject IsNot Nothing Then
+                    If _QuoteObject.Locations IsNot Nothing AndAlso _QuoteObject.Locations.Count >= CInt(lblLocationNumber.Text) Then
+                        'both should do the same thing
+                        '_QuoteObject.Locations.Remove(_QuoteObject.Locations.Item(CInt(lblLocationNumber.Text) - 1))
+                        _QuoteObject.Locations.RemoveAt(CInt(lblLocationNumber.Text) - 1)
+
+                        'this save block should probably be a method
+                        'Dim saveError As String = String.Empty
+                        'If SuccessfulSave(saveError) = True Then
+                        '    QuoteObject = _QuoteObject 'so same code is executed as when normally set thru property; could also call same code separately or create a method to do it for both
+                        '    RaiseEvent QuoteUpdated(sender, e)
+                        'Else
+                        '    _QuoteObject = Nothing 'so it will be reloaded from viewstate next time
+                        '    If String.IsNullOrEmpty(saveError) = True Then
+                        '        saveError = "There was a problem saving the quote."
+                        '    End If
+                        '    ShowError(saveError)
+                        'End If
+                        SaveCurrentQuoteObjectAndRaiseUpdatedEvent(sender, e, TreeViewSection.Locations) 'updated 1/22/2014 to send new optional param
+                    End If
+                End If
+            End If
+        End If
+    End Sub
+    Private Sub ShowError(ByVal message As String, Optional ByVal redirect As Boolean = False, Optional ByVal redirectPage As String = "")
+        message = Replace(message, "\", "\\")
+        message = Replace(message, "<br>", "\n")
+        message = Replace(message, vbCrLf, "\n")
+
+        Dim strScript As String = "<script language=JavaScript>"
+        strScript &= "alert(""" & message & """);"
+        If redirect = True Then
+            If redirectPage = "" Then
+                redirectPage = "TestTreeView.aspx"
+            End If
+            strScript &= " window.location.href='" & redirectPage & "';"
+        End If
+        strScript &= "</script>"
+
+        Page.RegisterStartupScript("clientScript", strScript)
+
+    End Sub
+
+    Protected Sub btnExpandAll_Click(sender As Object, e As System.EventArgs) Handles btnExpandAll.Click
+        Me.hdnExpandOrCollapseAllFlag.Value = "expand"
+    End Sub
+
+    'new methods 1/9/2014
+    Public Sub LoadQuoteForQuoteId(Optional ByVal qId As String = "", Optional ByRef errorMessage As String = "")
+        If qId <> "" Then
+            _QuoteId = qId
+            AddQuoteIdToViewstate()
+        End If
+
+        qqxml.GetQuoteForSaveType(QuoteId, QuickQuoteXML.QuickQuoteSaveType.Quote, QuoteObject, errorMessage) 'QuoteId property passed in so it can be pulled from viewstate if needed; see if passing QuoteObject property in also causes property's Set method to trigger and load tree view
+
+    End Sub
+    Public Function SuccessfulSave(Optional ByRef errorMessage As String = "") As Boolean
+        Dim saveSuccess As Boolean = False
+        errorMessage = String.Empty
+
+        qqxml.SaveQuote(QuickQuoteXML.QuickQuoteSaveType.Quote, QuoteObject, QuoteId, errorMessage) 'passing in QuoteObject and QuoteId properties so they can be obtained from viewstate if needed
+        If String.IsNullOrEmpty(errorMessage) = True Then
+            saveSuccess = True
+            QuoteObject = _QuoteObject 'so same code is executed as when normally set thru property; could also call same code separately or create a method to do it for both
+        End If
+
+        'ByVal qId As String, Optional ByVal saveOrRate As QuickQuoteXML.QuickQuoteValidationType = QuickQuoteXML.QuickQuoteValidationType.Rate
+
+        'If qId <> "" AndAlso IsNumeric(qId) = True Then
+        '    'get existing
+        '    qqxml.GetQuoteForSaveType(qId, QuickQuoteXML.QuickQuoteSaveType.Quote, QuickQuote, Err)
+        '    If Err() <> "" Then
+        '        Err = "" 'just reset
+        '    End If
+        'Else
+        '    'get new
+        'End If
+
+        'Dim qqxml As New QuickQuoteXML
+        'Dim err As String = ""
+
+        'Dim strQQ As String = ""
+        'Dim ratedQQ As QuickQuoteObject = Nothing
+        'Dim strRatedQQ As String = ""
+        'If saveOrRate <> Nothing AndAlso saveOrRate = QuickQuoteXML.QuickQuoteValidationType.Save Then
+        '    qqxml.SaveQuote(QuickQuoteXML.QuickQuoteSaveType.Quote, QuickQuote, qId, Err)
+        '    If Err() = "" Then
+        '        'okay
+
+        '    Else
+        '        'error
+        '    End If
+        'Else
+        '    qqxml.RateQuoteAndSave(QuickQuoteXML.QuickQuoteSaveType.Quote, QuickQuote, strQQ, ratedQQ, strRatedQQ, qId, Err) 'debug method w/ byref params for rated QuickQuoteObject and xml strings for the request and response
+        '    'qqxml.RateQuoteAndSave(QuickQuoteXML.QuickQuoteSaveType.Quote, quickQuote, qId, err) 'normal method
+        '    If Err() = "" Then
+        '        'okay
+        '        Response.Redirect("DiamondQuoteSummary.aspx?QuoteId=" & qId)
+
+
+        '    Else
+        '        'error
+        '    End If
+        'End If
+
+        Return saveSuccess
+    End Function
+    Public Function SuccessfulSave(ByVal updatedQuoteObject As QuickQuoteObject, Optional ByRef errorMessage As String = "") As Boolean
+        Dim saveSuccess As Boolean = False
+        errorMessage = String.Empty
+
+        If updatedQuoteObject IsNot Nothing AndAlso QuoteObject IsNot Nothing Then
+            If _QuoteObject.Database_QuoteId <> "" Then
+                If updatedQuoteObject.Database_QuoteId = "" Then
+                    updatedQuoteObject.Database_QuoteId = _QuoteObject.Database_QuoteId
+                ElseIf updatedQuoteObject.Database_QuoteId <> _QuoteObject.Database_QuoteId Then
+                    errorMessage = "There's a quote id conflict between the quote object passed in and the one that's already in place."
+                    Return saveSuccess
+                    Exit Function
+                End If
+            End If
+        End If
+        _QuoteObject = updatedQuoteObject
+        GetQuoteIdFromQuoteObjectAndAddToViewstate()
+
+        qqxml.SaveQuote(QuickQuoteXML.QuickQuoteSaveType.Quote, QuoteObject, QuoteId, errorMessage) 'passing in QuoteObject and QuoteId properties so they can be obtained from viewstate if needed
+        If String.IsNullOrEmpty(errorMessage) = True Then
+            saveSuccess = True
+            QuoteObject = _QuoteObject 'so same code is executed as when normally set thru property; could also call same code separately or create a method to do it for both
+        End If
+
+        Return saveSuccess
+    End Function
+    Private Sub AddQuoteIdToViewstate()
+        If ViewState("QuoteId") Is Nothing Then
+            ViewState("QuoteId") = _QuoteId
+        Else
+            ViewState.Add("QuoteId", _QuoteId)
+        End If
+    End Sub
+    Private Sub GetQuoteIdFromQuoteObjectAndAddToViewstate()
+        If _QuoteObject IsNot Nothing AndAlso _QuoteObject.Database_QuoteId <> "" Then
+            _QuoteId = _QuoteObject.Database_QuoteId
+        Else
+            _QuoteId = ""
+        End If
+        AddQuoteIdToViewstate()
+    End Sub
+    Private Sub SaveCurrentQuoteObjectAndRaiseUpdatedEvent(ByVal sender As Object, ByVal e As System.EventArgs, Optional ByVal sectionToShow As TreeViewSection = TreeViewSection.None) 'added sectionToShow optional param 1/22/2014
+        Dim saveError As String = String.Empty
+        If SuccessfulSave(saveError) = True Then
+            'QuoteObject = _QuoteObject 'so same code is executed as when normally set thru property; could also call same code separately or create a method to do it for both; moved to SuccessfulSave method
+            RaiseEvent QuoteUpdated(sender, e)
+
+            'added 1/22/2014
+            If sectionToShow <> Nothing AndAlso sectionToShow <> TreeViewSection.None Then
+                Select Case sectionToShow
+                    Case TreeViewSection.Policyholders
+                        RaiseEvent ShowPolicyholders(sender, e)
+                    Case TreeViewSection.Drivers
+                        RaiseEvent ShowDrivers(sender, e)
+                    Case TreeViewSection.Vehicles
+                        RaiseEvent ShowVehicles(sender, e)
+                    Case TreeViewSection.Locations
+                        RaiseEvent ShowLocations(sender, e)
+                    Case TreeViewSection.Coverages
+                        RaiseEvent ShowCoverages(sender, e)
+                End Select
+            End If
+        Else
+            _QuoteObject = Nothing 'so it will be reloaded from viewstate next time
+            If String.IsNullOrEmpty(saveError) = True Then
+                saveError = "There was a problem saving the quote."
+            End If
+            ShowError(saveError)
+        End If
+    End Sub
+
+    Protected Sub rptVehicles_ItemDataBound(sender As Object, e As System.Web.UI.WebControls.RepeaterItemEventArgs) Handles rptVehicles.ItemDataBound
+        If e.Item.ItemType = ListItemType.Item OrElse e.Item.ItemType = ListItemType.AlternatingItem Then
+            Dim lblVehicleNumber As Label = e.Item.FindControl("lblVehicleNumber")
+            Dim pnlVehicleDrivers As Panel = e.Item.FindControl("pnlVehicleDrivers")
+            Dim rptVehicleDrivers As Repeater = e.Item.FindControl("rptVehicleDrivers")
+            Dim imgBtnRemoveVehicle As ImageButton = e.Item.FindControl("imgBtnRemoveVehicle")
+
+            If imgBtnRemoveVehicle IsNot Nothing Then
+                'imgBtnRemoveVehicle.Attributes.Add("onClick", "javascript:return " & "confirm('Are you sure you want to remove this vehicle?')")
+                'updated 1/23/2014 to take into account EditMode functionality (so you don't get the message that it's in edit mode and then get the confirm box)
+                imgBtnRemoveVehicle.Attributes.Add("onClick", "javascript: if (InEditMode() == true){alert('This functionality is currently locked.'); return false;}else{return confirm('Are you sure you want to remove this vehicle?');}")
+            End If
+
+            pnlVehicleDrivers.Visible = False
+
+            If lblVehicleNumber.Text <> "" AndAlso IsNumeric(lblVehicleNumber.Text) = True AndAlso QuoteObject IsNot Nothing AndAlso _QuoteObject.Vehicles IsNot Nothing AndAlso _QuoteObject.Vehicles.Count >= CInt(lblVehicleNumber.Text) Then
+                Dim hasPrincipal As Boolean = False
+                Dim hasOcc1 As Boolean = False
+                Dim hasOcc2 As Boolean = False
+                Dim hasOcc3 As Boolean = False
+                With _QuoteObject.Vehicles.Item(CInt(lblVehicleNumber.Text) - 1)
+                    If .PrincipalDriverNum <> "" AndAlso IsNumeric(.PrincipalDriverNum) = True AndAlso _QuoteObject.Drivers IsNot Nothing AndAlso _QuoteObject.Drivers.Count >= CInt(.PrincipalDriverNum) Then
+                        hasPrincipal = True
+                    End If
+                    If .OccasionalDriver1Num <> "" AndAlso IsNumeric(.OccasionalDriver1Num) = True AndAlso _QuoteObject.Drivers IsNot Nothing AndAlso _QuoteObject.Drivers.Count >= CInt(.OccasionalDriver1Num) Then
+                        hasOcc1 = True
+                    End If
+                    If .OccasionalDriver2Num <> "" AndAlso IsNumeric(.OccasionalDriver2Num) = True AndAlso _QuoteObject.Drivers IsNot Nothing AndAlso _QuoteObject.Drivers.Count >= CInt(.OccasionalDriver2Num) Then
+                        hasOcc2 = True
+                    End If
+                    If .OccasionalDriver3Num <> "" AndAlso IsNumeric(.OccasionalDriver3Num) = True AndAlso _QuoteObject.Drivers IsNot Nothing AndAlso _QuoteObject.Drivers.Count >= CInt(.OccasionalDriver3Num) Then
+                        hasOcc3 = True
+                    End If
+
+                    If hasPrincipal = True OrElse hasOcc1 = True OrElse hasOcc2 = True OrElse hasOcc3 = True Then
+                        pnlVehicleDrivers.Visible = True
+                        Dim dt As New DataTable
+                        dt.Columns.Add("VehicleDriverDescription", System.Type.GetType("System.String"))
+                        dt.Columns.Add("VehicleDriverIdentifier", System.Type.GetType("System.String"))
+                        dt.Columns.Add("DriverNumber", System.Type.GetType("System.String"))
+
+                        If hasPrincipal = True Then
+                            Dim newRow As DataRow = dt.NewRow
+                            'newRow.Item("VehicleDriverDescription") = qqHelper.appendText("Driver Number " & .PrincipalDriverNum, _QuoteObject.Drivers.Item(CInt(.PrincipalDriverNum) - 1).Name.DisplayName, " - ") & " (principal)"
+                            'newRow.Item("VehicleDriverDescription") = qqHelper.appendText("Driver #" & .PrincipalDriverNum, _QuoteObject.Drivers.Item(CInt(.PrincipalDriverNum) - 1).Name.DisplayName, " - ") & " (principal)"
+                            newRow.Item("VehicleDriverDescription") = qqHelper.appendText("", _QuoteObject.Drivers.Item(CInt(.PrincipalDriverNum) - 1).Name.DisplayName, " - ") & " (principal)"
+                            newRow.Item("VehicleDriverIdentifier") = "PrincipalDriver"
+                            newRow.Item("DriverNumber") = .PrincipalDriverNum
+                            dt.Rows.Add(newRow)
+                        End If
+                        If hasOcc1 = True Then
+                            Dim newRow As DataRow = dt.NewRow
+                            'newRow.Item("VehicleDriverDescription") = qqHelper.appendText("Driver Number " & .OccasionalDriver1Num, _QuoteObject.Drivers.Item(CInt(.OccasionalDriver1Num) - 1).Name.DisplayName, " - ") & " (occasional 1)"
+                            'newRow.Item("VehicleDriverDescription") = qqHelper.appendText("Driver #" & .OccasionalDriver1Num, _QuoteObject.Drivers.Item(CInt(.OccasionalDriver1Num) - 1).Name.DisplayName, " - ") & " (occasional 1)"
+                            newRow.Item("VehicleDriverDescription") = qqHelper.appendText("", _QuoteObject.Drivers.Item(CInt(.OccasionalDriver1Num) - 1).Name.DisplayName, " - ") & " (occasional 1)"
+                            newRow.Item("VehicleDriverIdentifier") = "OccasionalDriver1"
+                            newRow.Item("DriverNumber") = .OccasionalDriver1Num
+                            dt.Rows.Add(newRow)
+                        End If
+                        If hasOcc2 = True Then
+                            Dim newRow As DataRow = dt.NewRow
+                            'newRow.Item("VehicleDriverDescription") = qqHelper.appendText("Driver Number " & .OccasionalDriver2Num, _QuoteObject.Drivers.Item(CInt(.OccasionalDriver2Num) - 1).Name.DisplayName, " - ") & " (occasional 2)"
+                            'newRow.Item("VehicleDriverDescription") = qqHelper.appendText("Driver #" & .OccasionalDriver2Num, _QuoteObject.Drivers.Item(CInt(.OccasionalDriver2Num) - 1).Name.DisplayName, " - ") & " (occasional 2)"
+                            newRow.Item("VehicleDriverDescription") = qqHelper.appendText("", _QuoteObject.Drivers.Item(CInt(.OccasionalDriver2Num) - 1).Name.DisplayName, " - ") & " (occasional 2)"
+                            newRow.Item("VehicleDriverIdentifier") = "OccasionalDriver2"
+                            newRow.Item("DriverNumber") = .OccasionalDriver2Num
+                            dt.Rows.Add(newRow)
+                        End If
+                        If hasOcc3 = True Then
+                            Dim newRow As DataRow = dt.NewRow
+                            'newRow.Item("VehicleDriverDescription") = qqHelper.appendText("Driver Number " & .OccasionalDriver3Num, _QuoteObject.Drivers.Item(CInt(.OccasionalDriver3Num) - 1).Name.DisplayName, " - ") & " (occasional 3)"
+                            'newRow.Item("VehicleDriverDescription") = qqHelper.appendText("Driver #" & .OccasionalDriver3Num, _QuoteObject.Drivers.Item(CInt(.OccasionalDriver3Num) - 1).Name.DisplayName, " - ") & " (occasional 3)"
+                            newRow.Item("VehicleDriverDescription") = qqHelper.appendText("", _QuoteObject.Drivers.Item(CInt(.OccasionalDriver3Num) - 1).Name.DisplayName, " - ") & " (occasional 3)"
+                            newRow.Item("VehicleDriverIdentifier") = "OccasionalDriver3"
+                            newRow.Item("DriverNumber") = .OccasionalDriver3Num
+                            dt.Rows.Add(newRow)
+                        End If
+
+                        rptVehicleDrivers.DataSource = dt
+                        rptVehicleDrivers.DataBind()
+                        SetupVehicleDriversRepeater(rptVehicleDrivers)
+                    End If
+                End With
+
+            End If
+        End If
+    End Sub
+    Protected Sub imgBtnRemoveVehicleDriver_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblVehicleNumber As Label = currIB.Parent.Parent.Parent.FindControl("lblVehicleNumber") 'Parent.Parent.Parent needed; 1st parent: rptVehicleDrivers, 2nd parent: pnlVehicleDrivers, 3rd parent: rptVehicles (or repeater ItemTemplate)
+            Dim lblVehicleDriverIdentifier As Label = currIB.Parent.FindControl("lblVehicleDriverIdentifier")
+            Dim lblDriverNumber As Label = currIB.Parent.FindControl("lblDriverNumber")
+
+            'If lblDriverNumber IsNot Nothing Then
+            '    ShowError("you want to remove vehicle driver # " & lblDriverNumber.Text)
+            'End If
+            If lblVehicleNumber IsNot Nothing AndAlso IsNumeric(lblVehicleNumber.Text) = True Then ' AndAlso lblDriverNumber IsNot Nothing AndAlso IsNumeric(lblDriverNumber.Text) = True Then'should be able to clear out text regardless if value is number or not
+                If QuoteObject IsNot Nothing Then
+                    If _QuoteObject.Vehicles IsNot Nothing AndAlso _QuoteObject.Vehicles.Count >= CInt(lblVehicleNumber.Text) Then
+                        If lblVehicleDriverIdentifier IsNot Nothing AndAlso lblVehicleDriverIdentifier.Text <> "" Then
+                            Dim wasUpdated As Boolean = False
+                            With _QuoteObject.Vehicles.Item(CInt(lblVehicleNumber.Text) - 1)
+                                Select Case UCase(lblVehicleDriverIdentifier.Text)
+                                    Case UCase("PrincipalDriver")
+                                        If lblDriverNumber IsNot Nothing AndAlso lblDriverNumber.Text = .PrincipalDriverNum Then 'can verify that text is the same; not mandatory
+                                            wasUpdated = True
+                                            .PrincipalDriverNum = ""
+                                        End If
+                                    Case UCase("OccasionalDriver1")
+                                        If lblDriverNumber IsNot Nothing AndAlso lblDriverNumber.Text = .OccasionalDriver1Num Then 'can verify that text is the same; not mandatory
+                                            wasUpdated = True
+                                            .OccasionalDriver1Num = ""
+                                        End If
+                                    Case UCase("OccasionalDriver2")
+                                        If lblDriverNumber IsNot Nothing AndAlso lblDriverNumber.Text = .OccasionalDriver2Num Then 'can verify that text is the same; not mandatory
+                                            wasUpdated = True
+                                            .OccasionalDriver2Num = ""
+                                        End If
+                                    Case UCase("OccasionalDriver3")
+                                        If lblDriverNumber IsNot Nothing AndAlso lblDriverNumber.Text = .OccasionalDriver3Num Then 'can verify that text is the same; not mandatory
+                                            wasUpdated = True
+                                            .OccasionalDriver3Num = ""
+                                        End If
+                                End Select
+                            End With
+                            If wasUpdated = True Then
+                                MoveUpVehicleDrivers(_QuoteObject.Vehicles.Item(CInt(lblVehicleNumber.Text) - 1))
+
+                                SaveCurrentQuoteObjectAndRaiseUpdatedEvent(sender, e, TreeViewSection.Vehicles) 'updated 1/22/2014 to send new optional param
+                            End If
+                        End If
+                    End If
+                End If
+            End If
+        End If
+    End Sub
+    'added 'new/add' button clicks 1/10/2014
+    Protected Sub imgBtnAddDriver_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            'Dim currIB As ImageButton = CType(sender, ImageButton)
+            'Dim lblDriverNumber As Label = currIB.Parent.FindControl("lblDriverNumber")
+            ''If lblDriverNumber IsNot Nothing Then
+            ''    ShowError("you want to edit driver # " & lblDriverNumber.Text)
+            ''End If
+            'If lblDriverNumber IsNot Nothing AndAlso IsNumeric(lblDriverNumber.Text) = True Then
+            '    RaiseEvent EditDriver(CInt(lblDriverNumber.Text))
+            'End If
+
+            'If QuoteObject IsNot Nothing Then
+            '    If _QuoteObject.Drivers Is Nothing Then
+            '        _QuoteObject.Drivers = New List(Of QuickQuoteDriver)
+            '        AddQuoteObjectToViewstate()
+            '    End If
+            '    RaiseEvent NewDriver(_QuoteObject.Drivers.Count + 1)
+            'End If
+            'updated 2/4/2014
+            RaiseNewDriverEvent()
+        End If
+    End Sub
+    Protected Sub imgBtnAddVehicle_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            'Dim currIB As ImageButton = CType(sender, ImageButton)
+            'Dim lblVehicleNumber As Label = currIB.Parent.FindControl("lblVehicleNumber")
+            ''If lblVehicleNumber IsNot Nothing Then
+            ''    ShowError("you want to edit vehicle # " & lblVehicleNumber.Text)
+            ''End If
+            'If lblVehicleNumber IsNot Nothing AndAlso IsNumeric(lblVehicleNumber.Text) = True Then
+            '    RaiseEvent EditVehicle(CInt(lblVehicleNumber.Text))
+            'End If
+
+            'If QuoteObject IsNot Nothing Then
+            '    If _QuoteObject.Vehicles Is Nothing Then
+            '        _QuoteObject.Vehicles = New List(Of QuickQuoteVehicle)
+            '        AddQuoteObjectToViewstate()
+            '    End If
+            '    RaiseEvent NewVehicle(_QuoteObject.Vehicles.Count + 1)
+            'End If
+            'updated 2/4/2014
+            RaiseNewVehicleEvent()
+        End If
+    End Sub
+    Protected Sub imgBtnAddLocation_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            'Dim currIB As ImageButton = CType(sender, ImageButton)
+            'Dim lblLocationNumber As Label = currIB.Parent.FindControl("lblLocationNumber")
+            ''If lblLocationNumber IsNot Nothing Then
+            ''    ShowError("you want to edit location # " & lblLocationNumber.Text)
+            ''End If
+            'If lblLocationNumber IsNot Nothing AndAlso IsNumeric(lblLocationNumber.Text) = True Then
+            '    RaiseEvent EditLocation(CInt(lblLocationNumber.Text))
+            'End If
+
+            'If QuoteObject IsNot Nothing Then
+            '    If _QuoteObject.Locations Is Nothing Then
+            '        _QuoteObject.Locations = New List(Of QuickQuoteLocation)
+            '        AddQuoteObjectToViewstate()
+            '    End If
+            '    RaiseEvent NewLocation(_QuoteObject.Locations.Count + 1)
+            'End If
+            'updated 2/4/2014
+            RaiseNewLocationEvent()
+        End If
+    End Sub
+    Private Sub AddQuoteObjectToViewstate()
+        If ViewState("QuoteObject") Is Nothing Then
+            ViewState("QuoteObject") = _QuoteObject
+        Else
+            ViewState.Add("QuoteObject", _QuoteObject)
+        End If
+    End Sub
+
+    Protected Sub rptDrivers_ItemDataBound(sender As Object, e As System.Web.UI.WebControls.RepeaterItemEventArgs) Handles rptDrivers.ItemDataBound
+        If e.Item.ItemType = ListItemType.Item OrElse e.Item.ItemType = ListItemType.AlternatingItem Then
+            Dim imgBtnRemoveDriver As ImageButton = e.Item.FindControl("imgBtnRemoveDriver")
+            If imgBtnRemoveDriver IsNot Nothing Then
+                'imgBtnRemoveDriver.Attributes.Add("onClick", "javascript:return " & "confirm('Are you sure you want to remove this driver?')")
+                'updated 1/23/2014 to take into account EditMode functionality (so you don't get the message that it's in edit mode and then get the confirm box)
+                imgBtnRemoveDriver.Attributes.Add("onClick", "javascript: if (InEditMode() == true){alert('This functionality is currently locked.'); return false;}else{return confirm('Are you sure you want to remove this driver?');}")
+            End If
+
+            'added 1/27/2014
+            Dim lblDriverNumber As Label = e.Item.FindControl("lblDriverNumber")
+            Dim pnlDriverAccidentViolations As Panel = e.Item.FindControl("pnlDriverAccidentViolations")
+            Dim rptDriverAccidentViolations As Repeater = e.Item.FindControl("rptDriverAccidentViolations")
+
+            pnlDriverAccidentViolations.Visible = False
+
+            If lblDriverNumber.Text <> "" AndAlso IsNumeric(lblDriverNumber.Text) = True AndAlso QuoteObject IsNot Nothing AndAlso _QuoteObject.Drivers IsNot Nothing AndAlso _QuoteObject.Drivers.Count >= CInt(lblDriverNumber.Text) Then
+                pnlDriverAccidentViolations.Visible = True
+
+                Dim dt As New DataTable
+                dt.Columns.Add("DriverAccidentViolationDescription", System.Type.GetType("System.String"))
+                dt.Columns.Add("DriverAccidentViolationNumber", System.Type.GetType("System.String"))
+
+                With _QuoteObject.Drivers.Item(CInt(lblDriverNumber.Text) - 1)
+                    If .AccidentViolations IsNot Nothing AndAlso .AccidentViolations.Count > 0 Then
+                        'moved outside of IF to bind message row when there's no accs/viols
+                        'pnlDriverAccidentViolations.Visible = True
+
+                        'Dim dt As New DataTable
+                        'dt.Columns.Add("DriverAccidentViolationDescription", System.Type.GetType("System.String"))
+                        'dt.Columns.Add("DriverAccidentViolationNumber", System.Type.GetType("System.String"))
+
+                        Dim accViolNum As Integer = 0
+                        For Each av As QuickQuoteAccidentViolation In .AccidentViolations
+                            accViolNum += 1
+                            Dim newRow As DataRow = dt.NewRow
+                            'newRow.Item("DriverAccidentViolationDescription") = qqHelper.appendText("Accident/Violation #" & accViolNum.ToString, av.Description, " - ")
+                            newRow.Item("DriverAccidentViolationDescription") = qqHelper.appendText(av.AvDate, qqHelper.GetStaticDataTextForValue(QuickQuoteHelperClass.QuickQuoteClassName.QuickQuoteAccidentViolation, QuickQuoteHelperClass.QuickQuotePropertyName.AccidentsViolationsTypeId, av.AccidentsViolationsTypeId), " - ")
+                            'If newRow.Item("DriverAccidentViolationDescription").ToString = "" Then 'may use
+                            '    newRow.Item("DriverAccidentViolationDescription") = av.Description
+                            'End If
+                            newRow.Item("DriverAccidentViolationNumber") = accViolNum.ToString
+                            dt.Rows.Add(newRow)
+                        Next
+
+                        'moved outside of IF to bind message row when there's no accs/viols
+                        'rptDriverAccidentViolations.DataSource = dt
+                        'rptDriverAccidentViolations.DataBind()
+                        'SetupDriverAccidentViolationsRepeater(rptDriverAccidentViolations)
+                    Else
+                        Dim newRow As DataRow = dt.NewRow
+                        newRow.Item("DriverAccidentViolationDescription") = "No Accidents/Violations"
+                        newRow.Item("DriverAccidentViolationNumber") = "" 'could also use 0
+                        dt.Rows.Add(newRow)
+                    End If
+                End With
+
+                rptDriverAccidentViolations.DataSource = dt
+                rptDriverAccidentViolations.DataBind()
+                SetupDriverAccidentViolationsRepeater(rptDriverAccidentViolations)
+            End If
+        End If
+    End Sub
+    'added 1/27/2014
+    Private Sub SetupDriverAccidentViolationsRepeater(ByVal rptDriverAccidentViolations As Repeater)
+        If rptDriverAccidentViolations IsNot Nothing Then
+            For Each i As RepeaterItem In rptDriverAccidentViolations.Items
+                Dim imgBtnRemoveDriverAccidentViolation As ImageButton = i.FindControl("imgBtnRemoveDriverAccidentViolation")
+                If imgBtnRemoveDriverAccidentViolation IsNot Nothing Then
+                    'imgBtnRemoveDriverAccidentViolation.Attributes.Add("onClick", "javascript:return " & "confirm('Are you sure you want to remove this driver accident/violation?')")
+                    'updated 1/23/2014 to take into account EditMode functionality (so you don't get the message that it's in edit mode and then get the confirm box)
+                    imgBtnRemoveDriverAccidentViolation.Attributes.Add("onClick", "javascript: if (InEditMode() == true){alert('This functionality is currently locked.'); return false;}else{return confirm('Are you sure you want to remove this driver accident/violation?');}")
+
+                    Dim lblDriverAccidentViolationNumber As Label = i.FindControl("lblDriverAccidentViolationNumber")
+                    If lblDriverAccidentViolationNumber IsNot Nothing Then
+                        If lblDriverAccidentViolationNumber.Text <> "" AndAlso IsNumeric(lblDriverAccidentViolationNumber.Text) = True Then
+                            'normal... okay
+                            imgBtnRemoveDriverAccidentViolation.Visible = True
+                        Else
+                            'message row; delete button not needed
+                            imgBtnRemoveDriverAccidentViolation.Visible = False
+                        End If
+                    End If
+                End If
+            Next
+        End If
+    End Sub
+    'added 1/27/2014
+    Protected Sub imgBtnRemoveDriverAccidentViolation_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblDriverNumber As Label = currIB.Parent.Parent.Parent.FindControl("lblDriverNumber") 'Parent.Parent.Parent needed; 1st parent: rptDriverAccidentViolations, 2nd parent: pnlDriverAccidentViolations, 3rd parent: rptDrivers (or repeater ItemTemplate)
+            Dim lblDriverAccidentViolationNumber As Label = currIB.Parent.FindControl("lblDriverAccidentViolationNumber")
+
+            If lblDriverNumber IsNot Nothing AndAlso IsNumeric(lblDriverNumber.Text) = True AndAlso lblDriverAccidentViolationNumber IsNot Nothing AndAlso IsNumeric(lblDriverAccidentViolationNumber.Text) = True Then
+                If QuoteObject IsNot Nothing Then
+                    If _QuoteObject.Drivers IsNot Nothing AndAlso _QuoteObject.Drivers.Count >= CInt(lblDriverNumber.Text) Then
+                        With _QuoteObject.Drivers.Item(CInt(lblDriverNumber.Text) - 1)
+                            If .AccidentViolations IsNot Nothing AndAlso .AccidentViolations.Count >= CInt(lblDriverAccidentViolationNumber.Text) Then
+                                'both should do the same thing
+                                '.AccidentViolations.Remove(.AccidentViolations.Item(CInt(lblDriverAccidentViolationNumber.Text) - 1))
+                                .AccidentViolations.RemoveAt(CInt(lblDriverAccidentViolationNumber.Text) - 1)
+
+                                SaveCurrentQuoteObjectAndRaiseUpdatedEvent(sender, e, TreeViewSection.Drivers) 'updated 1/22/2014 to send new optional param
+                            End If
+                        End With
+                    End If
+                End If
+            End If
+        End If
+    End Sub
+
+    Protected Sub rptLocations_ItemDataBound(sender As Object, e As System.Web.UI.WebControls.RepeaterItemEventArgs) Handles rptLocations.ItemDataBound
+        If e.Item.ItemType = ListItemType.Item OrElse e.Item.ItemType = ListItemType.AlternatingItem Then
+            Dim imgBtnRemoveLocation As ImageButton = e.Item.FindControl("imgBtnRemoveLocation")
+            If imgBtnRemoveLocation IsNot Nothing Then
+                'imgBtnRemoveLocation.Attributes.Add("onClick", "javascript:return " & "confirm('Are you sure you want to remove this location?')")
+                'updated 1/23/2014 to take into account EditMode functionality (so you don't get the message that it's in edit mode and then get the confirm box)
+                imgBtnRemoveLocation.Attributes.Add("onClick", "javascript: if (InEditMode() == true){alert('This functionality is currently locked.'); return false;}else{return confirm('Are you sure you want to remove this location?');}")
+            End If
+
+            'added 1/20/2014
+            Dim lblLocationNumber As Label = e.Item.FindControl("lblLocationNumber")
+            Dim pnlLocationBuildings As Panel = e.Item.FindControl("pnlLocationBuildings")
+            Dim rptLocationBuildings As Repeater = e.Item.FindControl("rptLocationBuildings")
+
+            pnlLocationBuildings.Visible = False
+
+            If lblLocationNumber.Text <> "" AndAlso IsNumeric(lblLocationNumber.Text) = True AndAlso QuoteObject IsNot Nothing AndAlso _QuoteObject.Locations IsNot Nothing AndAlso _QuoteObject.Locations.Count >= CInt(lblLocationNumber.Text) Then
+                With _QuoteObject.Locations.Item(CInt(lblLocationNumber.Text) - 1)
+                    If .Buildings IsNot Nothing AndAlso .Buildings.Count > 0 Then
+                        pnlLocationBuildings.Visible = True
+
+                        Dim dt As New DataTable
+                        dt.Columns.Add("LocationBuildingDescription", System.Type.GetType("System.String"))
+                        dt.Columns.Add("BuildingNumber", System.Type.GetType("System.String"))
+
+                        Dim buildingNum As Integer = 0
+                        For Each b As QuickQuoteBuilding In .Buildings
+                            buildingNum += 1
+                            Dim newRow As DataRow = dt.NewRow
+                            newRow.Item("LocationBuildingDescription") = qqHelper.appendText("Building #" & buildingNum.ToString, b.Description, " - ")
+                            newRow.Item("BuildingNumber") = buildingNum.ToString
+                            dt.Rows.Add(newRow)
+                        Next
+
+                        rptLocationBuildings.DataSource = dt
+                        rptLocationBuildings.DataBind()
+                        SetupLocationBuildingsRepeater(rptLocationBuildings)
+                    End If
+                End With
+            End If
+        End If
+    End Sub
+    Private Sub SetupLocationBuildingsRepeater(ByVal rptLocationBuildings As Repeater)
+        If rptLocationBuildings IsNot Nothing Then
+            For Each i As RepeaterItem In rptLocationBuildings.Items
+                Dim imgBtnRemoveLocationBuilding As ImageButton = i.FindControl("imgBtnRemoveLocationBuilding")
+                If imgBtnRemoveLocationBuilding IsNot Nothing Then
+                    'imgBtnRemoveLocationBuilding.Attributes.Add("onClick", "javascript:return " & "confirm('Are you sure you want to remove this location building?')")
+                    'updated 1/23/2014 to take into account EditMode functionality (so you don't get the message that it's in edit mode and then get the confirm box)
+                    imgBtnRemoveLocationBuilding.Attributes.Add("onClick", "javascript: if (InEditMode() == true){alert('This functionality is currently locked.'); return false;}else{return confirm('Are you sure you want to remove this location building?');}")
+                End If
+            Next
+        End If
+    End Sub
+    Protected Sub imgBtnRemoveLocationBuilding_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        If TypeOf sender Is ImageButton Then
+            Dim currIB As ImageButton = CType(sender, ImageButton)
+            Dim lblLocationNumber As Label = currIB.Parent.Parent.Parent.FindControl("lblLocationNumber") 'Parent.Parent.Parent needed; 1st parent: rptLocationBuildings, 2nd parent: pnlLocationBuildings, 3rd parent: rptLocations (or repeater ItemTemplate)
+            Dim lblBuildingNumber As Label = currIB.Parent.FindControl("lblBuildingNumber")
+
+            If lblLocationNumber IsNot Nothing AndAlso IsNumeric(lblLocationNumber.Text) = True AndAlso lblBuildingNumber IsNot Nothing AndAlso IsNumeric(lblBuildingNumber.Text) = True Then
+                If QuoteObject IsNot Nothing Then
+                    If _QuoteObject.Locations IsNot Nothing AndAlso _QuoteObject.Locations.Count >= CInt(lblLocationNumber.Text) Then
+                        With _QuoteObject.Locations.Item(CInt(lblLocationNumber.Text) - 1)
+                            If .Buildings IsNot Nothing AndAlso .Buildings.Count >= CInt(lblBuildingNumber.Text) Then
+                                'both should do the same thing
+                                '.Buildings.Remove(.Buildings.Item(CInt(lblBuildingNumber.Text) - 1))
+                                .Buildings.RemoveAt(CInt(lblBuildingNumber.Text) - 1)
+
+                                SaveCurrentQuoteObjectAndRaiseUpdatedEvent(sender, e, TreeViewSection.Locations) 'updated 1/22/2014 to send new optional param
+                            End If
+                        End With
+                    End If
+                End If
+            End If
+        End If
+    End Sub
+
+    Private Sub SetupVehicleDriversRepeater(ByVal rptVehicleDrivers As Repeater)
+        If rptVehicleDrivers IsNot Nothing Then
+            For Each i As RepeaterItem In rptVehicleDrivers.Items
+                Dim imgBtnRemoveVehicleDriver As ImageButton = i.FindControl("imgBtnRemoveVehicleDriver")
+                If imgBtnRemoveVehicleDriver IsNot Nothing Then
+                    'imgBtnRemoveVehicleDriver.Attributes.Add("onClick", "javascript:return " & "confirm('Are you sure you want to remove this vehicle driver?')")
+                    'updated 1/23/2014 to take into account EditMode functionality (so you don't get the message that it's in edit mode and then get the confirm box)
+                    imgBtnRemoveVehicleDriver.Attributes.Add("onClick", "javascript: if (InEditMode() == true){alert('This functionality is currently locked.'); return false;}else{return confirm('Are you sure you want to remove this vehicle driver?');}")
+                End If
+            Next
+        End If
+    End Sub
+    Private Sub ResetQuoteDescriptionAndEffectiveDateToOriginalLabels()
+        Me.lblQuoteDescription.Text = qqHelper.appendText(Me.lblQuoteNumber.Text, Me.lblOriginalQuoteDescription.Text, " - ")
+        Me.lblEffectiveDate.Text = Me.lblOriginalEffectiveDate.Text
+    End Sub
+
+    Protected Sub imgBtnEditQuoteDescription_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnEditQuoteDescription.Click
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        InEditMode = True
+        Me.QuoteDescriptionEditSection.Visible = True
+        Me.QuoteDescriptionViewSection.Visible = False
+        Me.txtQuoteDescription.Text = Me.lblOriginalQuoteDescription.Text
+        Page.SetFocus(Me.txtQuoteDescription) 'added 1/15/2014
+    End Sub
+
+    Protected Sub imgBtnSaveQuoteDescription_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnSaveQuoteDescription.Click
+        If Me.txtQuoteDescription.Text = "" Then
+            ShowError("please enter the quote description")
+            Page.SetFocus(Me.txtEffectiveDate)
+        Else
+            'update
+            If QuoteObject IsNot Nothing Then
+                _QuoteObject.QuoteDescription = Me.txtQuoteDescription.Text
+                SaveCurrentQuoteObjectAndRaiseUpdatedEvent(sender, e)
+            End If
+            InEditMode = False
+        End If
+    End Sub
+
+    Protected Sub imgBtnCancelSaveQuoteDescription_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnCancelSaveQuoteDescription.Click
+        ResetQuoteDescriptionAndEffectiveDateToOriginalLabels()
+        Me.QuoteDescriptionViewSection.Visible = True
+        Me.QuoteDescriptionEditSection.Visible = False
+        InEditMode = False
+    End Sub
+
+    Protected Sub imgBtnEditEffectiveDate_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnEditEffectiveDate.Click
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+        InEditMode = True
+        Me.EffectiveDateEditSection.Visible = True
+        Me.EffectiveDateViewSection.Visible = False
+        Me.txtEffectiveDate.Text = Me.lblOriginalEffectiveDate.Text
+        Page.SetFocus(Me.txtEffectiveDate) 'added 1/15/2014
+    End Sub
+
+    Protected Sub imgBtnSaveEffectiveDate_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnSaveEffectiveDate.Click
+        If Me.txtEffectiveDate.Text = "" Then
+            ShowError("please enter the effective date")
+            Page.SetFocus(Me.txtEffectiveDate)
+        ElseIf IsDate(Me.txtEffectiveDate.Text) = False Then
+            ShowError("please enter a valid date")
+            Page.SetFocus(Me.txtEffectiveDate)
+        Else
+            'update
+            If QuoteObject IsNot Nothing Then
+                _QuoteObject.EffectiveDate = Me.txtEffectiveDate.Text
+                SaveCurrentQuoteObjectAndRaiseUpdatedEvent(sender, e)
+            End If
+            InEditMode = False
+        End If
+    End Sub
+
+    Protected Sub imgBtnCancelSaveEffectiveDate_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnCancelSaveEffectiveDate.Click
+        ResetQuoteDescriptionAndEffectiveDateToOriginalLabels()
+        Me.EffectiveDateViewSection.Visible = True
+        Me.EffectiveDateEditSection.Visible = False
+        InEditMode = False
+    End Sub
+
+    Protected Sub imgBtnPolicyholders_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnPolicyholders.Click
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+
+        RaiseEvent ShowPolicyholders(sender, e)
+    End Sub
+
+    'added show button clicks 1/22/2014
+    Protected Sub imgBtnDrivers_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnDrivers.Click
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+
+        'updated 2/4/2014
+        Dim raiseNewEvent As Boolean = False
+        If Me.lblNumberOfDrivers.Text <> "" AndAlso IsNumeric(Me.lblNumberOfDrivers.Text) = True Then
+            If CInt(Me.lblNumberOfDrivers.Text) = 0 Then
+                raiseNewEvent = True
+            End If
+        ElseIf QuoteObject IsNot Nothing AndAlso (_QuoteObject.Drivers Is Nothing OrElse _QuoteObject.Drivers.Count = 0) Then
+            raiseNewEvent = True
+        End If
+        If raiseNewEvent = True Then
+            'If QuoteObject IsNot Nothing AndAlso _QuoteObject.Drivers Is Nothing Then
+            '    _QuoteObject.Drivers = New List(Of QuickQuoteDriver)
+            '    AddQuoteObjectToViewstate()
+            'End If
+            'RaiseEvent NewDriver(1)
+            RaiseNewDriverEvent()
+            Exit Sub
+        End If
+
+        RaiseEvent ShowDrivers(sender, e)
+    End Sub
+
+    Protected Sub imgBtnVehicles_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnVehicles.Click
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+
+        'updated 2/4/2014
+        Dim raiseNewEvent As Boolean = False
+        If Me.lblNumberOfVehicles.Text <> "" AndAlso IsNumeric(Me.lblNumberOfVehicles.Text) = True Then
+            If CInt(Me.lblNumberOfVehicles.Text) = 0 Then
+                raiseNewEvent = True
+            End If
+        ElseIf QuoteObject IsNot Nothing AndAlso (_QuoteObject.Vehicles Is Nothing OrElse _QuoteObject.Vehicles.Count = 0) Then
+            raiseNewEvent = True
+        End If
+        If raiseNewEvent = True Then
+            'If QuoteObject IsNot Nothing AndAlso _QuoteObject.Vehicles Is Nothing Then
+            '    _QuoteObject.Vehicles = New List(Of QuickQuoteVehicle)
+            '    AddQuoteObjectToViewstate()
+            'End If
+            'RaiseEvent NewVehicle(1)
+            RaiseNewVehicleEvent()
+            Exit Sub
+        End If
+
+        RaiseEvent ShowVehicles(sender, e)
+    End Sub
+
+    Protected Sub imgBtnLocations_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnLocations.Click
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+
+        'updated 2/4/2014
+        Dim raiseNewEvent As Boolean = False
+        If Me.lblNumberOfLocations.Text <> "" AndAlso IsNumeric(Me.lblNumberOfLocations.Text) = True Then
+            If CInt(Me.lblNumberOfLocations.Text) = 0 Then
+                raiseNewEvent = True
+            End If
+        ElseIf QuoteObject IsNot Nothing AndAlso (_QuoteObject.Locations Is Nothing OrElse _QuoteObject.Locations.Count = 0) Then
+            raiseNewEvent = True
+        End If
+        If raiseNewEvent = True Then
+            'If QuoteObject IsNot Nothing AndAlso _QuoteObject.Locations Is Nothing Then
+            '    _QuoteObject.Locations = New List(Of QuickQuoteLocation)
+            '    AddQuoteObjectToViewstate()
+            'End If
+            'RaiseEvent NewLocation(1)
+            RaiseNewLocationEvent()
+            Exit Sub
+        End If
+
+        RaiseEvent ShowLocations(sender, e)
+    End Sub
+
+    Protected Sub imgBtnCoverages_Click(sender As Object, e As System.Web.UI.ImageClickEventArgs) Handles imgBtnCoverages.Click
+        If InEditMode = True Then
+            ShowError("This functionality is currently locked.")
+            Exit Sub
+        End If
+
+        RaiseEvent ShowCoverages(sender, e)
+    End Sub
+    'added 2/4/2014 to centralize logic in 1 spot
+    Private Sub RaiseNewDriverEvent()
+        If QuoteObject IsNot Nothing Then
+            If _QuoteObject.Drivers Is Nothing Then
+                _QuoteObject.Drivers = New List(Of QuickQuoteDriver)
+                AddQuoteObjectToViewstate()
+            End If
+            RaiseEvent NewDriver(_QuoteObject.Drivers.Count + 1)
+        End If
+    End Sub
+    Private Sub RaiseNewVehicleEvent()
+        If QuoteObject IsNot Nothing Then
+            If _QuoteObject.Vehicles Is Nothing Then
+                _QuoteObject.Vehicles = New List(Of QuickQuoteVehicle)
+                AddQuoteObjectToViewstate()
+            End If
+            RaiseEvent NewVehicle(_QuoteObject.Vehicles.Count + 1)
+        End If
+    End Sub
+    Private Sub RaiseNewLocationEvent()
+        If QuoteObject IsNot Nothing Then
+            If _QuoteObject.Locations Is Nothing Then
+                _QuoteObject.Locations = New List(Of QuickQuoteLocation)
+                AddQuoteObjectToViewstate()
+            End If
+            RaiseEvent NewLocation(_QuoteObject.Locations.Count + 1)
+        End If
+    End Sub
+End Class

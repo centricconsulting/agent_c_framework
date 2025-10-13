@@ -1,0 +1,32 @@
+﻿
+
+Partial Class DiamondQuoteProposalPDF
+    Inherits System.Web.UI.Page
+
+
+    Protected Sub Page_Load(sender As Object, e As System.EventArgs) Handles Me.Load
+        If Page.IsPostBack = False Then
+            GeneratePDF()
+        End If
+    End Sub
+    Private Sub GeneratePDF()
+        'If formBytes IsNot Nothing Then
+        'Server.Execute("http://localhost:51360/DiamondQuickQuotePages/DiamondQuoteProposal.aspx?PrinterFriendlyQuoteIds=380|1368")
+        Server.Execute("DiamondQuoteProposal.aspx?PrinterFriendlyQuoteIds=380|1368")
+        'Response.ContentType = "application/pdf"
+        Response.ContentType = "text/html"
+        'Response.ContentType = "application/octet-stream"
+        'Response.BinaryWrite(formBytes)
+        'Response.AddHeader("Content-disposition", "attachment; filename=FlatPDFForm.fdf")
+        'Response.AddHeader("Content-disposition", "attachment; filename=TestProposal.pdf")
+        Response.AddHeader("Content-disposition", "attachment; filename=TestProposal.htm")
+        Response.Flush()
+
+        'If Session("DiamondPrintFormBytes_" & policyId) IsNot Nothing Then
+        '    Session("DiamondPrintFormBytes_" & policyId) = Nothing
+        'End If
+        'Else
+        'Response.Write("No print form found. Please try again.")
+        'End If
+    End Sub
+End Class

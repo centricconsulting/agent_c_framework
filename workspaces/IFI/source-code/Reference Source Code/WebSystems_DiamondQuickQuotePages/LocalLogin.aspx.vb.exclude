@@ -1,0 +1,152 @@
+Imports System.Web.Security
+Public Class LocalLogin
+    Inherits System.Web.UI.Page
+
+#Region " Web Form Designer Generated Code "
+
+    'This call is required by the Web Form Designer.
+    <System.Diagnostics.DebuggerStepThrough()> Private Sub InitializeComponent()
+
+    End Sub
+    'Protected WithEvents Button1 As System.Web.UI.WebControls.Button
+    'Protected WithEvents lbluserid As System.Web.UI.WebControls.Label
+    'Protected WithEvents lblrole As System.Web.UI.WebControls.Label
+    'Protected WithEvents lblAuth As System.Web.UI.WebControls.Label
+    'Protected WithEvents lblUsername As System.Web.UI.WebControls.Label
+    'Protected WithEvents txtrole As System.Web.UI.WebControls.TextBox
+    'Protected WithEvents txtuserid As System.Web.UI.WebControls.TextBox
+    'Protected WithEvents txtagencyid As System.Web.UI.WebControls.TextBox
+    'Protected WithEvents txtagencycode As System.Web.UI.WebControls.TextBox
+    'Protected WithEvents txtauth As System.Web.UI.WebControls.TextBox
+    'Protected WithEvents txtusername As System.Web.UI.WebControls.TextBox
+    'Protected WithEvents lblagencyterr As System.Web.UI.WebControls.Label
+    'Protected WithEvents txtagencyterr As System.Web.UI.WebControls.TextBox
+    'Protected WithEvents lblsuccess As System.Web.UI.WebControls.Label
+    'Protected WithEvents lblpassword As System.Web.UI.WebControls.Label
+    'Protected WithEvents txtpassword As System.Web.UI.WebControls.TextBox
+    'Protected WithEvents lblagencycode As System.Web.UI.WebControls.Label
+    'Protected WithEvents lblagencyid As System.Web.UI.WebControls.Label
+
+    'NOTE: The following placeholder declaration is required by the Web Form Designer.
+    'Do not delete or move it.
+    Private designerPlaceholderDeclaration As System.Object
+
+    Private Sub Page_Init(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Init
+        'CODEGEN: This method call is required by the Web Form Designer
+        'Do not modify it using the code editor.
+        InitializeComponent()
+    End Sub
+
+#End Region
+
+    'Dim WS As New AssociateCodeWebSubs
+
+    Private Sub Page_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        'Put user code to initialize the page here
+        lblsuccess.Visible = False
+        If Page.IsPostBack = False Then
+            'Me.txtagencycode.Text = "1840" 'Diamond code 6013-1840
+            'Me.txtagencyid.Text = "33" 'Diamond id = 17
+            'Me.txtuserid.Text = "33" 'Diamond id = 3135
+            'Me.txtusername.Text = "DonBrewtonTest"
+            'Me.txtpassword.Text = "DonBrewtonTest1"
+
+            Me.txtagencycode.Text = "3000" 'Diamond code 6000-3000
+            Me.txtagencyid.Text = "441" 'Diamond id = 441
+            Me.txtuserid.Text = "3310" 'Diamond id = 3033
+            Me.txtusername.Text = "TestNxTech2"
+            Me.txtpassword.Text = "DevTesting2"
+            Me.txtQuoteIDs.Text = "92570"
+        End If
+    End Sub
+
+    Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
+        'Response.Redirect("DiamondQuoteProposal.aspx?QuoteIDs=" & txtQuoteIDs.Text)
+        'Response.Redirect("DiamondQuoteProposal.aspx?PrinterFriendlyQuoteIds=" & txtQuoteIDs.Text)
+        Response.Redirect("DiamondQuoteProposal.aspx?PrinterFriendlyQuoteIds=" & txtQuoteIDs.Text & "&lookForExistingPDF=FALSE")
+
+        ' Clear the diamond session variable
+        Session("CurrentDiamondUser") = Nothing
+
+        Session("username") = Me.txtusername.Text
+        Session("password") = Me.txtpassword.Text
+        'Session("auth") = Me.txtauth.Text
+        Session("AgencyID") = Me.txtagencyid.Text
+        Session("AgencyCode") = Me.txtagencycode.Text
+        'Session("userID") = Me.txtuserid.Text
+        'Session("role") = Me.txtrole.Text
+        Session("agencyTerr") = Me.txtagencyterr.Text
+        'FormsAuthentication.RedirectFromLoginPage(Me.txtusername.Text, False)
+
+        'Test()
+        'Exit Sub
+
+        Using diaweb_security As New DiamondWebClass.DiamondSecurity(txtusername.Text, txtpassword.Text)
+            If Diamond.Web.BaseControls.SignedOnUserID <= 0 Then
+                'WS.SetAssociateCodesStringForLoggedInUser()
+                'Response.Redirect("UpdateUserForDiamond.aspx")
+            Else
+                diaweb_security.Lookup_GetExistingUserInfo(DiamondWebClass.Enums.UserLocation.Diamond)
+                diaweb_security.Lookup_GetUserAgencies(diaweb_security.ExistingUser, DiamondWebClass.Enums.UserLocation.Diamond)
+                diaweb_security.fillLinkData(diaweb_security.ExistingUser)
+                Session("DiamondUsername") = diaweb_security.ExistingUser.diamond_LoginName
+                Session("DiamondUserId") = Diamond.Web.BaseControls.SignedOnUserID
+                Session("DiamondPassword") = Session("password")
+                'Dim u As String = Diamond.Web.BaseControls.SignedOnUser.LoginName
+                'Dim p As String = Diamond.Web.BaseControls.SignedOnUser.Password
+                'Dim p2 As String = Diamond.Web.BaseControls.SignedOnUser.Userpassword
+                'Dim i As String = Diamond.Web.BaseControls.SignedOnUser.UsersId
+                'WS.SetAssociateCodesStringForLoggedInUser()
+
+                If diaweb_security.ExistingUser.diamond_MustChangePassword Then
+                    'Response.Redirect("changepassword.aspx")
+                Else
+                    'Response.Redirect("admin.aspx")
+                End If
+
+                FormsAuthentication.SetAuthCookie(Session("username"), False)
+                If Request.QueryString("ReturnUrl") IsNot Nothing AndAlso Request.QueryString("ReturnUrl") <> "" Then
+                    Response.Redirect(Request.QueryString("ReturnUrl").ToString)
+                Else
+                    'Response.Redirect("DiamondQuoteSummary.aspx")
+                    If Not String.IsNullOrWhiteSpace(txtQuoteIDs.Text) Then
+                        Response.Redirect("DiamondQuoteProposal.aspx?QuoteIDs=" & txtQuoteIDs.Text)
+                    End If
+                End If
+
+            End If
+        End Using
+
+    End Sub
+
+    Protected Sub btnDeleteUser_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles btnDeleteUser.Click
+        Using diawebsecuritn As New DiamondWebClass.DiamondSecurity()
+            Dim user As New DiamondWebClass.WebUser
+            user.diamond_LoginName = txtusername.Text
+            user.diamond_LoginDomain = "agency"
+
+            diawebsecuritn.Admin_DeleteWebUser(user, DiamondWebClass.Enums.UserLocation.Diamond)
+        End Using
+    End Sub
+
+    Private Sub Test()
+        Dim err As String = ""
+        Using email As New EmailObject()
+            'email.MailHost = "192.168.1.5"
+            email.MailHost = "spamfilter.egix.net"
+            email.EmailFromAddress = "Test@indianafarmers.com"
+            'email.EmailToAddress = "dmink@indianafarmers.com"
+            email.EmailToAddress = "don_m18_1982@yahoo.com"
+            'email.EmailToAddress = "howdyt1@comcast.net"
+            'email.EmailCCAddress = "dmink@indianafarmers.com"
+            email.EmailSubject = "Test Email Server"
+            email.EmailBody = "Test..."
+            email.SendEmail()
+
+            If email.hasError = True Then
+                err = email.errorMsg
+            End If
+        End Using
+
+    End Sub
+End Class

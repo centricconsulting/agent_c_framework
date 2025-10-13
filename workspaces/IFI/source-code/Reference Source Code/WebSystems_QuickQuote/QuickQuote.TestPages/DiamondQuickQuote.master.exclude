@@ -1,0 +1,83 @@
+﻿<%@ Master Language="VB" CodeFile="DiamondQuickQuote.master.vb" Inherits="DiamondQuickQuote" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<%--<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">--%>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <%--<meta http-equiv="X-UA-Compatible" content="IE=8" />--%>
+    <%--<meta http-equiv="X-UA-Compatible" content="IE=Edge">--%>
+    <%--<title>Diamond Quick Quote</title>--%>
+    <%--<link href="IFM.css" rel="stylesheet" type="text/css" />--%><!--removed 2/22/2013-->
+    <link rel="shortcut icon" href="images/favicon_VR.ico">
+    <link href="DiamondQuickQuoteStyles.css?dt=20130528x2" rel="stylesheet" type="text/css" /><!--added 2/22/2013; updated for CSS 7/12/2013 (was 20130513)-->
+    <asp:ContentPlaceHolder id="Scripts" runat="server">
+    </asp:ContentPlaceHolder>
+    <script type="text/javascript" src="js/GoogleAnalyticsScripts.js"></script>    
+</head>
+<body id="bodytag" runat="server" onkeydown="if(event.keyCode==8 && !event.srcElement.value) {window.event.returnValue=false;}">
+    <center><form id="form1" runat="server" class="formPortal" runat="server" style="background-color:White; BORDER-RIGHT: black 1px solid; BORDER-TOP: black 1px solid; BORDER-LEFT: black 1px solid; BORDER-BOTTOM: black 1px solid">
+    <asp:ScriptManager ID="ScriptManager1" runat="server">
+</asp:ScriptManager>
+    <%--<div>
+        <asp:ContentPlaceHolder id="ContentPlaceHolder1" runat="server">
+        
+        </asp:ContentPlaceHolder>
+    </div>--%>
+    <table class="layout" cellspacing="0" align="center" width="99%">
+            <tr>
+                <td class="TopNavLinks" colspan="2" align="right" style="font-size:-1; font:Calibri">                    
+                    <div><strong><a class="breadcrumbs" runat="server" id="CrumbsLogoutLink">LOGOUT</a>	/
+	<a class="breadcrumbs" runat="server" id="CrumbsChangePassword">CHANGE PASSWORD</a> / <a class="breadcrumbs" runat="server" id="CrumbsContactAgent">CONTACT US</a><!-- / 
+  <a class="breadcrumbs" runat="server" id="CrumbsHomeLink">HOME</a>--></strong></div>
+                </td>
+            </tr>
+            <tr>
+                <td><table width="100%"><tr><td width="70%" align="left"> <img runat="server" id="imgLogo" /></td><td width="30%" valign="top"><ul id="menu" style="text-align:center; width:300px">               
+                       <li class="menuCurrent"><a runat="server" id="HomeLink" target="_self" class="menuActive">Home</a></li>
+                       <li><a runat="server" id="AgentsOnlyLink" target="_self">Agents Only</a></li>               
+                    </ul>
+                    <br /></td></tr></table></td>
+            </tr>                
+            <tr><td>
+               <div id="navigation">
+                    <ul>
+                        <li><a runat="server" id="NewQuoteLink">New Client/Quote</a></li>
+                        <li><a runat="server" id="ClientSearchLink">Client Search</a></li>
+                        <li><a runat="server" id="SavedQuotesLink">Saved Quotes</a></li>
+                        <li><a runat="server" id="TrainingVideosLink" target="_blank">Tutorials</a></li>
+                        <li runat="server" id="XmlSelecterMenuButton" visible="false"><a runat="server" id="XmlSelecterLink">Xml Selecter</a></li>
+                    </ul>
+                </div> </td>
+            </tr>
+            <tr runat="server" id="MarqueeRow" visible="false">                
+                <td valign="top" align="center"><marquee><b><span runat="server" id="WebScrollArea"></span></b></marquee>
+                    <%--<div><%if instr(session("agencyCodes"), ",") > 0 and session("agencyCode") <> "9999" then%>
+						<span class="normaltext"><b>You are Currently in Agency Code <%=session("agencyCode")%></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="LocateCustomer.aspx">Search Associate Codes to Locate a Customer</a></span>
+						<%end if%> </div>--%>                    
+                </td>                
+            </tr>
+            <tr>
+                <td valign="top" align="left">
+                    <div class="applicationPortal" id="app" runat="server"><br /><asp:ContentPlaceHolder ID="Application" runat="server"></asp:ContentPlaceHolder></div>
+                </td>
+            </tr>
+            <tr>
+                <td class="footer" colspan="2" align="center">
+                    <TABLE width="90%" border="0" cellspacing="0" cellpadding="0">   
+    			<tr>
+			    <TD align="center" height="98"> 
+      				<P><FONT face="Calibri" size="-1"> <A class="footer" runat="server" id="FooterPrivacy">Privacy Policy</A> | <A class="footer" runat="server" id="FooterLegal">Legal Notice</A> 
+                    <!--| <A class="footer" runat="server" id="FooterContent">Content</A> --> | <A class="footer" runat="server" id="FooterStaff">Staff</A>
+        
+        </FONT></P>
+      <P class="tableField">&copy; Copyright 2001. 
+        Indiana Farmers Mutual Insurance Company. All Rights Reserved.</FONT></P>
+    </TD>
+  </TR>
+</TABLE></td>
+            </tr>                      
+        </table>
+    </form></center>
+</body>
+</html>

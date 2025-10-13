@@ -1,0 +1,21 @@
+﻿<%@ Page Language="VB" AutoEventWireup="false" CodeFile="DestinationPage.aspx.vb" Inherits="DestinationPage" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Destination Page</title>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+        <br /><br />
+    URL Referrer: <asp:Label runat="server" ID="lblUrlReferrer"></asp:Label>
+        <br /><br />
+        <a href="TestPage1.aspx">Test Page 1</a>
+        <br /><br />
+        <a href="TestPage2.aspx">Test Page 2</a>
+    </div>
+    </form>
+</body>
+</html>

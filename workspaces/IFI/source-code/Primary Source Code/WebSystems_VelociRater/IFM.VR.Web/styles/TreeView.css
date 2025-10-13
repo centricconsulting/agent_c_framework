@@ -1,0 +1,333 @@
+﻿    /*added 3/12/2014 for all of tree*/
+    .VRtreeview
+    {
+        color:#6e6e6e;
+    }
+/*started using 3/11/2014; moved up top so it happens 1st... may not matter*/
+/*ul .mainList *, ul .subList *, ul .subList2 **//*3/12/2014 note: asterisk doesn't get fonts in header section and doesn't allow clickable font color to show in other spots*/
+ul .mainList, ul .subList, ul .subList2
+{
+    /*color:Black;*/
+    /*changed 3/11/2014*/
+    /*color:#6e6e6e;*//*too light*/
+    /*color:#424242;*/
+}
+.clickable
+{
+    cursor:hand;
+    cursor:pointer;
+    /*color:blue;*//*added 2/25/2014*/
+    /*color:#4c4cff;*//*changed 3/12/2014*/
+    color:#6666ff;/*changed 3/12/2014*/
+    /*text-decoration:underline;*//*added 2/25/2014*/
+    /*font-style:italic;*//*added 2/25/2014*/
+}
+/*added 2/26/2014 for delete/remove options; 3/11/2014 - all changed to clickableHeader (7 total)*/
+.clickableX
+{
+    cursor:hand;
+    cursor:pointer;
+    color:red;
+    font-weight:bold;
+}
+/*added 2/26/2014 for list header sections*/
+.clickableHeader
+{
+    cursor:hand;
+    cursor:pointer;
+    /*color:black;*//*removed 3/11/2014; could also change to use main font color*/
+    /*color:#6e6e6e;*//*too light*/
+    /*color:#424242;*/
+    font-weight:bold;/*added 3/11/2014; most already had bold tags... except + (for Add) and (#) text next to headers*/
+}
+/*added 1/10/2018 for HOM Upgrade MLW*/
+.clickableLink
+{
+    cursor:hand;
+    cursor:pointer;
+    text-decoration:underline;
+}
+/*added 1/15/2014*/
+.clickable:hover
+{
+    /*font-weight:bold;*/
+    /*font-weight:600;*/
+    /*font-style:italic;*/
+    /*color:Blue;*/
+}
+/*added 1/14/2014; updated 1/22/2014 to add ul before class and li selected class; also updated to just affect spans; changed to all 1/23/2014*/
+ul.mainList li:hover *, ul.mainList li.selected *
+{
+    /*color:Aqua;*/
+    /*background-color:Aqua;*/
+    /*background-color:#f49000;*//*was used*/
+    /*color:#ffffff;*/
+    /*color:#dddddd;*/
+}
+ul.subList li:hover *, ul.subList li.selected *
+{
+    /*color:Lime;*/
+    /*background-color:Lime;*/
+    /*background-color:#666666;*//*was used*/
+    /*color:#ffffff;*//*was used*/
+}
+ul.subList2 li:hover *, ul.subList2 li.selected *
+{
+    /*color:Orange;*/
+    /*background-color:Orange;*/
+    /*background-color:#dddddd;*//*was used*/
+    /*color:#000000;*//*was used*/
+    /*color:#f49000;*/
+}
+/*ul .mainList, ul .subList, ul .subList2
+{
+    color:Black;
+}*/
+/*added 1/15/2014*/
+.hidden
+{
+    display:none;
+}
+
+ul.mainList
+{
+    /*font-size:medium;*/
+    font-size:13px;
+    /*font-family:Calibri;*/
+    /*margin-left:-30px;*//*added 3/11/2014 to remove indent; removed 3/12/2014; replaced with padding 0*/
+    padding:0;/*added 3/12/2014 to remove indent; 3/14/2014 note: when applicable, bullets aren't seen when padding is decreased enough*/
+    /*testing 3/19/2014 to align top w/ right side (ul has built-in margin)*/
+    margin-top:2px;
+    margin-bottom:0;
+    margin-left:0;
+    margin-right:0;
+}
+ul.subList
+{
+    /*font-size:small;*/
+    font-size:11px;
+    /*font-family:Calibri;*/
+     /*padding:0;*//*added 3/12/2014 to remove indent*/
+     /*replaced w/ all 4 padding styles; 3/14/2014 note: when applicable, bullets aren't seen when padding is decreased enough*/
+     padding-left:5px;
+     padding-right:0;
+     padding-top:0;
+     padding-bottom:0;
+}
+ul.subList2
+{
+    /*font-size:smaller;*/
+    font-size:9px;
+    /*font-family:Calibri;*/
+}
+.disabledTree /*matt 2-5-14*/
+{
+    filter:Alpha(opacity=50);
+    opacity: 0.5;
+    color: grey;
+}
+.overflow /*added 2/6/2014*/
+{
+    /*display:block;*/
+    /*display:inline-block;*//*testing 3/14/2014... can't see ellipsis; width or max-width of 100% doesn't make a difference; 3/17/2014 note: setting specific width or max-width works; inline-block also make the text off-center vertically*/
+    /*max-width:calc(100% - 100px);*/ /*testing 3/17/2014; works if amount subtracted is as much as 'Description: ' takes up*/
+    /*max-width:calc(!parent(attr(width)) - 100px);*/
+    /*max-width:calc(attr(width) - 100px);*/
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    /*float:right;*//*testing 3/13/2014... neither right or left are working yet... may need to nest it inside something else*/
+    /*vertical-align:middle;*//*testing 3/17/2014 w/ inline-block... neither middle or baseline do anything*/
+    /*testing 3/17/2014... float w/ width works on label alone but text is off-center*/
+    /*-o-text-overflow: ellipsis;
+    float:right;
+    width: 150px;
+    text-align: right;
+    margin-right: 0.5em;*/
+    /*-ms-text-overflow: ellipsis;*/
+    /*Internet Explorer 8 introduced the prefixed version, -ms-text-overflow, synonymous with text-overflow. Do not use this prefixed version.*/
+    /*Opera 9 and 10 require the prefixed version, -o-text-overflow.*/
+}
+/*added 3/17/2014... vertically-centered stuff was taken from working example... overflow:after is our stuff*/
+/*.vertically-centered {
+    height: 256px;
+    overflow-x: hidden;
+    white-space: nowrap;
+    font-weight: bold;
+    font-size: 2.5em;
+    text-align: center;
+    text-overflow: ellipsis;
+    background-color: #eee;
+}
+.vertically-centered:after {
+    content: "";
+    height: 100%;
+    display: inline-block;
+    vertical-align: middle;
+}
+.overflow:after {
+    content: "";
+    height: 100%;
+    display: inline-block;
+    vertical-align: middle;
+}*/
+/*added 3/17/2014; will hide X buttons if they're on the end (may need to move all to front)*/
+ul.mainList li, ul.subList li, ul.subList2 li
+{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+/*ul.mainList li img, ul.subList li img, ul.subList2 li img*//*2/26/2014 - if we just want it to affect images*/
+/*ul.mainList li span, ul.mainList li img, ul.subList li span, ul.subList li img, ul.subList2 li span, ul.subList2 li img*/ /*added 2/26/2014*/
+ul.mainList li span, ul.mainList li img, ul.mainList li input, ul.subList li span, ul.subList li img, ul.subList li input, ul.subList2 li span, ul.subList2 li img, ul.subList2 li input /*3/4/2014 - added input*/
+{
+    vertical-align:middle;/*commented for testing 3/17/2014*/
+}
+ul.mainList li span span, ul.mainList li img span, ul.mainList li input span, ul.subList li span span, ul.subList li img span, ul.subList li input span, ul.subList2 li span span, ul.subList2 li img span, ul.subList2 li input span /*added 3/11/2014 to prevent css from being applied multiple times for sub elements*/
+{
+    vertical-align:baseline;/*commented for testing 3/17/2014*/
+}
+/*7/1/2014 note: above styles rely on any text being enclosed in a span*/
+
+/*7/1/2014 - attempting new variation of existing styles... 1st 2 looks okay (fixes ellipses but premium labels look the same as before... closest to what we already have w/ above styles); adding 2nd 2 creates more issues (3rd one fixes premium but throws a lot more off)*/
+/*ul.mainList li div, ul.mainList li span, ul.mainList li img, ul.mainList li input, ul.subList li div, ul.subList li span, ul.subList li img, ul.subList li input, ul.subList2 li div, ul.subList2 li span, ul.subList2 li img, ul.subList2 li input
+{
+    vertical-align:middle;
+}
+ul.mainList li div span, ul.mainList li span span, ul.mainList li img span, ul.mainList li input span, ul.subList li div span, ul.subList li span span, ul.subList li img span, ul.subList li input span, ul.subList2 li div span, ul.subList2 li span span, ul.subList2 li img span, ul.subList2 li input span
+{
+    vertical-align:baseline;
+}*/
+/*ul.mainList li div span span, ul.mainList li span span span, ul.mainList li img span span, ul.mainList li input span span, ul.subList li div span span, ul.subList li span span span, ul.subList li img span span, ul.subList li input span span, ul.subList2 li div span span, ul.subList2 li span span span, ul.subList2 li img span span, ul.subList2 li input span span
+{
+    vertical-align:middle;
+}
+ul.mainList li div span span span, ul.mainList li span span span span, ul.mainList li img span span span, ul.mainList li input span span span, ul.subList li div span span span, ul.subList li span span span span, ul.subList li img span span span, ul.subList li input span span span, ul.subList2 li div span span span, ul.subList2 li span span span span, ul.subList2 li img span span span, ul.subList2 li input span span span
+{
+    vertical-align:baseline;
+}*/
+
+/*added 7/1/2014 for testing*/
+    /*ul.mainList li *, ul.subList li *, ul.subList2 li *
+    {
+        vertical-align:middle;
+    }
+    ul.mainList li * span, ul.mainList li * img, ul.mainList li * input, ul.subList li * span, ul.subList li * img, ul.subList li * input, ul.subList2 li * span, ul.subList2 li * img, ul.subList2 li * input
+    {
+        vertical-align:baseline;
+    }
+    ul.mainList li * span *, ul.mainList li * img *, ul.mainList li * input *, ul.subList li * span *, ul.subList li * img *, ul.subList li * input *, ul.subList2 li * span *, ul.subList2 li * img *, ul.subList2 li * input *
+    {
+        vertical-align:middle;
+    }*/
+    /*the above 3 work pretty well, but + signs and #s in parenthesis may look a little out of line... what's in line though?*/
+    /*ul.mainList li *, ul.subList li *, ul.subList2 li *
+    {
+        vertical-align:middle;
+    }
+    ul.mainList li * *, ul.subList li * *, ul.subList2 li * *
+    {
+        vertical-align:baseline;
+    }
+    ul.mainList li * * *, ul.subList li * * *, ul.subList2 li * * *
+    {
+        vertical-align:middle;
+    }
+    ul.mainList li * * * *, ul.subList li * * * *, ul.subList2 li * * * *
+    {
+        vertical-align:baseline;
+    }
+    ul.mainList li * * * * *, ul.subList li * * * * *, ul.subList2 li * * * * *
+    {
+        vertical-align:middle;
+    }
+    ul.mainList li * * * * * *, ul.subList li * * * * * *, ul.subList2 li * * * * * *
+    {
+        vertical-align:baseline;
+    }*/
+    /*the above 6 work okay but don't take care of text within span that's inside of bold (<b>Quote Number:&nbsp;<asp:Label runat="server" ID="lblQuoteNumber"></asp:Label></b>)... 1st 4 work the best for everything but sub images next to X text; adding last 2 fixes that but has same problems as previous example w/ 3 styles*/
+
+    /*ul.mainList li img, ul.subList li img, ul.subList2 li img
+    {
+        vertical-align:baseline;
+    }*/
+        /*ul.mainList li span, ul.mainList li img, ul.mainList li input, ul.subList li span, ul.subList li img, ul.subList li input, ul.subList2 li span, ul.subList2 li img, ul.subList2 li input
+        {
+            vertical-align:middle;
+        }
+            ul.mainList li span span, ul.mainList li img span, ul.mainList li input span, ul.subList li span span, ul.subList li img span, ul.subList li input span, ul.subList2 li span span, ul.subList2 li img span, ul.subList2 li input span
+            {
+                vertical-align:baseline;
+            }
+            ul.mainList li span span span, ul.mainList li img span span, ul.mainList li input span span, ul.subList li span span span, ul.subList li img span span, ul.subList li input span span, ul.subList2 li span span span, ul.subList2 li img span span, ul.subList2 li input span span
+            {
+                vertical-align:middle;
+            }*/
+/*added for testing 3/17/2014*/
+/*ul.mainList li img, ul.subList li img, ul.subList2 li img
+{
+    vertical-align:auto;
+}*/
+/*added 3/11/2014 to make sub-sub elements look like top level; added back 3/17/2014 for testing quote description after changing it to inline-block... doesn't appear to do anything*/
+/*ul.mainList li span span span, ul.mainList li img span span, ul.mainList li input span span, ul.subList li span span span, ul.subList li img span span, ul.subList li input span span, ul.subList2 li span span span, ul.subList2 li img span span, ul.subList2 li input span span
+{
+    vertical-align:middle;
+}*/
+/*more testing 3/17/2014... to get the ellipsis to be level w/ all the other text... doesn't work*/
+/*ul.mainList li span span span span, ul.mainList li img span span span, ul.mainList li input span span span, ul.subList li span span span span, ul.subList li img span span span, ul.subList li input span span span, ul.subList2 li span span span span, ul.subList2 li img span span span, ul.subList2 li input span span span
+{
+    vertical-align:baseline;
+}*/
+/*added 3/11/2014*/
+.sectionHeader
+{
+    /*background-color:gray;*/
+    background-color:#dddddd;
+    /*rounded corners*/
+    /*border:2px solid;*/
+    border:2px thin;/*updated 3/13/2014*/
+    border-radius:5px;/*the bigger this is, the more rounded it becomes... was 25px (too round)*/
+    /*end rounded corners*/
+    /*margin:2px;*//*added to give a little room w/ borders*/
+    padding:2px;/*added to give a little room w/ borders*/
+    /*vertical-align:middle;*//*attempt to handle off-center stuff; didn't do anything*/
+    border-color:#6e6e6e;/*too light*/
+    /*border-color:#424242;*/
+    /*cursor:cell;*//*added 3/19/2014 for testing... might only want to show for ones that have clickable actions*/
+    /*cursor:hand;
+    cursor:pointer;*/
+}
+/*added 4/3/2014 for premiums... so it doesn't just inherit style*/
+.sectionHeaderPremium
+{
+    font-weight:bold;
+    cursor:text;
+}
+/*added 5/15/2014; will no longer be used since logic was updated to apply disabledTree class to parent li*/
+.disabledSectionHeader
+{
+    /*background-color:gray;*/
+    background-color:#dddddd;
+    /*rounded corners*/
+    /*border:2px solid;*/
+    border:2px thin;/*updated 3/13/2014*/
+    border-radius:5px;/*the bigger this is, the more rounded it becomes... was 25px (too round)*/
+    /*end rounded corners*/
+    /*margin:2px;*//*added to give a little room w/ borders*/
+    padding:2px;/*added to give a little room w/ borders*/
+    /*vertical-align:middle;*//*attempt to handle off-center stuff; didn't do anything*/
+    border-color:#6e6e6e;/*too light*/
+    /*border-color:#424242;*/
+    /*cursor:cell;*//*added 3/19/2014 for testing... might only want to show for ones that have clickable actions*/
+    /*cursor:hand;
+    cursor:pointer;*/
+
+    filter:Alpha(opacity=50);
+    opacity: 0.5;
+    color: grey;
+}
+.disabledSectionHeader .clickable, .disabledSectionHeader .clickableX, .disabledSectionHeader .clickableHeader, .disabledTree .clickable, .disabledTree .clickableX, .disabledTree .clickableHeader
+{
+    cursor:default;
+}

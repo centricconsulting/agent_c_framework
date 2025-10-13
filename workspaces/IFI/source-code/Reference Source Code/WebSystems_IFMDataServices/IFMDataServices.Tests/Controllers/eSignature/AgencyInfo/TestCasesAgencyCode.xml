@@ -1,0 +1,30 @@
+﻿<tests>
+  <agencyInfo>
+    <description>Expect no errors.</description>
+    <agencyCode>6013-1840</agencyCode>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </agencyInfo>
+  <agencyInfo>
+    <description>Expect errors because of incorrect format.</description>
+    <agencyCode>1840</agencyCode>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </agencyInfo>
+  <agencyInfo>
+    <description>Expect errors because of incorrect format.</description>
+    <agencyCode>-12</agencyCode>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </agencyInfo>
+  <agencyInfo>
+    <description>Expect errors because of incorrect format.</description>
+    <agencyCode>32165</agencyCode>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </agencyInfo>
+</tests>

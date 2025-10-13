@@ -1,0 +1,77 @@
+﻿<tests>
+
+
+<makesByYear>
+  <description>Expect no errors.</description>
+    <year>2016</year>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </makesByYear>
+
+  <makesByYear>
+    <description>Expect no errors. But also won't have any results due to 2200 year.</description>
+    <year>2200</year>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </makesByYear>
+
+  <makesByYear>
+    <description>Expect no errors. But also won't have any results due to 1800 year.</description>
+    <year>1800</year>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </makesByYear>
+
+  <TestModelsByYear>
+    <year>2016</year>
+    <make>jeep</make>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestModelsByYear>
+
+  <TestModelInfoByVin>
+    <vin>1J4GL48K34W205862</vin>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestModelInfoByVin>
+
+  <TestModelInfoByVin>
+    <vin>JTEBU5JR1C5106600</vin>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestModelInfoByVin>
+
+  <!--<TestModelInfoByYearMakeModel>
+    <year>2021</year>
+    <make>Honda</make>
+    <model>Civic</model>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestModelInfoByYearMakeModel>-->
+
+  <TestModelInfoByYearMakeModel>
+    <year>2020</year>
+    <make>Chevrolet</make>
+    <model>Camaro</model>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestModelInfoByYearMakeModel>
+
+  <TestModelInfoByYearMakeModel>
+    <year>2020</year>
+    <make>GMC</make>
+    <model>Acadia</model>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestModelInfoByYearMakeModel>
+
+</tests>

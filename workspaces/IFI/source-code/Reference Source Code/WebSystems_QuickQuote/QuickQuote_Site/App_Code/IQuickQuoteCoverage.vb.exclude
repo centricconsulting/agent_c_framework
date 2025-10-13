@@ -1,0 +1,15 @@
+﻿Imports Microsoft.VisualBasic
+Imports QuickQuote.CommonObjects
+Imports QuickQuote.CommonMethods
+
+Public Interface IQuickQuoteCoverage
+    ReadOnly Property Coverage As QuickQuoteCoverage
+
+    Sub SetPropertiesFromCoverage(ByVal cov As QuickQuoteCoverage)
+    Sub SetCoverageFromProperties()
+
+    Function HasCoverage() As Boolean
+
+    Function HasCoverageDetail() As Boolean
+
+End Interface

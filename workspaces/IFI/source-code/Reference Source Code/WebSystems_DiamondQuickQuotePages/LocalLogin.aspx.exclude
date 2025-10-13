@@ -1,0 +1,37 @@
+<%@ Page Language="vb" AutoEventWireup="false" Codefile="LocalLogin.aspx.vb" Inherits="LocalLogin" %>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+	<HEAD>
+		<title>WebForm1</title>
+		<meta content="Microsoft Visual Studio .NET 7.1" name="GENERATOR">
+		<meta content="Visual Basic .NET 7.1" name="CODE_LANGUAGE">
+		<meta content="JavaScript" name="vs_defaultClientScript">
+		<meta content="http://schemas.microsoft.com/intellisense/ie5" name="vs_targetSchema">
+	</HEAD>
+	<body MS_POSITIONING="GridLayout">
+		<form id="Form1" method="post" runat="server">
+			<asp:label id="lblagencycode" style="Z-INDEX: 101; LEFT: 184px; POSITION: absolute; TOP: 208px"
+				runat="server" Font-Bold="True">Agency Code</asp:label><asp:textbox id="txtpassword" style="Z-INDEX: 118; LEFT: 312px; POSITION: absolute; TOP: 48px"
+				runat="server" BorderColor="LightGray" tabIndex="2">84002B</asp:textbox><asp:label id="lblpassword" style="Z-INDEX: 117; LEFT: 184px; POSITION: absolute; TOP: 48px"
+				runat="server" Font-Bold="True">Password</asp:label><asp:label id="lblsuccess" style="Z-INDEX: 116; LEFT: 184px; POSITION: absolute; TOP: 328px"
+				runat="server" Width="320px" Font-Size="Medium">You have changed your session variable(s).</asp:label><asp:textbox id="txtagencyterr" style="Z-INDEX: 115; LEFT: 312px; POSITION: absolute; TOP: 288px"
+				runat="server" BorderColor="LightGray" tabIndex="8">2</asp:textbox><asp:label id="lblagencyterr" style="Z-INDEX: 114; LEFT: 184px; POSITION: absolute; TOP: 288px"
+				runat="server" Font-Bold="True">Agency Terr</asp:label><asp:textbox id="txtusername" style="Z-INDEX: 113; LEFT: 312px; POSITION: absolute; TOP: 8px"
+				runat="server" BorderColor="LightGray" tabIndex="1">Admin001840</asp:textbox><asp:label id="lblUsername" style="Z-INDEX: 112; LEFT: 184px; POSITION: absolute; TOP: 8px"
+				runat="server" Font-Size="Small" Font-Bold="True">Username</asp:label><asp:textbox id="txtauth" style="Z-INDEX: 111; LEFT: 312px; POSITION: absolute; TOP: 88px" runat="server"
+				BorderColor="LightGray" tabIndex="3">a</asp:textbox><asp:label id="lblAuth" style="Z-INDEX: 110; LEFT: 184px; POSITION: absolute; TOP: 88px" runat="server"
+				Font-Bold="True">Auth</asp:label><asp:textbox id="txtrole" style="Z-INDEX: 109; LEFT: 312px; POSITION: absolute; TOP: 168px" runat="server"
+				BorderColor="LightGray" tabIndex="5"></asp:textbox><asp:textbox id="txtuserid" style="Z-INDEX: 108; LEFT: 312px; POSITION: absolute; TOP: 128px"
+				runat="server" BorderColor="LightGray" tabIndex="4">33</asp:textbox><asp:label id="lbluserid" style="Z-INDEX: 107; LEFT: 184px; POSITION: absolute; TOP: 128px"
+				runat="server" Font-Bold="True">User ID</asp:label><asp:label id="lblrole" style="Z-INDEX: 106; LEFT: 184px; POSITION: absolute; TOP: 168px" runat="server"
+				Font-Bold="True">Role</asp:label><asp:textbox id="txtagencyid" style="Z-INDEX: 104; LEFT: 312px; POSITION: absolute; TOP: 248px"
+				runat="server" BorderColor="LightGray" tabIndex="7">33</asp:textbox><asp:textbox id="txtagencycode" style="Z-INDEX: 103; LEFT: 312px; POSITION: absolute; TOP: 208px"
+				runat="server" BorderColor="LightGray" tabIndex="6">1840</asp:textbox>
+                <asp:label id="lblagencyid" style="Z-INDEX: 102; LEFT: 184px; POSITION: absolute; TOP: 248px" runat="server" Font-Bold="True">Agency ID</asp:label>
+                <asp:label id="lblQuoteIDs" runat="server" Font-Bold="True" style="Z-INDEX: 114; LEFT: 184px; POSITION: absolute; TOP: 328px">Quote IDs</asp:label>
+                <asp:textbox id="txtQuoteIDs" style="Z-INDEX: 108; LEFT: 312px; POSITION: absolute; TOP: 328px" runat="server" BorderColor="LightGray" tabIndex="9">103587</asp:textbox>
+                <asp:button id="Button1" style="Z-INDEX: 105; LEFT: 288px; POSITION: absolute; TOP: 392px" runat="server" Text="Log In" BorderColor="White" BackColor="Silver"></asp:button>
+            <asp:Button ID="btnDeleteUser" runat="server" Text="Delete User" />
+        </form>
+	</body>
+</HTML>

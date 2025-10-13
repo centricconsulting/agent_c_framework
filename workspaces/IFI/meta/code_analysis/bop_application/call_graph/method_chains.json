@@ -1,0 +1,87 @@
+{
+  "call_graph_analysis": {
+    "feature": "BOP Application Section",
+    "analysis_date": "2024-12-19",
+    "total_chains_identified": 8
+  },
+  "primary_call_chains": [
+    {
+      "entry_point": "ctlCommercialUWQuestionItem.Save()",
+      "method_chain": [
+        "Save() → VR.Common.UWQuestions.UWQuestions.GetCommercialBOPUnderwritingQuestions()",
+        "GetCommercialBOPUnderwritingQuestions() → Hardcoded question list creation",
+        "Question processing loop → PolicyUnderwritings collection"
+      ],
+      "terminal_operation": "SubQuotes.PolicyUnderwritings.Add(question)",
+      "data_source": "Hardcoded in UWQuestions.vb",
+      "location": "ctlCommercialUWQuestionItem.ascx.vb, line 52",
+      "purpose": "Load and save BOP underwriting questions"
+    },
+    {
+      "entry_point": "ctl_WorkflowManager_App_BOP workflow state management",
+      "method_chain": [
+        "Workflow initialization → State validation",
+        "State transition → Cross-control coordination",
+        "Application progression → State persistence"
+      ],
+      "terminal_operation": "Workflow state persistence",
+      "data_source": "ViewState and session management",
+      "location": "ctl_WorkflowManager_App_BOP.ascx.vb",
+      "purpose": "Manage 8-state BOP application workflow"
+    },
+    {
+      "entry_point": "ctl_BOP_App_Location.Populate()",
+      "method_chain": [
+        "Populate() → Quote.Locations collection access",
+        "Location indexing → Address display logic",
+        "Building coordination → Child control population"
+      ],
+      "terminal_operation": "Child control population with location data",
+      "data_source": "Quote.Locations collection",
+      "location": "ctl_BOP_App_Location.ascx.vb",
+      "purpose": "Location data management and display"
+    },
+    {
+      "entry_point": "ctl_BOP_App_Building.Populate()",
+      "method_chain": [
+        "Populate() → Quote.Locations[index].Buildings access",
+        "Building data retrieval → Property characteristics",
+        "Rating factors → Additional interest management"
+      ],
+      "terminal_operation": "Building data display and rating",
+      "data_source": "Quote.Locations.Buildings collection",
+      "location": "ctl_BOP_App_Building.ascx.vb", 
+      "purpose": "Building property management and rating"
+    },
+    {
+      "entry_point": "ctl_BOP_App_AdditionalServices.Populate()",
+      "method_chain": [
+        "Populate() → SubQuotes collection iteration",
+        "HasBeauticiansProfessionalLiability check",
+        "BeauticiansProfessionalLiabilityDescription parsing",
+        "Checkbox state setting based on services"
+      ],
+      "terminal_operation": "Checkbox population from service description",
+      "data_source": "SubQuotes.BeauticiansProfessionalLiabilityDescription",
+      "location": "ctl_BOP_App_AdditionalServices.ascx.vb",
+      "purpose": "Additional services selection management"
+    }
+  ],
+  "data_flow_patterns": [
+    {
+      "pattern": "Quote → Locations → Buildings hierarchy",
+      "flow_direction": "Top-down data access",
+      "controls_involved": ["ctl_BOP_App_Location", "ctl_BOP_App_Building", "ctl_BOP_App_LocationList", "ctl_BOP_App_BuildingList"]
+    },
+    {
+      "pattern": "UW Questions → PolicyUnderwritings collection",
+      "flow_direction": "Service to persistence",
+      "controls_involved": ["ctlCommercialUWQuestionItem"]
+    },
+    {
+      "pattern": "Additional Services → SubQuotes collection",
+      "flow_direction": "UI to business object",
+      "controls_involved": ["ctl_BOP_App_AdditionalServices"]
+    }
+  ]
+}

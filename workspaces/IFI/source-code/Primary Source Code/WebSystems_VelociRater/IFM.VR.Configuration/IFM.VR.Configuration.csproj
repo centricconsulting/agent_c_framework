@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Authors>Indiana Farmers Insurance</Authors>
+    <AnalysisLevel>none</AnalysisLevel>
+    <Copyright>Indiana Farmers Insurance $([System.DateTime]::Now.ToString(yyyy))</Copyright>
+    <VersionSuffix>$([System.DateTime]::Now.ToString(yyyy)).$([System.DateTime]::Now.ToString(MM)).$([System.DateTime]::Now.ToString(dd)).$([System.DateTime]::Now.ToString(HHmm))</VersionSuffix>
+    <Version>$(VersionSuffix)</Version>
+    <AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Diamond.Common.Services" Version="538.12.2000.1" />
+    <PackageReference Include="IFM.DiamondWebClass" Version="2024.12.23.100" />
+    <PackageReference Include="IFM.QuickQuoteDeploy" Version="2025.9.15.1550-beta" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+  </ItemGroup>
+
+</Project>

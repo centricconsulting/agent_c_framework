@@ -1,0 +1,44 @@
+﻿<%@ Page Language="VB" AutoEventWireup="false" CodeFile="TestMVR.aspx.vb" Inherits="TestMVR" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Test MVR</title>
+    <script type="text/javascript" src="js/CommonFunctions.js"></script>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+    <br /><br />
+    <b>Policy Id:  </b><asp:TextBox runat="server" ID="txtPolicyId"></asp:TextBox>
+    <br />
+    <b>Policy Image Num:  </b><asp:TextBox runat="server" ID="txtPolicyImageNum"></asp:TextBox>
+    <br />
+    <b>Driver Num:  </b><asp:TextBox runat="server" ID="txtDriverNum"></asp:TextBox>
+    <br />
+    <asp:CheckBox runat="server" ID="cbBatchOrder" Text="Batch Order" />
+    <asp:CheckBox runat="server" ID="cbRenewalPreProcess" Text="Renewal PreProcess" />
+    <asp:CheckBox runat="server" ID="cbSystemGenerated" Text="System Generated" />
+    <asp:CheckBox runat="server" ID="cbSupportTransaction" Text="Support Transaction" />
+    <asp:CheckBox runat="server" ID="cbSaveRequest" Text="Save Request" />
+    <asp:CheckBox runat="server" ID="cbIsChanged" Text="Is Changed" Visible="false" />
+    <asp:CheckBox runat="server" ID="cbForcedMvr" Text="Forced MVR" />
+    <asp:CheckBox runat="server" ID="cbFillData" Text="Fill Data" />
+    <br />
+    <asp:Button runat="server" ID="btnOrderMVR" Text="Order MVR Report (LoadImage)" />&nbsp;&nbsp;<asp:Button runat="server" ID="btnOrderMVR2" Text="Order MVR Report (AcquirePendingImage)" />
+    <br />
+    <b>Results:  </b>
+    <asp:Label runat="server" ID="lblResults"></asp:Label>
+    <div runat="server" id="SaveSection" visible="false">
+    <br />
+    <asp:Label runat="server" ID="lblSavedFile" Visible="false"></asp:Label>
+    <asp:Button runat="server" ID="btnSaveThirdPartyData" Text="Save Third Party Data" />
+    <br />
+    <b>Results:  </b>
+    <asp:Label runat="server" ID="lblSaveResults"></asp:Label>
+    </div>
+    </div>
+    </form>
+</body>
+</html>

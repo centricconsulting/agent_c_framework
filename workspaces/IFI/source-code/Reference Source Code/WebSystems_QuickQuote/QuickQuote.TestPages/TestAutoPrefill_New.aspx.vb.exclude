@@ -1,0 +1,360 @@
+﻿Imports QuickQuote.CommonObjects 'added 1/15/2014
+Imports QuickQuote.CommonMethods 'added 1/15/2014
+
+Partial Class TestAutoPrefill_New
+    Inherits System.Web.UI.Page
+
+    Dim qqHelper As New QuickQuoteHelperClass
+    Dim qqXml As New QuickQuoteXML
+
+    Protected Sub Page_Load(sender As Object, e As System.EventArgs) Handles Me.Load
+        If Page.IsPostBack = False Then
+            Page.MaintainScrollPositionOnPostBack = True
+            'removed home office staff user stuff 1/15/2014
+            'If qqHelper.IsHomeOfficeStaffUser = True Then
+            Me.btnOrderAutoPrefill.Attributes.Add("onclick", "btnSubmit_Click(this, 'Processing...');") 'for disable button and server-side logic
+            Me.btnSaveThirdPartyData.Attributes.Add("onclick", "btnSubmit_Click(this, 'Saving...');") 'for disable button and server-side logic
+            Me.btnOrderAutoPrefill.Enabled = True
+            'added 10/31/2013
+            Me.btnOrderAutoPrefillForClient.Attributes.Add("onclick", "btnSubmit_Click(this, 'Processing...');") 'for disable button and server-side logic
+            Me.btnOrderAutoPrefillForClient.Enabled = True
+            'added 1/16/2014
+            Me.btnOrderAutoPrefillForNewQuote.Attributes.Add("onclick", "btnSubmit_Click(this, 'Processing...');") 'for disable button and server-side logic
+            Me.btnOrderAutoPrefillForNewQuote.Enabled = True
+            Me.btnOrderAutoPrefillForExistingQuote.Attributes.Add("onclick", "btnSubmit_Click(this, 'Processing...');") 'for disable button and server-side logic
+            Me.btnOrderAutoPrefillForExistingQuote.Enabled = True
+            'added 1/17/2014
+            Me.btnOrderAutoPrefillNewDemoData.Attributes.Add("onclick", "btnSubmit_Click(this, 'Processing...');") 'for disable button and server-side logic
+            Me.btnOrderAutoPrefillNewDemoData.Enabled = True
+            SetFocus(Me.txtPolicyId)
+            'Else
+            '    Me.btnOrderAutoPrefill.Enabled = False
+            '    'added 10/31/2013
+            '    Me.btnOrderAutoPrefillForClient.Enabled = False
+            '    'added 1/16/2014
+            '    Me.btnOrderAutoPrefillForNewQuote.Enabled = False
+            '    Me.btnOrderAutoPrefillForExistingQuote.Enabled = False
+            '    'added 1/17/2014
+            '    Me.btnOrderAutoPrefillNewDemoData.Enabled = False
+            '    ShowError("You're not authorized to use this page")
+            'End If
+        End If
+    End Sub
+
+    Protected Sub btnOrderAutoPrefill_Click(sender As Object, e As System.EventArgs) Handles btnOrderAutoPrefill.Click
+        'LoadImage; 4/30/2013 - this works without acquiring quote; doesn't appear to need a pending image either
+        System.Threading.Thread.Sleep(500) 'delay 1/2 second
+
+        Me.lblResults.Text = ""
+        Dim errMessage As String = ""
+        Me.SaveSection.Visible = False
+        Me.lblSavedFile.Text = ""
+        Me.lblSaveResults.Text = ""
+
+        If Me.txtPolicyId.Text = "" OrElse IsNumeric(Me.txtPolicyId.Text) = False Then
+            ShowError("Invalid policy id format")
+            SetFocus(Me.txtPolicyId)
+        ElseIf Me.txtPolicyImageNum.Text = "" OrElse IsNumeric(Me.txtPolicyImageNum.Text) = False Then
+            ShowError("Invalid policy image num format")
+            SetFocus(Me.txtPolicyImageNum)
+        Else
+            Dim thirdPartyData As Diamond.Common.Objects.ThirdParty.ThirdPartyData
+            qqXml.TestAutoPrefill(Me.txtPolicyId.Text, Me.txtPolicyImageNum.Text, thirdPartyData, Me.lblResults.Text, errMessage)
+            If errMessage <> "" Then
+                ShowError(errMessage)
+            Else
+                ShowError("success")
+                Me.SaveSection.Visible = True
+                ViewState.Item("thirdPartyData") = thirdPartyData
+
+                'added 9/16/2013
+                Me.lblResults.Text &= "<br /><br /><br />Using TestEvaluateThirdPartyData:<br />"
+                Dim res As String = ""
+                qqXml.TestEvaluateThirdPartyData(thirdPartyData, res)
+                Me.lblResults.Text &= res
+            End If
+        End If
+    End Sub
+
+    Private Sub ShowError(ByVal message As String, Optional ByVal redirect As Boolean = False, Optional ByVal redirectPage As String = "")
+        message = Replace(message, "\", "\\")
+        message = Replace(message, "<br>", "\n")
+        message = Replace(message, vbCrLf, "\n")
+
+        Dim strScript As String = "<script language=JavaScript>"
+        strScript &= "alert(""" & message & """);"
+        If redirect = True Then
+            If redirectPage = "" Then
+                redirectPage = ConfigurationManager.AppSettings("QuickQuote_SavedQuotes").ToString
+            End If
+            strScript &= " window.location.href='" & redirectPage & "';"
+        End If
+        strScript &= "</script>"
+
+        Page.RegisterStartupScript("clientScript", strScript)
+
+    End Sub
+
+    Protected Sub btnSaveThirdPartyData_Click(sender As Object, e As System.EventArgs) Handles btnSaveThirdPartyData.Click
+        System.Threading.Thread.Sleep(500) 'delay 1/2 second
+
+        If Me.lblSavedFile.Text <> "" Then
+            ShowError("It appears that this file has already been saved")
+        ElseIf ViewState.Item("thirdPartyData") Is Nothing Then
+            ShowError("The ThirdPartyData element could not be loaded from ViewState")
+        Else
+            Dim thirdPartyData As Diamond.Common.Objects.ThirdParty.ThirdPartyData = CType(ViewState.Item("thirdPartyData"), Diamond.Common.Objects.ThirdParty.ThirdPartyData)
+            If thirdPartyData Is Nothing Then
+                ShowError("The ThirdPartyData element appears to be Nothing")
+            Else
+                If ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath") IsNot Nothing AndAlso ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString <> "" Then
+                    Try
+                        'Me.lblSavedFile.Text = ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString & "AutoPrefill_" & Me.txtPolicyId.Text & "_" & Me.txtPolicyImageNum.Text & "_" & Date.Now.ToString("s").Replace(":", "").Replace("-", "").Replace("/", "").Replace(" ", "") & ".txt"
+                        'Me.lblSavedFile.Text = ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString & "AutoPrefill_" & Me.txtPolicyId.Text & "_" & Me.txtPolicyImageNum.Text & "_" & Date.Now.ToString("s").Replace(":", "").Replace("-", "").Replace("/", "").Replace(" ", "") & ".xml"
+                        'update 10/31/2013
+                        'If Me.txtPolicyId.Text <> "" AndAlso Me.txtPolicyImageNum.Text <> "" Then
+                        'updated 1/20/2014
+                        If Me.txtPolicyId.Text <> "" AndAlso Me.txtPolicyImageNum.Text <> "" AndAlso Me.txtQuoteId.Text = "" Then
+                            Me.lblSavedFile.Text = ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString & "AutoPrefill_" & Me.txtPolicyId.Text & "_" & Me.txtPolicyImageNum.Text & "_" & Date.Now.ToString("s").Replace(":", "").Replace("-", "").Replace("/", "").Replace(" ", "") & ".xml"
+                            'ElseIf Me.txtQuoteId.Text <> "" Then
+                            'updated 1/20/2014
+                        ElseIf Me.txtQuoteId.Text <> "" AndAlso Me.txtPolicyId.Text = "" Then
+                            Me.lblSavedFile.Text = ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString & "AutoPrefill_" & Me.txtQuoteId.Text & "_" & Date.Now.ToString("s").Replace(":", "").Replace("-", "").Replace("/", "").Replace(" ", "") & ".xml"
+                        Else
+                            Me.lblSavedFile.Text = ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString & "AutoPrefill_Client_" & Date.Now.ToString("s").Replace(":", "").Replace("-", "").Replace("/", "").Replace(" ", "") & ".xml"
+                        End If
+                        thirdPartyData.DumpToFile(Me.lblSavedFile.Text)
+                        Me.lblSaveResults.Text = "Successful Save"
+                        ShowError("sucess saving file")
+                    Catch ex As Exception
+                        Me.lblSavedFile.Text = ""
+                        Me.lblSaveResults.Text = "Failed Save: <br />" & ex.ToString
+                        ShowError("error saving file")
+                    End Try
+                Else
+                    ShowError("The configuration key, QuickQuote_ThirdPartyData_SavePath, is either missing or empty")
+                End If
+            End If
+        End If
+    End Sub
+    'added 10/31/2013
+    Protected Sub btnOrderAutoPrefillForClient_Click(sender As Object, e As System.EventArgs) Handles btnOrderAutoPrefillForClient.Click
+        System.Threading.Thread.Sleep(500) 'delay 1/2 second
+
+        Me.lblResults.Text = ""
+        Dim errMessage As String = ""
+        Me.SaveSection.Visible = False
+        Me.lblSavedFile.Text = ""
+        Me.lblSaveResults.Text = ""
+
+        If Me.txtQuoteId.Text = "" OrElse IsNumeric(Me.txtQuoteId.Text) = False Then
+            ShowError("Invalid quote id format")
+            SetFocus(Me.txtPolicyId)
+        Else
+            Dim qq As QuickQuoteObject
+            qqXml.GetQuoteForSaveType(Me.txtQuoteId.Text, QuickQuoteXML.QuickQuoteSaveType.AppGap, qq, errMessage)
+            If qq IsNot Nothing Then
+                Dim thirdPartyData As Diamond.Common.Objects.ThirdParty.ThirdPartyData
+                qqXml.TestAutoPrefill(qq.Client, thirdPartyData, Me.lblResults.Text, errMessage)
+                If errMessage <> "" Then
+                    ShowError(errMessage)
+                Else
+                    ShowError("success")
+                    Me.SaveSection.Visible = True
+                    ViewState.Item("thirdPartyData") = thirdPartyData
+
+                    'added 9/16/2013
+                    Me.lblResults.Text &= "<br /><br /><br />Using TestEvaluateThirdPartyData:<br />"
+                    Dim res As String = ""
+                    qqXml.TestEvaluateThirdPartyData(thirdPartyData, res)
+                    Me.lblResults.Text &= res
+                End If
+            Else
+                If errMessage <> "" Then
+                    ShowError(errMessage)
+                Else
+                    ShowError("problem loading VR quote")
+                End If
+            End If
+        End If
+    End Sub
+
+    Protected Sub btnOrderAutoPrefillForNewQuote_Click(sender As Object, e As System.EventArgs) Handles btnOrderAutoPrefillForNewQuote.Click
+        System.Threading.Thread.Sleep(500) 'delay 1/2 second
+
+        Me.lblResults.Text = ""
+        Dim errMessage As String = ""
+        Me.SaveSection.Visible = False
+        Me.lblSavedFile.Text = ""
+        Me.lblSaveResults.Text = ""
+
+        If Me.txtQuoteId.Text = "" OrElse IsNumeric(Me.txtQuoteId.Text) = False Then
+            ShowError("Invalid quote id format")
+            SetFocus(Me.txtPolicyId)
+        Else
+            Dim qq As QuickQuoteObject
+            qqXml.GetQuoteForSaveType(Me.txtQuoteId.Text, QuickQuoteXML.QuickQuoteSaveType.AppGap, qq, errMessage)
+            If qq IsNot Nothing Then
+                Dim thirdPartyData As Diamond.Common.Objects.ThirdParty.ThirdPartyData
+                'qqXml.TestAutoPrefill(qq.Client, thirdPartyData, Me.lblResults.Text, errMessage)
+                Dim newQuote As New QuickQuoteObject
+                newQuote.LobType = QuickQuoteObject.QuickQuoteLobType.AutoPersonal
+                'newQuote.EffectiveDate = Date.Today.ToShortDateString 'now doing in method call
+                newQuote.Client = qqHelper.CloneObject(qq.Client)
+                qqXml.LoadPrefillForQuote(newQuote, thirdPartyData, Me.lblResults.Text, errMessage)
+                'If newQuote IsNot Nothing AndAlso newQuote.Database_QuoteId <> "" Then 'added 1/20/2014; might not use here
+                '    Me.txtQuoteId.Text = newQuote.Database_QuoteId
+                'End If
+                If errMessage <> "" Then
+                    If newQuote IsNot Nothing AndAlso newQuote.QuoteNumber <> "" AndAlso newQuote.Database_QuoteId <> "" Then 'added 1/20/2014
+                        errMessage &= "; new quote id = " & newQuote.Database_QuoteId & "; new quote number = " & newQuote.QuoteNumber
+                    End If
+                    ShowError(errMessage)
+                Else
+                    Dim newQuoteInfoMessage As String = "new quote id = " & newQuote.Database_QuoteId & "; new quote number = " & newQuote.QuoteNumber
+                    ShowError("success; " & newQuoteInfoMessage)
+                    Me.SaveSection.Visible = True
+                    ViewState.Item("thirdPartyData") = thirdPartyData
+
+                    'added 9/16/2013
+                    Me.lblResults.Text &= "<br /><br /><br />Using TestEvaluateThirdPartyData:<br />"
+                    Dim res As String = ""
+                    qqXml.TestEvaluateThirdPartyData(thirdPartyData, res)
+                    Me.lblResults.Text &= res
+                End If
+            Else
+                If errMessage <> "" Then
+                    ShowError(errMessage)
+                Else
+                    ShowError("problem loading VR quote")
+                End If
+            End If
+        End If
+    End Sub
+
+    Protected Sub btnOrderAutoPrefillForExistingQuote_Click(sender As Object, e As System.EventArgs) Handles btnOrderAutoPrefillForExistingQuote.Click
+        System.Threading.Thread.Sleep(500) 'delay 1/2 second
+
+        Me.lblResults.Text = ""
+        Dim errMessage As String = ""
+        Me.SaveSection.Visible = False
+        Me.lblSavedFile.Text = ""
+        Me.lblSaveResults.Text = ""
+
+        If Me.txtQuoteId.Text = "" OrElse IsNumeric(Me.txtQuoteId.Text) = False Then
+            ShowError("Invalid quote id format")
+            SetFocus(Me.txtPolicyId)
+        Else
+            Dim qq As QuickQuoteObject
+            qqXml.GetQuoteForSaveType(Me.txtQuoteId.Text, QuickQuoteXML.QuickQuoteSaveType.AppGap, qq, errMessage)
+            If qq IsNot Nothing Then
+                Dim originalQuoteInfoMessage As String = "original quote id = " & qq.Database_QuoteId & "; original quote number = " & qq.QuoteNumber
+                Dim thirdPartyData As Diamond.Common.Objects.ThirdParty.ThirdPartyData
+                qqXml.LoadPrefillForQuote(qq, thirdPartyData, Me.lblResults.Text, errMessage)
+                If errMessage <> "" Then
+                    If qq IsNot Nothing AndAlso qq.QuoteNumber <> "" AndAlso qq.Database_QuoteId <> "" Then 'added 1/20/2014
+                        errMessage &= "; quote id = " & qq.Database_QuoteId & "; quote number = " & qq.QuoteNumber
+                    End If
+                    ShowError(errMessage)
+                Else
+                    Dim newQuoteInfoMessage As String = "new quote id = " & qq.Database_QuoteId & "; new quote number = " & qq.QuoteNumber
+                    ShowError("success; " & originalQuoteInfoMessage & "; " & newQuoteInfoMessage)
+                    Me.SaveSection.Visible = True
+                    ViewState.Item("thirdPartyData") = thirdPartyData
+
+                    'added 9/16/2013
+                    Me.lblResults.Text &= "<br /><br /><br />Using TestEvaluateThirdPartyData:<br />"
+                    Dim res As String = ""
+                    qqXml.TestEvaluateThirdPartyData(thirdPartyData, res)
+                    Me.lblResults.Text &= res
+                End If
+            Else
+                If errMessage <> "" Then
+                    ShowError(errMessage)
+                Else
+                    ShowError("problem loading VR quote")
+                End If
+            End If
+        End If
+    End Sub
+
+    Protected Sub btnOrderAutoPrefillNewDemoData_Click(sender As Object, e As System.EventArgs) Handles btnOrderAutoPrefillNewDemoData.Click
+        System.Threading.Thread.Sleep(500) 'delay 1/2 second
+
+        Me.lblResults.Text = ""
+        Dim errMessage As String = ""
+        Me.SaveSection.Visible = False
+        Me.lblSavedFile.Text = ""
+        Me.lblSaveResults.Text = ""
+
+        Dim qq As New QuickQuoteObject
+        With qq
+            .LobType = QuickQuoteObject.QuickQuoteLobType.AutoPersonal
+            .EffectiveDate = Date.Today.ToShortDateString
+            'With .Client 'test1: quoteId = 1979; quoteNumber = QPPA111111
+            '    With .Name
+            '        .FirstName = "Katherine"
+            '        .MiddleName = "F"
+            '        .LastName = "Bertrand"
+            '        .TaxNumber = "666037812"
+            '        .TaxTypeId = "1" 'SSN
+            '        .BirthDate = "9/14/2949"
+            '        .SexId = "2" 'Female
+            '        .DriversLicenseNumber = "8905407777"
+            '        .DriversLicenseStateId = "16"
+            '    End With
+            '    With .Address
+            '        .HouseNum = "14611"
+            '        .StreetName = "Reeder Rd"
+            '        .City = "Crown Point"
+            '        .StateId = "16"
+            '        .Zip = "463078382"
+            '    End With
+            'End With
+
+            With .Client 'test2: quoteId = 1980; quoteNumber = QPPA111112
+                With .Name
+                    .FirstName = "Jesse"
+                    .MiddleName = ""
+                    .LastName = "Waldrop"
+                    .TaxNumber = "666109689"
+                    .TaxTypeId = "1" 'SSN
+                    .BirthDate = "11/26/1981"
+                    .SexId = "1" 'Male
+                    .DriversLicenseNumber = "2340751137"
+                    .DriversLicenseStateId = "16"
+                End With
+                With .Address
+                    .HouseNum = "11400"
+                    .StreetName = "Westfield Blvd"
+                    .City = "Carmel"
+                    .StateId = "16"
+                    .Zip = "460323556"
+                End With
+            End With
+        End With
+
+        Dim thirdPartyData As Diamond.Common.Objects.ThirdParty.ThirdPartyData
+        qqXml.LoadPrefillForQuote(qq, thirdPartyData, Me.lblResults.Text, errMessage)
+        If qq IsNot Nothing AndAlso qq.Database_QuoteId <> "" Then 'added 1/20/2014
+            Me.txtQuoteId.Text = qq.Database_QuoteId
+        End If
+        If errMessage <> "" Then
+            If qq IsNot Nothing AndAlso qq.QuoteNumber <> "" AndAlso qq.Database_QuoteId <> "" Then 'added 1/20/2014
+                errMessage &= "; new quote id = " & qq.Database_QuoteId & "; new quote number = " & qq.QuoteNumber
+            End If
+            ShowError(errMessage)
+        Else
+            Dim newQuoteInfoMessage As String = "new quote id = " & qq.Database_QuoteId & "; new quote number = " & qq.QuoteNumber
+            ShowError("success; " & newQuoteInfoMessage)
+            Me.SaveSection.Visible = True
+            ViewState.Item("thirdPartyData") = thirdPartyData
+
+            'added 9/16/2013
+            Me.lblResults.Text &= "<br /><br /><br />Using TestEvaluateThirdPartyData:<br />"
+            Dim res As String = ""
+            qqXml.TestEvaluateThirdPartyData(thirdPartyData, res)
+            Me.lblResults.Text &= res
+        End If
+    End Sub
+End Class

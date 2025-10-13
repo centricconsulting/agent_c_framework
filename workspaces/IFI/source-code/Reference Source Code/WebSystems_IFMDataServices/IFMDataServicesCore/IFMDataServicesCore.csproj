@@ -1,0 +1,507 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="..\packages\Microsoft.Net.Compilers.2.10.0\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.2.10.0\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{628DA979-609B-4685-80F5-D05FECDB01AB}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IFM.DataServicesCore</RootNamespace>
+    <AssemblyName>IFMDataServicesCore</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <ShouldCreateLogs>True</ShouldCreateLogs>
+    <AdvancedSettingsExpanded>False</AdvancedSettingsExpanded>
+    <UpdateAssemblyVersion>False</UpdateAssemblyVersion>
+    <UpdateAssemblyFileVersion>False</UpdateAssemblyFileVersion>
+    <UpdateAssemblyInfoVersion>False</UpdateAssemblyInfoVersion>
+    <UpdatePackageVersion>False</UpdatePackageVersion>
+    <AssemblyInfoVersionType>SettingsVersion</AssemblyInfoVersionType>
+    <InheritWinAppVersionFrom>None</InheritWinAppVersionFrom>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'EOMTEST2|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'PATCH|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'PROD|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CommonClasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CommonClassesDeploy.2021.8.2.100\lib\CommonClasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="Dapper, Version=1.60.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dapper.1.60.6\lib\net451\Dapper.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Charts.v20.2.Core, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Charts.v20.2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Data.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Data.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.DataAccess.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.DataAccess.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.DataVisualization.v20.2.Core, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.DataVisualization.v20.2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Docs.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Docs.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Office.v20.2.Core, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Office.v20.2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Pdf.v20.2.Core, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Pdf.v20.2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.PivotGrid.v20.2.Core, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.PivotGrid.v20.2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Printing.v20.2.Core, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Printing.v20.2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.RichEdit.v20.2.Core, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.RichEdit.v20.2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.SpellChecker.v20.2.Core, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.SpellChecker.v20.2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Spreadsheet.v20.2.Core, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Spreadsheet.v20.2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Utils.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Utils.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Web.ASPxHtmlEditor.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Web.ASPxHtmlEditor.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Web.ASPxPivotGrid.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Web.ASPxPivotGrid.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Web.ASPxRichEdit.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Web.ASPxRichEdit.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Web.ASPxScheduler.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Web.ASPxScheduler.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Web.ASPxSpellChecker.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Web.ASPxSpellChecker.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Web.ASPxSpreadsheet.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Web.ASPxSpreadsheet.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Web.ASPxThemes.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Web.ASPxThemes.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Web.ASPxTreeList.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Web.ASPxTreeList.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Web.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Web.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpf.Charts.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Xpf.Charts.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpo.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.Xpo.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.XtraCharts.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.XtraCharts.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.XtraCharts.v20.2.Web, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.XtraCharts.v20.2.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.XtraReports.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.XtraReports.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.XtraReports.v20.2.Web, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.XtraReports.v20.2.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.XtraReports.v20.2.Web.WebForms, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.XtraReports.v20.2.Web.WebForms.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.XtraScheduler.v20.2, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.XtraScheduler.v20.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.XtraScheduler.v20.2.Core, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.XtraScheduler.v20.2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.XtraScheduler.v20.2.Core.Desktop, Version=20.2.9.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiamondDevExpress.20.2.9\lib\DevExpress.XtraScheduler.v20.2.Core.Desktop.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Business.ThirdParty, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2900\lib\Diamond.Business.ThirdParty.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.ChoicePoint.Library, Version=4.2.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2900\lib\Diamond.Common.ChoicePoint.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Diagnostics, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2900\lib\Diamond.Common.Diagnostics.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Objects.538.12.500\lib\Diamond.Common.Objects.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects.ConfigurableBook, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2900\lib\Diamond.Common.Objects.ConfigurableBook.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2900\lib\Diamond.Common.Rules.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Services.538.12.500\lib\Diamond.Common.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2900\lib\Diamond.Common.StaticDataManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Utility.536.12.2900\lib\Diamond.Common.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2900\lib\Diamond.UI.Rules.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2900\lib\Diamond.UI.StaticDataManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2900\lib\Diamond.UI.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.BaseControls, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Web.Items.536.12.2900\lib\Diamond.Web.BaseControls.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Web.Items.536.12.2900\lib\Diamond.Web.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="DiamondWebClass, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.DiamondWebClass.2023.4.25.100\lib\DiamondWebClass.dll</HintPath>
+    </Reference>
+    <Reference Include="eSELECTplus_dotNet_API, Version=1.0.5.0, Culture=neutral, PublicKeyToken=8cb9cd598f87e276, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PayTraceRCC.2022.10.3.1813\lib\eSELECTplus_dotNet_API.dll</HintPath>
+    </Reference>
+    <Reference Include="eSELECTplus_dotNet_API-US, Version=3.5.1.0, Culture=neutral, PublicKeyToken=8cb9cd598f87e276, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PayTraceRCC.2022.10.3.1813\lib\eSELECTplus_dotNet_API-US.dll</HintPath>
+    </Reference>
+    <Reference Include="IFI.PolicyAPIModels, Version=2022.9.13.1235, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFI.PolicyAPIModels.2022.9.13.1235\lib\netstandard2.0\IFI.PolicyAPIModels.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.Common.InputValidation, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CommonInputValidation.1.0.0\lib\net45\IFM.Common.InputValidation.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.PrimativeExtensions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PrimativeExtensions.1.1.0\lib\net45\IFM.PrimativeExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.PrimitiveExtensions, Version=2022.12.1.1449, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PrimitiveExtensions.2022.12.1.1449\lib\netstandard2.0\IFM.PrimitiveExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.VR.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.VR.Common.1.0.0-MultiStateAlpa\lib\net461\IFM.VR.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.VR.Configuration, Version=2022.8.17.1352, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.VR.Configuration.2022.8.17.1352\lib\netstandard2.0\IFM.VR.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.VR.Flags, Version=2022.1.18.810, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.VR.Flags.2022.1.18.810\lib\netstandard2.0\IFM.VR.Flags.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMDiamondServices, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.IFMDiamondServices.2014.4.17.100\lib\IFMDiamondServices.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMErrorLogging, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.IFMErrorLogging.2017.9.4.100\lib\IFMErrorLogging.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM_CreditCardProcessing_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CreditCardProcessing.2024.11.3.1033\lib\IFM_CreditCardProcessing_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="Insuresoft.RuleEngine.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Insuresoft.RuleEngine.Common.536.12.2900\lib\Insuresoft.RuleEngine.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="InsuresoftServices, Version=531.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\InsuresoftServices.531.9.2200\lib\net461\InsuresoftServices.dll</HintPath>
+    </Reference>
+    <Reference Include="JsonProxyClient, Version=2022.4.25.100, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.JsonProxyClient.2022.4.25.100\lib\netstandard2.0\JsonProxyClient.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.8.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.Caching, Version=5.0.414.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.MinMicrosoftPractices.2019.9.26.1\lib\Microsoft.Practices.EnterpriseLibrary.Caching.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.Common, Version=5.0.414.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.MinMicrosoftPractices.2019.9.26.1\lib\Microsoft.Practices.EnterpriseLibrary.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling, Version=5.0.414.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.MinMicrosoftPractices.2019.9.26.1\lib\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.Logging, Version=5.0.414.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.MinMicrosoftPractices.2019.9.26.1\lib\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.Logging, Version=5.0.414.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.MinMicrosoftPractices.2019.9.26.1\lib\Microsoft.Practices.EnterpriseLibrary.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.MinMicrosoftPractices.2019.9.26.1\lib\Microsoft.Practices.Prism.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.MinMicrosoftPractices.2019.9.26.1\lib\Microsoft.Practices.ServiceLocation.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Unity, Version=2.0.414.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.MinMicrosoftPractices.2019.9.26.1\lib\Microsoft.Practices.Unity.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Unity.Interception, Version=2.0.414.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.MinMicrosoftPractices.2019.9.26.1\lib\Microsoft.Practices.Unity.Interception.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PayTraceRcc_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PayTraceRCC.2022.10.3.1813\lib\PayTraceRcc_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="QuickQuote_deploy, Version=2024.10.15.856, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.QuickQuoteDeploy.2024.10.15.856\lib\net48\QuickQuote_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="SQLclasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.SQLClassesDeploy.2020.3.6.100\lib\SQLclasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.IdentityModel.Tokens.Jwt, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IdentityModel.Tokens.Jwt.4.0.10819.1000\lib\System.IdentityModel.Tokens.Jwt.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="ZipCodeRef, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.ZipCodeRef.2014.9.2.100\lib\ZipCodeRef.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BusinessLogic\AppConfig.cs" />
+    <Compile Include="BusinessLogic\BusinessLogicBase.cs" />
+    <Compile Include="BusinessLogic\Diamond\AdditionalInterestHelper.cs" />
+    <Compile Include="BusinessLogic\Diamond\AgencyAccess.cs" />
+    <Compile Include="BusinessLogic\Diamond\AgencyInformation.cs" />
+    <Compile Include="BusinessLogic\Diamond\Claim.cs" />
+    <Compile Include="BusinessLogic\Diamond\DiamondUsers.cs" />
+    <Compile Include="BusinessLogic\Diamond\EOP.cs" />
+    <Compile Include="BusinessLogic\Diamond\Login.cs" />
+    <Compile Include="BusinessLogic\Diamond\PolicyQuoteProcessing.cs" />
+    <Compile Include="BusinessLogic\Diamond\Policy\PolicyInfoLookup.cs" />
+    <Compile Include="BusinessLogic\Diamond\Policy\QuoteUserTransfer.cs" />
+    <Compile Include="BusinessLogic\Diamond\Policy\QuoteHistoryLookup.cs" />
+    <Compile Include="BusinessLogic\Diamond\Policy\PolicyHistoryLookup.cs" />
+    <Compile Include="BusinessLogic\Diamond\Policy\QuoteImage.cs" />
+    <Compile Include="BusinessLogic\Diamond\Policy\PolicyImage.cs" />
+    <Compile Include="BusinessLogic\Diamond\Print.cs" />
+    <Compile Include="BusinessLogic\Diamond\SystemDate.cs" />
+    <Compile Include="BusinessLogic\Diamond\UserInfo.cs" />
+    <Compile Include="BusinessLogic\Extensions.cs" />
+    <Compile Include="BusinessLogic\Fiserv\GeneralHelper.cs" />
+    <Compile Include="BusinessLogic\Fiserv\ScheduledPaymentHelper.cs" />
+    <Compile Include="BusinessLogic\Fiserv\WalletHelper.cs" />
+    <Compile Include="BusinessLogic\OMP\AddressHelper.cs" />
+    <Compile Include="BusinessLogic\OMP\Billing.cs" />
+    <Compile Include="BusinessLogic\OMP\ClaimsManager.cs" />
+    <Compile Include="BusinessLogic\OMP\DiamondLogin.cs" />
+    <Compile Include="BusinessLogic\OMP\Endorsements.cs" />
+    <Compile Include="BusinessLogic\OMP\EndorsementsValidator.cs" />
+    <Compile Include="BusinessLogic\OMP\General.cs" />
+    <Compile Include="BusinessLogic\OMP\PolicyAccess.cs" />
+    <Compile Include="BusinessLogic\OMP\PolicyAccessVerifier.cs" />
+    <Compile Include="BusinessLogic\OMP\PrintDistribution.cs" />
+    <Compile Include="BusinessLogic\OMP\PrintForms.cs" />
+    <Compile Include="BusinessLogic\OMP\QuickPolicyLookup.cs" />
+    <Compile Include="BusinessLogic\OMP\StaticDataQuery.cs" />
+    <Compile Include="BusinessLogic\OnBase\AgencyLookup.cs" />
+    <Compile Include="BusinessLogic\OnBase\ClaimCommon.cs" />
+    <Compile Include="BusinessLogic\OnBase\ClaimantListLookup.cs" />
+    <Compile Include="BusinessLogic\OnBase\PolicyLookup.cs" />
+    <Compile Include="BusinessLogic\OnBase\ClaimLookup.cs" />
+    <Compile Include="BusinessLogic\OnBase\DiamondLogin.cs" />
+    <Compile Include="BusinessLogic\OnBase\PolicyholderNameLookup.cs" />
+    <Compile Include="BusinessLogic\OnBase\ProviderLookup.cs" />
+    <Compile Include="BusinessLogic\Payments\ApplyCash.cs" />
+    <Compile Include="BusinessLogic\Payments\eCheck\eCheckDuplicateAndNSFChecking.cs" />
+    <Compile Include="BusinessLogic\Payments\eCheck\EcheckProcessor.cs" />
+    <Compile Include="BusinessLogic\Payments\AgencyEFTPayment.cs" />
+    <Compile Include="CommonObjects\Diamond\AgencyEFTInfo.cs" />
+    <Compile Include="CommonObjects\Diamond\BasicClaimInfo.cs" />
+    <Compile Include="CommonObjects\Diamond\EODFinishedNotification.cs" />
+    <Compile Include="CommonObjects\Diamond\VersionInfo.cs" />
+    <Compile Include="CommonObjects\Fiserv\CalculateFee.cs" />
+    <Compile Include="CommonObjects\IFM\Auto\YearMakeModelLookup.cs" />
+    <Compile Include="CommonObjects\Payments\MemberPortalPaymentData.cs" />
+    <Compile Include="CommonObjects\OMP\AccountBillInfo.cs" />
+    <Compile Include="CommonObjects\OMP\AccountBillPoliciesInAccount.cs" />
+    <Compile Include="CommonObjects\OMP\Claimant.cs" />
+    <Compile Include="CommonObjects\OMP\Email.cs" />
+    <Compile Include="CommonObjects\OMP\FNOL.cs" />
+    <Compile Include="CommonObjects\OMP\FNOLVehicle.cs" />
+    <Compile Include="CommonObjects\OMP\GAR\GARSupplementalInfo.cs" />
+    <Compile Include="CommonObjects\OMP\PackagePart.cs" />
+    <Compile Include="CommonObjects\OMP\Person.cs" />
+    <Compile Include="CommonObjects\OMP\Property.cs" />
+    <Compile Include="CommonObjects\OMP\Witness.cs" />
+    <Compile Include="CommonObjects\Payments\GetCurrentPayPlanObject.cs" />
+    <Compile Include="CommonObjects\Payments\GetCurrentPayPlanOptions.cs" />
+    <Compile Include="BusinessLogic\WildcardRegex.cs" />
+    <Compile Include="CommonObjects\Diamond\AssignAgencyResult.cs" />
+    <Compile Include="CommonObjects\IFM\StaticData\StaticDataHelper.cs" />
+    <Compile Include="CommonObjects\ObjectConversions.cs" />
+    <Compile Include="CommonObjects\OMP\AgencyProducer.cs" />
+    <Compile Include="CommonObjects\OMP\Endorsement.cs" />
+    <Compile Include="CommonObjects\OMP\EndorsementInformation.cs" />
+    <Compile Include="CommonObjects\Fiserv\ModelBase.cs" />
+    <Compile Include="CommonObjects\Fiserv\PaymentSettings.cs" />
+    <Compile Include="CommonObjects\Fiserv\ScheduledPayment.cs" />
+    <Compile Include="CommonObjects\Fiserv\Wallet.cs" />
+    <Compile Include="CommonObjects\Fiserv\WalletItem.cs" />
+    <Compile Include="CommonObjects\OMP\PUP\PUPSupplementalInfo.cs" />
+    <Compile Include="CommonObjects\OnBase\UploadPayload.cs" />
+    <Compile Include="BusinessLogic\Payments\PayPlanHelper.cs" />
+    <Compile Include="BusinessLogic\Payments\ProcessPayment.cs" />
+    <Compile Include="BusinessLogic\PublicDomain\PolicyAccess.cs" />
+    <Compile Include="BusinessLogic\PublicDomain\PolicyData.cs" />
+    <Compile Include="CommonObjects\BasicAgencyInfo.cs" />
+    <Compile Include="CommonObjects\Constants.cs" />
+    <Compile Include="CommonObjects\EmailDocument.cs" />
+    <Compile Include="CommonObjects\Enums\Enums.cs" />
+    <Compile Include="CommonObjects\IFM\Address\ZipCodeLookupResult.cs" />
+    <Compile Include="CommonObjects\IFM\Auto\VinLookupResult.cs" />
+    <Compile Include="CommonObjects\IFM\GeoCoding\GeoCodeLookupResult.cs" />
+    <Compile Include="CommonObjects\IFM\StaticData\StaticDataOption.cs" />
+    <Compile Include="CommonObjects\OMP\AccidentViolation.cs" />
+    <Compile Include="CommonObjects\OMP\AccountLinkedPolicy.cs" />
+    <Compile Include="CommonObjects\OMP\AccountRegistedPolicy.cs" />
+    <Compile Include="CommonObjects\OMP\AdditionalInterest.cs" />
+    <Compile Include="CommonObjects\OMP\Address.cs" />
+    <Compile Include="CommonObjects\OMP\Agent.cs" />
+    <Compile Include="CommonObjects\OMP\Applicant.cs" />
+    <Compile Include="CommonObjects\OMP\BillingAddress.cs" />
+    <Compile Include="CommonObjects\OMP\BillingInformation.cs" />
+    <Compile Include="CommonObjects\OMP\BillingItem.cs" />
+    <Compile Include="CommonObjects\OMP\Building.cs" />
+    <Compile Include="CommonObjects\OMP\BuildingUpdates.cs" />
+    <Compile Include="CommonObjects\OMP\CAP\CAPSupplementalInfo.cs" />
+    <Compile Include="CommonObjects\OMP\ClaimReport.cs" />
+    <Compile Include="CommonObjects\OMP\CoverageBase.cs" />
+    <Compile Include="CommonObjects\OMP\CoverageCode.cs" />
+    <Compile Include="CommonObjects\OMP\CoverageLimitcs.cs" />
+    <Compile Include="CommonObjects\OMP\FAR\FarLocation.cs" />
+    <Compile Include="CommonObjects\OMP\FAR\FarmBuilding.cs" />
+    <Compile Include="CommonObjects\OMP\FAR\FARSupplementalInfo.cs" />
+    <Compile Include="CommonObjects\OMP\FutureBillingActivityItem.cs" />
+    <Compile Include="CommonObjects\OMP\HOM\HomCoverage.cs" />
+    <Compile Include="CommonObjects\OMP\HOM\HomLocation.cs" />
+    <Compile Include="CommonObjects\OMP\HOM\HOMSupplementalInfo.cs" />
+    <Compile Include="CommonObjects\OMP\HOM\SectionCoverage.cs" />
+    <Compile Include="CommonObjects\OMP\Location.cs" />
+    <Compile Include="CommonObjects\OMP\LossHistory.cs" />
+    <Compile Include="CommonObjects\OMP\MemberAccountPolicy.cs" />
+    <Compile Include="CommonObjects\OMP\MinimalPolicyInformation.cs" />
+    <Compile Include="CommonObjects\OMP\ModelBase.cs" />
+    <Compile Include="CommonObjects\OMP\Name.cs" />
+    <Compile Include="CommonObjects\OMP\Operator.cs" />
+    <Compile Include="CommonObjects\OMP\Phone.cs" />
+    <Compile Include="CommonObjects\OMP\PolicyAccessVerification.cs" />
+    <Compile Include="CommonObjects\OMP\PolicyHistory.cs" />
+    <Compile Include="CommonObjects\OMP\Policyholder.cs" />
+    <Compile Include="CommonObjects\OMP\PPA\Driver.cs" />
+    <Compile Include="CommonObjects\OMP\PPA\PPASupplementalInfo.cs" />
+    <Compile Include="CommonObjects\OMP\PPA\Vehicle.cs" />
+    <Compile Include="CommonObjects\OMP\PPA\VehicleCoverage.cs" />
+    <Compile Include="CommonObjects\OMP\PrintDistribution.cs" />
+    <Compile Include="CommonObjects\OMP\PrintForm.cs" />
+    <Compile Include="CommonObjects\OMP\QuickLookup.cs" />
+    <Compile Include="CommonObjects\OnBase\ModelBase.cs" />
+    <Compile Include="CommonObjects\OnBase\Name.cs" />
+    <Compile Include="CommonObjects\OnBase\OnBaseAgencyInformation.cs" />
+    <Compile Include="CommonObjects\OnBase\OnBaseClaimantList.cs" />
+    <Compile Include="CommonObjects\OnBase\OnBasePolicyInformation.cs" />
+    <Compile Include="CommonObjects\OnBase\OnBaseClaimInformation.cs" />
+    <Compile Include="CommonObjects\OMP\UnSweptPayment.cs" />
+    <Compile Include="CommonObjects\OMP\VeryBasicClaimInformation.cs" />
+    <Compile Include="CommonObjects\Payments\CreditCardPaymentInformation.cs" />
+    <Compile Include="CommonObjects\Payments\ECheckPaymentInformation.cs" />
+    <Compile Include="CommonObjects\Payments\PaymentData.cs" />
+    <Compile Include="CommonObjects\Payments\PayPlanData.cs" />
+    <Compile Include="CommonObjects\Payments\RecurringCreditCardInformation.cs" />
+    <Compile Include="CommonObjects\Payments\RecurringEftInformation.cs" />
+    <Compile Include="CommonObjects\VR\Payplan\PayplanFactor.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="package.nuspec" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IFMDataServicesClientModels\IFMDataServicesClientModels.csproj">
+      <Project>{b9431c8e-69b3-417a-b33f-46470919b2d8}</Project>
+      <Name>IFMDataServicesClientModels</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.2.10.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.2.10.0\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+  </Target>
+</Project>

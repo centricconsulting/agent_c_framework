@@ -1,0 +1,70 @@
+{
+  "database_analysis": {
+    "feature": "BOP Application Section",
+    "analysis_date": "2024-12-19",
+    "queries_identified": 2,
+    "external_services_identified": 1
+  },
+  "identified_database_queries": [
+    {
+      "query_id": "BOP_UW_Questions_Load",
+      "query_type": "Service Method Call",
+      "location": "ctlCommercialUWQuestionItem.ascx.vb, line 52",
+      "query_logic": "Load BOP underwriting questions",
+      "method_call": "VR.Common.UWQuestions.UWQuestions.GetCommercialBOPUnderwritingQuestions()",
+      "actual_implementation": "Hardcoded list creation in UWQuestions.vb",
+      "purpose": "Retrieve all BOP underwriting questions for display",
+      "content_status": "✅ Direct extraction complete - hardcoded questions identified",
+      "estimated_records": "~20+ underwriting questions based on code structure"
+    },
+    {
+      "query_id": "BOP_Multi_State_Processing", 
+      "query_type": "Collection Access",
+      "location": "ctlCommercialUWQuestionItem.ascx.vb, Save() method",
+      "query_logic": "Process answers across multiple state SubQuotes",
+      "method_call": "SubQuotes collection iteration",
+      "actual_implementation": "In-memory collection processing",
+      "purpose": "Save UW question answers to all state-specific quote objects",
+      "content_status": "✅ Direct extraction complete - SubQuotes processing logic identified",
+      "estimated_records": "Variable based on multi-state quote configuration"
+    }
+  ],
+  "external_services": [
+    {
+      "service_id": "BOP_UW_Question_Service",
+      "service_type": "Internal Service Method",
+      "endpoint": "VR.Common.UWQuestions.UWQuestions.GetCommercialBOPUnderwritingQuestions()",
+      "method": "GetCommercialBOPUnderwritingQuestions",
+      "parameters": "None",
+      "purpose": "Retrieve BOP-specific underwriting questions",
+      "response_type": "List<VRUWQuestion>",
+      "content_status": "✅ Source analyzed - hardcoded implementation in UWQuestions.vb",
+      "integration_point": "Question display and answer processing",
+      "frequency": "Per application section load"
+    }
+  ],
+  "data_sources_summary": {
+    "hardcoded_sources": {
+      "count": 2,
+      "extraction_status": "✅ Complete",
+      "locations": [
+        "UWQuestions.vb - BOP question definitions",
+        "ctl_BOP_App_AdditionalServices.ascx.vb - Beautician services list"
+      ]
+    },
+    "collection_based_sources": {
+      "count": 3,
+      "extraction_status": "✅ Complete",
+      "sources": [
+        "Quote.Locations collection",
+        "Quote.Locations.Buildings collection", 
+        "SubQuotes collection"
+      ]
+    },
+    "external_dependencies": {
+      "count": 0,
+      "extraction_status": "N/A",
+      "note": "No external database or API dependencies identified"
+    }
+  }
+}

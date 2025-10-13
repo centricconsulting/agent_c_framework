@@ -1,0 +1,20 @@
+﻿<tests>
+
+  <testLoad>
+    <description>Expect no errors.</description>
+    <policyId>1084297</policyId>
+    <xmlId>12427968</xmlId>
+    <descriptionParam>Receipt Notice _-_ Rescission Notice</descriptionParam>
+    <printFormNumber>105</printFormNumber>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testLoad>
+  <TestPrintPDFByPrintURL>
+    <description>Expect no errors.</description>
+    <printURL>/omp/print/document/1084297/12427968/Receipt+Notice+_-_+Rescission+Notice/105</printURL>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestPrintPDFByPrintURL>
+</tests>

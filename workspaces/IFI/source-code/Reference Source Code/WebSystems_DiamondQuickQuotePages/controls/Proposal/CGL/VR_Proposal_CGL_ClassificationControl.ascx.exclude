@@ -1,0 +1,35 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CGL_VR_Proposal_CGL_ClassificationControl, VR_CGL_CPP_CPR_deploy" %>
+
+  <%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc1" %>
+
+  <div runat="server" id="mainTable">
+  <table class="basictbl">
+      <tr style="border-bottom:1px solid black;">
+      <td class="p_ListHead">
+      Classification
+      </td>
+      <td class="p_ListHead" style="text-align:right;width: 120px;">
+      Exposure
+      </td>
+      <td class="p_ListHead" style="text-align:right; width: 120px;">
+      Premium
+      </td>
+      </tr>
+          <asp:Repeater ID="Repeater1" runat="server">
+          <ItemTemplate>
+          <tr>
+            <td><%#GetClassificationToString(DirectCast(Container.DataItem, QuickQuote.CommonObjects.QuickQuoteGLClassification))%></td>
+            <td style="text-align:right"><%#DataBinder.Eval(Container.DataItem, "PremiumExposure")%></td>
+            <td style="text-align:right"><%#General_VR_CGL.TryToFormatAsCurrency(DataBinder.Eval(Container.DataItem, "QuotedPremium").ToString(), False)%></td>
+          </tr>
+          </ItemTemplate>
+          </asp:Repeater>
+
+      <tr style="border-top: 1px solid black; font-weight:bold">
+      <td colspan="2" style="text-align: left">Total</td>
+      <td style="text-align:right">
+          <asp:Label ID="lblTotal" runat="server" Text=""></asp:Label></td>
+      </tr>
+      </table>
+      </div>
+<asp:Label ID="lblNoLocationLevelClass" runat="server" Visible="false" Text="No classification applied exclusively to this location."></asp:Label>

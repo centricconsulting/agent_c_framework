@@ -1,0 +1,81 @@
+﻿Imports Microsoft.VisualBasic
+Imports QuickQuote.CommonMethods
+Imports QuickQuote.CommonObjects
+
+Namespace QuickQuote.Interfaces 'added for testing 10/8/2014
+    Public Class GlobalSavingRating
+        Public Sub GlobalSave()
+
+        End Sub
+        Public Sub GlobalRate()
+
+        End Sub
+    End Class
+    Public Interface iSavingRating
+        Sub Save()
+        Sub Rate()
+
+    End Interface
+    Public Class BaseSaveRate
+        Public Sub BaseSave()
+
+        End Sub
+        Public Overloads Sub BaseRate()
+
+        End Sub
+    End Class
+    Public Class DiamondSaveRate
+        Inherits BaseSaveRate
+        Implements iSavingRating
+
+        Public Sub Rate() Implements iSavingRating.Rate
+            BaseRate()
+
+        End Sub
+
+        Public Sub Save() Implements iSavingRating.Save
+            BaseSave()
+
+        End Sub
+    End Class
+    Public Class OtherVendorSaveRate
+        Inherits BaseSaveRate
+        Implements iSavingRating
+
+        Public Sub Rate() Implements iSavingRating.Rate
+            BaseRate()
+
+        End Sub
+
+        Public Sub Save() Implements iSavingRating.Save
+            BaseRate()
+
+        End Sub
+    End Class
+    Public Interface iNewSavingRating
+        Inherits iSavingRating
+
+        Sub NewSave()
+        Sub NewRate()
+
+    End Interface
+    Public Class NewDiamondSaveRate
+        Implements iNewSavingRating
+
+        Public Sub NewRate() Implements iNewSavingRating.NewRate
+
+        End Sub
+
+        Public Sub NewSave() Implements iNewSavingRating.NewSave
+
+        End Sub
+
+        Public Sub Rate() Implements iSavingRating.Rate
+
+        End Sub
+
+        Public Sub Save() Implements iSavingRating.Save
+            
+        End Sub
+    End Class
+End Namespace

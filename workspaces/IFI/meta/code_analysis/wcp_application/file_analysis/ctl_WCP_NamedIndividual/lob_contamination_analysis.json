@@ -1,0 +1,201 @@
+{
+  "lob_contamination_assessment": {
+    "primary_lob": "Workers Compensation (WCP)",
+    "file_location": "User Controls/VR Commercial/Application/WCP/",
+    "contamination_level": "MODERATE",
+    "contamination_type": "State-Specific Logic Mixing",
+    "overall_risk": "Medium-High"
+  },
+  "contamination_patterns_identified": [
+    {
+      "contamination_id": "multi_state_data_storage",
+      "contamination_type": "State-Specific Logic Mixing",
+      "severity": "HIGH",
+      "location": "MyNamedIndividual property, lines 25-75",
+      "pattern_description": "Single control handles data storage across multiple states with different storage patterns",
+      "evidence": [
+        "Governing State storage for some types (Inclusion, Waiver)",
+        "Indiana-specific storage for Amish exclusions",
+        "Illinois-specific storage with separate collections (_IL suffix)",
+        "Kentucky-specific storage for rejection endorsements",
+        "Multi-state fallback logic (Indiana → Kentucky for sole officer)"
+      ],
+      "business_impact": "Makes state-specific business rules difficult to separate",
+      "risk_factors": [
+        "State law changes require code changes in shared component",
+        "Testing requires multi-state data setup",
+        "Deployment complexity for state-specific features"
+      ]
+    },
+    {
+      "contamination_id": "state_specific_record_types",
+      "contamination_type": "Data Model Mixing",
+      "severity": "MEDIUM",
+      "location": "Multiple locations - object casting throughout file",
+      "pattern_description": "Different QuickQuote record types for different states within same control",
+      "evidence": [
+        "QuickQuoteInclusionOfSoleProprietorRecord (general)",
+        "QuickQuoteExclusionOfSoleProprietorRecord_IL (Illinois-specific)", 
+        "QuickQuoteKentuckyRejectionOfCoverageEndorsement (Kentucky-specific)",
+        "Same business concept but different object types"
+      ],
+      "business_impact": "Schema evolution requires coordinated changes across state-specific types",
+      "risk_factors": [
+        "Type-specific bugs hard to isolate",
+        "Refactoring requires understanding all state variants",
+        "New states require new object types and code paths"
+      ]
+    },
+    {
+      "contamination_id": "hardcoded_state_enumeration",
+      "contamination_type": "State Logic Hardcoding",
+      "severity": "MEDIUM", 
+      "location": "Multiple methods with state-specific case statements",
+      "pattern_description": "Explicit state enumeration embedded in business logic",
+      "evidence": [
+        "SubQuoteForState(QuickQuoteState.Indiana)",
+        "SubQuoteForState(QuickQuoteState.Illinois)", 
+        "SubQuoteForState(QuickQuoteState.Kentucky)",
+        "Hardcoded state checks in multiple methods"
+      ],
+      "business_impact": "Adding new states requires code changes, not configuration",
+      "risk_factors": [
+        "State expansion requires development effort",
+        "State-specific logic scattered across methods", 
+        "Maintenance burden increases with each state"
+      ]
+    },
+    {
+      "contamination_id": "conditional_ui_logic_by_state",
+      "contamination_type": "Presentation Logic Mixing", 
+      "severity": "LOW",
+      "location": "SetControlType and UpdateAccordHeader methods",
+      "pattern_description": "UI behavior changes based on state-specific NIType values",
+      "evidence": [
+        "Different header text for state-specific types",
+        "Conditional display logic for type selection row",
+        "State-specific validation group names"
+      ],
+      "business_impact": "UI testing requires state-specific scenarios", 
+      "risk_factors": [
+        "UI changes need state-specific validation",
+        "User experience varies by state",
+        "Help text/documentation needs state context"
+      ]
+    }
+  ],
+  "clean_patterns_identified": [
+    {
+      "clean_pattern_id": "consistent_validation_interface",
+      "pattern_type": "Abstraction Adherence",
+      "location": "ValidateControl method",
+      "description": "Validation logic follows consistent pattern despite state differences",
+      "evidence": [
+        "Same validation interface for all NITypes",
+        "Consistent error message handling", 
+        "Uniform validation helper usage"
+      ],
+      "positive_impact": "Testing and error handling work consistently"
+    },
+    {
+      "clean_pattern_id": "unified_save_pattern", 
+      "pattern_type": "Data Persistence Consistency",
+      "location": "Save method",
+      "description": "Save operations follow same pattern across all state types",
+      "evidence": [
+        "Consistent Name.CommercialName1 assignment",
+        "Uniform Name.TypeId = '2' setting",
+        "Same SaveChildControls() call pattern"
+      ],
+      "positive_impact": "Data consistency maintained across states"
+    }
+  ],
+  "boundary_violations": [
+    {
+      "violation_id": "cross_state_object_access",
+      "violation_type": "State Boundary Crossing",
+      "location": "MyNamedIndividual property",
+      "description": "Single WCP control accesses data from multiple state quotes",
+      "evidence": "Direct access to Indiana, Illinois, Kentucky quote objects",
+      "expected_boundary": "WCP control should access unified data interface",
+      "actual_behavior": "Control knows about state-specific data structures"
+    },
+    {
+      "violation_id": "state_specific_business_logic",
+      "violation_type": "Business Rule Mixing", 
+      "location": "Entire file",
+      "description": "State-specific business rules embedded in shared component",
+      "evidence": "Different rules for Amish exclusions (IN), IL-specific exclusions, KY rejection endorsements",
+      "expected_boundary": "State rules should be externalized or delegated",
+      "actual_behavior": "State rules hardcoded in control logic"
+    }
+  ],
+  "contamination_remediation_recommendations": [
+    {
+      "recommendation_id": "state_strategy_pattern",
+      "priority": "HIGH",
+      "description": "Implement strategy pattern for state-specific behaviors",
+      "approach": "Create state-specific handlers for NIType operations",
+      "benefits": [
+        "Isolate state logic into separate classes",
+        "Enable independent state rule evolution", 
+        "Simplify testing with state-specific test suites"
+      ],
+      "effort_estimate": "Medium - requires refactoring but clear pattern"
+    },
+    {
+      "recommendation_id": "unified_data_interface",
+      "priority": "HIGH", 
+      "description": "Create abstraction layer for Named Individual data access",
+      "approach": "Interface that hides state-specific collection differences",
+      "benefits": [
+        "UI logic independent of data storage details",
+        "Easier to add new states without UI changes",
+        "Centralized data access patterns"
+      ],
+      "effort_estimate": "High - requires data layer refactoring"
+    },
+    {
+      "recommendation_id": "configuration_driven_state_logic",
+      "priority": "MEDIUM",
+      "description": "Move state-specific rules to configuration",
+      "approach": "External configuration for state behaviors and validations",
+      "benefits": [
+        "Add states without code changes",
+        "Business users can modify state rules",
+        "Clear separation of logic and configuration"
+      ],
+      "effort_estimate": "Medium - requires configuration framework"
+    }
+  ],
+  "testing_implications": [
+    {
+      "test_complexity": "HIGH", 
+      "reason": "Must test all state combinations and NIType combinations",
+      "required_test_scenarios": [
+        "Each NIType × each applicable state",
+        "State fallback logic (IN → KY for sole officer)",
+        "Collection initialization for each state",
+        "UI display logic for each type/state combination"
+      ],
+      "test_data_requirements": [
+        "Indiana quote with all applicable collections",
+        "Illinois quote with IL-specific collections", 
+        "Kentucky quote with KY-specific collections",
+        "Governing state quote setup"
+      ]
+    }
+  ],
+  "deployment_implications": [
+    {
+      "deployment_risk": "MEDIUM",
+      "reason": "State-specific changes affect shared component",
+      "considerations": [
+        "State law changes require full regression testing",
+        "New state addition requires code deployment", 
+        "State-specific bug fixes affect all installations",
+        "Database schema changes need multi-state coordination"
+      ]
+    }
+  ]
+}

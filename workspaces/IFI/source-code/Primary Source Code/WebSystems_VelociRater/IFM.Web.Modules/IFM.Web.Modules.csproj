@@ -1,0 +1,228 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{939C4C22-28C0-4B9C-8EE1-B2A592B12EAE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IFM.Web.Modules</RootNamespace>
+    <AssemblyName>IFM.Web.Modules</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CommonClasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CommonClassesDeploy.2023.6.14-beta\lib\CommonClasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Business.ThirdParty, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Business.ThirdParty.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.ChoicePoint.Library, Version=4.2.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.ChoicePoint.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Diagnostics, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Diagnostics.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Objects.536.12.2100.1\lib\Diamond.Common.Objects.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects.ConfigurableBook, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Objects.ConfigurableBook.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Rules.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Services.538.12.2000.1\lib\Diamond.Common.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.StaticDataManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Utility.536.12.2100.1\lib\Diamond.Common.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.Rules.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.StaticDataManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.BaseControls, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Web.Items.536.12.2100.1\lib\Diamond.Web.BaseControls.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Web.Items.536.12.2100.1\lib\Diamond.Web.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="DiamondWebClass, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.DiamondWebClass.2024.12.23.100\lib\DiamondWebClass.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.PolicyLoader, Version=2023.6.5.1140, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.PolicyLoader.2023.6.5.1140-beta\lib\net48\IFM.PolicyLoader.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMDiamondServices, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.IFMDiamondServices.2014.4.17.100\lib\IFMDiamondServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Insuresoft.RuleEngine.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Insuresoft.RuleEngine.Common.536.12.2100.1\lib\Insuresoft.RuleEngine.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.6.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.8.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Caching.Abstractions.6.0.0\lib\net461\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Memory, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Caching.Memory.6.0.0\lib\net461\Microsoft.Extensions.Caching.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=2.1.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.2.1.0\lib\net461\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.6.0.0\lib\net461\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.FileProviders.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.FileProviders.Abstractions.6.0.0\lib\net461\Microsoft.Extensions.FileProviders.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.FileProviders.Physical, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.FileProviders.Physical.6.0.0\lib\net461\Microsoft.Extensions.FileProviders.Physical.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.FileSystemGlobbing, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.FileSystemGlobbing.6.0.0\lib\net461\Microsoft.Extensions.FileSystemGlobbing.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\lib\net461\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Options.6.0.0\lib\net461\Microsoft.Extensions.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Primitives, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Primitives.6.0.0\lib\net461\Microsoft.Extensions.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PosInformatique.AspNet.WebForms.DependencyInjection, Version=1.2.0.4, Culture=neutral, PublicKeyToken=e045a3b52533a91d, processorArchitecture=MSIL">
+      <HintPath>..\packages\PosInformatique.AspNet.WebForms.DependencyInjection.1.2.0\lib\net472\PosInformatique.AspNet.WebForms.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="QuickQuote_deploy, Version=2025.9.15.1550, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.QuickQuoteDeploy.2025.9.15.1550-beta\lib\net48\QuickQuote_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="SQLclasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.SQLClassesDeploy.2020.3.6.100\lib\SQLclasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IO, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.4.3.0\lib\net462\System.IO.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.4.3.0\lib\net462\System.Runtime.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Algorithms, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Algorithms.4.3.1\lib\net463\System.Security.Cryptography.Algorithms.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Encoding, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Encoding.4.3.0\lib\net46\System.Security.Cryptography.Encoding.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Primitives, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Primitives.4.3.0\lib\net46\System.Security.Cryptography.Primitives.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DependencyInjectionModule.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IFM.VR.Common\IFM.VR.Common.vbproj">
+      <Project>{7CAE39C0-50C2-4F23-A11A-4FD7057B94E7}</Project>
+      <Name>IFM.VR.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IFM.VR.Flags\IFM.VR.Flags.csproj">
+      <Project>{ec6c5caa-0414-40cb-b130-8a0359bc6a37}</Project>
+      <Name>IFM.VR.Flags</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets'))" />
+  </Target>
+  <Import Project="..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets" Condition="Exists('..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets')" />
+</Project>

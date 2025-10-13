@@ -1,0 +1,123 @@
+{
+  "multi_state_orchestration": {
+    "governing_state_logic": {
+      "pattern": "GoverningStateQuote property access for primary coverage decisions",
+      "coverage_types": [
+        "HasInclusionOfSoleProprietorsPartnersOfficersAndOthers",
+        "HasWaiverOfSubrogation"
+      ],
+      "data_source": "GoverningStateQuote.InclusionOfSoleProprietorRecords",
+      "location": "Lines 87-120",
+      "business_rule": "Governing state controls inclusion and waiver coverage availability"
+    },
+    "sub_state_logic": {
+      "indiana_kentucky_shared": {
+        "pattern": "SubQuotesContainsState(\"IN\") OrElse SubQuotesContainsState(\"KY\")",
+        "coverage_type": "ExclusionOfSoleProprietorsPartnersOfficersAndOthers",
+        "location": "Lines 122-162",
+        "business_rule": "Both IN and KY states can have sole officer exclusions"
+      },
+      "indiana_only": {
+        "pattern": "SubQuotesContainsState(\"IN\")",
+        "coverage_type": "ExclusionOfAmishWorkers", 
+        "location": "Lines 164-188",
+        "business_rule": "Amish worker exclusions are Indiana-specific"
+      },
+      "illinois_only": {
+        "pattern": "IsMultistateCapableEffectiveDate(Quote.EffectiveDate) AndAlso SubQuotesContainsState(\"IL\")",
+        "coverage_type": "ExclusionOfSoleProprietorsPartnersOfficersAndOthers_IL",
+        "effective_date_check": true,
+        "location": "Lines 203-226",
+        "business_rule": "Illinois exclusions require multistate capability and effective date validation"
+      },
+      "kentucky_only": {
+        "pattern": "CDate(Quote.EffectiveDate).Date >= CDate(IFM.VR.Common.Helpers.MultiState.General.KentuckyWCPEffectiveDate).Date AndAlso SubQuotesContainsState(\"KY\")",
+        "coverage_type": "KentuckyRejectionOfCoverageEndorsement",
+        "effective_date_dependency": "KentuckyWCPEffectiveDate",
+        "location": "Lines 229-252",
+        "business_rule": "Kentucky rejection endorsements require specific effective date threshold"
+      }
+    }
+  },
+  "named_individual_types": {
+    "total_types": 6,
+    "type_definitions": [
+      {
+        "type": "InclusionOfSoleProprietersEtc",
+        "enum_value": "NIType_Enum.InclusionOfSoleProprietersEtc",
+        "repeater": "rptInclOfSoleProprieters",
+        "control_id": "ctl_NI_InclOfSoleProprietersEtc",
+        "data_source": "govStateQuote.InclusionOfSoleProprietorRecords",
+        "state_scope": "Governing State",
+        "location": "Lines 87-107"
+      },
+      {
+        "type": "WaiverOfSubrogation", 
+        "enum_value": "NIType_Enum.WaiverOfSubrogation",
+        "repeater": "rptWaiverOfSubro",
+        "control_id": "ctl_NI_WaiverOfSubro", 
+        "data_source": "GoverningStateQuote.WaiverOfSubrogationRecords",
+        "state_scope": "Governing State",
+        "location": "Lines 108-121"
+      },
+      {
+        "type": "ExclusionOfAmishWorkers",
+        "enum_value": "NIType_Enum.ExclusionOfAmishWorkers",
+        "repeater": "rptExclOfAmish", 
+        "control_id": "ctl_NI_ExclOfAmish",
+        "data_source": "INQuote.ExclusionOfAmishWorkerRecords",
+        "state_scope": "Indiana Only",
+        "location": "Lines 164-185"
+      },
+      {
+        "type": "ExclusionOfSoleOfficer",
+        "enum_value": "NIType_Enum.ExclusionOfSoleOfficer", 
+        "repeater": "rptExclOfSoleOfficer",
+        "control_id": "ctl_NI_ExclOfSoleOfficer",
+        "data_source": "INQuote.ExclusionOfSoleProprietorRecords or KYQuote.ExclusionOfSoleProprietorRecords",
+        "state_scope": "Indiana or Kentucky",
+        "location": "Lines 122-162"
+      },
+      {
+        "type": "ExclusionOfSoleProprietor_IL",
+        "enum_value": "NIType_Enum.ExclusionOfSoleProprietor_IL",
+        "repeater": "rptExclOfSoleProprietorsEtc_IL",
+        "control_id": "ctl_NI_ExclOfSoleProprietor_IL", 
+        "data_source": "ILQuote.ExclusionOfSoleProprietorRecords_IL",
+        "state_scope": "Illinois Only",
+        "effective_date_check": "IsMultistateCapableEffectiveDate",
+        "location": "Lines 203-226"
+      },
+      {
+        "type": "RejectionOfCoverageEndorsement",
+        "enum_value": "NIType_Enum.RejectionOfCoverageEndorsement",
+        "repeater": "rptRejectionOfCoverageEndorsement",
+        "control_id": "ctl_NI_RejectionOfCoverageEndorsement",
+        "data_source": "KYQuote.KentuckyRejectionOfCoverageEndorsementRecords",
+        "state_scope": "Kentucky Only", 
+        "effective_date_check": "KentuckyWCPEffectiveDate",
+        "location": "Lines 229-252"
+      }
+    ]
+  },
+  "conditional_display_patterns": {
+    "initial_hide_all": {
+      "pattern": "divXXX.Attributes.Add(\"style\", \"display:none\")",
+      "applies_to": [
+        "divInclOfSoleProprietersEtc", 
+        "divWaiverOfSubro",
+        "divExclOfAmish", 
+        "divExclOfSoleOfficer",
+        "divExclOfSoleProprietorsEtc_IL"
+      ],
+      "location": "Lines 75-79",
+      "business_rule": "All Named Individual sections hidden by default"
+    },
+    "conditional_show": {
+      "pattern": "divXXX.Attributes.Add(\"style\", \"display:''\")",
+      "trigger": "Coverage selection and state eligibility",
+      "location": "Throughout populate method",
+      "business_rule": "Show sections only when coverage selected and state eligible"
+    }
+  }
+}

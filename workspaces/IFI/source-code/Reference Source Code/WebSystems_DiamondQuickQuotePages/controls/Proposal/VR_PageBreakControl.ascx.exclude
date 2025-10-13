@@ -1,0 +1,3 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_VR_PageBreakControl, VR_CGL_CPP_CPR_deploy" %>
+
+<asp:PlaceHolder runat="server" ID="phControls"></asp:PlaceHolder>

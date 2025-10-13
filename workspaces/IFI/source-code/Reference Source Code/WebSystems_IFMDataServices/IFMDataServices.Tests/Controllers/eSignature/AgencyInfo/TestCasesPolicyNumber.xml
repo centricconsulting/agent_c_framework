@@ -1,0 +1,30 @@
+﻿<tests>
+  <agencyInfo>
+    <description>Expect no errors.</description>
+    <policynumber>PPA2056522</policynumber>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </agencyInfo>
+  <agencyInfo>
+    <description>Expect errors because we sent quote number instead of policy number.</description>
+    <policynumber>QPPA2056522</policynumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </agencyInfo>
+  <agencyInfo>
+    <description>Expect errors because of incorrect format.</description>
+    <policynumber>-12</policynumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </agencyInfo>
+  <agencyInfo>
+    <description>Expect errors because of incorrect format.</description>
+    <policynumber>32165</policynumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </agencyInfo>
+</tests>

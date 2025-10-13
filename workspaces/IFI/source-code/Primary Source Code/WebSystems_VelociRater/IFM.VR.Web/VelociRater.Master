@@ -1,0 +1,301 @@
+﻿<%@ Master Language="VB" AutoEventWireup="false" CodeBehind="VelociRater.master.vb" Inherits="IFM.VR.Web.VelociRater" %>
+
+<%@ Import Namespace="IFM.VR.Web" %>
+
+<%@ Register Src="~/User Controls/ctlPageStartupScript.ascx" TagPrefix="uc1" TagName="ctlPageStartupScript" %>
+<%@ Register Src="~/User Controls/ctlValidationSummary.ascx" TagPrefix="uc1" TagName="ctlValidationSummary" %>
+<%@ Register Src="~/User Controls/ctlWarnSessionExpiring.ascx" TagPrefix="uc1" TagName="ctlWarnSessionExpiring" %>
+
+<!DOCTYPE html>
+<html>
+<head id="Head1" runat="server">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>VelociRater</title>
+    <script async type="text/javascript" src="js/GoogleAnalyticsScripts.js?dt=20230210"></script>
+    <link rel="icon" type="image/png" href="favicon_VR.ico">
+
+    <asp:PlaceHolder runat="server" ID="mainScripts">
+        <link href="<%=ResolveClientUrL("~/styles/quoteMenu.css")%>" rel="stylesheet" />
+        <link href="<%=ResolveClientUrl("~/styles/site.css?dt=" + Me.ScriptDT)%>" rel="stylesheet" />
+        <link href="<%=ResolveClientUrl("~/styles/vr.css?dt=" + Me.ScriptDT)%>" rel="stylesheet" />
+        <link href="<%=ResolveClientUrl("~/styles/TreeView.css?dt=" + Me.ScriptDT)%>" rel="stylesheet" />
+
+        <link href="<%=ResolveClientUrL("~/styles/common.css")%>" rel="stylesheet" />
+        <link href="<%=ResolveClientUrl("~/styles/jqueryUiMenuBar.css")%>" rel="stylesheet" />        
+                
+        <%--<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.4.min.js"></script>        
+        <script src="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.11.4/jquery-ui.min.js"></script>--%>
+                <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-1.11.3.min.js"></script>
+        <script src="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.11.4/jquery-ui.min.js"></script>
+
+        <script src="<%=ResolveClientUrl("~/js/3rdParty/menubar.js")%>"></script>
+        <script src="<%=ResolveClientUrl("~/js/3rdParty/bowser.min.js")%>"></script>
+                            
+        
+        <script src="<%=ResolveClientUrl("~/js/treeview.js?dt=" + Me.ScriptDT)%>"></script>        
+        <script src="<%=ResolveClientUrl("~/js/VrPersonal.js?dt=" + Me.ScriptDT)%>"></script>
+        <script src="<%=ResolveClientUrl("~/js/VRQuoteSummaryActions.js?dt=" + Me.ScriptDT)%>"></script>        
+        <script src="<%=ResolveClientUrl("~/js/VrArrays.js?dt=" + Me.ScriptDT)%>"></script> 
+        <script src="<%=ResolveClientUrl("~/js/VrDate.js?dt=" + Me.ScriptDT)%>"></script> 
+        <script src="<%=ResolveClientUrl("~/js/VRDataFetcher.js?dt=" + Me.ScriptDT)%>"></script> 
+
+        <script src="<%=ResolveClientUrl("~/js/vr.core.js?dt=" + Me.ScriptDT)%>"></script> <%--NEEDS TO BE LAST--%>
+        
+        <script src="<%=ResolveClientUrl("~/js/3rdParty/jquery.browser.js")%>"></script>
+        <script src="<%=ResolveClientUrl("~/js/3rdParty/jquery.mask.js")%>"></script>
+        <script src="<%=ResolveClientUrl("~/js/3rdParty/jquery.watermark.js")%>"></script>
+        <script src="<%=ResolveClientUrl("~/js/3rdParty/jquery.dirtyFields.js?dt=" + Me.ScriptDT)%>"></script>
+        <script src="<%=ResolveClientUrl("~/js/3rdParty/jquery.cookie.js")%>"></script>
+        <script src="<%=ResolveClientUrl("~/js/3rdParty/VrSplitButton.js?dt=" + Me.ScriptDT)%>"></script>
+
+        <link href="https://cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css" rel="stylesheet" />
+        <script src="https://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.js"></script>
+
+        <link href="<%=ResolveClientUrl("~/Content/fontawesome.min.css")%>" rel="stylesheet">
+        <link href="<%=ResolveClientUrl("~/Content/brands.min.css")%>" rel="stylesheet">
+        <link href="<%=ResolveClientUrl("~/Content/solid.min.css")%>" rel="stylesheet">
+        
+        <%--<script id="ThemeJsSnow" src="js/3rdPart/snowstorm-min.js"></script>--%>
+        <style>
+            /* This removes the X clear icon on IE - needed as it bypassed some script events */
+            ::-ms-clear { 
+                        display: none;
+                        }
+        </style>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                hideVersionedFields();
+
+                var myVRViewElem = $("[id$='hdnMyVRView']");
+                var liMyVelociraterElem = $("[id$='liMyVelocirater']");
+                var liSavedQuotesElem = $("[id$='liSavedQuotes']");
+                var liSavedChangesElem = $("[id$='liSavedChanges']");
+                var liBillingUpdatesElem = $("[id$='liBillingUpdates']");
+                if (myVRViewElem.length && liMyVelociraterElem.length && liBillingUpdatesElem.length && liSavedChangesElem.length && liSavedQuotesElem.length){
+                    if (myVRViewElem.val() === "splash") {
+                        liBillingUpdatesElem.hide();
+                        liSavedChangesElem.hide();
+                        liSavedQuotesElem.hide();
+                        liMyVelociraterElem.hide();
+                        ifm.vr.theming.LoadThemeFromCookie('NewBusinessQuote');
+                    } else {
+                        var changeSearchTypeAccordingToPageCurrentlyOnElem = $("[id$='hdnChangeSearchTypeAccordingToPageCurrentlyOn']");
+                        var dropdownTypeElem = $("[id$='ddType']");
+                        var dropdownTimeElem = $("[id$='ddTimeFrame']");
+                        var doChangeSearchTypeAccordingToPageCurrentlyOn = false;
+
+                        liBillingUpdatesElem.show();
+                        liSavedChangesElem.show();
+                        liSavedQuotesElem.show();
+                        liMyVelociraterElem.show();
+
+                        if (changeSearchTypeAccordingToPageCurrentlyOnElem.length && changeSearchTypeAccordingToPageCurrentlyOnElem.val().toLowerCase() === "true"){
+                            if (dropdownTypeElem.length) {
+                                switch (myVRViewElem.val()) {
+                                    case "savedQuotes":
+                                        if (isPostBack === 0) {
+                                            dropdownTypeElem.val("2");
+                                            dropdownTimeElem.val("90");
+                                        }
+                                        //ifm.vr.theming.LoadThemeFromCookie('NewBusinessQuote');
+                                        break;
+                                    case "savedChanges":
+                                        if (isPostBack === 0) {
+                                            dropdownTypeElem.val("3");
+                                            dropdownTimeElem.val("0");
+                                        }
+                                        //ifm.vr.theming.LoadThemeFromCookie('Endorsement');
+                                        break;
+                                    case "billingUpdates":
+                                        if (isPostBack === 0) {
+                                            dropdownTypeElem.val("4");
+                                            dropdownTimeElem.val("0");
+                                        }
+                                        //ifm.vr.theming.LoadThemeFromCookie('PayplanChange');
+                                        break;
+                                    case "globalSearch":
+                                        if (isPostBack === 0) {
+                                            dropdownTypeElem.val("1");
+                                            dropdownTimeElem.val("0");
+                                        }
+                                        //ifm.vr.theming.LoadThemeFromCookie('ReadOnly');
+                                        break;
+                                    default:
+                                        //ifm.vr.theming.LoadThemeFromCookie('NewBusinessQuote');
+                                        break;
+                                }
+                            }
+                        } else {
+                            if (dropdownTypeElem.length) {
+                                switch (myVRViewElem.val()) {
+                                    case "savedQuotes":
+                                        if (isPostBack === 0) {
+                                            dropdownTimeElem.val("90");
+                                        }
+                                        break;
+                                    default:
+                                        if (isPostBack === 0) {
+                                            dropdownTimeElem.val("0");
+                                        }
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            //if ($(this).children(""option"").filter("":selected"").text() == ""Archive""){
+            //    if (confirm(""Archive this quote? "")) {
+            //        DisableFormOnSaveRemoves();
+            //        Post(this, '" & Me.ClientID & "_" & e.Row.DataItemIndex & "');
+            //    } else {
+            //        $(this).removeAttr(""selected"").find(""option:first"").attr(""selected"", ""selected"");
+            //    }
+            //    return true;
+            //} else if ($(this).children(""option"").filter("":selected"").text() == ""Delete""){
+            //    if (confirm(""Delete this change? "")) {
+            //        DisableFormOnSaveRemoves();
+            //        Post(this, '" & Me.ClientID & "_" & e.Row.DataItemIndex & "');
+            //    } else {
+            //        $(this).removeAttr(""selected"").find(""option:first"").attr(""selected"", ""selected"");
+            //    }
+            //}else {
+            //    DisableFormOnSaveRemoves(); Post(this, '" & Me.ClientID & "_" & e.Row.DataItemIndex & "');
+            //}
+
+        </script>
+    </asp:PlaceHolder>
+</head>
+
+<body>
+    <form id="frmMaster" runat="server" submitdisabledcontrols="true">
+        <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
+
+        <div id="divForPopups" style="position: fixed; left: 40px; z-index:2; top: 150px;"><%If Request.IsLocal Then%><%End If%></div>
+        <div id="divASP_Popups" style="position: absolute; top: 50px; z-index:2; display:none;"></div>
+        <div id="page">
+            <div runat="server" id="scrollRow" visible="false">                            
+                                <marquee><b><span runat="server" id="WebScrollArea"></span></b></marquee>                            
+                        </div>
+            <div id="headerAndNavBar">
+                <div id="header">
+                    <div id="vrLogo">
+                        <a href="MyVelocirater.aspx" style="" tabindex="-1">
+                            <img style="border: none;" src="images/Velocirater.jpg" class="w150" alt="VelociRater" />
+                        </a>
+                    </div>                    
+                    <table>                        
+                        <tr>
+                            <td class="txtRgt">
+                                <asp:Label ID="lblWelcomeUser" runat="server"></asp:Label></td>
+                        </tr>
+                        <tr>
+                            <td class="txtRgt vBot">
+                                <asp:Panel ID="pnlAgencyDD" runat="server">
+                                    <label for="<%=ddAgencies.ClientID%>">Current Agency:</label>
+                                    <span>
+                                        <asp:DropDownList ID="ddAgencies" runat="server" AutoPostBack="True"
+                                            ToolTip="Available Agencies">
+                                        </asp:DropDownList>
+                                    </span>
+                                    <div style="display: none;">
+                                        <br />
+                                        <span>Current Agent:</span>
+                                        <asp:DropDownList ID="ddAgent" runat="server" AutoPostBack="True">
+                                        </asp:DropDownList>
+                                    </div>
+                                </asp:Panel>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="txtRgt">
+                                <a href="<%=ConfigurationManager.AppSettings("TerritoryLink") %>" style="color: black !important;" tabindex="-1">Contact Us</a>
+                                <uc1:ctlWarnSessionExpiring runat="server" ID="ctlWarnSessionExpiring" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="jQueryMenu_VR" style="display: none;" class="VR_Vader_Menu">
+                    <ul id="mainMenu_VR">
+                        <li id="liMyVelocirater">
+                            <a href="MyVelocirater.aspx" tabindex="-1">My Velocirater</a></li>
+                        <li title="Create a new quote">
+                            <a href="#">New Quote</a>
+                            <ul style="width: 190px;">
+                                <%= GetSupportedNewQuoteMenuItem()%>
+                            </ul>
+                        </li>
+                        <li id="liSavedQuotes"><a href="MyVelocirater.aspx?PageView=savedQuotes">Saved Quotes</a></li>
+                        <li id="liSavedChanges"><a href="MyVelocirater.aspx?PageView=savedChanges">Saved Changes</a></li>
+                        <li id="liBillingUpdates"><a href="MyVelocirater.aspx?PageView=billingUpdates">Billing Updates</a></li>
+                        <%--These menu items below do seem backward but it is that way for a reason --%>
+                        <li style="float: right;"><a href="<%=ConfigurationManager.AppSettings("VRHelpLink") + "p=" + Me.PageName%>" target="_blank">Help</a></li>
+                        <li style="float: right;"><a href="<%=ConfigurationManager.AppSettings("LogoutLink")%>">Log Out</a></li>
+                        <li style="float: right;"><a href="<%=ConfigurationManager.AppSettings("MyAgencyLink")%>">AgentPort</a></li>
+
+                        <li runat="server" id="liThemes" visible="false" style="float: right;"><a href="#">Themes</a>
+                            <ul style="width: 130px;" id="ul_vr_Themes">
+                                <li><a href="#" onclick="ifm.vr.theming.ChangeTheme(ThemeOrange);">Orange(default)</a></li>
+                                <li><a href="#" onclick="ifm.vr.theming.ChangeTheme(ThemeCupertino);">Light Blue</a></li>
+                                <li><a href="#" onclick="ifm.vr.theming.ChangeTheme(ThemeSmoothness);">High Contrast</a></li>
+                                <li><a href="#" onclick="ifm.vr.theming.ChangeTheme(ThemeChanges);">Changes</a></li>
+                                <% If Request.IsLocal %>
+                                <li>-------------</li>
+                                <li><a href="#" onclick="ifm.vr.theming.ChangeTheme(ThemeStPatty);">St Patrick</a></li>
+
+                                <li><a href="#" onclick="ifm.vr.theming.ChangeTheme(ThemeFlick);">Independence</a></li>
+
+                                <%--<li><a href="#" onclick="ifm.vr.theming.ChangeTheme(ThemeOvercast);">Overcast</a></li>--%>
+                                <li><a href="#" onclick="ifm.vr.theming.ChangeTheme(ThemePepper);">Thanksgiving</a></li>
+                                <%--  <li><a href="#" onclick="ifm.vr.theming.ChangeTheme(ThemeDarkHive);">Dark Hive</a></li> --%>
+                                <li><a href="#" onclick="ifm.vr.theming.ChangeTheme(ThemeGreen);">The Holidays</a></li>
+                                <%end if %>
+                            </ul>
+                        </li>
+
+                        <%If (Session("ss_RecentQuoteActivity") IsNot Nothing AndAlso String.IsNullOrWhiteSpace(GetRecentHistoryItems()) = False) Then%>
+                        <li id="liRecentQuoteActivity" style="float: right;"><a href="#">Recent Activity</a>
+                            <%=GetRecentHistoryItems()%>
+                        </li>
+                        <%End If%>
+                    </ul>
+                </div>
+            </div>
+            <div class="clear" id="content">
+                <div id="main">
+
+                    <asp:ContentPlaceHolder ID="cphMain" runat="server">
+                    </asp:ContentPlaceHolder>
+                </div>
+            </div>
+            <div id="footer" class="clear" style="margin-top: 30px;">
+                &copy; Copyright <%=DateTime.Now.Year.ToString()%>. Indiana Farmers Mutual Insurance Group. All Rights Reserved.
+            </div>
+
+            <div title="This is only shown on non-production environments" runat="server" id="DivVrBuildDate" style="text-align: center; width: 300px; margin-left: auto; margin-right: auto; margin-top: 10px; color: white; background-color: black;">
+                <div>VR Build Date: <%= Me.AssemblyLastUpdatedDate%></div>
+                <div>Diamond System Date: <%= GetDiamondSystemDate() %></div>
+                <div>Server System Date: <%= Date.Now.ToShortDateString() %></div>
+                <div><%= GetCompanyId() %></div>
+            </div>
+        </div>
+
+        <asp:Panel ID="pnlLOBVersionFields" runat="server" style="display:none;"></asp:Panel>
+
+        <asp:ContentPlaceHolder ID="cphBodyScripts" runat="server">
+        </asp:ContentPlaceHolder>
+
+        <%--Must be here at the end of the page so it renders last--%>
+        <uc1:ctlValidationSummary runat="server" ID="ctlValidationSummary" />
+
+        <%--ctlPageStartupScript MUST BE LAST ITEM IN FORM TO ENSURE Its PRE-RENDER IS DONE AFTER ALL OTHERS OTHERWISE SCRIPTS WILL BE LOST--%>
+        <uc1:ctlPageStartupScript runat="server" ID="ctlPageStartupScript" />
+
+        <asp:HiddenField ID="hdnChangeSearchTypeAccordingToPageCurrentlyOn" Value="False" runat="server" />
+    </form>
+</body>
+</html>

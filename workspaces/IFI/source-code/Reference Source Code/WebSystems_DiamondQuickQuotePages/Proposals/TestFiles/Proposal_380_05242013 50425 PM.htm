@@ -1,0 +1,1120 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1"><meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    
+    <!--removed 2/25/2013-->
+    <link href="DiamondQuickQuoteStyles.css?dt=20130513" rel="stylesheet" type="text/css" /><!--added 2/22/2013-->
+    
+    <title>Diamond Quote Proposal</title>
+<script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
+    <reference path="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2-vsdoc.js"/>
+    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.9.0/jquery-ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.9.0/themes/smoothness/jquery-ui.css" />
+    <script type="text/javascript" src="js/CGL-general.js"></script>    
+    <link rel="stylesheet" type="text/css" href="Styles/CGLStyle.css" />
+     <link rel="stylesheet" type="text/css" href="Styles/Vr_NearMono.css" />
+     <!--[if lt IE 9]>
+	    <link rel="stylesheet" type="text/css" href="Styles/Vr_NearMono_Legacy.css" />
+    <![endif]-->
+    
+    <!--[if gte IE 9]>
+        <link rel="stylesheet" type="text/css" href="Styles/Vr_NearMono_IE_9_Only.css" />
+    <![endif]-->
+    <script type="text/javascript">
+        //changed = to #; need Page.Header.DataBind() on Page_Load
+        var hdnPdfFilePath = 'Application_hdnPdfFilePath';
+        var pdfButtonArea = 'Application_pdfButtonArea';
+
+//        function openPdf() {
+//            if (document.getElementById(hdnPdfFilePath)) {
+//                var PdfFilePath = document.getElementById(hdnPdfFilePath).value;
+//                if (PdfFilePath == (0 || "0" || "")) {
+//                    return;
+//                } else {
+//                    if (UrlExists(PdfFilePath)) {
+//                        //if (fileExists(PdfFilePath)) {
+//                        window.open(PdfFilePath);
+//                    } else {
+//                        return;
+//                    }
+//                }
+//            }
+//        }
+        function openPdf() {
+            if (document.getElementById(pdfButtonArea)) {
+                if (document.getElementById(hdnPdfFilePath)) {
+                    var PdfFilePath = document.getElementById(hdnPdfFilePath).value;
+                    if (PdfFilePath == (0 || "0" || "")) {
+                        return;
+                    } else {
+                        if (UrlExists(PdfFilePath)) {
+                            //if (fileExists(PdfFilePath)) {
+                            //window.open(PdfFilePath);
+                            document.getElementById(pdfButtonArea).style.display = "table";
+                        } else {
+                            return;
+                        }
+                    }
+                }                
+            }
+        }
+        function openPdfWindow() {
+            if (document.getElementById(hdnPdfFilePath)) {
+                var PdfFilePath = document.getElementById(hdnPdfFilePath).value;
+                if (PdfFilePath == (0 || "0" || "")) {
+                    return;
+                } else {
+                    if (UrlExists(PdfFilePath)) {
+                        //if (fileExists(PdfFilePath)) {
+                        window.open(PdfFilePath);
+                    } else {
+                        return;
+                    }
+                }
+            }
+        }
+
+        function UrlExists(url) {
+            var http = new XMLHttpRequest();
+            http.open('HEAD', url, false);
+            http.send();
+            return http.status != 404;
+        }
+        function fileExists(url) {
+            if (url) {
+                var req = new XMLHttpRequest();
+                req.open('GET', url, false);
+                req.send();
+                return req.status == 200;
+            } else {
+                return false;
+            }
+        }
+    </script>
+       
+
+<title>
+
+</title></head>
+<body id="bodytag" onkeydown="if(event.keyCode==8 &amp;&amp; !event.srcElement.value) {window.event.returnValue=false;}">
+    <center><form method="post" action="DiamondQuoteProposal.aspx?PrinterFriendlyQuoteIds=380" id="form1" class="formPortal" style="background-color:White;">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJMjkwODAyODYwD2QWAmYPZBYEAgEPZBYCAgQPZBYCZg8VAhpBcHBsaWNhdGlvbl9oZG5QZGZGaWxlUGF0aBlBcHBsaWNhdGlvbl9wZGZCdXR0b25BcmVhZAIDD2QWAgIBD2QWAgIDD2QWAmYPZBYCAgEPZBYIZg9kFgICAQ8WAh4Dc3JjBSF+L2ltYWdlcy9JRk1JbnRyYW5ldExvZ28tMjAxMy5qcGdkAgIPZBYEAgEPFgIfAAUhfi9pbWFnZXMvSUZNSW50cmFuZXRMb2dvLTIwMTMuanBnZAIJD2QWAgIBDw8WAh4EVGV4dAUWVHVlc2RheSwgSnVseSAyMywgMjAxM2RkAgQPZBYCAgIPZBYEAgcPZBYCAgEPDxYCHhF2c191c2VQb2xpY3lMZXZlbGdkFgICAQ9kFgRmD2QWAmYPFQMrNTAwMTcgLSBBQlJBU0lWRVMgT1IgQUJSQVNJVkUgUFJPRFVDVFMgTUZHLgYxMCwwMDADJDQxZAIBD2QWAmYPFQMSNTE3NDEgLSBDQU5ETEUgTUZHBjIwLDAwMAQkMTI0ZAIJD2QWAmYPZBYCZg9kFgICAw9kFgICAQ9kFgRmD2QWAmYPFQMbOTY2MTEgLSBJTlRFUklPUiBERUNPUkFUT1JTBTUsMDAwAyQ2MGQCAQ9kFgJmDxUDHDU3OTk3IC0gUEhPVE8gRklOSVNISU5HIExBQlMGMzAsMDAwAyQxMmQCBw9kFgICbQ9kFgICAQ8PFgIfAQUWVHVlc2RheSwgSnVseSAyMywgMjAxM2RkZJjmBsKeM2IBYrwaRHzpyJcTsN3qkMTcSXsNWCgv3inZ" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['form1'];
+if (!theForm) {
+    theForm = document.form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/DiamondQuickQuotePages/WebResource.axd?d=u887Y-RtjN6KujGy3R3tUXz_z_Hl54yDqQpreccowWaa0MxAjg-Qxd7GGbJV5cfdXllVVRvVO4FSqGiglxYuqV64DD5E4JebGKqrHbtJ_bM1&amp;t=634932981206998849" type="text/javascript"></script>
+
+
+<script src="/DiamondQuickQuotePages/ScriptResource.axd?d=16CEusuU3nHri2LWCUwchyPs2mB0UbL0XP85YDXE-bl4YEIcDdRsWduns28uli1Y3nrz2nFYx7S6mOuDW1gsgVMI400j7NycO5VSzQNEMv68D2HynrOsSBrNYLKV4NjK2SaBOAiYSAchBwAC__aRT05oP_RC7XjO8pVVqUfW22EZU1k6dwZuP7eeKQD4GwyB0&amp;t=ffffffff940d030f" type="text/javascript"></script>
+<script type="text/javascript">
+//<![CDATA[
+if (typeof(Sys) === 'undefined') throw new Error('ASP.NET Ajax client-side framework failed to load.');
+//]]>
+</script>
+
+<script src="/DiamondQuickQuotePages/ScriptResource.axd?d=guuRAlqt2ihKRDUh0I7M6hODvrw1umW4iun4p9DABtkcHF-FKUcRjo6jMpF9I1-QD7LDi7z24XjeNtAXiWPZ1TQt0ZlppagiXobd12Jpzac0wG9YDgrniDPRzC3lsK5eAn8EmzAltI5GR5XaKDPyQ3grPChZDaRH9ARvLU_iMisoitJ_-r6llKTh8uVji_M-0&amp;t=ffffffff940d030f" type="text/javascript"></script>
+    <script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ctl00$ScriptManager1', 'form1', [], [], [], 90, 'ctl00');
+//]]>
+</script>
+
+    
+    <table class="layout" cellspacing="0" align="center" width="100%">
+            <tr>
+                <td valign="top" align="left">
+                    <div id="app" class="applicationPortal">
+
+<div class="tableField" style="width:900px; margin-left:auto; margin-right:auto;">
+
+
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td align="left">
+            <img src="images/IFMIntranetLogo-2013.jpg" id="Application_ctl00_HeaderLogo" class="QuickQuoteProposalHeaderLogo" />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+        </td>
+    </tr>
+    <tr style="border-top: 2px solid black; border-bottom: 2px solid black; border-left: 2px solid black; border-right: 2px solid black;">
+        <td align="center">
+            <br />
+            <span class="tableRowHeaderLarger">Commercial Insurance Proposal</span>
+            <br />
+            <br />
+            <br />
+            <span class="tableRowHeader">Prepared For:</span>
+            <br />
+            <span id="Application_ctl00_lblClientInfo" class="tableFieldHeader">DON TEST DBA (PH)<br />123 TEST STREET<br />INDIANAPOLIS, IN 46227-0000</span>
+            <br />
+            <br />
+            <span id="Application_ctl00_lblDateText">Friday, May 24, 2013</span>
+            <br /><br />
+        </td>
+    </tr>
+    <tr>
+        
+        <td align="center">
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <span id="Application_ctl00_lblAgencyInfo" class="tableFieldHeader">BREWTON INSURANCE AGENCY, INC. <br />BREWTON INSURANCE<br />21797 OMEGA COURT<br />GOSHEN, IN 46528-0000<br />(574)875-8506</span>            
+        </td>
+    </tr>
+    <tr>
+        <td align="center">
+            <br />
+            <br />
+            <span id="Application_ctl00_lblLogo"><img src="http://ifmwebtest/AgentsOnly/images/QuickQuoteProposal/Logo_1840.jpg" class="QuickQuoteProposalAgencyLogoSection" /></span>
+        </td>
+    </tr>
+</table>
+<br /><span><div class="page-break"></div><div class="page-break-section"></div></span>
+
+<br />
+<div class="tableField">
+<img src="images/IFMIntranetLogo-2013.jpg" id="Application_ctl02_HeaderLogo" class="QuickQuoteProposalHeaderLogo" />
+<br />
+<br />
+<p width="100%" align="center" class="tableRowHeaderLarger">
+    Commercial Insurance Quote Summary
+</p>
+
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td width="50%" valign="top">
+            <span id="Application_ctl02_VRProposal_ClientAndAgencyInfo1_lblClientInfo">DON TEST DBA (PH)<br />123 TEST STREET<br />INDIANAPOLIS, IN 46227-0000</span>
+        </td>
+        <td width="50%" valign="top">
+            <span id="Application_ctl02_VRProposal_ClientAndAgencyInfo1_lblAgencyInfo">BREWTON INSURANCE AGENCY, INC. <br />BREWTON INSURANCE<br />21797 OMEGA COURT<br />GOSHEN, IN 46528-0000<br />(574)875-8506</span>
+        </td>
+    </tr>
+</table>
+<br />
+<p width="100%" align="center" class="tableRowHeader">
+    Total Quote Premiums
+</p>
+
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td colspan="2" class="tableFieldHeaderLarger">
+            Commercial Policy Package - <span id="Application_ctl02_ctl00_lblQuoteNumber">QCPP012107</span>
+        </td>
+    </tr>
+    
+    <tr>
+        <td colspan="2" align="center">
+            <table width="100%" class="quickQuoteSectionTable">
+                <tr>
+                    <td align="left" colspan="2" class="tableFieldHeader">
+                        Commercial Property
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Building Coverage
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblBuildingPremium">$2,244.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Personal Property Coverage
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblPersPropPremium">$2,044.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Personal Property Of Others
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblPersPropOfOthersPremium">$2,880.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Business Income Coverage
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblBusIncPremium">$2,228.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Property in the Open
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblPropInTheOpenPremium">$0.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Enhancement Endorsement
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblEnhEndPremium">$150.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Equipment Breakdown
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblEbPremium">$530.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Earthquake
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblEqPremium">$433.00</span>
+                    </td>
+                </tr>
+                <tr style="border-top: 1px solid black;">
+                    <td align="left" class="tableFieldValue">
+                        Property Total Premium
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblCprPremium">$10,509.00</span>
+                    </td>
+                </tr>
+                
+                
+                <tr>
+                    <td colspan="2">&nbsp;</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    
+    
+    <tr>
+        <td colspan="2" align="center">
+            <table width="100%" class="quickQuoteSectionTable">
+                <tr>
+                    <td align="left" colspan="2" class="tableFieldHeader">
+                        Commercial General Liability
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Enhancement Endorsement
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblEnhEndPrem">$100.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Premises/Operations
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblPremOps">$105.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Products/Completed Operations
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblProdCompOps">$132.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Optional Coverages
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblOptCovs">$850.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Amount to Equal Minimum Premium (Premises) - (<span id="Application_ctl02_ctl00_lblMinPrem_Prem">$225.00</span>)
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblAmtForMinPrem_Prem">$120.00</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="left" class="tableFieldValue">
+                        Amount to Equal Minimum Premium (Products) - (<span id="Application_ctl02_ctl00_lblMinPrem_Prod">$340.00</span>)
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblAmtForMinPrem_Prod">$208.00</span>
+                    </td>
+                </tr>
+                <tr style="border-top: 1px solid black;">
+                    <td align="left" class="tableFieldValue">
+                        General Liability Total Premium
+                    </td>
+                    <td align="right" class="tableFieldValue">
+                        <span id="Application_ctl02_ctl00_lblCglPremium">$1,515.00</span>
+                    </td>
+                </tr>
+                
+                
+                <tr>
+                    <td colspan="2">&nbsp;</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    
+    <tr style="border-top: 1px solid black;">
+        <td class="tableFieldHeader">
+            Total Package Premium Due
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl02_ctl00_lblTotalPremium">$12,024.00</span>
+        </td>
+    </tr>
+</table>
+<br />
+
+</div>
+<p width="100%" align="center" class="tableRowHeader">
+    Total Combined Premium:  <span id="Application_ctl02_lblCombinedPremium">$12,024.00</span>
+</p>
+
+
+<br />
+<div class="tableField">
+
+    <div class="DisclaimerHolder"><div class="QuickQuoteProposalDisclaimer">
+        <ul>
+            <li>This quotation has been developed based on the information provided to Indiana Farmers Mutual Insurance Company and does not bind or provide actual coverage. It is subject to final underwriting approval, acceptable loss experience and favorable loss control inspection.</li>
+            <li>This quotation is valid for 60 days, until <span id="Application_ctl02_VRProposal_Disclaimer1_lblValidQuoteDate">Tuesday, July 23, 2013</span></li>
+            <li>Additional coverages, exposures, or increased limits may be added for additional premium.</li>
+        </ul>
+    </div></div>
+</div>
+<br />
+<br /><span><div class="page-break"></div><div class="page-break-section"></div></span>
+
+<div style="text-align:left">
+<div class="p_ControlTitle" style="width:100%; text-align:center; margin-bottom: 15px;">
+    <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_lblLob">CPP - Property</span>
+    </div>
+
+
+
+
+<div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+        <table class="basictbl" style="margin-top: 15px;" >
+<tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_General_Control1_tr2" style="border-bottom: 1px solid black;">
+	<td class="p_ListHead">
+            General</td>
+	<td class="p_ListHead" style="width:120px; text-align:right;">
+               Premium
+            </td>
+</tr>
+
+    
+            <tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_General_Control1_trEquipment">
+	<td>
+            Equipment Breakdown</td>
+	<td style="width:120px; text-align:right;">
+                <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_General_Control1_lblEquipmentBreak">$530</span>
+            </td>
+</tr>
+
+            <tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_General_Control1_trsum" style="border-top: 1px solid black;font-weight:bold;">
+	<td>
+            Total</td>
+	<td style="width:120px; text-align:right;">
+                <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_General_Control1_lblSum">$530</span>
+            </td>
+</tr>
+
+    </table>
+    </div>
+
+<div id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_pnlLocations">
+	<div id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_pnlBuildings">
+		
+
+<div>
+
+    <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblLocationTitle" class="p_SectionHead">Location #1, Building #1 - 123 TEST STREET,INDIANAPOLIS, IN 46227</span>
+    <div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+        <table class="basictbl" style="margin-top: 15px;" >
+<tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_tr2" style="border-bottom: 1px solid black;">
+			<td class="p_ListHead">
+            Coverage</td>
+			<td class="p_ListHead" style="width:180px; text-align:right;">
+            Cause of Loss</td>
+			<td class="p_ListHead" style="width:180px; text-align:right;">
+            Valuation</td>
+			<td class="p_ListHead" style="width:120px; text-align:right;">
+            Coinsurance</td>
+		</tr>
+		
+    <tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_trBuildingCov">
+			<td> Building</td>
+			<td style="text-align:right;">
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBuildingCause">Broad Form</span>
+        </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBuildingVal">Replacement Cost</span>
+    </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBuildingCoIn">60%</span>
+    </td>
+		</tr>
+		
+    <tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_trBICov">
+			<td> Business Income</td>
+			<td style="text-align:right;">
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBICause">Basic Form</span>
+        </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBIVal">n/a</span>
+    </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBICoIn">n/a</span>
+    </td>
+		</tr>
+		
+    <tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_trPPCov">
+			<td> Personal Property</td>
+			<td style=" text-align:right;">
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPCause">Special Form Including Theft</span>
+        </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPVal">Replacement Cost</span>
+    </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPCoIn">70%</span>
+    </td>
+		</tr>
+		
+    <tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_trPPOCov">
+			<td> Personal Property of Others</td>
+			<td style=" text-align:right;">
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPOCause">Special Form Excluding Theft</span>
+        </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPOVal">Functional Replacement Cost</span>
+    </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPOCoIn">80%</span>
+    </td>
+		</tr>
+		
+
+    </table>
+
+     <table class="basictbl" style="margin-top: 15px;" >
+<tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_tr1" style="border-bottom: 1px solid black;">
+			<td class="p_ListHead">
+            Coverage</td>
+			<td class="p_ListHead" style="width:120px; text-align:right;">
+            Limit</td>
+			<td class="p_ListHead" style="width:180px; text-align:right;">
+            Deductible</td>
+			<td class="p_ListHead" style="width:120px; text-align:right;">
+            Premium</td>
+		</tr>
+		
+    <tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_trBuildingCovDetails">
+			<td> Building</td>
+			<td style="width:120px; text-align:right;">
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBuildingLimit">$120,000</span>
+        </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBuildingDeduc">$500</span>
+    </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBuildingPrem">$2,270</span>
+    </td>
+		</tr>
+		
+    <tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_trBICovDetails">
+			<td> Business Income</td>
+			<td style="width:120px; text-align:right;">
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBILimit">$117,000</span>
+        </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBIDeduc">n/a</span>
+    </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovBIPrem">$2,254</span>
+    </td>
+		</tr>
+		
+
+    <tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_trPPCovDetails">
+			<td> Personal Property</td>
+			<td style="width:120px; text-align:right;">
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPLimit">$110,000</span>
+        </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPDeduc">$2,500</span>
+    </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPPrem">$2,221</span>
+    </td>
+		</tr>
+		
+
+    <tr id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_trPPOCovDetails">
+			<td> Personal Property of Others</td>
+			<td style="width:120px; text-align:right;">
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPOLimit">$127,000</span>
+        </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPODeduc">$5,000</span>
+    </td>
+			<td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblCovPPOPrem">$3,084</span>
+    </td>
+		</tr>
+		
+
+    <tr style="border-top: 1px solid black;font-weight:bold;">
+    <td> Total</td>
+    <td style="width:120px; text-align:right;"></td>
+    <td style="width:120px; text-align:right;">        
+    </td>    
+    <td style="width:120px; text-align:right;">        
+        <span id="Application_ctl04_Velocirater_Proposal_CPR_Control1_VR_Proposal_CPR_Location_List_Control1_ctl00_ctl00_lblTotalPrem">$9,829</span>
+    </td>    
+    </tr>
+    </table>
+
+
+        </div>
+</div>
+
+
+	</div>
+
+
+
+
+
+</div>
+
+
+
+
+    </div>
+
+
+
+
+
+
+    <div class="page-break"></div>
+    <div class="page-break-section"></div>
+
+
+
+
+<div style="text-align:left">
+<div class="p_ControlTitle" style="width:100%; text-align:center; margin-bottom: 15px;">
+    <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_lblLob">CPP - General Liability</span></div>
+
+
+
+
+<table class="basictbl" style="margin-bottom:15px;">
+    <tr>
+        <td class="formStandardLeftWidth ">
+            General Aggregate</td>
+        <td class="tblcellLeftSide">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_General_Control1_lblGenAgg">$1,000,000</span>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Products/completed Operations</td>
+        <td class="tblcellLeftSide">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_General_Control1_lblProducts">$1,000,000</span>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Personal and Adverting Inquiry</td>
+        <td class="tblcellLeftSide">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_General_Control1_lblPersonal">$500,000</span>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Occurrence Liability Limit</td>
+        <td class="tblcellLeftSide">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_General_Control1_lblOccurrence">$500,000</span>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Damages to Premises Rented to Others</td>
+        <td class="tblcellLeftSide">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_General_Control1_lblDamages">$100,000</span>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Medical Expenses</td>
+        <td class="tblcellLeftSide">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_General_Control1_lblmedical">$5,000</span>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+</table>
+
+
+
+    
+<div style="text-align:left">
+<span class="p_SectionHead">Policy Coverages</span>
+<div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+<table class="basictbl">
+<tr id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_tr1" style="border-bottom: 1px solid black;">
+	<td class="p_ListHead">
+            Coverage</td>
+	<td class="p_ListHead" style="width:190px; text-align:right;">
+            Detail</td>
+	<td class="p_ListHead" style="width:120px; text-align:right;">
+            Premium</td>
+</tr>
+
+    <tr id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_trAdditionalInsured">
+	<td>
+            Additional Insured</td>
+	<td style="width:120px; text-align:right;">
+            n/a</td>
+	<td style="width:120px; text-align:right;">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_lblAdditionalInsuredSum">$85</span></td>
+</tr>
+
+    <tr id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_trEmployeeBenifits">
+	<td>
+            Employee Benefits Liability</td>
+	<td style="width:120px; text-align:right;">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_lblNumEmployees">5 Employees</span></td>
+	<td style="width:120px; text-align:right;">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_lblEmployeeBenifitsSum">$150</span></td>
+</tr>
+
+    <tr id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_trLiquor">
+	<td>
+           Liquor Liability</td>
+	<td style="width:120px; text-align:right;">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_lblLiquorSales">Sales of $30,000</span></td>
+	<td style="width:120px; text-align:right;">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_lblLiquorSum">$250</span></td>
+</tr>
+
+    <tr id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_trProfessional">
+	<td style="vertical-align: middle">
+           Professional Liability</td>
+	<td style="width:120px; text-align:right;">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_lblBodies">100 Burials, 200 Bodies, 5 Clergy</span>
+        </td>
+	<td style="width:120px; text-align:right;">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_lblProfessionalSum">$295</span></td>
+</tr>
+
+         
+    <tr style="border-top: 1px solid black;font-weight:bold" >
+    <td> Total</td>
+    <td style="width:120px; text-align:right;"></td>
+    <td style="width:120px; text-align:right;">
+        <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_lblPolicyCoverageTotals">$535</span>
+    </td>
+    </tr>
+</table>
+
+<table id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_tblAdditionalCharges" class="basictbl" style="margin-top: 15px;">
+	<tr id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_tr2" style="border-bottom: 1px solid black;">
+		<td class="p_ListHead">
+            Description</td>
+		<td class="p_ListHead" style="width:120px; text-align:right;">
+            Detail</td>
+		<td class="p_ListHead" style="width:120px; text-align:right;">
+            Premium</td>
+	</tr>
+	<tr id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_trMiscCharges">
+		<td style="vertical-align: middle">
+           Additional Charges/Fees</td>
+		<td style="width:120px; text-align:right;">
+            
+            n/a
+            
+        </td>
+		<td style="width:120px; text-align:right; font-weight:bold;">
+            <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Coverages_Control1_lblMiscCharges">$743.00</span>
+         </td>
+	</tr>
+</table>
+
+
+</div>
+</div>
+
+
+    
+
+
+    <span class="p_SectionHead">Policy Classifications</span>
+<br />
+<div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+    
+
+  <table class="basictbl">
+      <tr style="border-bottom:1px solid black;">
+      <td class="p_ListHead">
+      Classification
+      </td>
+      <td class="p_ListHead" style="text-align:right;width: 120px;">
+      Exposure
+      </td>
+      <td class="p_ListHead" style="text-align:right; width: 120px;">
+      Premium
+      </td>
+      </tr>
+          
+          <tr>
+            <td>50017 - ABRASIVES OR ABRASIVE PRODUCTS MFG.</td>
+            <td style="text-align:right">10,000</td>
+            <td style="text-align:right">$41</td>
+          </tr>
+          
+          <tr>
+            <td>51741 - CANDLE MFG</td>
+            <td style="text-align:right">20,000</td>
+            <td style="text-align:right">$124</td>
+          </tr>
+          
+
+      <tr style="border-top: 1px solid black; font-weight:bold">
+      <td colspan="2" style="text-align: left">Total</td>
+      <td style="text-align:right">
+          <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_Policy_Classification_Control1_VR_Proposal_CGL_ClassificationControl1_lblTotal">$165</span></td>
+      </tr>
+      </table>
+</div>
+
+
+    
+<div id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_LocationListControl1_pnlLocations" style="width:100%;">
+	
+
+<div>
+
+    <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_LocationListControl1_ctl00_lblLocationTitle" class="p_SectionHead">Location #1 - 123 TEST STREET,INDIANAPOLIS, IN 46227</span>
+    <div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+        
+
+  <table class="basictbl">
+      <tr style="border-bottom:1px solid black;">
+      <td class="p_ListHead">
+      Classification
+      </td>
+      <td class="p_ListHead" style="text-align:right;width: 120px;">
+      Exposure
+      </td>
+      <td class="p_ListHead" style="text-align:right; width: 120px;">
+      Premium
+      </td>
+      </tr>
+          
+          <tr>
+            <td>96611 - INTERIOR DECORATORS</td>
+            <td style="text-align:right">5,000</td>
+            <td style="text-align:right">$60</td>
+          </tr>
+          
+          <tr>
+            <td>57997 - PHOTO FINISHING LABS</td>
+            <td style="text-align:right">30,000</td>
+            <td style="text-align:right">$12</td>
+          </tr>
+          
+
+      <tr style="border-top: 1px solid black; font-weight:bold">
+      <td colspan="2" style="text-align: left">Total</td>
+      <td style="text-align:right">
+          <span id="Application_ctl04_Velocirater_Proposal_CGL_Control1_VR_Proposal_CGL_LocationListControl1_ctl00_VR_Proposal_CGL_ClassificationControl1_lblTotal">$72</span></td>
+      </tr>
+      </table>
+        </div>
+</div>
+</div>
+
+
+
+    
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<span><div class="page-break"></div><div class="page-break-section"></div></span>
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td width="50%" valign="top">
+            <span id="Application_ctl06_lblClientInfo">DON TEST DBA (PH)<br />123 TEST STREET<br />INDIANAPOLIS, IN 46227-0000</span>
+        </td>
+        <td width="50%" valign="top">
+            <span id="Application_ctl06_lblAgencyInfo">BREWTON INSURANCE AGENCY, INC. <br />BREWTON INSURANCE<br />21797 OMEGA COURT<br />GOSHEN, IN 46528-0000<br />(574)875-8506</span>
+        </td>
+    </tr>
+</table>
+<br />
+
+<br />
+<p width="100%" align="center" class="tableRowHeader">
+    Payment Schedule
+</p>
+<table width="100%" class="quickQuoteSectionTable">
+    <tr style="border-bottom: 1px solid black;">
+        <td class="tableFieldHeader">
+            <b>Plan</b>
+        </td>
+        
+        
+        <td class="tableFieldHeader">
+            <b>Down Payment</b>
+        </td>
+        
+        <td class="tableFieldHeader">
+            <b>Remaining Installments</b>
+        </td>
+        
+        <td class="tableFieldHeader">
+            <b>Installment Amount</b>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct/Agent Bill Annual
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblAnnual_BasicDownPayment">$12,024.00</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblAnnual_RemainingInstallments">N/A</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblAnnual_BasicInstallmentAmount">N/A</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct/Agent Bill Semi Annual
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblSemiAnnual_BasicDownPayment">$6,012.00</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblSemiAnnual_RemainingInstallments">1</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblSemiAnnual_BasicInstallmentAmount">$6,012.00</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct/Agent Bill Quarterly
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblQuarterly_BasicDownPayment">$3,006.00</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblQuarterly_RemainingInstallments">3</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblQuarterly_BasicInstallmentAmount">$3,006.00</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct Bill Monthly
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblMonthly_BasicDownPayment">$1,002.00</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblMonthly_RemainingInstallments">11</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblMonthly_BasicInstallmentAmount">$1,005.00</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            EFT Monthly
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblEftMonthly_BasicDownPayment">$1,002.00</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblEftMonthly_RemainingInstallments">11</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl07_lblEftMonthly_BasicInstallmentAmount">$1,002.00</span>
+        </td>
+        
+    </tr>
+    
+    
+    
+    
+</table>
+<br />
+<br />
+
+<br />
+<div class="tableField">
+
+    <div class="DisclaimerHolder"><div class="QuickQuoteProposalDisclaimer">
+        <ul>
+            <li>This quotation has been developed based on the information provided to Indiana Farmers Mutual Insurance Company and does not bind or provide actual coverage. It is subject to final underwriting approval, acceptable loss experience and favorable loss control inspection.</li>
+            <li>This quotation is valid for 60 days, until <span id="Application_ctl07_VRProposal_Disclaimer1_lblValidQuoteDate">Tuesday, July 23, 2013</span></li>
+            <li>Additional coverages, exposures, or increased limits may be added for additional premium.</li>
+        </ul>
+    </div></div>
+</div>
+<br />
+<br />
+
+<input name="ctl00$Application$hdnPdfFilePath" type="hidden" id="Application_hdnPdfFilePath" value="/DiamondQuickQuotePages/Proposals/Proposal_380_05242013 50425 PM.pdf" />
+<div id="Application_pdfButtonArea" style="display:none; width:100%;">
+<br />
+<center><input type="button" value="Open as PDF" onclick="openPdfWindow()" class="quickQuoteButton hideFromPrinter" /></center>
+</div>
+</div>
+</div>
+                </td>
+            </tr>                      
+        </table>
+    
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__SCROLLPOSITIONX" id="__SCROLLPOSITIONX" value="0" />
+	<input type="hidden" name="__SCROLLPOSITIONY" id="__SCROLLPOSITIONY" value="0" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEWAgLWwvniAQLCls/aBS08sILqAOCSq63ZYVao/d1xWYeFAOqK5ahyZZ+55mJt" />
+</div>
+<script language=JavaScript> openPdf();</script>
+<script type="text/javascript">
+//<![CDATA[
+
+theForm.oldSubmit = theForm.submit;
+theForm.submit = WebForm_SaveScrollPositionSubmit;
+
+theForm.oldOnSubmit = theForm.onsubmit;
+theForm.onsubmit = WebForm_SaveScrollPositionOnSubmit;
+//]]>
+</script>
+</form></center>
+</body>
+</html>

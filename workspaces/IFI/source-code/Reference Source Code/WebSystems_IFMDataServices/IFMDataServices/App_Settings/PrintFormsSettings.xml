@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<config>
+  <add key="PrintFormDescriptions_CharactersToMakeAsWildcards" value="&amp;,/" />
+  <add key="PrintForms_FormsToIgnore" value="ENOT-ADJINFO,ENOT-CLMNO,ENOT-CONTACT,ENOT-PMTPROC,ENOT-CALLADJ" /> <!-- Delimited by , -->
+</config>

@@ -1,0 +1,157 @@
+{
+  "ui_labels_hardcoded": {
+    "accordion_headers": [
+      {
+        "element": "lblWorkplacesAccordHeader.Text",
+        "default_text": "Workplace Addresses",
+        "dynamic_text": "Workplace Addresses ({count})",
+        "location": "Lines 60-63",
+        "content_type": "Dynamic header with count",
+        "data_source": "Quote.Locations.Count"
+      }
+    ]
+  },
+  "coverage_descriptions": {
+    "named_individual_coverage_types": [
+      {
+        "coverage_name": "Inclusion Of Sole Proprietors Partners Officers And Others",
+        "property_check": "HasInclusionOfSoleProprietorsPartnersOfficersAndOthers", 
+        "data_collection": "InclusionOfSoleProprietorRecords",
+        "state_scope": "Governing State",
+        "business_description": "Inclusion coverage for business owners and officers"
+      },
+      {
+        "coverage_name": "Waiver Of Subrogation",
+        "property_check": "HasWaiverOfSubrogation",
+        "data_collection": "WaiverOfSubrogationRecords", 
+        "state_scope": "Governing State",
+        "business_description": "Waiver of insurance company's subrogation rights"
+      },
+      {
+        "coverage_name": "Exclusion Of Amish Workers",
+        "property_check": "HasExclusionOfAmishWorkers",
+        "data_collection": "ExclusionOfAmishWorkerRecords",
+        "state_scope": "Indiana Only",
+        "business_description": "Religious exemption for Amish workers from WCP coverage"
+      },
+      {
+        "coverage_name": "Exclusion Of Sole Proprietors Partners Officers And Others",
+        "property_check": "HasExclusionOfSoleProprietorsPartnersOfficersAndOthers",
+        "data_collection": "ExclusionOfSoleProprietorRecords",
+        "state_scope": "Indiana or Kentucky", 
+        "business_description": "Exclusion of business owners and officers from coverage"
+      },
+      {
+        "coverage_name": "Exclusion Of Sole Proprietors Partners Officers And Others (Illinois)",
+        "property_check": "HasExclusionOfSoleProprietorsPartnersOfficersAndOthers_IL",
+        "data_collection": "ExclusionOfSoleProprietorRecords_IL",
+        "state_scope": "Illinois Only",
+        "effective_date_requirement": "IsMultistateCapableEffectiveDate",
+        "business_description": "Illinois-specific exclusion of business owners and officers"
+      },
+      {
+        "coverage_name": "Kentucky Rejection Of Coverage Endorsement", 
+        "property_check": "HasKentuckyRejectionOfCoverageEndorsement",
+        "data_collection": "KentuckyRejectionOfCoverageEndorsementRecords",
+        "state_scope": "Kentucky Only",
+        "effective_date_requirement": "KentuckyWCPEffectiveDate",
+        "business_description": "Kentucky-specific rejection endorsement for coverage"
+      }
+    ]
+  },
+  "validation_group_names": [
+    {
+      "group_name": "Application",
+      "location": "Line 314",
+      "usage": "Me.ValidationHelper.GroupName = \"Application\""
+    }
+  ],
+  "control_identifiers": {
+    "accordion_divs": [
+      "div_master_wcp_app",
+      "divWorkplacesList", 
+      "divWorkplaces",
+      "divNamedIndividuals",
+      "divInclOfSoleProprietersEtc",
+      "divWaiverOfSubro",
+      "divExclOfAmish", 
+      "divExclOfSoleOfficer",
+      "divExclOfSoleProprietorsEtc_IL",
+      "divRejectionOfCoverageEndorsement"
+    ],
+    "hidden_fields": [
+      "hdn_master_wcp_app",
+      "hdnAccordWorkplace",
+      "hdnAccordWorkplaceList", 
+      "hdnAccordNamedIndiv",
+      "hdnInclSoleProprieterList",
+      "hdnWaiverOfSubroList",
+      "hdnExclOfAmishList",
+      "hdnExclOfSoleOfficerList", 
+      "hdnExclOfSoleProprietorList_IL",
+      "hdnRejectionOfCoverageEndorsement"
+    ],
+    "repeaters": [
+      "rptInclOfSoleProprieters",
+      "rptWaiverOfSubro",
+      "rptExclOfAmish",
+      "rptExclOfSoleOfficer",
+      "rptExclOfSoleProprietorsEtc_IL", 
+      "rptRejectionOfCoverageEndorsement",
+      "rptWorkplaces"
+    ],
+    "child_controls": [
+      "ctl_NI_InclOfSoleProprietersEtc",
+      "ctl_NI_WaiverOfSubro",
+      "ctl_NI_ExclOfAmish",
+      "ctl_NI_ExclOfSoleOfficer",
+      "ctl_NI_ExclOfSoleProprietor_IL",
+      "ctl_NI_RejectionOfCoverageEndorsement",
+      "ctl_Workplaces",
+      "ctl_Esignature",
+      "ctlApp_Rate"
+    ]
+  },
+  "business_rule_text_embedded": [
+    {
+      "rule": "E-signature Feature Flag Check",
+      "code": "If Me.hasEsigOption = False Then ctl_Esignature.Visible = False",
+      "location": "Lines 25-27",
+      "business_logic": "Hide e-signature control if feature flag disabled"
+    },
+    {
+      "rule": "Initial Section Visibility",
+      "code": "divXXX.Attributes.Add(\"style\", \"display:none\")",
+      "location": "Lines 65-69",
+      "business_logic": "All Named Individual sections hidden by default, shown conditionally"
+    },
+    {
+      "rule": "Coverage Conditional Display",
+      "code": "divXXX.Attributes.Add(\"style\", \"display:''\")",
+      "business_logic": "Show coverage sections only when selected and state-eligible"
+    }
+  ],
+  "dynamic_content_sources": [
+    {
+      "content_type": "Coverage Records",
+      "source_pattern": "XXXQuote.YYYRecords", 
+      "examples": [
+        "govStateQuote.InclusionOfSoleProprietorRecords",
+        "GoverningStateQuote.WaiverOfSubrogationRecords",
+        "INQuote.ExclusionOfAmishWorkerRecords", 
+        "INQuote.ExclusionOfSoleProprietorRecords",
+        "KYQuote.ExclusionOfSoleProprietorRecords",
+        "ILQuote.ExclusionOfSoleProprietorRecords_IL",
+        "KYQuote.KentuckyRejectionOfCoverageEndorsementRecords"
+      ],
+      "content_status": "⚠️ In sub-quote objects - requires sub-quote data access",
+      "follow_up_needed": "Need to analyze sub-quote data structure and content"
+    },
+    {
+      "content_type": "Workplace Locations",
+      "source_pattern": "Quote.Locations",
+      "content_status": "⚠️ In main quote object - requires location data access",
+      "follow_up_needed": "Need to analyze Quote.Locations collection structure"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+﻿<%@ Page Language="vb" AutoEventWireup="false" MasterPageFile="~/VelociRater.Master" CodeBehind="VR3E2ValueReturn.aspx.vb" Inherits="IFM.VR.Web.VR3E2ValueReturn" %>
+
+<%@ Import Namespace="IFM.VR.Web" %>
+<%@ Register Src="~/User Controls/ctlTreeView.ascx" TagPrefix="uc1" TagName="ctlTreeView" %>
+
+<asp:Content ID="script" ContentPlaceHolderID="cphBodyScripts" runat="server">
+    <script src="<%=ResolveClientUrl("~/js/VrMiniClientSearch.js?dt=" + DirectCast(Me.Master, VelociRater).ScriptDT)%>"></script>
+    <script src="<%=ResolveClientUrl("~/js/VrProtectionClassLookup.js?dt=" + DirectCast(Me.Master, VelociRater).ScriptDT)%>"></script>
+</asp:Content>
+
+<asp:Content ID="cntMain" ContentPlaceHolderID="cphMain" runat="server">
+
+    <table style="width: 100%;">
+        <tr>
+            <td style="width: 250px; vertical-align: top;">
+                <uc1:ctlTreeView runat="server" ID="ctlTreeView" />
+            </td>
+            <td style="vertical-align: top;">
+                <div>
+                    <asp:Panel ID="pnlMain" runat="server">
+                        <asp:Label ID="lblMsg" runat="server" ForeColor="Red" Font-Bold="true" Text="E2Value Error Has Occured, Being Redirected Back To VelociRater"></asp:Label>
+                    </asp:Panel>
+                </div>
+            </td>
+        </tr>
+    </table>
+</asp:Content>

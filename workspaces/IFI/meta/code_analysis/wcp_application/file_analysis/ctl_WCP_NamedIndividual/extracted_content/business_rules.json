@@ -1,0 +1,165 @@
+{
+  "state_specific_business_rules": [
+    {
+      "rule_id": "inclusion_sole_proprietors_governing_state",
+      "rule_text": "Inclusion of Sole Proprietors records are stored on the Governing State Quote",
+      "location": "MyNamedIndividual property, lines 27-33",
+      "business_logic": "GoverningStateQuote.InclusionOfSoleProprietorRecords collection access",
+      "states_affected": ["Governing State"],
+      "rule_type": "data_storage_rule",
+      "code_comment": "Inclusion of Sole Proprietors - stored on Indiana Quote, updated 11/27/2018"
+    },
+    {
+      "rule_id": "waiver_subrogation_governing_state", 
+      "rule_text": "Waiver of Subrogation records are stored on the Governing State Quote",
+      "location": "MyNamedIndividual property, lines 34-40",
+      "business_logic": "GoverningStateQuote.WaiverOfSubrogationRecords collection access",
+      "states_affected": ["Governing State"],
+      "rule_type": "data_storage_rule",
+      "code_comment": "Waiver of Subro - Governing State"
+    },
+    {
+      "rule_id": "exclusion_amish_workers_indiana",
+      "rule_text": "Exclusion of Amish Workers records are stored specifically on the Indiana Quote",
+      "location": "MyNamedIndividual property, lines 41-49",
+      "business_logic": "SubQuoteForState(QuickQuoteState.Indiana).ExclusionOfAmishWorkerRecords",
+      "states_affected": ["Indiana"],
+      "rule_type": "state_specific_data_storage",
+      "code_comment": "Exclusion of Amish Workers - stored on Indiana Quote, updated 11/27/2018"
+    },
+    {
+      "rule_id": "exclusion_sole_officer_indiana_kentucky",
+      "rule_text": "Exclusion of Sole Officer records are stored on Indiana Quote first, fallback to Kentucky Quote",
+      "location": "MyNamedIndividual property, lines 50-61",
+      "business_logic": "Try Indiana first, then Kentucky for ExclusionOfSoleProprietorRecords",
+      "states_affected": ["Indiana", "Kentucky"],
+      "rule_type": "multi_state_fallback_rule",
+      "code_comment": "Exclusion of Sole Officer - stored on Indiana and Kentucky Quotes, updated 11/27/2018"
+    },
+    {
+      "rule_id": "exclusion_sole_proprietor_illinois",
+      "rule_text": "Illinois-specific Exclusion of Sole Proprietor records use separate collection",
+      "location": "MyNamedIndividual property, lines 62-68",
+      "business_logic": "SubQuoteForState(QuickQuoteState.Illinois).ExclusionOfSoleProprietorRecords_IL",
+      "states_affected": ["Illinois"],
+      "rule_type": "state_specific_data_storage",
+      "code_comment": "added 11/27/2018"
+    },
+    {
+      "rule_id": "rejection_coverage_endorsement_kentucky",
+      "rule_text": "Rejection of Coverage Endorsement records are Kentucky-specific",
+      "location": "MyNamedIndividual property, lines 69-75",
+      "business_logic": "SubQuoteForState(QuickQuoteState.Kentucky).KentuckyRejectionOfCoverageEndorsementRecords",
+      "states_affected": ["Kentucky"],
+      "rule_type": "state_specific_data_storage",
+      "code_comment": "added 5-2-2019 MGB"
+    }
+  ],
+  "validation_business_rules": [
+    {
+      "rule_id": "inclusion_type_required",
+      "rule_text": "Type selection is mandatory for Inclusion of Sole Proprietors",
+      "location": "ValidateControl method, lines 313-316",
+      "business_logic": "If NIType = InclusionOfSoleProprietersEtc AND ddlType.SelectedIndex < 0, show 'Missing Type' error",
+      "applies_to": ["InclusionOfSoleProprietersEtc"],
+      "rule_type": "conditional_field_validation",
+      "enforcement": "UI validation before save"
+    },
+    {
+      "rule_id": "name_always_required",
+      "rule_text": "Name field is required for all Named Individual types",
+      "location": "ValidateControl method, lines 327-329", 
+      "business_logic": "If txtName.Text.Trim = '', show 'Missing Name' error",
+      "applies_to": ["All NITypes"],
+      "rule_type": "universal_field_validation",
+      "enforcement": "UI validation before save"
+    },
+    {
+      "rule_id": "other_types_no_type_validation",
+      "rule_text": "All NITypes except InclusionOfSoleProprietersEtc do not require type selection",
+      "location": "ValidateControl method, conditional logic",
+      "business_logic": "Only InclusionOfSoleProprietersEtc validates ddlType field",
+      "applies_to": ["WaiverOfSubrogation", "ExclusionOfAmishWorkers", "ExclusionOfSoleOfficer", "ExclusionOfSoleProprietor_IL", "RejectionOfCoverageEndorsement"],
+      "rule_type": "type_specific_validation_exemption",
+      "enforcement": "Validation logic exclusion"
+    }
+  ],
+  "ui_display_business_rules": [
+    {
+      "rule_id": "type_row_display_logic",
+      "rule_text": "Type selection row only displays for Inclusion of Sole Proprietors",
+      "location": "SetControlType method, lines 108-110",
+      "business_logic": "trTypeRow and trInfoRow visible only when NIType = InclusionOfSoleProprietersEtc",
+      "applies_to": ["InclusionOfSoleProprietersEtc"],
+      "rule_type": "conditional_ui_display",
+      "default_behavior": "Hidden for all other types"
+    },
+    {
+      "rule_id": "default_dropdown_selection",
+      "rule_text": "Default type selection is 'Sole Proprietor' (value 7)",
+      "location": "Populate method, line 164",
+      "business_logic": "ddlType.SelectedValue = '7' during population",
+      "applies_to": ["InclusionOfSoleProprietersEtc"],
+      "rule_type": "default_value_assignment",
+      "business_purpose": "Most common selection for inclusion type"
+    }
+  ],
+  "data_population_business_rules": [
+    {
+      "rule_id": "name_placeholder_handling",
+      "rule_text": "Default placeholder names should be cleared from display",
+      "location": "Populate method, multiple locations",
+      "business_logic": "If DisplayName contains 'INCLUSION NAME', 'EXCLUSION NAME', or 'REJECTION NAME', clear txtName.Text",
+      "applies_to": ["All NITypes with placeholder names"],
+      "rule_type": "placeholder_name_filtering",
+      "placeholder_patterns": ["INCLUSION NAME", "EXCLUSION NAME", "REJECTION NAME"]
+    },
+    {
+      "rule_id": "name_type_id_standardization",
+      "rule_text": "All Named Individual names use TypeId = '2' (Commercial Name type)",
+      "location": "Save method, multiple case statements",
+      "business_logic": "NI.Name.TypeId = '2' for all NITypes",
+      "applies_to": ["All NITypes"],
+      "rule_type": "data_standardization",
+      "business_purpose": "Consistent name type classification"
+    },
+    {
+      "rule_id": "commercial_name_assignment",
+      "rule_text": "Named Individual names are stored in CommercialName1 field",
+      "location": "Save method, multiple case statements", 
+      "business_logic": "NI.Name.CommercialName1 = txtName.Text for all NITypes",
+      "applies_to": ["All NITypes"],
+      "rule_type": "data_field_mapping",
+      "business_purpose": "Standard field for commercial entity names"
+    }
+  ],
+  "collection_management_rules": [
+    {
+      "rule_id": "collection_initialization",
+      "rule_text": "Collections must be initialized before adding new records",
+      "location": "lnkNew_Click method, multiple case statements",
+      "business_logic": "If collection Is Nothing Then collection = New List(Of RecordType)",
+      "applies_to": ["All NITypes"],
+      "rule_type": "null_safety_pattern",
+      "enforcement": "Before AddNew() operations"
+    },
+    {
+      "rule_id": "save_populate_sequence",
+      "rule_text": "New record creation follows Save-Populate-Save sequence",
+      "location": "lnkNew_Click method, multiple case statements",
+      "business_logic": "AddNew() → Save_FireSaveEvent(False) → Populate_FirePopulateEvent() → Save_FireSaveEvent(False)",
+      "applies_to": ["All NITypes"],
+      "rule_type": "workflow_sequence",
+      "business_purpose": "Ensure proper data persistence and UI refresh"
+    },
+    {
+      "rule_id": "accordion_activation_after_crud",
+      "rule_text": "Accordion must be reactivated after create/delete operations",
+      "location": "lnkNew_Click and lnkDelete_Click methods",
+      "business_logic": "RaiseEvent ChangeNIActiveAccordion(NIType, Index) after operations",
+      "applies_to": ["All NITypes"],
+      "rule_type": "ui_state_management",
+      "business_purpose": "Keep user focused on active accordion after changes"
+    }
+  ]
+}

@@ -1,0 +1,837 @@
+﻿/*--2/11/2013--changed all Verdana fonts to Calibri; also did testing w/ style="border-collapse:separate;" and style="border-collapse:collapse;"*/
+/*--2/13/2013--created table styles (added more 2/14/2013)*/
+/*--2/14/2013--add 2 pts to each font-size; was 8-10-12-14; now 10-12-14-16*/
+body {
+}
+.tableRowHeader
+{
+    font-family:Calibri;
+    font-size:12pt;
+    /*font-size:14pt;*/
+    font-weight:bolder;
+}
+.tableRowHeaderSmaller
+{
+    font-family:Calibri;
+    font-size:10pt;
+    /*font-size:12pt;*/
+    font-weight:bolder;
+}
+.tableRowHeaderLarger
+{
+    font-family:Calibri;
+    font-size:14pt;
+    /*font-size:16pt;*/
+    font-weight:bolder;
+}
+.tableFieldHeader
+{
+    font-family:Calibri;
+    font-size:10pt;
+    /*font-size:12pt;*/
+    /*font-style:italic;*//*removed italic 2/19/2013*/
+    font-weight:bold;
+}
+.tableFieldHeaderSmaller
+{
+    font-family:Calibri;
+    font-size:8pt;
+    /*font-size:10pt;*/
+    /*font-style:italic;*//*removed italic 2/19/2013*/
+    font-weight:bold;
+}
+.tableFieldHeaderLarger
+{
+    font-family:Calibri;
+    font-size:12pt;
+    /*font-size:14pt;*/
+    /*font-style:italic;*//*removed italic 2/19/2013*/
+    font-weight:bold;
+}
+.tableField
+{
+    font-family:Calibri;
+    font-size:10pt;
+    /*font-size:12pt;*/
+}
+.tableFieldValue
+{
+    font-family:Calibri;
+    font-size:10pt;
+    /*font-size:12pt;*/
+    font-weight:normal;
+}
+.tableFieldValueSmaller
+{
+    font-family:Calibri;
+    font-size:8pt;
+    /*font-size:10pt;*/
+    font-weight:normal;
+}
+.tableRowSpacer
+{
+    /*height:60px;*/
+    /*height:30px;*/
+    /*2/19/2013 - changed from 30 to 20*/
+    height:20px;
+}
+.quickQuoteButton
+{
+    width:195px;/*testing 2/22/2013; was 250px; then 200px*/
+    height:35px;
+    font-family:Calibri;/*added 2/13/2013*/
+    background-color: #797777;
+    color:#F4F4F4;/*changed from White 2/25/2013*/
+    /*border: 1px solid #797777;*//*looks like this is the only difference between old and new styles*/
+    
+/*added 2/20/2013 for Matt's styles*/
+/*roundedContainer*/
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+border-radius: 4px;
+
+/*StandardButton*/
+border: 1px solid #797777;
+color: #F4F4F4;/*changed from White 2/25/2013*/
+background-color:#797777;	        
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+border-radius: 4px;/*   height: 20px;*//*removed height from what came from Matt's class*/
+
+/*testing 2/22/2013 so buttons won't touch each other*/
+margin:2px;
+}
+/*added 3/4/2013 for shorter buttons*/
+.quickQuoteButtonShorter
+{
+    width:195px;/*testing 2/22/2013; was 250px; then 200px*/
+    height:25px;
+    font-family:Calibri;/*added 2/13/2013*/
+    background-color: #797777;
+    color:#F4F4F4;/*changed from White 2/25/2013*/
+    /*border: 1px solid #797777;*//*looks like this is the only difference between old and new styles*/
+    
+/*added 2/20/2013 for Matt's styles*/
+/*roundedContainer*/
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+border-radius: 4px;
+
+/*StandardButton*/
+border: 1px solid #797777;
+color: #F4F4F4;/*changed from White 2/25/2013*/
+background-color:#797777;	        
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+border-radius: 4px;/*   height: 20px;*//*removed height from what came from Matt's class*/
+
+/*testing 2/22/2013 so buttons won't touch each other*/
+margin:2px;
+}
+/*added 3/5/2013 for +/- buttons*/
+.quickQuoteButtonStyle
+{
+    /*width:195px;
+    height:35px;*/
+    font-family:Calibri;/*added 2/13/2013*/
+    background-color: #797777;
+    color:#F4F4F4;/*changed from White 2/25/2013*/
+    /*border: 1px solid #797777;*//*looks like this is the only difference between old and new styles*/
+    
+/*added 2/20/2013 for Matt's styles*/
+/*roundedContainer*/
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+border-radius: 4px;
+
+/*StandardButton*/
+border: 1px solid #797777;
+color: #F4F4F4;/*changed from White 2/25/2013*/
+background-color:#797777;	        
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+border-radius: 4px;/*   height: 20px;*//*removed height from what came from Matt's class*/
+
+/*testing 2/22/2013 so buttons won't touch each other*/
+margin:2px;
+}
+/*added 2/25/2013; updated 3/4/2013 for quickQuoteButtonShorter; then 3/5/2013 for quickQuoteButtonStyle*/
+.quickQuoteButton:hover, .quickQuoteButtonShorter:hover, .quickQuoteButtonStyle:hover
+{   
+/*border: 2px solid #000;*//*updated 2/26/2013*/
+border: 1px solid #545353;
+color: White;
+background-color:#545353;
+}
+/*testing 2/26/2013; updated 3/4/2013 for quickQuoteButtonShorter; then 3/5/2013 for quickQuoteButtonStyle*/
+/*[disabled=disabled].quickQuoteButton, [disabled=disabled].quickQuoteButtonShorter, [disabled=disabled].quickQuoteButtonStyle*/
+/*updated 5/8/2013*/
+[disabled=disabled].quickQuoteButton, [disabled=disabled].quickQuoteButtonShorter, [disabled=disabled].quickQuoteButtonStyle, [disabled].quickQuoteButton, [disabled].quickQuoteButtonShorter, [disabled].quickQuoteButtonStyle
+{    
+background-color: #d6d6d6;/*was #797777; then #545353*/    
+border: 1px solid #d6d6d6;/*was #797777; then #545353*/
+}
+input.quickQuoteButton:focus, input.quickQuoteButtonShorter:focus, input.quickQuoteButtonStyle:focus
+{   
+border: 2px solid #000;
+}
+
+.quickQuoteGrid
+{
+border-style:solid;
+border-color:#000;/*added 2/19/2013*/
+border-collapse: collapse;/*added 2/19/2013*/
+/*commented 2/19/2013*/
+/*border-bottom-color:#999999;
+border-top-color: #999999;
+border-left-color:#999999;
+border-right-color:#999999;*/
+}
+.quickQuoteGrid th
+{
+/*commented 2/19/2013*/
+/*border-bottom-color:#999999;
+border-top-color: #999999;
+border-left-color:#999999;
+border-right-color:#999999*/
+/*added 2/19/2013 to match grid table styles*/
+border: 2px solid #000;
+background-color: #797777;
+color:White;
+}
+/*added 2/19/2013*/
+.quickQuoteGrid .GridHeader
+{
+border: 2px solid #000;
+background-color: #797777;
+color:White;
+/*.tableFieldHeaderSmaller*/
+font-family:Calibri;
+font-size:8pt;
+/*font-size:10pt;*/
+/*font-style:italic;*//*removed italic 2/19/2013*/
+font-weight:bold;
+}
+.quickQuoteGrid .GridHeader td
+{
+border: 2px solid #000;
+background-color: #797777;
+color:White;
+/*.tableFieldHeaderSmaller*/
+font-family:Calibri;
+font-size:8pt;
+/*font-size:10pt;*/
+/*font-style:italic;*//*removed italic 2/19/2013*/
+font-weight:bold;
+}
+/*.quickQuoteGrid tr
+{
+border-bottom-color:#999999;
+border-top-color: #999999;
+border-left-color:#999999;
+border-right-color:#999999
+}*/
+.quickQuoteGrid td
+{
+/*commented 2/19/2013*/
+/*border-bottom-color:#999999;
+border-top-color: #999999;
+border-left-color:#999999;
+border-right-color:#999999*/
+/*added 2/19/2013 to match grid table styles*/
+border: 1px solid #000;
+}
+/*added 2/19/2013*/
+.quickQuoteGrid .GridItem
+{
+border: 1px solid #000;
+/*.tableFieldValueSmaller*/
+font-family:Calibri;
+font-size:8pt;
+/*font-size:10pt;*/
+font-weight:normal;
+}
+
+/*testing 2/13/2013*/
+table.quickQuoteSectionTable
+{
+    font-family:Calibri;
+    font-size:10pt;/*currently being inherited from outer table on QuoteSummary*/
+    /*font-size:12pt;*//*currently being inherited from outer table on QuoteSummary*/
+    border-collapse: collapse;/*allows you to set borders on rows*/
+}
+table.quickQuoteSectionTable tr
+{
+    
+}
+table.quickQuoteSectionTable tr.quickQuoteSectionTableHeaderRow td
+{
+    border: 2px solid #000;/*put back in when done testing*/
+    background-color: #797777;/*added 2/14/2013*/
+    color:White;/*added 2/14/2013*/
+}
+/*added 2/21/2013 for testing printer friendly styles*/
+table.quickQuoteSectionTable tr.quickQuoteSectionTableHeaderRowPF td
+{
+    border: 2px solid #000;/*put back in when done testing*/
+}
+/*added 2/20/2013*/
+table.quickQuoteSectionTable tr.quickQuoteSectionTableHeaderRowDiv td div
+{
+    border: 2px solid #000;/*put back in when done testing*/
+    background-color: #797777;/*added 2/14/2013*/
+    color:White;/*added 2/14/2013*/
+    
+    text-align: left;
+    text-indent:15px;
+    /*width:100%;*//*removed 3/4/2013 so there would be equal distance on both sides of header divs (inside table cell)*/
+}
+/*added 2/21/2013 for testing printer friendly styles*/
+table.quickQuoteSectionTable tr.quickQuoteSectionTableHeaderRowDivPF td div
+{
+    border: 2px solid #000;/*put back in when done testing*/
+    
+    text-align: left;
+    text-indent:15px;
+    /*width:100%;*//*removed 3/4/2013 so there would be equal distance on both sides of header divs (inside table cell)*/
+}
+table.quickQuoteSectionTable td
+{
+    /*border-style:inset;*/
+    /*border-top:1;*/
+    /*background-color:Gray;*/
+    /*border: 1px solid #000;
+    border-style:ridge;*/
+    /*border: 1px solid;*/
+    /*border-left:1px solid ActiveBorder;
+    border-left-style:outset;
+    border-right:1px solid ActiveBorder;
+    border-right-style:outset;
+    border-top:1px solid ActiveBorder;
+    border-top-style:inset;
+    border-bottom:1px solid ActiveBorder;
+    border-bottom-style:inset;*/
+    /*border-style:inset;
+    border-color:ActiveBorder;*/
+    /*border-color: ActiveBorder;*//*ButtonShadow,ActiveBorder*/
+    /*border: 1px solid #000000;*/
+    /*border-bottom: 1px solid #000;*/
+}
+/*more testing 2/14/2013*/
+table.quickQuoteGridTable
+{
+    font-family:Calibri;
+    font-size:10pt;/*currently being inherited from outer table on QuoteSummary*/
+    /*font-size:12pt;*//*currently being inherited from outer table on QuoteSummary*/
+    border-collapse: collapse;/*allows you to set borders on rows*/
+}
+table.quickQuoteGridTable tr
+{
+    
+}
+table.quickQuoteGridTable tr.quickQuoteGridTableHeaderRow td
+{
+    border: 2px solid #000;/*removed for testing left-aligned (align="left" on each td)*/
+    background-color: #797777;/*added 2/14/2013*/
+    color:White;/*added 2/14/2013*/
+}
+/*added 2/21/2013 for testing printer friendly styles*/
+table.quickQuoteGridTable tr.quickQuoteGridTableHeaderRowPF td
+{
+    border: 2px solid #000;/*removed for testing left-aligned (align="left" on each td)*/
+}
+/*added 2/20/2013*/
+table.quickQuoteGridTable tr.quickQuoteGridTableHeaderRowDiv td div
+{
+    border: 2px solid #000;/*removed for testing left-aligned (align="left" on each td)*/
+    background-color: #797777;/*added 2/14/2013*/
+    color:White;/*added 2/14/2013*/
+    
+    text-align: left;
+    text-indent:15px;
+    /*width:100%;*//*removed 3/4/2013 so there would be equal distance on both sides of header divs (inside table cell)*/
+}
+/*added 2/21/2013 for testing printer friendly styles*/
+table.quickQuoteGridTable tr.quickQuoteGridTableHeaderRowDivPF td div
+{
+    border: 2px solid #000;/*removed for testing left-aligned (align="left" on each td)*/
+    
+    text-align: left;
+    text-indent:15px;
+    /*width:100%;*//*removed 3/4/2013 so there would be equal distance on both sides of header divs (inside table cell)*/
+}
+table.quickQuoteGridTable td
+{
+    border: 1px solid #000;/*removed for testing left-aligned (align="left" on each td)*/
+}
+table.quickQuoteGridTable tr.tableRowSpacer td
+{
+    border: none;/*removed for testing left-aligned (align="left" on each td)*/
+}
+
+/*added 2/21/2013*/
+table.quickQuoteSectionTable tr.Gradient td, table.quickQuoteSectionTable tr.GradientDiv td div, table.quickQuoteGridTable tr.Gradient td, table.quickQuoteGridTable tr.GradientDiv td div
+{
+        
+/*gradient; Styles/Vr_NearMono.css*/
+background-color: #797777;                       
+/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzdkN2U3ZCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwZTBlMGUiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+background: -moz-linear-gradient(top,  #7d7e7d 0%, #0e0e0e 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#7d7e7d), color-stop(100%,#0e0e0e)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #7d7e7d 0%,#0e0e0e 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #7d7e7d 0%,#0e0e0e 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #7d7e7d 0%,#0e0e0e 100%); /* IE10+ */
+background: linear-gradient(to bottom,  #7d7e7d 0%,#0e0e0e 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7d7e7d', endColorstr='#0e0e0e',GradientType=0 ); /* IE6-8 */
+}
+[if lt IE 9]
+table.quickQuoteSectionTable tr.Gradient td, table.quickQuoteSectionTable tr.GradientDiv td div, table.quickQuoteGridTable tr.Gradient td, table.quickQuoteGridTable tr.GradientDiv td div
+{
+        
+/*gradient; Styles/Vr_NearMono_Legacy.css*/
+background-color: #797777;
+}
+[if gte IE 9]
+table.quickQuoteSectionTable tr.Gradient td, table.quickQuoteSectionTable tr.GradientDiv td div, table.quickQuoteGridTable tr.Gradient td, table.quickQuoteGridTable tr.GradientDiv td div
+{
+        
+/*gradient; Styles/Vr_NearMono_IE_9_Only.css*/
+filter: none;
+}
+table.quickQuoteSectionTable tr.RoundedCornerDiv td div, table.quickQuoteGridTable tr.RoundedCornerDiv td div
+{
+    
+/*roundedContainer*/
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+border-radius: 4px;
+}
+table.quickQuoteSectionTable tr.Shadow td, table.quickQuoteSectionTable tr.ShadowDiv td div, table.quickQuoteGridTable tr.Shadow td, table.quickQuoteGridTable tr.ShadowDiv td div
+{
+        
+/*standardShadow*/
+moz-box-shadow: 1px 1px 2px #2d2c2b;
+-webkit-box-shadow: 1px 1px 2px #2d2c2b;
+box-shadow: 1px 1px 2px #2d2c2b;
+}
+
+
+/*added 2/22/2013 to replace styles from IFM.css; 12px changed to 14px and 11px changed to 13px*/
+/*2/25/2013 - changed 093F70 to 545353 and 990000 to 797777; changed hover to use background-color w/ White font*/
+/*2/26/2013 - added transparent background to links being clicked (active)*/
+/*a:link {
+	color: #545353; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a:visited {
+    color: #545353; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a:hover {
+	color: White; background-color: #545353; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a:active {
+	color: #545353; background-color:transparent; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;}*/
+/*changed 2/28/2013*/
+a:link {
+	color: #093F70; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a:visited {
+    color: #093F70; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a:hover {
+	color: White; background-color: #093F70; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a:active {
+	color: #093F70; background-color:transparent; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;}	
+a.breadcrumbs:link {
+	color: #545353; text-decoration: none; font-size: 13px; font-family: Calibri;
+	font-weight:bold;
+}
+a.breadcrumbs:visited {
+    color: #545353; text-decoration: none; font-size: 13px; font-family: Calibri;
+	font-weight:bold;
+}
+a.breadcrumbs:hover {
+	color: White; background-color: #545353; text-decoration: none; font-size: 13px; font-family: Calibri;
+	font-weight:bold;
+}
+a.breadcrumbs:active {
+	color: #545353; background-color:transparent; text-decoration: none; font-size: 13px; font-family: Calibri;
+	font-weight:bold;}
+a.footer:link {
+	color: #545353; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a.footer:visited {
+    color: #545353; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a.footer:hover {
+	color: White; background-color: #545353; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a.footer:active {
+	color: #545353; background-color:transparent; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;}
+a.leftnav:link {
+	color: #545353; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a.leftnav:visited {
+    color: #545353; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a.leftnav:hover {
+	color: White; background-color: #545353; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;
+}
+a.leftnav:active {
+	color: #545353; background-color:transparent; text-decoration: none; font-size: 14px; font-family: Calibri;
+	font-weight:bold;}
+
+
+.menu
+{
+ width:auto;
+ height:auto;
+ vertical-align:top;	
+}
+.application
+{
+	font-family:Calibri;
+	width:627px;	
+	height:auto;
+	vertical-align:top;
+	overflow:auto;			
+}
+.applicationPortal
+{
+	/*font-family:Verdana;*/
+	width:100%;	
+	height:auto;
+	vertical-align:top;
+	/*overflow:auto;*/
+overflow:auto; table-layout:fixed; overflow-y: hidden ! important;
+}
+/*removed 2/28/2013 to not affect Print page; this style wasn't in previous version*/
+/*form
+{  
+   width:827px;
+   max-width:827px;
+}*/
+.formPortal
+{  
+   width:100%;
+   max-width:100%;
+   min-width:950px;/*added 2/22/2013 to help when user middle-mizes screen*/
+}
+h3
+{
+ text-align:center;
+ font-family:Calibri; 	
+}
+.headline
+{
+	font-family:Calibri;
+	font-size:medium;
+	font-weight:bold;
+}
+.subheadline
+{
+	font-family:Calibri;
+	font-size:small;
+	font-weight:bold;
+}
+.normaltext
+{
+	font-family:Calibri;
+	font-size:smaller;
+}
+.largertext
+{
+	font-family:Calibri;
+	font-size:small;
+}
+.oldsmallertext
+{
+	font-family:Calibri;
+	font-size:x-small;
+}
+.smallertext
+{
+	font-family:Calibri;
+	font-size:xx-small;
+}
+.xstext
+{
+	font-family:Calibri;
+	font-size:xx-small;
+	}
+#menu {
+	/*background: #013161;*/
+	/*updated 2/25/2013*/
+	/*background: #3C3B3B;*/
+	background: #545353;
+	float: right;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 290px;}
+#menu li {
+	float: left;
+	/*font: 67.5% "Lucida Sans Unicode", "Bitstream Vera Sans", "Trebuchet Unicode MS", "Lucida Grande", Verdana, Helvetica, sans-serif;*//*removed 2/25/2013*/
+	margin: 0;
+	padding: 0;
+    width: 139px;    
+}
+#menu a {
+	/*background: #013161 bottom right no-repeat;
+	color: #ccc;*/
+	/*updated 2/25/2013*/
+	/*background: #3C3B3B bottom right no-repeat;*/
+	background: #545353 bottom right no-repeat;
+	color: #F4F4F4;
+	display: block;
+	float: left;
+	margin: 0;
+	padding: 8px 0px;
+	text-decoration: none;
+	font-weight:normal;
+	width: 139px;
+}
+#menu a:hover {
+	/*background: #A5874C bottom center no-repeat;
+	color: #ffffff;*/
+	/*updated 2/25/2013*/
+	background: #000 bottom center no-repeat;
+	color: White;
+	padding-bottom: 8px;
+	width: 139px;
+	}
+#menu a.menuActive {
+    /*background: #487DAD bottom center no-repeat;
+    color: #FFF;*/
+    /*updated 2/25/2013*/
+    background: #797777 bottom center no-repeat;
+	color: #F4F4F4;
+	padding-bottom: 8px;
+	width: 139px;
+}
+/*added 2/25/2013*/
+#menu a.menuActive:hover {
+    background: #000 bottom center no-repeat;
+	color: White;
+	padding-bottom: 8px;
+	width: 139px;
+}
+     
+    .defaultText
+        {
+            font-family:Verdana;
+            font-size: 10px;
+            color: #000000;
+        }        
+        
+        .defaultText a
+        {
+            color: #ffffff;
+        }
+        
+        .defaultText a:hover
+        {
+            color: #CC9933;
+        }
+        
+        #btnSiteSearch
+        {
+            font-size:10px;
+            font-family:Verdana;
+        }
+        
+        #txtSiteSearch
+        {
+            width: 200px;
+            font-size:10px;
+            font-family:Verdana;
+        }
+        
+        #navigation {
+margin: 10px auto 0px auto;
+background: url(images/grey.gif) repeat-x 0 50%;/*removed for testing 2/25/2013*/
+font-size: 12px;
+z-index: 1;
+}
+
+#navigation ul {
+list-style-type: none;
+text-align: center;
+margin: 0px;
+padding: 0px;
+z-index: 2;
+}
+
+#navigation li {
+display: inline;
+text-align: center;
+margin: 0px 5px;
+}
+
+#navigation li a {
+padding: 1px 5px;
+/*color: #666666;
+background-color: #ffffff;
+border: 1px solid #cccccc;*/
+text-decoration: none;
+/*updated 2/25/2013*/
+border: 1px solid #797777;
+color: #F4F4F4;
+background-color:#797777;
+
+/*added 2/25/2013*/
+/*roundedContainer*/
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+border-radius: 4px;
+}
+
+#navigation li a:hover, #navigation li a#current 
+{
+/*removed 2/25/2013*/
+/*color: #000000;
+border: 1px solid #666666;
+border-top: 2px solid #666666;
+border-bottom: 2px solid #666666;*/
+
+/*added 2/25/2013*/
+color: White;
+border: 1px solid #000;
+border-top: 2px solid #000;
+border-bottom: 2px solid #000;
+/*background-color: #000;*/
+background-color:#545353;
+}
+/*testing 2/26/2013*/
+#navigation li a:focus
+{   
+border: 2px solid #000;
+}
+.test
+{
+/*gradient; Styles/Vr_NearMono.css*/
+background-color: #797777;                       
+/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzdkN2U3ZCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwZTBlMGUiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+background: -moz-linear-gradient(top,  #7d7e7d 0%, #0e0e0e 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#7d7e7d), color-stop(100%,#0e0e0e)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #7d7e7d 0%,#0e0e0e 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #7d7e7d 0%,#0e0e0e 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #7d7e7d 0%,#0e0e0e 100%); /* IE10+ */
+background: linear-gradient(to bottom,  #7d7e7d 0%,#0e0e0e 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7d7e7d', endColorstr='#0e0e0e',GradientType=0 ); /* IE6-8 */
+}
+
+/*added 5/3/2013; 5/24/2013 - changed all to screen for testing pdf creation but didn't work*/
+@media all {
+	.page-break	{ display: none; }/*ensures that the page-break is never seen visually*/
+	.page-break-section { display: block; border: 1px dotted black; text-align:center; font-weight:bolder; }
+	.page-break-section:before { content:"Page Break"; }
+	
+	/*testing 5/24/2013; added clear 5/24/2013*/
+	/*.page-break	{ display: block; page-break-before: always; clear:both; }
+	.page-break-section { display: none; }*/
+}
+
+@media print {
+	.page-break	{ display: block; page-break-before: always; }/*ensures that the page break is seen by the printer*/
+	.page-break-section { display: none; }
+}
+/*added 5/24/2013 for pdf creation*/
+.pdf_page-break	{ display: block; page-break-before: always; }/*ensures that the page break is seen by the printer*/
+.pdf_page-break-section { display: none; }
+
+/*testing 5/24/2013; also changed above to xpage...*/
+/*.page-break {
+  display: block;
+  clear: both;
+  page-break-after: always;
+}*/
+
+
+/*added 5/9/2013*/
+.QuickQuoteProposalAgencyLogoSection
+{
+    /*width:243px;
+    height:85px;*//*px for NewBWLogo.jpg (width/height in inches doesn't look right)*/
+    /*width:3.5in;*//*removed width 5/28/2013; may be needed for pdf converter; only needed when pdf doesn't pick up logo (now working on ifmwebtest after changing web page from absolute to relative)*/
+    height:2in;    
+}
+/*table.QuickQuoteProposalAgencyLogoSection
+{
+    border:2px solid Black;
+}*/
+/*added 5/10/2013*/
+/*table.QuickQuoteProposalAgencyLogoSection span
+{
+    color:Red;
+}*/
+/*added 5/10/2013*/
+@media all {
+	/*table.QuickQuoteProposalAgencyLogoSection { border:2px solid Black; }
+    table.QuickQuoteProposalAgencyLogoSection span { color:Red; }*/
+    table.QuickQuoteProposalAgencyLogoSection { border:0px none White; }
+    table.QuickQuoteProposalAgencyLogoSection span { color:White; }
+}
+
+@media print {
+	table.QuickQuoteProposalAgencyLogoSection { border:0px none White; }
+    table.QuickQuoteProposalAgencyLogoSection span { display: none; }
+}
+
+/*added 5/10/2013*/
+.QuickQuoteProposalHeaderLogo
+{
+    /*only needed if image is bigger than we want*; currently for Icon Row Member Portal.jpg/
+    /*height:39px;
+    width:168px;*/
+}
+.QuickQuoteProposalDisclaimer
+{
+    /*uses same font css as TableFieldHeader*/
+    font-family:Calibri;
+    font-size:10pt;
+    font-weight:bold;
+    /*position:absolute;
+    bottom:0;*//*this only puts it at the bottom of the web page (doesn't take scrolling into account)*/
+}
+@media print {
+	/*.QuickQuoteProposalDisclaimer { position:absolute; bottom:0; }*//*this only makes it print at the bottom of the 1st page*/
+	/*.QuickQuoteProposalDisclaimer { position:fixed; bottom:0; }*//*this puts it at the bottom of every print page*/
+}
+/*5/13/2013; prints okay but appears to stack disclaimer from both pages on top of each other to make it darker in PDF/Print Preview*/
+@media print 
+{
+    /*.QuickQuoteProposalDisclaimer { display: none; }
+	.DisclaimerHolder { position:relative; }
+	.DisclaimerHolder .QuickQuoteProposalDisclaimer { position:fixed; bottom:0; display: block; }*/
+}
+/*added 5/24/2013 for pdf creation; excluding for now since it's not really working right depending on browser (in print or pdf)*/
+/*.pdf_QuickQuoteProposalDisclaimer { display: none; font-family:Calibri; font-size:10pt; font-weight:bold; }
+.pdf_DisclaimerHolder { position:relative; }
+.pdf_DisclaimerHolder .pdf_QuickQuoteProposalDisclaimer { position:fixed; bottom:0; display: block; }*/
+.pdf_QuickQuoteProposalDisclaimer { font-family:Calibri; font-size:10pt; font-weight:bold; }
+
+/*added 5/24/2013*/
+@media all {
+	.hideFromPrinter { display: block; }
+}
+@media print {
+	.hideFromPrinter { display: none; }
+}

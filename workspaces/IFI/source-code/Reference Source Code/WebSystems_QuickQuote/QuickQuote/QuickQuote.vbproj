@@ -1,0 +1,951 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B762EB60-45A7-4D99-8397-748F0212AD8A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>
+    </RootNamespace>
+    <AssemblyName>QuickQuote_deploy</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>Windows</MyType>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <Deterministic>true</Deterministic>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>QuickQuote_deploy.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <DefineConstants>TARGET="lib"</DefineConstants>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>QuickQuote_deploy.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <DefineConstants>TARGET="lib"</DefineConstants>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CommonClasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.CommonClassesDeploy.2021.8.2.100\lib\CommonClasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Business.ThirdParty, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Business.ThirdParty.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.ChoicePoint.Library, Version=4.2.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.ChoicePoint.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Diagnostics, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Diagnostics.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Objects.536.12.2100.1\lib\Diamond.Common.Objects.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Objects.ConfigurableBook, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Objects.ConfigurableBook.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.Rules.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Services.536.12.2100.1\lib\Diamond.Common.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Libraries.536.12.2100.1\lib\Diamond.Common.StaticDataManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Common.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.Common.Utility.536.12.2100.1\lib\Diamond.Common.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.Rules, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.Rules.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.StaticDataManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.StaticDataManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.UI.Utility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.UI.Items.536.12.2100.1\lib\Diamond.UI.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.BaseControls, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Web.Items.536.12.2100.1\lib\Diamond.Web.BaseControls.dll</HintPath>
+    </Reference>
+    <Reference Include="Diamond.Web.Services, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond.VR.Web.Items.536.12.2100.1\lib\Diamond.Web.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="DiamondWebClass, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.DiamondWebClass.2023.4.25.100\lib\DiamondWebClass.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.VR.Configuration, Version=2022.1.18.809, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.VR.Configuration.2022.1.18.815\lib\netstandard2.0\IFM.VR.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="IFM.VR.Flags, Version=2022.1.18.810, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.VR.Flags.2022.1.18.810\lib\netstandard2.0\IFM.VR.Flags.dll</HintPath>
+    </Reference>
+    <Reference Include="IFMDiamondServices, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.IFMDiamondServices.2014.4.17.100\lib\IFMDiamondServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Insuresoft.RuleEngine.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=828f322f65400183, processorArchitecture=MSIL">
+      <HintPath>..\packages\Insuresoft.RuleEngine.Common.536.12.2100.1\lib\Insuresoft.RuleEngine.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Configuration.ConfigurationBuilders.Base, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Configuration.ConfigurationBuilders.Base.2.0.0\lib\Net471\Microsoft.Configuration.ConfigurationBuilders.Base.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="QuickQuote_deploy, Version=2022.8.25.1657, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.QuickQuoteDeploy.2022.8.25.1657\lib\net48\QuickQuote_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="SQLclasses_deploy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IFM.SQLClassesDeploy.2020.3.6.100\lib\SQLclasses_deploy.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.ConfigurationManager, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Configuration.ConfigurationManager.6.0.0\lib\net461\System.Configuration.ConfigurationManager.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.IdentityModel.Tokens.Jwt, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Diamond_System.IdentityModel.Tokens.Jwt.4.0.10819.1000\lib\System.IdentityModel.Tokens.Jwt.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net" />
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Security.AccessControl, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.AccessControl.6.0.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Permissions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Permissions.6.0.0\lib\net461\System.Security.Permissions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.5.0.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAccidentViolation.vb">
+      <Link>CommonObjects\QuickQuoteAccidentViolation.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAcreage.vb">
+      <Link>CommonObjects\QuickQuoteAcreage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAdditionalInsured.vb">
+      <Link>CommonObjects\QuickQuoteAdditionalInsured.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAdditionalInterest.vb">
+      <Link>CommonObjects\QuickQuoteAdditionalInterest.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAdditionalInterestBase.vb">
+      <Link>CommonObjects\QuickQuoteAdditionalInterestBase.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAdditionalInterestList.vb">
+      <Link>CommonObjects\QuickQuoteAdditionalInterestList.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAdditionalInterestListLink.vb">
+      <Link>CommonObjects\QuickQuoteAdditionalInterestListLink.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAdditionalPolicyholder.vb">
+      <Link>CommonObjects\QuickQuoteAdditionalPolicyholder.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAddress.vb">
+      <Link>CommonObjects\QuickQuoteAddress.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAgency.vb">
+      <Link>CommonObjects\QuickQuoteAgency.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAndDiamondGenericHolderClasses.vb">
+      <Link>CommonObjects\QuickQuoteAndDiamondGenericHolderClasses.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteApplicant.vb">
+      <Link>CommonObjects\QuickQuoteApplicant.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAutoDataPrefill.vb">
+      <Link>CommonObjects\QuickQuoteAutoDataPrefill.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAutoSubjectIdentification.vb">
+      <Link>CommonObjects\QuickQuoteAutoSubjectIdentification.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteAutoSymbol.vb">
+      <Link>CommonObjects\QuickQuoteAutoSymbol.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteBaseObject.vb">
+      <Link>CommonObjects\QuickQuoteBaseObject.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteBillingAddressee.vb">
+      <Link>CommonObjects\QuickQuoteBillingAddressee.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteBuildersRiskScheduledLocation.vb">
+      <Link>CommonObjects\QuickQuoteBuildersRiskScheduledLocation.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteBuilding.vb">
+      <Link>CommonObjects\QuickQuoteBuilding.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteBuildingPersonalProperty.vb">
+      <Link>CommonObjects\QuickQuoteBuildingPersonalProperty.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteCancelWarning.vb">
+      <Link>CommonObjects\QuickQuoteCancelWarning.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteCanUseDiamondNumFlagGroup.vb">
+      <Link>CommonObjects\QuickQuoteCanUseDiamondNumFlagGroup.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteChoicePointTransmission.vb">
+      <Link>CommonObjects\QuickQuoteChoicePointTransmission.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteChoicePointTransmissionVariableSet.vb">
+      <Link>CommonObjects\QuickQuoteChoicePointTransmissionVariableSet.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteChoicePointUnitNumCollectionSet.vb">
+      <Link>CommonObjects\QuickQuoteChoicePointUnitNumCollectionSet.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteClassification.vb">
+      <Link>CommonObjects\QuickQuoteClassification.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteClassificationCode.vb">
+      <Link>CommonObjects\QuickQuoteClassificationCode.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteClient.vb">
+      <Link>CommonObjects\QuickQuoteClient.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteClueAuto.vb">
+      <Link>CommonObjects\QuickQuoteClueAuto.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteClueProperty.vb">
+      <Link>CommonObjects\QuickQuoteClueProperty.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteComment.vb">
+      <Link>CommonObjects\QuickQuoteComment.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteCompressionHelperClass.vb">
+      <Link>CommonMethods\QuickQuoteCompressionHelperClass.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteContractorsEquipmentScheduledCoverage.vb">
+      <Link>CommonObjects\QuickQuoteContractorsEquipmentScheduledCoverage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteContractorsEquipmentScheduledItem.vb">
+      <Link>CommonObjects\QuickQuoteContractorsEquipmentScheduledItem.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteCoverage.vb">
+      <Link>CommonObjects\QuickQuoteCoverage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteCoverageAdditionalInfoRecord.vb">
+      <Link>CommonObjects\QuickQuoteCoverageAdditionalInfoRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteCoverageLookupInfo.vb">
+      <Link>CommonObjects\QuickQuoteCoverageLookupInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteCreditLocation.vb">
+      <Link>CommonObjects\QuickQuoteCreditLocation.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteCreditScore.vb">
+      <Link>CommonObjects\QuickQuoteCreditScore.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteCreditVehicle.vb">
+      <Link>CommonObjects\QuickQuoteCreditVehicle.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDatabaseRecord.vb">
+      <Link>CommonObjects\QuickQuoteDatabaseRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDetail.vb">
+      <Link>CommonObjects\QuickQuoteDetail.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDevDictionaryItem.vb">
+      <Link>CommonObjects\QuickQuoteDevDictionaryItem.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDevDictionaryList.vb">
+      <Link>CommonObjects\QuickQuoteDevDictionaryList.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDeveloperAutoSymbol.vb">
+      <Link>CommonObjects\QuickQuoteDeveloperAutoSymbol.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDiamondImageInfo.vb">
+      <Link>CommonObjects\QuickQuoteDiamondImageInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDiamondNumGroup.vb">
+      <Link>CommonObjects\QuickQuoteDiamondNumGroup.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDiamondProposal.vb">
+      <Link>CommonObjects\QuickQuoteDiamondProposal.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDiamondProposalComment.vb">
+      <Link>CommonObjects\QuickQuoteDiamondProposalComment.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDiamondProposalImage.vb">
+      <Link>CommonObjects\QuickQuoteDiamondProposalImage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDriver.vb">
+      <Link>CommonObjects\QuickQuoteDriver.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteDriversLicenseInfo.vb">
+      <Link>CommonObjects\QuickQuoteDriversLicenseInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteEmail.vb">
+      <Link>CommonObjects\QuickQuoteEmail.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteEmploymentInfo.vb">
+      <Link>CommonObjects\QuickQuoteEmploymentInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteEndorsementForPolicyIdAndTransactionDateInput.vb">
+      <Link>CommonObjects\QuickQuoteEndorsementForPolicyIdAndTransactionDateInput.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteEsignatureInformation.vb">
+      <Link>CommonObjects\QuickQuoteEsignatureInformation.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteExclusion.vb">
+      <Link>CommonObjects\QuickQuoteExclusion.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteExclusionOfAmishWorkerRecord.vb">
+      <Link>CommonObjects\QuickQuoteExclusionOfAmishWorkerRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteExclusionOfSoleProprietorRecord.vb">
+      <Link>CommonObjects\QuickQuoteExclusionOfSoleProprietorRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteExclusionOfSoleProprietorRecord_IL.vb">
+      <Link>CommonObjects\QuickQuoteExclusionOfSoleProprietorRecord_IL.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteExperienceModification.vb">
+      <Link>CommonObjects\QuickQuoteExperienceModification.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteExtensions.vb">
+      <Link>CommonMethods\QuickQuoteExtensions.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteFarmIncidentalLimit.vb">
+      <Link>CommonObjects\QuickQuoteFarmIncidentalLimit.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteFineArtsScheduledItem.vb">
+      <Link>CommonObjects\QuickQuoteFineArtsScheduledItem.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteFormerSection.vb">
+      <Link>CommonObjects\QuickQuoteFormerSection.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteGaragingAddress.vb">
+      <Link>CommonObjects\QuickQuoteGaragingAddress.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteGenericNameAddress.vb">
+      <Link>CommonObjects\QuickQuoteGenericNameAddress.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteGenericObjectWithTwoIntegerProperties.vb">
+      <Link>CommonObjects\QuickQuoteGenericObjectWithTwoIntegerProperties.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteGenericObjectWithTwoStringProperties.vb">
+      <Link>CommonObjects\QuickQuoteGenericObjectWithTwoStringProperties.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteGLClassification.vb">
+      <Link>CommonObjects\QuickQuoteGLClassification.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteGroupSearchSec.vb">
+      <Link>CommonObjects\QuickQuoteGroupSearchSec.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteHeader.vb">
+      <Link>CommonObjects\QuickQuoteHeader.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteHelperClass.vb">
+      <Link>CommonMethods\QuickQuoteHelperClass.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteHistoryRecord.vb">
+      <Link>CommonObjects\QuickQuoteHistoryRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteHouseholdMember.vb">
+      <Link>CommonObjects\QuickQuoteHouseholdMember.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteInclusionExclusion.vb">
+      <Link>CommonObjects\QuickQuoteInclusionExclusion.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteInclusionExclusionScheduledItem.vb">
+      <Link>CommonObjects\QuickQuoteInclusionExclusionScheduledItem.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteInclusionOfSoleProprietorRecord.vb">
+      <Link>CommonObjects\QuickQuoteInclusionOfSoleProprietorRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteIncomeLoss.vb">
+      <Link>CommonObjects\QuickQuoteIncomeLoss.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteInlandMarine.vb">
+      <Link>CommonObjects\QuickQuoteInlandMarine.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteInquiryIdentification.vb">
+      <Link>CommonObjects\QuickQuoteInquiryIdentification.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteInquirySection.vb">
+      <Link>CommonObjects\QuickQuoteInquirySection.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteInstallationScheduledLocation.vb">
+      <Link>CommonObjects\QuickQuoteInstallationScheduledLocation.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteInstallment.vb">
+      <Link>CommonObjects\QuickQuoteInstallment.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteIsoTransmissionLookupInfo.vb">
+      <Link>CommonObjects\QuickQuoteIsoTransmissionLookupInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteKentuckyRejectionOfCoverageEndorsement.vb">
+      <Link>CommonObjects\QuickQuoteKentuckyRejectionOfCoverageEndorsement.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobInfo.vb">
+      <Link>CommonObjects\QuickQuoteLobInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobPolicyLevelInfo.vb">
+      <Link>CommonObjects\QuickQuoteLobPolicyLevelInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobPolicyLevelInfoExtended.vb">
+      <Link>CommonObjects\QuickQuoteLobPolicyLevelInfoExtended.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobPolicyLevelInfoExtended_AppliedToAllStates.vb">
+      <Link>CommonObjects\QuickQuoteLobPolicyLevelInfoExtended_AppliedToAllStates.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobPolicyLevelInfoExtended_AppliedToGoverningState.vb">
+      <Link>CommonObjects\QuickQuoteLobPolicyLevelInfoExtended_AppliedToGoverningState.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobPolicyLevelInfoExtended_AppliedToIndividualState.vb">
+      <Link>CommonObjects\QuickQuoteLobPolicyLevelInfoExtended_AppliedToIndividualState.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobPolicyLevelInfo_AppliedToAllStates.vb">
+      <Link>CommonObjects\QuickQuoteLobPolicyLevelInfo_AppliedToAllStates.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobPolicyLevelInfo_AppliedToGoverningState.vb">
+      <Link>CommonObjects\QuickQuoteLobPolicyLevelInfo_AppliedToGoverningState.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobPolicyLevelInfo_AppliedToIndividualState.vb">
+      <Link>CommonObjects\QuickQuoteLobPolicyLevelInfo_AppliedToIndividualState.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobRiskLevelInfo.vb">
+      <Link>CommonObjects\QuickQuoteLobRiskLevelInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLobRiskLevelInfoExtended.vb">
+      <Link>CommonObjects\QuickQuoteLobRiskLevelInfoExtended.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLocation.vb">
+      <Link>CommonObjects\QuickQuoteLocation.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLossHistoryDetailRecord.vb">
+      <Link>CommonObjects\QuickQuoteLossHistoryDetailRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteLossHistoryRecord.vb">
+      <Link>CommonObjects\QuickQuoteLossHistoryRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteMailingSection.vb">
+      <Link>CommonObjects\QuickQuoteMailingSection.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteMessage.vb">
+      <Link>CommonObjects\QuickQuoteMessage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteModifier.vb">
+      <Link>CommonObjects\QuickQuoteModifier.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteMortgageInfo.vb">
+      <Link>CommonObjects\QuickQuoteMortgageInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteMortgageSection.vb">
+      <Link>CommonObjects\QuickQuoteMortgageSection.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteMVR.vb">
+      <Link>CommonObjects\QuickQuoteMVR.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteName.vb">
+      <Link>CommonObjects\QuickQuoteName.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteObject.vb">
+      <Link>CommonObjects\QuickQuoteObject.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteOperator.vb">
+      <Link>CommonObjects\QuickQuoteOperator.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteOptionalCoverage.vb">
+      <Link>CommonObjects\QuickQuoteOptionalCoverage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteOptionalCoverageE.vb">
+      <Link>CommonObjects\QuickQuoteOptionalCoverageE.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePackagePart.vb">
+      <Link>CommonObjects\QuickQuotePackagePart.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePaymentOption.vb">
+      <Link>CommonObjects\QuickQuotePaymentOption.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePayplanInfoHolderClasses.vb">
+      <Link>CommonObjects\QuickQuotePayplanInfoHolderClasses.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePeakSeason.vb">
+      <Link>CommonObjects\QuickQuotePeakSeason.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePersonalIdentification.vb">
+      <Link>CommonObjects\QuickQuotePersonalIdentification.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePhone.vb">
+      <Link>CommonObjects\QuickQuotePhone.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePolicyholder.vb">
+      <Link>CommonObjects\QuickQuotePolicyholder.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePolicyLookupInfo.vb">
+      <Link>CommonObjects\QuickQuotePolicyLookupInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePolicySection.vb">
+      <Link>CommonObjects\QuickQuotePolicySection.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePolicyUnderwriting.vb">
+      <Link>CommonObjects\QuickQuotePolicyUnderwriting.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePriorCarrier.vb">
+      <Link>CommonObjects\QuickQuotePriorCarrier.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePropertyInTheOpenRecord.vb">
+      <Link>CommonObjects\QuickQuotePropertyInTheOpenRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePropertyValuation.vb">
+      <Link>CommonObjects\QuickQuotePropertyValuation.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePropertyValuationHelperClass.vb">
+      <Link>CommonObjects\QuickQuotePropertyValuationHelperClass.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePropertyValuationRequest.vb">
+      <Link>CommonObjects\QuickQuotePropertyValuationRequest.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePropertyValuationResponse.vb">
+      <Link>CommonObjects\QuickQuotePropertyValuationResponse.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteProposalObject.vb">
+      <Link>CommonObjects\QuickQuoteProposalObject.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuotePropSubjectIdentification.vb">
+      <Link>CommonObjects\QuickQuotePropSubjectIdentification.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteRequest.vb">
+      <Link>CommonObjects\QuickQuoteRequest.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteRequestorIdentification.vb">
+      <Link>CommonObjects\QuickQuoteRequestorIdentification.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteResidenceInfo.vb">
+      <Link>CommonObjects\QuickQuoteResidenceInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteResidenceInfoDetail.vb">
+      <Link>CommonObjects\QuickQuoteResidenceInfoDetail.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteResidentName.vb">
+      <Link>CommonObjects\QuickQuoteResidentName.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteRiskSection.vb">
+      <Link>CommonObjects\QuickQuoteRiskSection.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteRvWatercraft.vb">
+      <Link>CommonObjects\QuickQuoteRvWatercraft.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteRvWatercraftMotor.vb">
+      <Link>CommonObjects\QuickQuoteRvWatercraftMotor.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSAQ.vb">
+      <Link>CommonObjects\QuickQuoteSAQ.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSAQImportedDriver.vb">
+      <Link>CommonObjects\QuickQuoteSAQImportedDriver.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSAQImportedVehicle.vb">
+      <Link>CommonObjects\QuickQuoteSAQImportedVehicle.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteScheduledCoverage.vb">
+      <Link>CommonObjects\QuickQuoteScheduledCoverage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteScheduledGolfCartCourse.vb">
+      <Link>CommonObjects\QuickQuoteScheduledGolfCartCourse.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteScheduledGolfCourse.vb">
+      <Link>CommonObjects\QuickQuoteScheduledGolfCourse.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteScheduledItem.vb">
+      <Link>CommonObjects\QuickQuoteScheduledItem.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteScheduledPersonalPropertyCoverage.vb">
+      <Link>CommonObjects\QuickQuoteScheduledPersonalPropertyCoverage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteScheduledPropertyItem.vb">
+      <Link>CommonObjects\QuickQuoteScheduledPropertyItem.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteScheduledRating.vb">
+      <Link>CommonObjects\QuickQuoteScheduledRating.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteScheduledSign.vb">
+      <Link>CommonObjects\QuickQuoteScheduledSign.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteScheduledText.vb">
+      <Link>CommonObjects\QuickQuoteScheduledText.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteScheduledVehicle.vb">
+      <Link>CommonObjects\QuickQuoteScheduledVehicle.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSectionCoverage.vb">
+      <Link>CommonObjects\QuickQuoteSectionCoverage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSectionIAndIICoverage.vb">
+      <Link>CommonObjects\QuickQuoteSectionIAndIICoverage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSectionICoverage.vb">
+      <Link>CommonObjects\QuickQuoteSectionICoverage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSectionIICoverage.vb">
+      <Link>CommonObjects\QuickQuoteSectionIICoverage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteStaticDataAttribute.vb">
+      <Link>CommonObjects\QuickQuoteStaticDataAttribute.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteStaticDataElement.vb">
+      <Link>CommonObjects\QuickQuoteStaticDataElement.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteStaticDataList.vb">
+      <Link>CommonObjects\QuickQuoteStaticDataList.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteStaticDataNameValuePair.vb">
+      <Link>CommonObjects\QuickQuoteStaticDataNameValuePair.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteStaticDataOption.vb">
+      <Link>CommonObjects\QuickQuoteStaticDataOption.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSubjectSection.vb">
+      <Link>CommonObjects\QuickQuoteSubjectSection.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSubUnitQuotebackInfo.vb">
+      <Link>CommonObjects\QuickQuoteSubUnitQuotebackInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSupplementA.vb">
+      <Link>CommonObjects\QuickQuoteSupplementA.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteSupplementC.vb">
+      <Link>CommonObjects\QuickQuoteSupplementC.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyData.vb">
+      <Link>CommonObjects\QuickQuoteThirdPartyData.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyDataAddress.vb">
+      <Link>CommonObjects\QuickQuoteThirdPartyDataAddress.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyPolicyInfo.vb">
+      <Link>CommonObjects\QuickQuoteThirdPartyPolicyInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportAddress.vb">
+      <Link>CommonObjects\QuickQuoteThirdPartyReportAddress.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportEntity.vb">
+      <Link>CommonObjects\QuickQuoteThirdPartyReportEntity.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportEntityValidationTypeCombo.vb">
+      <Link>CommonObjects\QuickQuoteThirdPartyReportEntityValidationTypeCombo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportHelperClass.vb">
+      <Link>CommonMethods\QuickQuoteThirdPartyReportHelperClass.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportLogRecord.vb">
+      <Link>CommonObjects\QuickQuoteThirdPartyReportLogRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportName.vb">
+      <Link>CommonObjects\QuickQuoteThirdPartyReportName.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportResults.vb">
+      <Link>CommonObjects\QuickQuoteThirdPartyReportResults.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteThirdPartyReportSettingsAndResults.vb">
+      <Link>CommonObjects\QuickQuoteThirdPartyReportSettingsAndResults.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteTieringInformation.vb">
+      <Link>CommonObjects\QuickQuoteTieringInformation.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteTopLevelQuoteBase.vb">
+      <Link>CommonObjects\QuickQuoteTopLevelQuoteBase.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteTopLevelQuoteBase_CommonInfo.vb">
+      <Link>CommonObjects\QuickQuoteTopLevelQuoteBase_CommonInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteTopLevelQuoteBase_DatabaseInfo.vb">
+      <Link>CommonObjects\QuickQuoteTopLevelQuoteBase_DatabaseInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteTopLevelQuoteInfo.vb">
+      <Link>CommonObjects\QuickQuoteTopLevelQuoteInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteTopLevelQuotePremiums.vb">
+      <Link>CommonObjects\QuickQuoteTopLevelQuotePremiums.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteTopLevelStateAndLobParts.vb">
+      <Link>CommonObjects\QuickQuoteTopLevelStateAndLobParts.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteUnscheduledPersonalPropertyCoverage.vb">
+      <Link>CommonObjects\QuickQuoteUnscheduledPersonalPropertyCoverage.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteUpdatesRecord.vb">
+      <Link>CommonObjects\QuickQuoteUpdatesRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteUserAgency.vb">
+      <Link>CommonObjects\QuickQuoteUserAgency.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteValidationItem.vb">
+      <Link>CommonObjects\QuickQuoteValidationItem.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteVehicle.vb">
+      <Link>CommonObjects\QuickQuoteVehicle.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteVehicleSection.vb">
+      <Link>CommonObjects\QuickQuoteVehicleSection.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteVehicleSymbol.vb">
+      <Link>CommonObjects\QuickQuoteVehicleSymbol.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteVeriskProtectionClassReportOrderingResultFlags.vb">
+      <Link>CommonObjects\QuickQuoteVeriskProtectionClassReportOrderingResultFlags.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteVeriskProtectionClassReportOrderingSettings.vb">
+      <Link>CommonObjects\QuickQuoteVeriskProtectionClassReportOrderingSettings.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteVersionAndLobInfo.vb">
+      <Link>CommonObjects\QuickQuoteVersionAndLobInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteWaiverOfSubrogationRecord.vb">
+      <Link>CommonObjects\QuickQuoteWaiverOfSubrogationRecord.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuoteXML.vb">
+      <Link>CommonMethods\QuickQuoteXML.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuote_Copy_Parameters.vb">
+      <Link>CommonObjects\QuickQuote_Copy_Parameters.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuote_CPR_Location_Defaults.vb">
+      <Link>CommonObjects\QuickQuote_CPR_Location_Defaults.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\QuickQuote_WCP_RiskGrade_Parameters.vb">
+      <Link>CommonObjects\QuickQuote_WCP_RiskGrade_Parameters.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\Address.vb">
+      <Link>CommonObjects\Umbrella\Address.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\BasePolicyItem.vb">
+      <Link>CommonObjects\Umbrella\BasePolicyItem.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\Diamond_UnderlyingPolicyLobId.vb">
+      <Link>CommonObjects\Umbrella\Diamond_UnderlyingPolicyLobId.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\Driver.vb">
+      <Link>CommonObjects\Umbrella\Driver.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\FarmLiability.vb">
+      <Link>CommonObjects\Umbrella\FarmLiability.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\ICommercialAutoPolicy.vb">
+      <Link>CommonObjects\Umbrella\ICommercialAutoPolicy.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\IFarmPolicy.vb">
+      <Link>CommonObjects\Umbrella\IFarmPolicy.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\IHomePolicy.vb">
+      <Link>CommonObjects\Umbrella\IHomePolicy.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\IPersonalAutoPolicy.vb">
+      <Link>CommonObjects\Umbrella\IPersonalAutoPolicy.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\IReconcilable.vb">
+      <Link>CommonObjects\Umbrella\IReconcilable.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\IWorkersCompensationPolicy.vb">
+      <Link>CommonObjects\Umbrella\IWorkersCompensationPolicy.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\IXmlSerializationSupportExtensions.vb">
+      <Link>CommonObjects\Umbrella\IXmlSerializationSupportExtensions.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\LinkedPolicyItem.vb">
+      <Link>CommonObjects\Umbrella\LinkedPolicyItem.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\Location.vb">
+      <Link>CommonObjects\Umbrella\Location.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\MiscellaneousLiability.vb">
+      <Link>CommonObjects\Umbrella\MiscellaneousLiability.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\Name.vb">
+      <Link>CommonObjects\Umbrella\Name.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\PersonalLiability.vb">
+      <Link>CommonObjects\Umbrella\PersonalLiability.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\PolicyInfo.vb">
+      <Link>CommonObjects\Umbrella\PolicyInfo.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\ProfessionalLiability.vb">
+      <Link>CommonObjects\Umbrella\ProfessionalLiability.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\QuickQuoteUnderlyingPolicy.vb">
+      <Link>CommonObjects\Umbrella\QuickQuoteUnderlyingPolicy.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\RecreationalVehicle.vb">
+      <Link>CommonObjects\Umbrella\RecreationalVehicle.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\TrackedPolicyItem.vb">
+      <Link>CommonObjects\Umbrella\TrackedPolicyItem.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\Vehicle.vb">
+      <Link>CommonObjects\Umbrella\Vehicle.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\Watercraft.vb">
+      <Link>CommonObjects\Umbrella\Watercraft.vb</Link>
+    </Compile>
+    <Compile Include="..\QuickQuote_Site\App_Code\Umbrella\YouthfulOperator.vb">
+      <Link>CommonObjects\Umbrella\YouthfulOperator.vb</Link>
+    </Compile>
+    <Compile Include="CRS\ComparativeRatingService.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AssemblyInfo.tt</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\QuickQuote_Site\.tfignore">
+      <Link>.tfignore</Link>
+    </None>
+    <None Include="app.config" />
+    <None Include="CommonMethods.cd" />
+    <None Include="CommonObjects.cd" />
+    <None Include="IFM.QuickQuoteDeploy.nuspec">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="package.builder.json" />
+    <None Include="packages.config" />
+    <None Include="Umbrella.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WebReferences Include="Web References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\QuickQuote_Site\DiamondStaticData.xml">
+      <Link>DiamondStaticData.xml</Link>
+    </None>
+    <None Include="..\QuickQuote_Site\DiamondStaticData_Overrides_IL.xml">
+      <Link>DiamondStaticData_Overrides_IL.xml</Link>
+    </None>
+    <None Include="..\QuickQuote_Site\DiamondStaticData_Overrides_IN.xml">
+      <Link>DiamondStaticData_Overrides_IN.xml</Link>
+    </None>
+    <None Include="..\QuickQuote_Site\DiamondStaticData_Overrides_KY.xml">
+      <Link>DiamondStaticData_Overrides_KY.xml</Link>
+    </None>
+    <None Include="..\QuickQuote_Site\DiamondStaticData_Overrides_OH.xml">
+      <Link>DiamondStaticData_Overrides_OH.xml</Link>
+    </None>
+    <None Include="My Project\AssemblyInfo.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AssemblyInfo.vb</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <!-- process *.tt templates on each build  -->
+  <PropertyGroup>
+    <!-- 15.0 is for VS2017, adjust if necessary -->
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">16.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <!-- This is what will cause the templates to be transformed when the project is built (default is false) -->
+    <TransformOnBuild>true</TransformOnBuild>
+    <!-- Set to true to force overwriting of read-only output files, e.g. if they're not checked out (default is false) -->
+    <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
+    <!-- Set to false to transform files even if the output appears to be up-to-date (default is true)  -->
+    <TransformOutOfDateOnly>false</TransformOutOfDateOnly>
+  </PropertyGroup>
+  <Import Project="$(VSToolsPath)\TextTemplating\Microsoft.TextTemplating.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.2.4.0\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.8\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+    <Error Condition="!Exists('..\packages\NuGet.Package.Builder.1.0.12\build\NuGet.Package.Builder.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NuGet.Package.Builder.1.0.12\build\NuGet.Package.Builder.targets'))" />
+  </Target>
+  <Import Project="..\packages\NuGet.Package.Builder.1.0.12\build\NuGet.Package.Builder.targets" Condition="Exists('..\packages\NuGet.Package.Builder.1.0.12\build\NuGet.Package.Builder.targets')" />
+</Project>

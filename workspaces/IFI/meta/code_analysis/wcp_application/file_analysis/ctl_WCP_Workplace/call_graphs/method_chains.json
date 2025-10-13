@@ -1,0 +1,204 @@
+{
+  "method_call_chains": [
+    {
+      "chain_id": "populate_chain",
+      "entry_point": "Populate() override method",
+      "entry_location": "Line 69",
+      "method_chain": [
+        {
+          "step": 1,
+          "method": "LoadStaticData()",
+          "location": "Line 73",
+          "purpose": "Load state dropdown options"
+        },
+        {
+          "step": 2,
+          "method": "QQHelper.LoadStaticDataOptionsDropDown()",
+          "location": "Line 66 (within LoadStaticData)",
+          "parameters": "Me.ddState, QuickQuoteClassName.QuickQuoteAddress, QuickQuotePropertyName.StateId",
+          "purpose": "Populate state dropdown from static data",
+          "external_dependency": "QuickQuote.CommonMethods.QuickQuoteHelperClass"
+        },
+        {
+          "step": 3,
+          "method": "UpdateAccordHeader()",
+          "location": "Line 94",
+          "purpose": "Update accordion header display"
+        },
+        {
+          "step": 4,
+          "method": "Me.PopulateChildControls()",
+          "location": "Line 96",
+          "purpose": "Populate any child user controls",
+          "inherited_method": "From VRControlBase"
+        }
+      ],
+      "terminal_operations": [
+        {
+          "operation": "Static Data Loading",
+          "source_type": "Static Data Service",
+          "source_details": "QQHelper.LoadStaticDataOptionsDropDown loads state options",
+          "content_status": "External dependency - QuickQuoteHelperClass"
+        },
+        {
+          "operation": "Child Control Population",
+          "source_type": "Base Class Method",
+          "source_details": "VRControlBase.PopulateChildControls()",
+          "content_status": "Inherited behavior - requires base class analysis"
+        }
+      ]
+    },
+    {
+      "chain_id": "save_chain",
+      "entry_point": "Save() override function",
+      "entry_location": "Line 103",
+      "method_chain": [
+        {
+          "step": 1,
+          "method": "Address field assignments",
+          "location": "Lines 112-119",
+          "purpose": "Update MyWorkplace.Address properties from UI fields"
+        },
+        {
+          "step": 2,
+          "method": "UpdateAccordHeader()",
+          "location": "Line 120",
+          "purpose": "Refresh display after save"
+        },
+        {
+          "step": 3,
+          "method": "Me.SaveChildControls()",
+          "location": "Line 122",
+          "purpose": "Save any child user controls",
+          "inherited_method": "From VRControlBase"
+        }
+      ],
+      "terminal_operations": [
+        {
+          "operation": "Object Property Updates",
+          "source_type": "In-memory object manipulation",
+          "source_details": "Updates QuickQuoteLocation.Address properties",
+          "content_status": "Direct object updates - no external dependencies"
+        }
+      ]
+    },
+    {
+      "chain_id": "validation_chain",
+      "entry_point": "ValidateControl() override method",
+      "entry_location": "Line 127",
+      "method_chain": [
+        {
+          "step": 1,
+          "method": "MyBase.ValidateControl(valArgs)",
+          "location": "Line 129",
+          "purpose": "Execute base validation logic",
+          "inherited_method": "From VRControlBase"
+        },
+        {
+          "step": 2,
+          "method": "ValidationHelper.AddError()",
+          "location": "Lines 134-150 (multiple calls)",
+          "purpose": "Add field validation errors for missing required fields",
+          "parameters": "control, error_message, accordion_list"
+        },
+        {
+          "step": 3,
+          "method": "Me.ValidateChildControls(valArgs)",
+          "location": "Line 152",
+          "purpose": "Validate any child user controls",
+          "inherited_method": "From VRControlBase"
+        }
+      ],
+      "terminal_operations": [
+        {
+          "operation": "Validation Error Collection",
+          "source_type": "ValidationHelper service",
+          "source_details": "Collects validation errors for display",
+          "content_status": "Uses ValidationHelper from base class"
+        }
+      ]
+    },
+    {
+      "chain_id": "javascript_binding_chain",
+      "entry_point": "AddScriptWhenRendered() override method",
+      "entry_location": "Line 54",
+      "method_chain": [
+        {
+          "step": 1,
+          "method": "Me.VRScript.StopEventPropagation()",
+          "location": "Line 55",
+          "purpose": "Prevent event bubbling for save link"
+        },
+        {
+          "step": 2,
+          "method": "Me.VRScript.CreateConfirmDialog()",
+          "location": "Lines 56-57",
+          "purpose": "Create confirmation dialogs for delete/clear"
+        },
+        {
+          "step": 3,
+          "method": "Me.VRScript.CreateJSBinding()",
+          "location": "Line 59",
+          "purpose": "Bind ZIP code field to JavaScript lookup function",
+          "parameters": "txtZipcode, onkeyup, DoCityCountyLookup JavaScript function"
+        }
+      ],
+      "terminal_operations": [
+        {
+          "operation": "JavaScript Function Call",
+          "source_type": "Client-side JavaScript function",
+          "source_details": "DoCityCountyLookup(zipcode_id, city_dropdown_id, city_text_id, county_id, state_id)",
+          "content_status": "⚠️ External JavaScript dependency - requires client-side analysis"
+        }
+      ]
+    },
+    {
+      "chain_id": "multi_state_logic_chain",
+      "entry_point": "IsFirstLocationForStatePart property",
+      "entry_location": "Line 29",
+      "method_chain": [
+        {
+          "step": 1,
+          "method": "IFM.VR.Common.Helpers.MultiState.Locations.IsFirstLocationForAnySubQuote()",
+          "location": "Line 31",
+          "parameters": "Me.Quote, Me.MyWorkplace",
+          "purpose": "Determine if this is the first location for any sub-quote"
+        }
+      ],
+      "terminal_operations": [
+        {
+          "operation": "Multi-State Logic Evaluation",
+          "source_type": "External helper class",
+          "source_details": "IFM.VR.Common.Helpers.MultiState.Locations helper",
+          "content_status": "⚠️ External dependency - requires analysis of MultiState helper class"
+        }
+      ]
+    }
+  ],
+  "external_dependencies_identified": [
+    {
+      "dependency": "QuickQuote.CommonMethods.QuickQuoteHelperClass",
+      "method_called": "LoadStaticDataOptionsDropDown",
+      "purpose": "Load state dropdown options",
+      "analysis_required": true
+    },
+    {
+      "dependency": "IFM.VR.Common.Helpers.MultiState.Locations",
+      "method_called": "IsFirstLocationForAnySubQuote",
+      "purpose": "Multi-state location logic",
+      "analysis_required": true
+    },
+    {
+      "dependency": "VRControlBase (base class)",
+      "methods_called": "PopulateChildControls, SaveChildControls, ValidateChildControls",
+      "purpose": "Base control functionality",
+      "analysis_required": true
+    },
+    {
+      "dependency": "DoCityCountyLookup JavaScript function",
+      "method_called": "DoCityCountyLookup",
+      "purpose": "Client-side city/county lookup",
+      "analysis_required": true
+    }
+  ]
+}

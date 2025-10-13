@@ -1,0 +1,230 @@
+{
+  "data_flow_analysis": [
+    {
+      "variable_name": "WorkplaceIndex",
+      "variable_type": "Int32 Property",
+      "location": "Lines 10-18",
+      "source_type": "ViewState Persistence",
+      "source_details": "ViewState.GetInt32(\"vs_WCPWorkplaceIndex\", -1)",
+      "data_flow_path": "ViewState → Property Get → UI Logic",
+      "usage_locations": [
+        "Line 31: Multi-state logic parameter",
+        "Line 35: Accordion index",
+        "Line 49: Event parameter",
+        "Line 52: Event parameter", 
+        "Line 73: UI visibility logic",
+        "Line 132: Validation group name",
+        "Line 73-74: Accordion header display"
+      ],
+      "content_status": "Managed by ViewState - persisted across postbacks"
+    },
+    {
+      "variable_name": "MyWorkplace",
+      "variable_type": "QuickQuoteLocation Property",
+      "location": "Lines 20-27",
+      "source_type": "Object Navigation",
+      "source_details": "Quote.Locations(WorkplaceIndex)",
+      "data_flow_path": "Quote object → Locations collection → Indexed access → Property",
+      "dependency_chain": [
+        "Quote (inherited from base class)",
+        "Quote.Locations collection",
+        "WorkplaceIndex for array access"
+      ],
+      "null_safety": "Implements safe navigation with multiple null checks",
+      "usage_locations": [
+        "Line 31: Multi-state logic parameter",
+        "Line 68-69: Accordion header update",
+        "Line 85-94: Address field population",
+        "Line 111-119: Address field saving"
+      ],
+      "content_status": "⚠️ Depends on Quote object - inherited from VRControlBase"
+    },
+    {
+      "variable_name": "Quote.Locations Collection",
+      "variable_type": "Collection of QuickQuoteLocation",
+      "location": "Referenced throughout",
+      "source_type": "Base Class Property",
+      "source_details": "Inherited Quote property from VRControlBase",
+      "data_flow_path": "VRControlBase.Quote → Locations collection → Individual location access",
+      "content_status": "⚠️ Base class dependency - requires VRControlBase analysis"
+    },
+    {
+      "variable_name": "Address Fields (UI to Object)",
+      "variable_type": "String properties",
+      "location": "Lines 111-119 (Save method)",
+      "source_type": "UI Control Values",
+      "data_flow_path": "UI Controls → Object Properties",
+      "field_mappings": [
+        {
+          "ui_control": "txtStreetNum.Text",
+          "object_property": "MyWorkplace.Address.HouseNum",
+          "line": 112
+        },
+        {
+          "ui_control": "txtStreetName.Text", 
+          "object_property": "MyWorkplace.Address.StreetName",
+          "line": 113
+        },
+        {
+          "ui_control": "txtCity.Text",
+          "object_property": "MyWorkplace.Address.City",
+          "line": 114
+        },
+        {
+          "ui_control": "ddState.SelectedValue",
+          "object_property": "MyWorkplace.Address.StateId",
+          "line": 115
+        },
+        {
+          "ui_control": "txtCounty.Text",
+          "object_property": "MyWorkplace.Address.County",
+          "line": 116
+        },
+        {
+          "ui_control": "txtApartmentNumber.Text",
+          "object_property": "MyWorkplace.Address.ApartmentNumber",
+          "line": 117
+        },
+        {
+          "ui_control": "txtZipcode.Text",
+          "object_property": "MyWorkplace.Address.Zip",
+          "line": 118
+        }
+      ],
+      "content_status": "Direct UI to object mapping - no external dependencies"
+    },
+    {
+      "variable_name": "Address Fields (Object to UI)",
+      "variable_type": "String properties",
+      "location": "Lines 85-93 (Populate method)",
+      "source_type": "Object Properties",
+      "data_flow_path": "Object Properties → UI Controls",
+      "field_mappings": [
+        {
+          "object_property": "Quote.Locations(WorkplaceIndex).Address.HouseNum",
+          "ui_control": "txtStreetNum.Text",
+          "line": 85
+        },
+        {
+          "object_property": "Quote.Locations(WorkplaceIndex).Address.StreetName",
+          "ui_control": "txtStreetName.Text",
+          "line": 86
+        },
+        {
+          "object_property": "Quote.Locations(WorkplaceIndex).Address.ApartmentNumber",
+          "ui_control": "txtApartmentNumber.Text",
+          "line": 87
+        },
+        {
+          "object_property": "Quote.Locations(WorkplaceIndex).Address.City",
+          "ui_control": "txtCity.Text",
+          "line": 88
+        },
+        {
+          "object_property": "Quote.Locations(WorkplaceIndex).Address.County",
+          "ui_control": "txtCounty.Text",
+          "line": 89
+        },
+        {
+          "object_property": "Quote.Locations(WorkplaceIndex).Address.StateId",
+          "ui_control": "ddState.SelectedValue",
+          "line": 90
+        },
+        {
+          "object_property": "Quote.Locations(WorkplaceIndex).Address.Zip",
+          "ui_control": "txtZipcode.Text",
+          "line": 91
+        }
+      ],
+      "content_status": "Direct object to UI mapping - depends on Quote object state"
+    },
+    {
+      "variable_name": "ddState.Items Collection",
+      "variable_type": "DropDown Items",
+      "location": "Line 66 (LoadStaticData method)",
+      "source_type": "External Service Call",
+      "source_details": "QQHelper.LoadStaticDataOptionsDropDown(Me.ddState, QuickQuoteClassName.QuickQuoteAddress, QuickQuotePropertyName.StateId, SortBy.None, Me.Quote.LobType)",
+      "data_flow_path": "QuickQuoteHelperClass → Static Data Service → DropDown Items",
+      "parameters": [
+        "QuickQuoteClassName.QuickQuoteAddress",
+        "QuickQuotePropertyName.StateId", 
+        "SortBy.None",
+        "Me.Quote.LobType"
+      ],
+      "content_status": "⚠️ External dependency - requires QuickQuoteHelperClass analysis"
+    },
+    {
+      "variable_name": "JavaScript Parameters",
+      "variable_type": "Client-side parameters",
+      "location": "Line 59 (AddScriptWhenRendered method)",
+      "source_type": "Control ClientID Properties",
+      "data_flow_path": "Server Controls → ClientID → JavaScript Parameters",
+      "parameter_mappings": [
+        {
+          "server_control": "Me.txtZipcode.ClientID",
+          "js_parameter": "zipcode field ID",
+          "position": 1
+        },
+        {
+          "server_control": "Me.ddCityName.ClientID",
+          "js_parameter": "city dropdown ID",
+          "position": 2
+        },
+        {
+          "server_control": "Me.txtCity.ClientID",
+          "js_parameter": "city text field ID",
+          "position": 3
+        },
+        {
+          "server_control": "Me.txtCounty.ClientID",
+          "js_parameter": "county field ID",
+          "position": 4
+        },
+        {
+          "server_control": "Me.ddState.ClientID",
+          "js_parameter": "state dropdown ID",
+          "position": 5
+        }
+      ],
+      "content_status": "⚠️ Passed to JavaScript - requires DoCityCountyLookup analysis"
+    }
+  ],
+  "object_dependencies": [
+    {
+      "object": "Quote",
+      "source": "Inherited from VRControlBase",
+      "properties_used": ["Locations", "LobType"],
+      "analysis_required": true
+    },
+    {
+      "object": "QuickQuoteLocation",
+      "source": "Quote.Locations collection item",
+      "properties_used": ["Address"],
+      "analysis_required": false,
+      "note": "Standard CommonObjects class"
+    },
+    {
+      "object": "QuickQuoteAddress", 
+      "source": "QuickQuoteLocation.Address property",
+      "properties_used": ["HouseNum", "StreetName", "City", "StateId", "County", "ApartmentNumber", "Zip", "DisplayAddress"],
+      "analysis_required": false,
+      "note": "Standard CommonObjects class"
+    }
+  ],
+  "external_data_sources": [
+    {
+      "source_name": "Static Data Service",
+      "access_method": "QQHelper.LoadStaticDataOptionsDropDown",
+      "data_type": "State dropdown options",
+      "parameters": "QuickQuoteClassName.QuickQuoteAddress, QuickQuotePropertyName.StateId, Quote.LobType",
+      "content_status": "⚠️ External service - requires analysis"
+    },
+    {
+      "source_name": "JavaScript City/County Lookup",
+      "access_method": "DoCityCountyLookup JavaScript function", 
+      "data_type": "City and county data based on ZIP code",
+      "parameters": "ZIP code, control IDs for city dropdown, city text, county, state",
+      "content_status": "⚠️ Client-side service - requires JavaScript analysis"
+    }
+  ]
+}

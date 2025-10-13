@@ -1,0 +1,379 @@
+﻿Imports QuickQuote.CommonObjects
+Imports QuickQuote.CommonMethods
+
+Partial Class TestTreeViewPage
+    Inherits System.Web.UI.Page
+
+    Dim qqXml As New QuickQuoteXML
+    Dim qq As QuickQuoteObject
+    Dim qqHelper As New QuickQuoteHelperClass
+
+    Protected Sub Page_Load(sender As Object, e As System.EventArgs) Handles Me.Load
+        If Page.IsPostBack = False Then
+            SetFocus(Me.txtQuoteId)
+            Me.cbTreeViewEditMode.Checked = Me.QuickQuoteTreeView1.InEditMode
+        End If
+    End Sub
+    Private Sub ShowError(ByVal message As String, Optional ByVal redirect As Boolean = False, Optional ByVal redirectPage As String = "")
+        message = Replace(message, "\", "\\")
+        message = Replace(message, "<br>", "\n")
+        message = Replace(message, vbCrLf, "\n")
+
+        Dim strScript As String = "<script language=JavaScript>"
+        strScript &= "alert(""" & message & """);"
+        If redirect = True Then
+            If redirectPage = "" Then
+                redirectPage = "TestTreeView.aspx"
+            End If
+            strScript &= " window.location.href='" & redirectPage & "';"
+        End If
+        strScript &= "</script>"
+
+        Page.RegisterStartupScript("clientScript", strScript)
+
+    End Sub
+
+    Protected Sub btnGo_Click(sender As Object, e As System.EventArgs) Handles btnGo.Click
+        If txtQuoteId.Text = "" Then
+            SetFocus(Me.txtQuoteId)
+            ShowError("Please enter the quote id.")
+        Else
+
+            'Dim qq As QuickQuoteObject
+            Dim errMsg As String = String.Empty
+            'qqXml.GetQuote(Me.txtQuoteId.Text, qq, errMsg)
+            'If String.IsNullOrEmpty(errMsg) = False Then
+            '    ShowError(errMsg)
+            'Else
+            '    Me.QuickQuoteTreeView1.QuoteObject = qq
+            'End If
+
+            Me.QuickQuoteTreeView1.LoadQuoteForQuoteId(Me.txtQuoteId.Text, errMsg)
+            If String.IsNullOrEmpty(errMsg) = False Then
+                ShowError(errMsg)
+            End If
+        End If
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_EditPolicyholder(policyholderNumber As Integer) Handles QuickQuoteTreeView1.EditPolicyholder
+        ShowError("Move to policholder edit screen; policyholder # " & policyholderNumber.ToString)
+        'added 1/24/2014
+        Me.QuickQuoteTreeView1.InEditMode = True
+        Me.cbTreeViewEditMode.Checked = True
+        'Me.lblManuallyPutInEditMode.Text = "Yes"
+        '1/27/2014 - changed to hidden field
+        Me.hdnManuallyPutInEditMode.Value = "Yes"
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_EditDriver(driverNumber As Integer) Handles QuickQuoteTreeView1.EditDriver
+        ShowError("Move to driver edit screen; driver # " & driverNumber.ToString)
+        'added 1/24/2014
+        Me.QuickQuoteTreeView1.InEditMode = True
+        Me.cbTreeViewEditMode.Checked = True
+        'Me.lblManuallyPutInEditMode.Text = "Yes"
+        '1/27/2014 - changed to hidden field
+        Me.hdnManuallyPutInEditMode.Value = "Yes"
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_EditVehicle(vehicleNumber As Integer) Handles QuickQuoteTreeView1.EditVehicle
+        ShowError("Move to vehicle edit screen; vehicle # " & vehicleNumber.ToString)
+        'added 1/24/2014
+        Me.QuickQuoteTreeView1.InEditMode = True
+        Me.cbTreeViewEditMode.Checked = True
+        'Me.lblManuallyPutInEditMode.Text = "Yes"
+        '1/27/2014 - changed to hidden field
+        Me.hdnManuallyPutInEditMode.Value = "Yes"
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_EditLocation(locationNumber As Integer) Handles QuickQuoteTreeView1.EditLocation
+        ShowError("Move to location edit screen; location # " & locationNumber.ToString)
+        'added 1/24/2014
+        Me.QuickQuoteTreeView1.InEditMode = True
+        Me.cbTreeViewEditMode.Checked = True
+        'Me.lblManuallyPutInEditMode.Text = "Yes"
+        '1/27/2014 - changed to hidden field
+        Me.hdnManuallyPutInEditMode.Value = "Yes"
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_QuoteUpdated(sender As Object, e As System.EventArgs) Handles QuickQuoteTreeView1.QuoteUpdated
+        ShowError("An update has been done from the treeview; all pages should now refresh the quote object")
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_NewDriver(driverNumber As Integer) Handles QuickQuoteTreeView1.NewDriver
+        'ShowError("Move to new driver screen; driver # " & driverNumber.ToString)
+        If Me.QuickQuoteTreeView1.QuoteObject IsNot Nothing Then
+            qq = Me.QuickQuoteTreeView1.QuoteObject
+            If qq.Drivers Is Nothing Then
+                qq.Drivers = New List(Of QuickQuoteDriver)
+            End If
+            Dim d As New QuickQuoteDriver
+            With d
+                .Name = qqHelper.CloneObject(qq.Client.Name) '.Client.Name
+                .Name.FirstName &= "_" & driverNumber.ToString
+                .Name.LastName &= "_" & Date.Now.ToString
+                .Name.NameAddressSourceId = "6" 'Driver
+                .Address = qqHelper.CloneObject(qq.Client.Address) '.Client.Address
+                .LicenseStatusId = "2" 'Valid
+                .DriverExcludeTypeId = "1" 'Rated
+                .RelationshipTypeId = "8" 'Policyholder (needed to order reports)
+
+                'added 1/27/2014
+                .AccidentViolations = New List(Of QuickQuoteAccidentViolation)
+                Dim av1 As New QuickQuoteAccidentViolation
+                With av1
+                    .AccidentsViolationsTypeId = 1 'Speeding (15 mph or less over the legal limit)
+                    .AvDate = "6/1/2013"
+                    .Description = "speeding to get to work"
+                    .AmountProperty = ""
+                    .Comments = "won't do it again"
+                    .SpeedLimit = "55"
+                    .Mph = "65"
+                    .Place = "I465"
+                    .LicenseSuspended = False
+                    .ConvictionDate = "7/1/2013"
+                    .ViolationConvictionTypeId = "2" 'Minor Violation
+                    .ViolationSourceId = "1" 'MVR
+                    .Points = "2"
+                    .PaidDate = "7/10/2013"
+                    .PostDate = "7/17/2013"
+                    .BiDeath = False
+                    .Surcharge = False
+                End With
+                .AccidentViolations.Add(av1)
+
+                'commented 1/31/2014 because of message that they should be added to LossHistories... probably specific to AccidentsViolationsTypeId
+                'Dim av2 As New QuickQuoteAccidentViolation
+                'With av2
+                '    .AccidentsViolationsTypeId = 43 'At Fault Accident
+                '    .AvDate = "9/1/2013"
+                '    .Description = "t-boned minivan"
+                '    .AmountProperty = "9500.00"
+                '    .Comments = "ouch"
+                '    .SpeedLimit = "35"
+                '    .Mph = "42"
+                '    .Place = "Meridian / 106th"
+                '    .LicenseSuspended = False
+                '    .ConvictionDate = "10/1/2013"
+                '    .ViolationConvictionTypeId = "1" 'No Charge
+                '    .ViolationSourceId = "2" 'Manual
+                '    .Points = "0"
+                '    .PaidDate = ""
+                '    .PostDate = ""
+                '    .BiDeath = False
+                '    .Surcharge = True
+                'End With
+                '.AccidentViolations.Add(av2)
+            End With
+            qq.Drivers.Add(d)
+            Dim errMsg As String = String.Empty
+            If Me.QuickQuoteTreeView1.SuccessfulSave(qq, errMsg) = False Then
+                If String.IsNullOrEmpty(errMsg) = True Then
+                    errMsg = "There was a problem adding the new driver"
+                End If
+                ShowError(errMsg)
+            Else
+                ShowError("Driver # " & driverNumber.ToString & " has been added")
+            End If
+        End If
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_NewVehicle(vehicleNumber As Integer) Handles QuickQuoteTreeView1.NewVehicle
+        ' ShowError("Move to new vehicle screen; vehicle # " & vehicleNumber.ToString)
+        If Me.QuickQuoteTreeView1.QuoteObject IsNot Nothing Then
+            qq = Me.QuickQuoteTreeView1.QuoteObject
+            If qq.Vehicles Is Nothing Then
+                qq.Vehicles = New List(Of QuickQuoteVehicle)
+            End If
+            Dim v As New QuickQuoteVehicle
+            With v
+                .PrincipalDriverNum = "1"
+                .Make = "CHEVROLET"
+                .Model = "1500_" & Date.Now.ToString
+                .Year = "1992"
+                .ClassCode = "01199"
+                .Vin = "1GCKC39FGNJ109116"
+                .CostNew = "18000"
+                .VehicleRatingTypeId = "9" 'Truck, Tractor, or Trailer
+                '.UseCodeTypeId = "28" 'Service (for commercial only)
+                .VehicleUseTypeId = "6" 'Personal
+                .OperatorTypeId = "0"
+                .OperatorUseTypeId = "0"
+                .RadiusTypeId = "1" 'Local, up to 50 miles
+                .SecondaryClassTypeId = "30" 'Not Otherwise Specified
+                .SecondaryClassUsageTypeId = "9" 'All Other
+                .SizeTypeId = "18" 'Light Truck < or equal 10,000 Pounds GVW
+                .PerformanceTypeId = 1 'Standard
+                .BodyTypeId = "40" 'Pickup w/o Camper
+                .AntiLockTypeId = "1" 'Rear-Wheel Anti-Lock Brakes
+                .RegisteredStateId = "16" 'IN
+                .RestraintTypeId = "1" 'Passive Seat Belts
+                .AntiTheftTypeId = "0" 'None
+                .VehicleValueId = "2" 'Used
+                .GrossVehicleWeight = "4150"
+                .VehicleTypeId = "" 'for motorcycles
+                .OdometerReading = "136127"
+                .AnnualMiles = "13500"
+                .MilesOneWay = "77"
+                .DaysPerWeek = "6"
+                .ActualCashValue = "16000" 'problem field... int in database; had to remove money formatting from property
+                .StatedAmount = "14500"
+                .PurchasedDate = "2/10/1996"
+                .CubicCentimeters = "300"
+                .CustomEquipmentAmount = "600"
+                .MultiCar = True
+                .DriverOutOfStateSurcharge = False
+                .DamageYesNoId = "1" 'Yes
+                .DamageRemarks = "Test Damage Remarks"
+                .NonOwnedNamed = False 'Named Non-Owned Non-Specific Vehicle
+                .NonOwned = False 'Extended Non-Owned
+
+                'new PPA props
+                .Liability_UM_UIM_LimitId = "10" '100,000; N/A=0 (Single Limit Liability and Bodily Injury are not available together.)
+                .MedicalPaymentsLimitId = "170" '1,000; N/A=0
+                .ComprehensiveDeductibleLimitId = "18" '100
+                .CollisionDeductibleLimitId = "20" '200
+                .TowingAndLaborDeductibleLimitId = "27" '25; 50=41
+                .UninsuredMotoristLiabilityLimitId = "0" '100/300=4; N/A=0 (UM/UIM BI limit cannot exceed Bodily Injury limit.)(Bodily Injury is required when selecting UM/UIM BI coverage.)
+                .BodilyInjuryLiabilityLimitId = "0" '100/200=135; N/A=0 (Single Limit Liability and Bodily Injury are not available together.)
+                .PropertyDamageLimitId = "0" '25,000=8; N/A=0 (Property Damage is not available with Single Limit Liability.)
+                .UninsuredCombinedSingleLimitId = "10" '100,000; N/A=0
+                .UninsuredMotoristPropertyDamageLimitId = "0" '25,000=8; N/A=0 (UM PD limit cannot exceed Property Damage limit.)
+                .UninsuredMotoristPropertyDamageDeductibleLimitId = "155" '300; N/A=0
+                .HasPollutionLiabilityBroadenedCoverage = False 'Pollution Liability Broadened Coverage is only available for Pickups with Farm use.
+                .TransportationExpenseLimitId = "80" '30/900; 20/600=30
+                .HasAutoLoanOrLease = False 'Auto Loan/Lease is only available for vehicles 5 years old or newer.
+                .TapesAndRecordsLimitId = "212" '200; 400=219
+                .SoundEquipmentLimit = "200"
+                .ElectronicEquipmentLimit = "300"
+                .TripInterruptionLimitId = "0" '300=25; N/A=0 (Interruption of Travel coverage is only available on Motorcycles.)
+
+                '9/5/2012 - will get error if garaging address isn't populated
+                With .GaragingAddress
+                    .WithinCity = True
+                    .Address = qqHelper.CloneObject(qq.Client.Address)
+                    .GaragedInside = False
+                End With
+
+                'Scheduled Items are only available on Motorcycles.
+                '.ScheduledItems = New List(Of QuickQuoteScheduledItem)
+                'With .ScheduledItems
+                '    Dim si As New QuickQuoteScheduledItem
+                '    With si
+                '        .Amount = "100.00"
+                '        .Breakage = True
+                '        .Description = "test trailer"
+                '        .Dscr2 = "trailer notes"
+                '        .ItemDate = "7/1/2013"
+                '        .ScheduledItemsCategoryId = "2" 'Coverage
+                '        .ScheduledItemsComboId = "0" 'None
+                '        .ScheduledItemsTypeId = "21" 'Trailers
+                '    End With
+                '    .Add(si)
+                '    Dim si2 As New QuickQuoteScheduledItem
+                '    With si2
+                '        .Amount = "150.00"
+                '        .Breakage = False
+                '        .Description = "test sidecar"
+                '        .Dscr2 = "sidecar notes"
+                '        .ItemDate = "7/3/2013"
+                '        .ScheduledItemsCategoryId = "2" 'Coverage
+                '        .ScheduledItemsComboId = "0" 'None
+                '        .ScheduledItemsTypeId = "22" 'Sidecars
+                '        .AdditionalInterests = New Generic.List(Of QuickQuoteAdditionalInterest)
+                '        Dim ai As New QuickQuoteAdditionalInterest
+                '        With ai
+                '            .Name = qqHelper.CloneObject(quickQuote.Client.Name)
+                '            .Address = qqHelper.CloneObject(quickQuote.Client.Address)
+                '            .Description = "Test AI Description"
+                '            .Other = ""
+                '            .TypeId = "65" 'Loss Payable - Loss Payable
+                '        End With
+                '        .AdditionalInterests.Add(ai)
+                '    End With
+                '    .Add(si2)
+                'End With
+            End With
+            qq.Vehicles.Add(v)
+            Dim errMsg As String = String.Empty
+            If Me.QuickQuoteTreeView1.SuccessfulSave(qq, errMsg) = False Then
+                If String.IsNullOrEmpty(errMsg) = True Then
+                    errMsg = "There was a problem adding the new vehicle"
+                End If
+                ShowError(errMsg)
+            Else
+                ShowError("Vehicle # " & vehicleNumber.ToString & " has been added")
+            End If
+        End If
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_NewLocation(locationNumber As Integer) Handles QuickQuoteTreeView1.NewLocation
+        'ShowError("Move to new location screen; location # " & locationNumber.ToString)
+        If Me.QuickQuoteTreeView1.QuoteObject IsNot Nothing Then
+            qq = Me.QuickQuoteTreeView1.QuoteObject
+            If qq.Locations Is Nothing Then
+                qq.Locations = New List(Of QuickQuoteLocation)
+            End If
+            Dim l As New QuickQuoteLocation
+            With l
+                l.Description = "new location " & Date.Now.ToString 'DateTime.Now.ToString
+            End With
+            qq.Locations.Add(l)
+            Dim errMsg As String = String.Empty
+            If Me.QuickQuoteTreeView1.SuccessfulSave(qq, errMsg) = False Then
+                If String.IsNullOrEmpty(errMsg) = True Then
+                    errMsg = "There was a problem adding the new location"
+                End If
+                ShowError(errMsg)
+            Else
+                ShowError("Location # " & locationNumber.ToString & " has been added")
+            End If
+        End If
+    End Sub
+
+    Protected Sub cbTreeViewEditMode_CheckedChanged(sender As Object, e As System.EventArgs) Handles cbTreeViewEditMode.CheckedChanged
+        'If Me.QuickQuoteTreeView1.InEditMode = True Then
+        '    ShowError("the treeview is currently in edit mode")
+        'End If
+        'Me.QuickQuoteTreeView1.InEditMode = Me.cbTreeViewEditMode.Checked
+
+        'updated 1/22/2014
+        'If Me.QuickQuoteTreeView1.InEditMode = True AndAlso (Me.lblManuallyPutInEditMode.Text = "" OrElse UCase(Me.lblManuallyPutInEditMode.Text) = "NO") Then
+        '1/27/2014 - changed to hidden field
+        If Me.QuickQuoteTreeView1.InEditMode = True AndAlso (Me.hdnManuallyPutInEditMode.Value = "" OrElse UCase(Me.hdnManuallyPutInEditMode.Value) = "NO") Then
+            ShowError("the treeview is currently in edit mode")
+            Me.cbTreeViewEditMode.Checked = Me.QuickQuoteTreeView1.InEditMode
+            Exit Sub
+        End If
+        If Me.cbTreeViewEditMode.Checked = True Then
+            'Me.lblManuallyPutInEditMode.Text = "Yes"
+            '1/27/2014 - changed to hidden field
+            Me.hdnManuallyPutInEditMode.Value = "Yes"
+        Else
+            'Me.lblManuallyPutInEditMode.Text = ""
+            '1/27/2014 - changed to hidden field
+            Me.hdnManuallyPutInEditMode.Value = ""
+        End If
+        Me.QuickQuoteTreeView1.InEditMode = Me.cbTreeViewEditMode.Checked
+    End Sub
+
+
+    Protected Sub QuickQuoteTreeView1_ShowPolicyholders(sender As Object, e As System.EventArgs) Handles QuickQuoteTreeView1.ShowPolicyholders
+        ShowError("Move to policyholders screen.")
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_ShowDrivers(sender As Object, e As System.EventArgs) Handles QuickQuoteTreeView1.ShowDrivers
+        ShowError("Move to drivers screen.")
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_ShowVehicles(sender As Object, e As System.EventArgs) Handles QuickQuoteTreeView1.ShowVehicles
+        ShowError("Move to vehicles screen.")
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_ShowLocations(sender As Object, e As System.EventArgs) Handles QuickQuoteTreeView1.ShowLocations
+        ShowError("Move to locations screen.")
+    End Sub
+
+    Protected Sub QuickQuoteTreeView1_ShowCoverages(sender As Object, e As System.EventArgs) Handles QuickQuoteTreeView1.ShowCoverages
+        ShowError("Move to coverages screen.")
+    End Sub
+End Class
