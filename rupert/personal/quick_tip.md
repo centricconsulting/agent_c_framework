@@ -68,5 +68,26 @@ git branch -u origin/new-name new-name
 
 **Note:** Use this when a repository branch name has been changed and you need to update your local environment to recognize the new name.
 
+### Creating and Managing Branches
+```bash
+# Create a new branch and switch to it immediately
+git checkout -b new-branch-name
+
+# Or with newer Git syntax
+git switch -c new-branch-name
+
+# Create a branch without switching to it
+git branch new-branch-name
+```
+
+Common workflow:
+```bash
+# Create and switch to new branch
+git checkout -b feature/my-new-feature
+
+# Make your changes, then push to GitHub
+git push origin feature/my-new-feature
+```
+
 ---
-*Last Updated: October 13, 2025 - 3:30PM*
+*Last Updated: October 13, 2025 - 3:45PM*
