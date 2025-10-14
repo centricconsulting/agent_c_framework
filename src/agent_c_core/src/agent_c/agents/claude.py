@@ -133,14 +133,9 @@ class ClaudeChatAgent(BaseAgent):
         max_tokens: int = self.CLAUDE_MAX_TOKENS
         allow_server_tools: bool = kwargs.get("allow_server_tools", False)
 
+
         tool_chest = kwargs.get("tool_chest", self.tool_chest)
-        toolsets: List[str] = kwargs.get("toolsets", [])
-        if len(toolsets) == 0:
-            functions: List[Dict[str, Any]] = tool_chest.active_claude_schemas
-        else:
-            inference_data = tool_chest.get_inference_data(toolsets, "claude")
-            functions: List[Dict[str, Any]] = kwargs['schemas']
-            kwargs['tool_sections'] = inference_data['sections']
+        functions: List[Dict[str, Any]] = kwargs['schemas']
 
         kwargs['prompt_metadata']['model_id'] = model_name
         (tool_context, prompt_context) = await self._render_contexts(**kwargs)
@@ -208,6 +203,8 @@ class ClaudeChatAgent(BaseAgent):
         messages = opts["completion_opts"]["messages"]
         interaction_id = await self._raise_interaction_start(**callback_opts)
         await self._raise_system_prompt(opts["completion_opts"]["system"], **callback_opts)
+        chat_session = kwargs.get("chat_session")
+
         delay = 3  # Initial delay between retries
         async with (self.semaphore):
             while delay <= self.max_delay:
@@ -248,6 +245,15 @@ class ClaudeChatAgent(BaseAgent):
                         self.logger.debug(f"Updating system prompt for interaction {interaction_id}")
                         opts["completion_opts"]["system"] = new_system_prompt
                         await self._raise_system_prompt(new_system_prompt, **callback_opts)
+
+                    # Get agent config from chat_session or tool_context (for act one-shot scenarios that don't provide it) - old code commented out.
+                    # tool_params = tool_chest.get_inference_data(chat_session.agent_config.tools, self.tool_format)
+                    # opts["completion_opts"]['tools'] = chat_session.agent_config.filter_allowed_tools(tool_params['schemas'])
+                    agent_config = chat_session.agent_config if chat_session else opts['tool_context'].get('active_agent') or opts['tool_context'].get('agent_config')
+                    if agent_config:
+                        tool_params = tool_chest.get_inference_data(agent_config.tools, self.tool_format)
+                        opts["completion_opts"]['tools'] = agent_config.filter_allowed_tools(tool_params['schemas'])
+
 
                     delay = 3
                     messages = result

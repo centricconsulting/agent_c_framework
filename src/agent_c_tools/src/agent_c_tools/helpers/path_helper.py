@@ -27,8 +27,14 @@ def has_file_extension(filename: str, extensions: List[str]) -> bool:
 def ensure_file_extension(filename: str, extension: str) -> str:
     """Ensure filename has the specified extension."""
     filename = normalize_path(filename)
-    if not filename.lower().endswith(f'.{extension.lower()}'):
-        return f"{filename}.{extension}"
+
+    # Normalize the extension to ensure it starts with a dot
+    if not extension.startswith('.'):
+        extension = f'.{extension}'
+
+    # Check if filename already ends with the extension (case-insensitive)
+    if not filename.lower().endswith(extension.lower()):
+        return f"{filename}{extension}"
     return filename
 
 def os_file_system_path(workspace_tool: WorkspaceTools, unc_path: str) -> str|None:

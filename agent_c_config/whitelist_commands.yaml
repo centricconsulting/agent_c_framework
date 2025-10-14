@@ -190,8 +190,8 @@ pnpm:
         "test:run": { allowed_flags: ["--filter", "--silent", "--reporter"], deny_args: false, allow_test_paths: true, suppress_success_output: true }
         "test:debug": { allowed_flags: [], deny_args: false, allow_test_paths: true, suppress_success_output: false }
         "type-check": { allowed_flags: [], suppress_success_output: false, allow_test_mode: true, deny_args: false }
-        "typecheck": { allowed_flags: [ ], suppress_success_output: false, allow_test_mode: true, deny_args: false }
-        "type_check": { allowed_flags: [ ], suppress_success_output: false, allow_test_mode: true, deny_args: false }
+        "typecheck": { allowed_flags: ["--filter"], suppress_success_output: false, allow_test_mode: true, deny_args: false }
+        "type_check": { allowed_flags: ["--filter" ], suppress_success_output: false, allow_test_mode: true, deny_args: false }
         "test:coverage": { allowed_flags: ["--filter", "--silent", "--reporter"], deny_args: false, allow_test_paths: true, suppress_success_output: false }
         "clean": { suppress_success_output: false, allow_test_mode: true, deny_args: false }
         "install:clean": { suppress_success_output: false, allow_test_mode: true, deny_args: false }
@@ -206,9 +206,9 @@ pnpm:
     "test:ui": { allowed_flags: ["--filter", "--silent", "--reporter"], deny_args: false, allow_test_paths: true, suppress_success_output: true }
     "test:debug": { allowed_flags: [], deny_args: false, allow_test_paths: true, suppress_success_output: true }
     "clean": { suppress_success_output: false, allow_test_mode: true, deny_args: false }
-    "type-check": { allowed_flags: [], suppress_success_output: false, allow_test_mode: true, deny_args: false }
-    "typecheck": { allowed_flags: [], suppress_success_output: false, allow_test_mode: true, deny_args: false }
-    "type_check": { allowed_flags: [], suppress_success_output: false, allow_test_mode: true, deny_args: false }
+    "type-check": { allowed_flags: ["--filter"], suppress_success_output: false, allow_test_mode: true, deny_args: false }
+    "typecheck": { allowed_flags: ["--filter"], suppress_success_output: false, allow_test_mode: true, deny_args: false }
+    "type_check": { allowed_flags: ["--filter"], suppress_success_output: false, allow_test_mode: true, deny_args: false }
     ls: { allowed_flags: [] }
     build: { allowed_flags: [], suppress_success_output: true }
     why: { allowed_flags: ["--json","--long"] }

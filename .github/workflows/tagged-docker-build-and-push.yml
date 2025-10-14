@@ -37,50 +37,21 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./dockerfiles/api.Dockerfile
+          file: ./api.Dockerfile
           # Only push when not a PR
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/${{ env.OWNER }}/agent_c_api_dev:latest
-            ghcr.io/${{ env.OWNER }}/agent_c_api_dev:build-${{ github.run_number }}
-            ghcr.io/${{ env.OWNER }}/agent_c_api_dev:${{ env.SHORT_SHA }}
-            ghcr.io/${{ env.OWNER }}/agent_c_api_dev:${{ env.DATE }}
+            ghcr.io/${{ env.OWNER }}/agentc-api:latest
+            ghcr.io/${{ env.OWNER }}/agentc-api:build-${{ github.run_number }}
 
-      - name: Build and push Framework image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./dockerfiles/Dockerfile.dev
-          # Only push when not a PR
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ghcr.io/${{ env.OWNER }}/agent_c_framework_dev:latest
-            ghcr.io/${{ env.OWNER }}/agent_c_framework_dev:build-${{ github.run_number }}
-            ghcr.io/${{ env.OWNER }}/agent_c_framework_dev:${{ env.SHORT_SHA }}
-            ghcr.io/${{ env.OWNER }}/agent_c_framework_dev:${{ env.DATE }}
 
-      - name: Build and push Frontend image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./dockerfiles/frontend.Dockerfile
-          # Only push when not a PR
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ghcr.io/${{ env.OWNER }}/agent_c_frontend_dev:latest
-            ghcr.io/${{ env.OWNER }}/agent_c_frontend_dev:build-${{ github.run_number }}
-            ghcr.io/${{ env.OWNER }}/agent_c_frontend_dev:${{ env.SHORT_SHA }}
-            ghcr.io/${{ env.OWNER }}/agent_c_frontend_dev:${{ env.DATE }}
-
-      - name: Build and push Realtime Client Demo image
+      - name: Build and push client image
         uses: docker/build-push-action@v4
         with:
           context: ./src/realtime_client
-          file: ./src/realtime_client/Dockerfile
+          file: ./client.Dockerfile
           # Only push when not a PR
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/${{ env.OWNER }}/agent_c_realtime_demo:latest
-            ghcr.io/${{ env.OWNER }}/agent_c_realtime_demo:build-${{ github.run_number }}
-            ghcr.io/${{ env.OWNER }}/agent_c_realtime_demo:${{ env.SHORT_SHA }}
-            ghcr.io/${{ env.OWNER }}/agent_c_realtime_demo:${{ env.DATE }}
+            ghcr.io/${{ env.OWNER }}/agentc-client:latest
+            ghcr.io/${{ env.OWNER }}/agentc-client:build-${{ github.run_number }}

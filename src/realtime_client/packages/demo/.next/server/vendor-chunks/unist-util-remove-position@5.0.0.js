@@ -1,0 +1,25 @@
+"use strict";
+/*
+ * ATTENTION: An "eval-source-map" devtool has been used.
+ * This devtool is neither made for production nor for readable output files.
+ * It uses "eval()" calls to create a separate source file with attached SourceMaps in the browser devtools.
+ * If you are trying to read the output file, select a different devtool (https://webpack.js.org/configuration/devtool/)
+ * or disable the default devtool with "devtool: false".
+ * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
+ */
+exports.id = "vendor-chunks/unist-util-remove-position@5.0.0";
+exports.ids = ["vendor-chunks/unist-util-remove-position@5.0.0"];
+exports.modules = {
+
+/***/ "(ssr)/../../node_modules/.pnpm/unist-util-remove-position@5.0.0/node_modules/unist-util-remove-position/lib/index.js":
+/*!**********************************************************************************************************************!*\
+  !*** ../../node_modules/.pnpm/unist-util-remove-position@5.0.0/node_modules/unist-util-remove-position/lib/index.js ***!
+  \**********************************************************************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   removePosition: () => (/* binding */ removePosition)\n/* harmony export */ });\n/* harmony import */ var unist_util_visit__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! unist-util-visit */ \"(ssr)/../../node_modules/.pnpm/unist-util-visit@5.0.0/node_modules/unist-util-visit/lib/index.js\");\n/**\n * @typedef {import('unist').Node} Node\n */\n\n/**\n * @typedef Options\n *   Configuration.\n * @property {boolean | null | undefined} [force=false]\n *   Whether to use `delete` to remove `position` fields.\n *\n *   The default is to set them to `undefined`.\n */\n\n\n\n/**\n * Remove the `position` field from a tree.\n *\n * @param {Node} tree\n *   Tree to clean.\n * @param {Options | null | undefined} [options={force: false}]\n *   Configuration (default: `{force: false}`).\n * @returns {undefined}\n *   Nothing.\n */\nfunction removePosition(tree, options) {\n  const config = options || {}\n  const force = config.force || false\n\n  ;(0,unist_util_visit__WEBPACK_IMPORTED_MODULE_0__.visit)(tree, remove)\n\n  /**\n   * @param {Node} node\n   */\n  function remove(node) {\n    if (force) {\n      delete node.position\n    } else {\n      node.position = undefined\n    }\n  }\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHNzcikvLi4vLi4vbm9kZV9tb2R1bGVzLy5wbnBtL3VuaXN0LXV0aWwtcmVtb3ZlLXBvc2l0aW9uQDUuMC4wL25vZGVfbW9kdWxlcy91bmlzdC11dGlsLXJlbW92ZS1wb3NpdGlvbi9saWIvaW5kZXguanMiLCJtYXBwaW5ncyI6Ijs7Ozs7QUFBQTtBQUNBLGFBQWEsc0JBQXNCO0FBQ25DOztBQUVBO0FBQ0E7QUFDQTtBQUNBLGNBQWMsNEJBQTRCO0FBQzFDO0FBQ0E7QUFDQTtBQUNBOztBQUVzQzs7QUFFdEM7QUFDQTtBQUNBO0FBQ0EsV0FBVyxNQUFNO0FBQ2pCO0FBQ0EsV0FBVyw0QkFBNEIsVUFBVSxhQUFhO0FBQzlELCtCQUErQixhQUFhO0FBQzVDLGFBQWE7QUFDYjtBQUNBO0FBQ087QUFDUDtBQUNBOztBQUVBLEVBQUUsd0RBQUs7O0FBRVA7QUFDQSxhQUFhLE1BQU07QUFDbkI7QUFDQTtBQUNBO0FBQ0E7QUFDQSxNQUFNO0FBQ047QUFDQTtBQUNBO0FBQ0EiLCJzb3VyY2VzIjpbIi9Vc2Vycy9FYm9vdGgvYWdlbnRfY19mcmFtZXdvcmsvc3JjL3JlYWx0aW1lX2NsaWVudC9ub2RlX21vZHVsZXMvLnBucG0vdW5pc3QtdXRpbC1yZW1vdmUtcG9zaXRpb25ANS4wLjAvbm9kZV9tb2R1bGVzL3VuaXN0LXV0aWwtcmVtb3ZlLXBvc2l0aW9uL2xpYi9pbmRleC5qcyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIEB0eXBlZGVmIHtpbXBvcnQoJ3VuaXN0JykuTm9kZX0gTm9kZVxuICovXG5cbi8qKlxuICogQHR5cGVkZWYgT3B0aW9uc1xuICogICBDb25maWd1cmF0aW9uLlxuICogQHByb3BlcnR5IHtib29sZWFuIHwgbnVsbCB8IHVuZGVmaW5lZH0gW2ZvcmNlPWZhbHNlXVxuICogICBXaGV0aGVyIHRvIHVzZSBgZGVsZXRlYCB0byByZW1vdmUgYHBvc2l0aW9uYCBmaWVsZHMuXG4gKlxuICogICBUaGUgZGVmYXVsdCBpcyB0byBzZXQgdGhlbSB0byBgdW5kZWZpbmVkYC5cbiAqL1xuXG5pbXBvcnQge3Zpc2l0fSBmcm9tICd1bmlzdC11dGlsLXZpc2l0J1xuXG4vKipcbiAqIFJlbW92ZSB0aGUgYHBvc2l0aW9uYCBmaWVsZCBmcm9tIGEgdHJlZS5cbiAqXG4gKiBAcGFyYW0ge05vZGV9IHRyZWVcbiAqICAgVHJlZSB0byBjbGVhbi5cbiAqIEBwYXJhbSB7T3B0aW9ucyB8IG51bGwgfCB1bmRlZmluZWR9IFtvcHRpb25zPXtmb3JjZTogZmFsc2V9XVxuICogICBDb25maWd1cmF0aW9uIChkZWZhdWx0OiBge2ZvcmNlOiBmYWxzZX1gKS5cbiAqIEByZXR1cm5zIHt1bmRlZmluZWR9XG4gKiAgIE5vdGhpbmcuXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiByZW1vdmVQb3NpdGlvbih0cmVlLCBvcHRpb25zKSB7XG4gIGNvbnN0IGNvbmZpZyA9IG9wdGlvbnMgfHwge31cbiAgY29uc3QgZm9yY2UgPSBjb25maWcuZm9yY2UgfHwgZmFsc2VcblxuICB2aXNpdCh0cmVlLCByZW1vdmUpXG5cbiAgLyoqXG4gICAqIEBwYXJhbSB7Tm9kZX0gbm9kZVxuICAgKi9cbiAgZnVuY3Rpb24gcmVtb3ZlKG5vZGUpIHtcbiAgICBpZiAoZm9yY2UpIHtcbiAgICAgIGRlbGV0ZSBub2RlLnBvc2l0aW9uXG4gICAgfSBlbHNlIHtcbiAgICAgIG5vZGUucG9zaXRpb24gPSB1bmRlZmluZWRcbiAgICB9XG4gIH1cbn1cbiJdLCJuYW1lcyI6W10sImlnbm9yZUxpc3QiOlswXSwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///(ssr)/../../node_modules/.pnpm/unist-util-remove-position@5.0.0/node_modules/unist-util-remove-position/lib/index.js\n");
+
+/***/ })
+
+};
+;

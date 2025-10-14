@@ -24,8 +24,8 @@ class DataVisualizationTools(Toolset):
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs, name='data_visualization')
-        self.workspace_tool = self.tool_chest.active_tools.get('WorkspaceTools')
-        self.dataframe_tool = self.tool_chest.active_tools.get('DataframeTools')
+        self.workspace_tool = self.tool_chest.available_tools.get('WorkspaceTools')
+        self.dataframe_tool = self.tool_chest.available_tools.get('DataframeTools')
         logging_manager = LoggingManager(self.__class__.__name__)
         self.logger = logging_manager.get_logger()
 

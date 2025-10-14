@@ -26,7 +26,7 @@ class CodeInterpreterTools(Toolset):
                 Required tools: 'workspace' for managing input/output files
         """
         super().__init__(**kwargs, name='code_interpreter')
-        self.workspace_tool = self.tool_chest.active_tools.get('WorkspaceTools')
+        self.workspace_tool = self.tool_chest.available_tools.get('WorkspaceTools')
 
         self.logger = logging.getLogger(__name__)
         self.section = CodeInterpreterToolsSection()

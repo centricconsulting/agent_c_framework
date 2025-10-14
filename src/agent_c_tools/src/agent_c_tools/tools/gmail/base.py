@@ -36,11 +36,28 @@ class GmailBase(Toolset):
     def __init__(self, **kwargs):
         super().__init__(**kwargs, needed_keys=['GOOGLE_CREDENTIALS_FILE'])
         self.logger: logging.Logger = logging.getLogger(__name__)
-        self.workspace_tool = self.tool_chest.active_tools.get('WorkspaceTools')
+        self.workspace_tool = self.tool_chest.available_tools.get('WorkspaceTools')
         self.service = self._initialize_gmail_service()
         self.cache_expire = 300  # 5 minute default cache expiration for emails
         self.MAX_TOKEN_SIZE = 35000
 
+    def _count_tokens(self, data: str, tool_context) -> int:
+        """
+        Centralized token counting method for Gmail tools.
+
+        Args:
+            data: The text content to count tokens for
+            tool_context: Tool context containing agent_runtime
+
+        Returns:
+            Number of tokens in the data
+
+        Raises:
+            ValueError: If tool_context or agent_runtime is missing
+        """
+        if tool_context is None or 'agent_runtime' not in tool_context:
+            raise ValueError("tool_context with agent_runtime is required for token counting")
+        return tool_context['agent_runtime'].count_tokens(data)
 
     def _initialize_gmail_service(self):
         """Initialize Gmail API service with improved token refresh handling."""
@@ -133,13 +150,16 @@ class GmailBase(Toolset):
                 cleaned_lines.append(line)
         return ' '.join(cleaned_lines)
 
-    def is_content_too_large(self, content: str) -> bool:
-        token_count = self.tool_chest.agent.count_tokens(content)
-        return token_count > self.MAX_EMAIL_BODY_TOKEN_SIZE
+    def is_content_too_large(self, content: str, tool_context) -> bool:
+        if tool_context is None or 'agent_runtime' not in tool_context:
+            return True  # Can't check size without agent context
+        else:
+            token_count = self._count_tokens(content, tool_context)
+            return token_count > self.MAX_EMAIL_BODY_TOKEN_SIZE
 
-    def truncate_content_by_approx_tokens(self, content: str, max_tokens: int) -> str:
+    def truncate_content_by_approx_tokens(self, content: str, max_tokens: int, tool_context) -> str:
         """Truncate content to stay within token budget while preserving readability."""
-        if not self.is_content_too_large(content):
+        if not self.is_content_too_large(content, tool_context):
             return content
 
         # Simple but smarter truncation
@@ -159,9 +179,10 @@ class GmailBase(Toolset):
             output: Any,
             return_type: str,
             calling_function: str,
+            tool_context,
             ui_message: Optional[str] = None,
             error: Optional[Exception] = None,
-            tool_context: Optional[Dict] = None
+
     ) -> str:
         """Handle different return types consistently across all tools."""
         if isinstance(output, (dict, list)):
@@ -171,7 +192,7 @@ class GmailBase(Toolset):
 
 
         # handle the case where the output is too large
-        output_str = self.truncate_content_by_approx_tokens(output_str, self.MAX_TOKEN_SIZE)
+        output_str = self.truncate_content_by_approx_tokens(output_str, self.MAX_TOKEN_SIZE, tool_context)
 
         if error:
             error_msg = str(error)

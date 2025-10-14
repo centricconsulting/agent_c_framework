@@ -506,6 +506,7 @@ class BrowserPlaywrightTools(Toolset):
         full_page = kwargs.get("full_page", False)
         quality = kwargs.get("quality", 80)
         file_format = kwargs.get("file_format", "png")
+        tool_context = kwargs.get("tool_context", {})
         
         if not session_id or session_id not in self.sessions:
             return "ERROR: No active browser session. Initialize a browser first."
@@ -562,7 +563,8 @@ class BrowserPlaywrightTools(Toolset):
                 content_type=media_type,
                 name=filename,
                 content_bytes=screenshot_bytes,
-                content=f"data:{media_type};base64,{base64_screenshot}"
+                content=f"data:{media_type};base64,{base64_screenshot}",
+                tool_context=tool_context
             )
             
             result = {

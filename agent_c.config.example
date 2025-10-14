@@ -1,0 +1,43 @@
+######################################################################
+# Model configuration
+
+# Open AI support
+OPENAI_API_KEY=FROM-OPEN-AI
+
+# Needed to use Azure OpenAI.  Note:  Do not add this if you don't have access to Azure OpenAI
+# as it will be used over the default OpenAI API if these keys are populated. (for now)
+#AZURE_OPENAI_API_KEY=FROM-AZURE
+#AZURE_OPENAI_ENDPOINT=https://YOURNAME.openai.azure.com/
+#AZURE_OPENAI_API_VERSION=2024-03-01-preview
+
+# Needed for Claude support
+#ANTHROPIC_API_KEY=FROM-ANTHROPIC
+
+
+
+######################################################################
+# Basic Setup
+
+
+######################################################################
+# API keys for various services consumed by tools.
+
+# SERPAPI_API_KEY for using google_search_results package
+# SERPAPI_API_KEY=
+
+# SEC_API Key for accessing SEC filings via sec-api.io
+# SEC_API_KEY=
+
+# Tavili API Key for using the tavili package
+# TAVILI_API_KEY=tavilyapikey
+
+# NewsAPI Key for using the https://newsapi.org
+# NEWSAPI_API_KEY=newsapikey
+
+# For Salesforce Tool
+# to get token, click on your profile picture, settings, reset my security token, and click the reset security token button
+# new security token will be emailed to you
+SALESFORCE_USERID=
+SALESFORCE_PASSWORD=
+SALESFORCE_SECURITY_TOKEN=
+SALESFORCE_DOMAIN=

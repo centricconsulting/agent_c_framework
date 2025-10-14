@@ -58,7 +58,7 @@ class SalesforceTools(Toolset):
                          needed_keys=['SALESFORCE_USERID', 'SALESFORCE_PASSWORD', 'SALESFORCE_SECURITY_TOKEN',
                                       'SALESFORCE_DOMAIN'])
         self.logger: logging.Logger = logging.getLogger(__name__)
-        self.workspace_tool = self.tool_chest.active_tools.get('WorkspaceTools')
+        self.workspace_tool = self.tool_chest.available_tools.get('WorkspaceTools')
 
         self.section = SalesforcePrompt()
         # adding domain to the object causes validation errors. This still works without the domain being passed
@@ -116,6 +116,8 @@ class SalesforceTools(Toolset):
         workspace_name = kwargs.get('workspace_name', 'project')
         force_save = kwargs.get('force_save', False)
         file_path = kwargs.get('file_path', f'salesforce_query_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
+        tool_context = kwargs.get('tool_context', None)
+
         self.logger.info(f"Querying Salesforce with SOQL: {soql_query}")
         if not self.sf:
             return json.dumps({"error": "Salesforce connection not initialized"})
@@ -136,7 +138,11 @@ class SalesforceTools(Toolset):
             # Convert to DataFrame
             df = pd.DataFrame(cleaned_records)
 
-            response_size = self.tool_chest.agent.count_tokens(df.to_json())
+            if tool_context is None or 'agent_runtime' not in tool_context:
+                raise ValueError("tool_context with agent_runtime is required for token counting")
+            else:
+                response_size = tool_context['agent_runtime'].count_tokens(df.to_json())
+
             if response_size > 25000 or force_save:
                 file_path = ensure_file_extension(file_path, 'xlsx')
                 unc_path = create_unc_path(workspace_name, file_path)
@@ -154,7 +160,8 @@ class SalesforceTools(Toolset):
                     sent_by_class=self.__class__.__name__,
                     sent_by_function='save_salesforce_query_results',
                     content_type="text/html",
-                    content=get_file_html(os_path, unc_path)
+                    content=get_file_html(os_path, unc_path),
+                    tool_context=tool_context
                 )
                 self.logger.debug(result)
 
@@ -196,6 +203,7 @@ class SalesforceTools(Toolset):
     async def create_record(self, **kwargs) -> str:
         object_name = kwargs.get('object_name')
         data = kwargs.get('data')
+        tool_context = kwargs.get('tool_context', None)
         self.logger.info(f"Creating {object_name} in Salesforce with: {data}")
 
         if not self.sf:
@@ -251,6 +259,7 @@ class SalesforceTools(Toolset):
         object_name = kwargs.get('object_name')
         record_id = kwargs.get('record_id')
         data = kwargs.get('data')
+        tool_context = kwargs.get('tool_context', None)
         self.logger.info(f"Updating {object_name} with id of {record_id} in Salesforce with: {data}")
 
         if not self.sf:
@@ -288,6 +297,7 @@ class SalesforceTools(Toolset):
     async def delete_record(self, **kwargs) -> str:
         object_name = kwargs.get('object_name')
         record_id = kwargs.get('record_id')
+        tool_context = kwargs.get('tool_context', None)
         print(f"Deleting {object_name} with id of {record_id} in Salesforce")
 
         if not self.sf:

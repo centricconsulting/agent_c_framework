@@ -73,7 +73,7 @@ class GmailSearch(GmailBase):
                 results = json.loads(cached_results)
             else:
                 if resource == GmailResourceType.MESSAGES:
-                    results = await self._search_messages(query, max_results)
+                    results = await self._search_messages(query, max_results, tool_context)
                 else:
                     results = await self._search_threads(query, max_results)
 
@@ -100,7 +100,7 @@ class GmailSearch(GmailBase):
                 tool_context=tool_context
             )
 
-    async def _search_messages(self, query: str, max_results: int) -> List[Dict[str, Any]]:
+    async def _search_messages(self, query: str, max_results: int, tool_context) -> List[Dict[str, Any]]:
         """Search for messages and get their details."""
         try:
             messages = (
@@ -148,7 +148,7 @@ class GmailSearch(GmailBase):
                     email_msg = email.message_from_bytes(raw_message)
 
                     # Process body with our smart handling
-                    result["body"] = await self.process_email_content(email_msg, self.MAX_EMAIL_BODY_TOKEN_SIZE)
+                    result["body"] = await self.process_email_content(email_msg=email_msg, max_tokens=self.MAX_EMAIL_BODY_TOKEN_SIZE, tool_context=tool_context)
                 except Exception as e:
                     self.logger.error(f"Error processing email body: {e}")
                     result["body"] = f"[Error processing email content: {str(e)}]"
@@ -254,7 +254,7 @@ class GmailSearch(GmailBase):
         return message
 
 
-    async def process_email_content(self, email_msg: email.message.Message, max_tokens: int = 2000) -> str:
+    async def process_email_content(self, email_msg: email.message.Message, tool_context, max_tokens: int = 2000) -> str:
         """
         Extract and prioritize email content, handling large emails intelligently.
         Returns plain text with important parts prioritized.
@@ -262,8 +262,7 @@ class GmailSearch(GmailBase):
         # First attempt to get plain text version (preferred)
         plain_text = await self._extract_plain_text(email_msg)
 
-        # If no plain text found or it's still too large, try HTML version
-        if not plain_text or self.tool_chest.agent.count_tokens(plain_text) > max_tokens:
+        if not plain_text or self._count_tokens(plain_text, tool_context) > max_tokens:
             html_content = await self._extract_html(email_msg)
             if html_content:
                 plain_text = await self._html_to_plain_text(html_content)
@@ -274,8 +273,8 @@ class GmailSearch(GmailBase):
             cleaned_text = await self._clean_email_text(plain_text)
 
             # Check if it's still too large
-            if self.tool_chest.agent.count_tokens(cleaned_text) > max_tokens:
-                return await self._prioritize_content(cleaned_text, max_tokens)
+            if self._count_tokens(cleaned_text, tool_context) > max_tokens:
+                return await self._prioritize_content(cleaned_text, max_tokens, tool_context)
             return cleaned_text
 
         # Fallback
@@ -385,7 +384,7 @@ class GmailSearch(GmailBase):
         return text.strip()
 
 
-    async def _prioritize_content(self, text: str, max_tokens: int) -> str:
+    async def _prioritize_content(self, text: str, max_tokens: int, tool_context) -> str:
         """
         Intelligently extract the most important parts of an email to fit within token limit.
         Prioritizes the beginning of the email with smart summarization.
@@ -395,12 +394,12 @@ class GmailSearch(GmailBase):
 
         # Always include the first paragraph (usually most important)
         result = paragraphs[0] + '\n\n'
-        token_count = self.tool_chest.agent.count_tokens(result)
+        token_count = self._count_tokens(result, tool_context)
 
         # Try to include the first few paragraphs
         for i in range(1, min(3, len(paragraphs))):
             next_para = paragraphs[i] + '\n\n'
-            next_tokens = self.tool_chest.agent.count_tokens(next_para)
+            next_tokens = self._count_tokens(next_para, tool_context)
 
             if token_count + next_tokens < max_tokens * 0.6:  # Leave room for middle/end selection
                 result += next_para
@@ -412,7 +411,7 @@ class GmailSearch(GmailBase):
         if len(paragraphs) > 5 and token_count < max_tokens * 0.7:
             middle_idx = len(paragraphs) // 2
             middle_para = paragraphs[middle_idx] + '\n\n'
-            middle_tokens = self.tool_chest.agent.count_tokens(middle_para)
+            middle_tokens = self._count_tokens(middle_para, tool_context)
 
             if token_count + middle_tokens < max_tokens * 0.8:
                 result += "[...]\n\n" + middle_para
@@ -421,7 +420,7 @@ class GmailSearch(GmailBase):
         # Try to include the last paragraph (often contains action items or conclusions)
         if len(paragraphs) > 1 and token_count < max_tokens * 0.9:
             last_para = paragraphs[-1]
-            last_tokens = self.tool_chest.agent.count_tokens(last_para)
+            last_tokens = self._count_tokens(last_para, tool_context)
 
             if token_count + last_tokens < max_tokens:
                 result += "[...]\n\n" + last_para

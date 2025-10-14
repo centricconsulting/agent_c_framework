@@ -951,6 +951,292 @@ _plans:
         updated_at: '2025-06-13T10:11:01.816739'
     title: Agent Variant Testing & Refinement Framework
     updated_at: '2025-06-13T10:51:16.358977'
+  angular_enterprise_team_design:
+    created_at: '2025-10-14T10:04:58.483766'
+    description: Design and implement a sophisticated multi-agent team for enterprise
+      Angular application development using Direct Communication Mesh pattern. The
+      team will handle complex architecture, standalone components, and comprehensive
+      testing strategies for the angular_app project.
+    id: volume-fabric
+    lessons_learned:
+    - created_at: '2025-10-14T10:55:36.524994'
+      id: world
+      learned_task_id: folio-janet
+      lesson: 'CRITICAL LESSON: Initial design lacked clone delegation for specialists,
+        which would have caused severe context burnout and token cost issues. ALL
+        specialists (Rex, Aria, Mason, Vera) should have AgentCloneTools and delegate
+        granular work. Mason implementing 30+ components in one session = guaranteed
+        burnout. Solution: Each specialist coordinates and delegates focused tasks
+        to clones (ONE component per clone, ONE module per clone, ONE test flow per
+        clone). This aligns with Design Bible principle: "Prime agents are orchestrators
+        and coordinators. Clones are focused executors."'
+    tasks:
+      ecology-orca:
+        child_tasks: []
+        completed: true
+        completion_report: 'Aria Angular Architect created successfully. Key features:
+          Standalone component architecture design, state management strategies (Signals/RxJS/NgRx),
+          smart/dumb component patterns, service layer architecture, comprehensive
+          technical specifications, direct communication with all team members via
+          AgentTeamTools, detailed architecture documentation templates, and enterprise
+          Angular best practices.'
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-14T10:05:21.316615'
+        description: Create the Angular architect agent that designs component architecture,
+          establishes design patterns, defines module structure, plans state management
+          strategies, and creates technical specifications. Should be an 'assist'
+          category agent with direct communication to requirements specialist, developer,
+          and test engineer.
+        id: ecology-orca
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Design Angular Architect Agent
+        updated_at: '2025-10-14T10:08:39.426426'
+      edition-voodoo:
+        child_tasks: []
+        completed: true
+        completion_report: '**Team Architecture Defined - Direct Communication Mesh
+          Pattern**
+
+
+          **Agent Keys and Roles:**
+
+          1. `diego_angular_orchestrator` - Orchestrator (domo) - User-facing team
+          coordinator
+
+          2. `rex_angular_requirements` - Requirements Specialist (assist) - Requirement
+          analysis
+
+          3. `aria_angular_architect` - Angular Architect (assist) - Technical architecture
+          and design
+
+          4. `mason_angular_craftsman` - Angular Developer (assist) - Implementation
+          specialist
+
+          5. `vera_angular_tester` - Test Engineer (assist) - Testing strategy and
+          quality assurance
+
+
+          **Communication Pattern:**
+
+          - Orchestrator coordinates workflow, maintains quality gates, provides user
+          interface
+
+          - Specialists communicate directly via AgentTeamTools for efficient collaboration
+
+          - Rex ↔ Aria: Requirements clarification and feasibility discussions
+
+          - Aria ↔ Mason: Architecture guidance and implementation coordination
+
+          - Aria ↔ Vera: Test strategy alignment with architecture
+
+          - Mason ↔ Vera: Implementation validation and test creation
+
+          - All specialists escalate to Diego for conflicts and strategic decisions
+
+
+          **Category Relationships:**
+
+          - Diego: [''domo'', ''angular'', ''enterprise'']
+
+          - Rex: [''assist'', ''requirements'', ''diego_angular_orchestrator'', ''aria_angular_architect'']
+
+          - Aria: [''assist'', ''architecture'', ''diego_angular_orchestrator'', ''rex_angular_requirements'',
+          ''mason_angular_craftsman'', ''vera_angular_tester'']
+
+          - Mason: [''assist'', ''development'', ''diego_angular_orchestrator'', ''aria_angular_architect'',
+          ''vera_angular_tester'']
+
+          - Vera: [''assist'', ''testing'', ''diego_angular_orchestrator'', ''aria_angular_architect'',
+          ''mason_angular_craftsman'']
+
+
+          **Tool Assignment:**
+
+          All agents: WorkspaceTools, WorkspacePlanningTools, ThinkTools, AgentTeamTools
+
+          Diego also: AgentCloneTools (for delegating complex tasks)
+
+          Vera also: BrowserPlaywrightTools (for test implementation)'
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-14T10:05:07.549692'
+        description: 'Establish the team structure using Direct Communication Mesh
+          pattern with 5 specialized agents: Orchestrator, Requirements Specialist,
+          Angular Architect, Angular Craftsman, and Test Engineer. Define communication
+          protocols and collaboration workflows.'
+        id: edition-voodoo
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Define Team Architecture and Communication Pattern
+        updated_at: '2025-10-14T10:05:57.833550'
+      folio-janet:
+        child_tasks: []
+        completed: true
+        completion_report: 'All five agent configurations implemented and saved:
+
+          1. diego_angular_orchestrator.yaml - Orchestrator (domo category)
+
+          2. rex_angular_requirements.yaml - Requirements Specialist (assist category)
+
+          3. aria_angular_architect.yaml - Angular Architect (assist category)
+
+          4. mason_angular_craftsman.yaml - Angular Developer (assist category)
+
+          5. vera_angular_tester.yaml - Test Engineer (assist category)
+
+
+          Direct Communication Mesh configured:
+
+          - All specialists have orchestrator key in categories
+
+          - Cross-specialist communication via AgentTeamTools (Rex↔Aria, Aria↔Mason,
+          Aria↔Vera, Mason↔Vera)
+
+          - Tool assignments verified (WorkspaceTools, WorkspacePlanningTools, ThinkTools,
+          AgentTeamTools for all; AgentCloneTools for Diego; BrowserPlaywrightTools
+          for Vera)
+
+
+          All configurations use claude-sonnet-4-20250514 with reasoning parameters.'
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-14T10:05:40.580798'
+        description: Create YAML configuration files for all five agents, save them
+          to //project/agent_c_config/agents/, verify proper category relationships
+          and tool assignments, and validate the Direct Communication Mesh setup.
+        id: folio-janet
+        parent_id: null
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Implement and Test Agent Configurations
+        updated_at: '2025-10-14T10:11:26.111633'
+      global-formal:
+        child_tasks: []
+        completed: true
+        completion_report: 'Mason Angular Craftsman created successfully. Key features:
+          Standalone component implementation, reactive patterns with RxJS and Signals,
+          TypeScript excellence with strict mode, enterprise coding standards, service
+          implementation with proper DI, comprehensive code templates, direct communication
+          with Aria and Vera via AgentTeamTools, code quality guidelines (method size,
+          complexity, naming), and performance optimization practices.'
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-14T10:05:26.225529'
+        description: Create the Angular developer agent that implements components,
+          services, directives, pipes, and features. Follows architectural specifications,
+          writes clean TypeScript/Angular code, implements standalone components,
+          and maintains code quality. Should be an 'assist' category agent with direct
+          communication to architect and test engineer.
+        id: global-formal
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Design Angular Craftsman/Developer Agent
+        updated_at: '2025-10-14T10:09:43.020143'
+      harlem-solid:
+        child_tasks: []
+        completed: true
+        completion_report: 'Diego Angular Orchestrator agent created successfully.
+          Key features: Sequential phase workflow management, AgentTeamTools for specialist
+          coordination, AgentCloneTools for complex task delegation, comprehensive
+          workspace structure for angular_app project, enterprise Angular standards,
+          quality gates with completion signoff, and direct specialist communication
+          mesh support.'
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-14T10:05:12.894743'
+        description: Create the orchestrator agent that coordinates the Angular development
+          workflow, manages quality gates, handles team coordination, and maintains
+          project state. Should be a 'domo' category agent that users interact with
+          directly.
+        id: harlem-solid
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Design Orchestrator Agent (Team Lead)
+        updated_at: '2025-10-14T10:06:51.250916'
+      husband-newton:
+        child_tasks: []
+        completed: true
+        completion_report: "Workspace structure defined for //angular_app:\n- /src/app\
+          \ - Application root with standalone components\n- /src/components - Shared\
+          \ standalone components  \n- /src/services - Angular services\n- /src/models\
+          \ - TypeScript interfaces/types\n- /src/directives, /src/pipes, /src/guards,\
+          \ /src/interceptors - Utility code\n- /tests/e2e - Playwright E2E tests\n\
+          - /tests/unit - Unit test specifications\n- /docs - Architecture and testing\
+          \ documentation\n- /.scratch - Agent working area with /handoffs, /analysis,\
+          \ /trash subdirectories\n- /Document_Library_Index.md - Master document\
+          \ index\n\nAll agents configured with these conventions and path standards."
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-14T10:05:35.462398'
+        description: Establish the workspace structure for //angular_app including
+          folder conventions, scratchpad usage, document management, and handoff protocols.
+          Define where components, services, tests, and documentation will be stored.
+        id: husband-newton
+        parent_id: null
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Define Workspace Structure and Conventions
+        updated_at: '2025-10-14T10:11:14.423611'
+      ivory-before:
+        child_tasks: []
+        completed: true
+        completion_report: 'Vera Angular Test Engineer created successfully. Key features:
+          Comprehensive test strategy development, Playwright E2E test creation with
+          Page Object Model, unit test specifications for components and services,
+          test pyramid approach (70% unit, 20% integration, 10% E2E), accessibility
+          testing, BrowserPlaywrightTools equipped, direct communication with Aria
+          and Mason via AgentTeamTools, test documentation templates, and quality
+          metrics definition.'
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-14T10:05:30.929993'
+        description: Create the test engineer agent that develops testing strategies,
+          writes Playwright tests, creates unit test specifications, defines test
+          coverage requirements, and validates quality standards. Should be an 'assist'
+          category agent with direct communication to architect and developer.
+        id: ivory-before
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Design Test Strategy Engineer Agent
+        updated_at: '2025-10-14T10:11:05.141140'
+      sharon-package:
+        child_tasks: []
+        completed: true
+        completion_report: 'Rex Angular Requirements Specialist created. Key features:
+          Business-to-technical translation, Angular-specific analysis (components,
+          services, state management), feasibility assessment, direct communication
+          with Aria via AgentTeamTools, comprehensive requirements documentation templates,
+          workspace conventions for angular_app, and planning tool integration.'
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-14T10:05:17.181615'
+        description: Create the requirements specialist agent that analyzes requirements,
+          extracts Angular-specific needs, identifies technical constraints, and translates
+          business requirements into technical specifications. Should be an 'assist'
+          category agent with direct communication access to architect.
+        id: sharon-package
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: null
+        title: Design Requirements Specialist Agent
+        updated_at: '2025-10-14T10:07:36.865931'
+    title: Angular Enterprise Development Team Design
+    updated_at: '2025-10-14T10:55:36.525037'
   bok_bakeoff_agents:
     created_at: '2025-06-07T17:12:23.012364'
     description: Development of variant BOKF agents and iteration on delegation systems

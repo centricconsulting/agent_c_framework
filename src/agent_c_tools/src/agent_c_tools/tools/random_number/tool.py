@@ -54,6 +54,8 @@ class RandomNumberTools(Toolset):
             str: JSON string containing the generated number or error message
         """
         try:
+            # get tool context
+            tool_context = kwargs.get('tool_context', {})
             # Set seed if provided
             seed = kwargs.get('seed')
             min_level = kwargs.get('min', 0)
@@ -72,9 +74,13 @@ class RandomNumberTools(Toolset):
                 sent_by_class=self.__class__.__name__,
                 sent_by_function='generate_random_number',
                 content_type="text/html",
-                content=f"<div>Example Raise Media Event: Number is <b>{number}</b></div>",
-                tool_context=kwargs.get('tool_context', {})
+                content=f"<div>Example Raise Media Event via tool context: Number is <b>{number}</b></div>",
+                tool_context=tool_context
             )
+
+            bridge = tool_context.get('bridge')
+            message = f":::IMPORTANT\n\n- *Number Generated* {number} using bridge render event\n:::"
+            await bridge.raise_render_media_markdown(message, "RandomNumberTools")
             return json.dumps({
                 "number": number,
                 "message": "Random number generated successfully"

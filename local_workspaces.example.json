@@ -1,0 +1,24 @@
+{
+    "local_workspaces": [
+        {
+            "name": "tools",
+            "workspace_path": "src/agent_c_tools",
+            "description": "Agent C - Tools project"
+        },
+        {
+            "name": "core",
+            "workspace_path": "src/agent_c_core",
+            "description": "The Agent C - Core project"
+        },
+        {
+            "name": "api",
+            "workspace_path": "src/agent_c_api",
+            "description": "Mapped to the source for the Agent C React UI backend APIt"
+        },
+        {
+            "name": "client",
+            "workspace_path": "src/typescript_client_sdk",
+            "description": "Workspace for the Agent C client SDK in Typescript"
+        }
+    ]
+}
