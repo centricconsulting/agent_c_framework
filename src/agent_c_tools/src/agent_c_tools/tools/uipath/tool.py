@@ -48,7 +48,8 @@ class UiPathTools(Toolset):
         required_configs = {
             'org_name': self._get_config_value('ORG_NAME'),
             'tenant_name': self._get_config_value('TENANT_NAME', 'DefaultTenant'),
-            'folder_id': self._get_config_value('FOLDER_ID')
+            'folder_id': self._get_config_value('FOLDER_ID'),
+            'auth_scope': self._get_config_value('AUTH_SCOPE')
         }
         
         if pat_token:
@@ -75,11 +76,12 @@ class UiPathTools(Toolset):
         
         return required_configs
     
-    async def _get_auth_token(self, scope: str = "OR.Assets OR.Assets.Read OR.Assets.Write OR.Queues OR.Queues.Read OR.Queues.Write") -> str:
+    async def _get_auth_token(self, scope: str = "OR.Administration OR.Administration.Read OR.Administration.Write OR.Analytics OR.Analytics.Read OR.Analytics.Write OR.Assets OR.Assets.Read OR.Assets.Write OR.Audit OR.Audit.Read OR.Audit.Write OR.AutomationSolutions.Access OR.BackgroundTasks OR.BackgroundTasks.Read OR.BackgroundTasks.Write OR.Execution OR.Execution.Read OR.Execution.Write OR.Folders OR.Folders.Read OR.Folders.Write OR.Hypervisor OR.Hypervisor.Read OR.Hypervisor.Write OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.License OR.License.Read OR.License.Write OR.Machines OR.Machines.Read OR.Machines.Write OR.ML OR.ML.Read OR.ML.Write OR.Monitoring OR.Monitoring.Read OR.Monitoring.Write OR.Queues OR.Queues.Read OR.Queues.Write OR.Robots OR.Robots.Read OR.Robots.Write OR.Settings OR.Settings.Read OR.Settings.Write OR.Tasks OR.Tasks.Read OR.Tasks.Write OR.TestDataQueues OR.TestDataQueues.Read OR.TestDataQueues.Write OR.TestSetExecutions OR.TestSetExecutions.Read OR.TestSetExecutions.Write OR.TestSets OR.TestSets.Read OR.TestSets.Write OR.TestSetSchedules OR.TestSetSchedules.Read OR.TestSetSchedules.Write OR.Users OR.Users.Read OR.Users.Write OR.Webhooks OR.Webhooks.Read OR.Webhooks.Write ") -> str:
         """Get authentication token from UiPath Cloud."""
         try:
             config = self._validate_config()
-            
+            # scope = config['auth_scope']
+            # self.logger.info(f"Using auth scope: {scope}")
             # Check if we have a cached token (simple caching, could be enhanced)
             cache_key = f"{config['org_name']}_{scope}_{config['auth_method']}"
             if cache_key in self._token_cache:
@@ -749,6 +751,202 @@ class UiPathTools(Toolset):
                 
         except Exception as e:
             return f"ERROR: Exception during workspace upload: {str(e)}"
+
+    async def _get_package_version(self, package_name: str, token: str, config: Dict[str, str]) -> Optional[str]:
+        """Get the latest version of a package from UiPath Orchestrator."""
+        try:
+            url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/Processes"
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "Accept": "application/json",
+            }
+            
+            params = {
+                "$filter": f"Title eq '{package_name}'"
+            }
+            
+            response = requests.get(url, headers=headers, params=params)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data["value"]:
+                    # Get the latest version (first one in the list)
+                    return data["value"][0]["Version"]
+                else:
+                    self.logger.warning(f"No package found with name '{package_name}'")
+                    return None
+            else:
+                self.logger.error(f"Failed to fetch package version. Status: {response.status_code}, Response: {response.text}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error getting package version: {str(e)}")
+            return None
+    
+    async def _get_entry_point_id(self, package_name: str, package_version: str, token: str, config: Dict[str, str]) -> Optional[str]:
+        """Get the entry point ID for a package version."""
+        try:
+            url = (
+                f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}"
+                f"/orchestrator_/odata/Processes/UiPath.Server.Configuration.OData.GetPackageEntryPointsV2(key='{package_name}:{package_version}')"
+            )
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "Accept": "application/json",
+            }
+            
+            response = requests.get(url, headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data["value"]:
+                    return data["value"][0]["Id"]
+                else:
+                    self.logger.error(f"No entry points found for package '{package_name}' version '{package_version}'")
+                    return None
+            else:
+                self.logger.error(f"Failed to fetch entry point ID. Status: {response.status_code}, Response: {response.text}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error getting entry point ID: {str(e)}")
+            return None
+    
+    @json_schema(
+        description="Create a new process (release) in UiPath Orchestrator from an existing package. The package with the same name as the process must already be uploaded to Orchestrator before creating a process from it. This creates a process definition that can be executed by UiPath robots.",
+        params={
+            "process_name": {
+                "type": "string",
+                "description": "The name for the new process/release. The package with this same name must already exist in Orchestrator.",
+                "required": True
+            },
+            "description": {
+                "type": "string",
+                "description": "Optional description for the process",
+                "default": "Process created via Agent C"
+            },
+            "input_arguments": {
+                "type": "string",
+                "description": "Optional input arguments for the process in JSON format",
+                "default": "{}"
+            }
+        }
+    )
+    async def create_process(self, **kwargs) -> str:
+        """Create a new process (release) in UiPath Orchestrator from an existing package."""
+        try:
+            tool_context = kwargs.get('tool_context')
+            process_name = kwargs.get('process_name')
+            description = kwargs.get('description', 'Process created via Agent C')
+            input_arguments = kwargs.get('input_arguments', '{}')
+            
+            if not process_name:
+                return "ERROR: process_name is required"
+            
+            # Use the same name for both process and package
+            package_name = process_name
+            
+            # Validate input_arguments is valid JSON
+            try:
+                json.loads(input_arguments)
+            except json.JSONDecodeError:
+                return "ERROR: input_arguments must be valid JSON format"
+            
+            # Get configuration
+            config = self._validate_config()
+            
+            # Get authentication token with execution permissions
+            token = await self._get_auth_token("OR.Administration OR.Administration.Read OR.Administration.Write OR.Analytics OR.Analytics.Read OR.Analytics.Write OR.Assets OR.Assets.Read OR.Assets.Write OR.Audit OR.Audit.Read OR.Audit.Write OR.AutomationSolutions.Access OR.BackgroundTasks OR.BackgroundTasks.Read OR.BackgroundTasks.Write OR.Execution OR.Execution.Read OR.Execution.Write OR.Folders OR.Folders.Read OR.Folders.Write OR.Hypervisor OR.Hypervisor.Read OR.Hypervisor.Write OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.License OR.License.Read OR.License.Write OR.Machines OR.Machines.Read OR.Machines.Write OR.ML OR.ML.Read OR.ML.Write OR.Monitoring OR.Monitoring.Read OR.Monitoring.Write OR.Queues OR.Queues.Read OR.Queues.Write OR.Robots OR.Robots.Read OR.Robots.Write OR.Settings OR.Settings.Read OR.Settings.Write OR.Tasks OR.Tasks.Read OR.Tasks.Write OR.TestDataQueues OR.TestDataQueues.Read OR.TestDataQueues.Write OR.TestSetExecutions OR.TestSetExecutions.Read OR.TestSetExecutions.Write OR.TestSets OR.TestSets.Read OR.TestSets.Write OR.TestSetSchedules OR.TestSetSchedules.Read OR.TestSetSchedules.Write OR.Users OR.Users.Read OR.Users.Write OR.Webhooks OR.Webhooks.Read OR.Webhooks.Write ")
+            
+            # Step 1: Get the package version
+            self.logger.info(f"Getting version for package '{package_name}' (same as process name)...")
+            package_version = await self._get_package_version(package_name, token, config)
+            
+            if not package_version:
+                return f"ERROR: Could not find package '{package_name}' in Orchestrator. Make sure the package with name '{process_name}' is uploaded first."
+            
+            self.logger.info(f"Found package version: {package_version}")
+            
+            # Step 2: Get the entry point ID
+            self.logger.info(f"Getting entry point ID for package '{package_name}' version '{package_version}'...")
+            entry_point_id = await self._get_entry_point_id(package_name, package_version, token, config)
+            
+            if not entry_point_id:
+                return f"ERROR: Could not get entry point ID for package '{package_name}' version '{package_version}'"
+            
+            self.logger.info(f"Found entry point ID: {entry_point_id}")
+            
+            # Step 3: Create the process (release)
+            create_process_url = (
+                f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}"
+                "/orchestrator_/odata/Releases/UiPath.Server.Configuration.OData.CreateRelease"
+            )
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+            
+            payload = {
+                "Name": process_name,
+                "ProcessKey": package_name,  # Must match the Package ID in Orchestrator
+                "Description": description,
+                "ProcessVersion": package_version,
+                "EntryPointId": entry_point_id,  # Main XAML file ID
+                "InputArguments": input_arguments,
+                "RetentionPeriod": 30,
+                "StaleRetentionAction": "Delete",
+                "StaleRetentionPeriod": 180
+            }
+            
+            # Debug logging
+            self.logger.info(f"UiPath Create Process URL: {create_process_url}")
+            self.logger.info(f"UiPath Create Process Headers: {json.dumps({k: v if k != 'Authorization' else 'Bearer ***' for k, v in headers.items()}, indent=2)}")
+            self.logger.info(f"UiPath Create Process Payload: {json.dumps(payload, indent=2)}")
+            
+            # Make the API call
+            response = requests.post(create_process_url, headers=headers, data=json.dumps(payload))
+            
+            # Debug response
+            self.logger.info(f"UiPath Create Process Response Status: {response.status_code}")
+            self.logger.info(f"UiPath Create Process Response Body: {response.text}")
+            
+            if response.status_code in [200, 201]:
+                result_data = response.json()
+                self.logger.info(f"Successfully created UiPath process: {process_name} from package {package_name}")
+                
+                # Return a formatted success response
+                result = {
+                    "status": "success",
+                    "message": f"Process '{process_name}' created successfully from package '{package_name}' (same name)",
+                    "process_id": result_data.get("Id"),
+                    "process_name": process_name,
+                    "package_name": package_name,
+                    "package_version": package_version,
+                    "entry_point_id": entry_point_id,
+                    "description": description,
+                    "input_arguments": input_arguments
+                }
+                return yaml.dump(result, allow_unicode=True)
+                
+            else:
+                error_msg = f"Failed to create process. Status code: {response.status_code}, Response: {response.text}"
+                self.logger.error(error_msg)
+                return f"ERROR: {error_msg}"
+                
+        except Exception as e:
+            error_msg = f"Error creating UiPath process: {str(e)}"
+            self.logger.error(error_msg)
+            return f"ERROR: {error_msg}"
 
 
 # Register the toolset with WorkspaceTools dependency
