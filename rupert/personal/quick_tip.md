@@ -2,6 +2,33 @@
 
 A collection of helpful reminders for common tasks and procedures.
 
+## API Keys
+
+### How to get your Anthropic API key (3 steps)
+
+1. Go to console.anthropic.com and create an account
+
+2. Once logged in, go to the API Keys section in your Account Settings
+
+3. Click "Create Key," give it a name, and copy it immediately - you won't be able to see it again
+
+4. Add a payment method under Plans and Billing to fund your account
+
+
+### How to get your OpenAI API key
+
+1. Sign up for an account at platform.openai.com (or openai.com/api)
+
+2. Once logged in, go to the API keys section (usually under your account settings)
+
+3. Click "Create new secret key"
+
+4. Give it a name and copy it immediately - you won't be able to see it again
+
+5. Set up billing to use the API beyond any free trial credits
+
+**Note:** The API platform is separate from the ChatGPT subscription, so even if someone has ChatGPT Plus, they still need to set up API access separately with its own billing.
+
 ## Development Environment
 
 ### Starting the API
@@ -135,4 +162,4 @@ git reset --hard HEAD~1
 **Note:** The stash method is definitely the easiest if you catch it before committing! Git is pretty forgiving about moving uncommitted work around between branches.
 
 ---
-*Last Updated: October 13, 2025 - 3:50PM*
+*Last Updated: October 14, 2025 - 3:45PM*
