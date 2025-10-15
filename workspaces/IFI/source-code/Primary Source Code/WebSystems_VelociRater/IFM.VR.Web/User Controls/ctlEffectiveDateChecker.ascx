@@ -1,0 +1,1 @@
+﻿<%@ Control Language="vb" AutoEventWireup="false" CodeBehind="ctlEffectiveDateChecker.ascx.vb" Inherits="IFM.VR.Web.ctlEffectiveDateChecker" %>

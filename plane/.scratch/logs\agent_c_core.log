@@ -1,0 +1,26 @@
+2025-10-15 12:45:55,241 - PlaneProjectTools - INFO - PLANE client initialized for workspace: agent_c
+2025-10-15 12:55:01,616 - PlaneIssueTools - INFO - PLANE issue tools initialized for workspace: agent_c
+2025-10-15 12:55:01,676 - PlaneIssueTools - ERROR - Unexpected error listing issues: slice(None, 20, None)
+2025-10-15 12:57:11,406 - PlaneIssueTools - INFO - PLANE issue tools initialized for workspace: agent_c
+2025-10-15 13:02:09,346 - PlaneSearchTools - INFO - PLANE search tools initialized for workspace: agent_c
+2025-10-15 13:04:50,799 - PlaneAnalyticsTools - INFO - PLANE analytics tools initialized for workspace: agent_c
+2025-10-15 13:09:42,382 - PlaneAnalyticsTools - INFO - PLANE analytics tools initialized for workspace: agent_c
+2025-10-15 13:16:15,257 - PlaneProjectTools - INFO - PLANE client initialized for workspace: agent_c
+2025-10-15 13:16:15,257 - PlaneProjectTools - INFO - PLANE client initialized for workspace: agent_c
+2025-10-15 13:16:15,335 - PlaneIssueTools - INFO - PLANE issue tools initialized for workspace: agent_c
+2025-10-15 13:16:15,335 - PlaneIssueTools - INFO - PLANE issue tools initialized for workspace: agent_c
+2025-10-15 13:16:15,391 - PlaneSearchTools - INFO - PLANE search tools initialized for workspace: agent_c
+2025-10-15 13:16:15,391 - PlaneSearchTools - INFO - PLANE search tools initialized for workspace: agent_c
+2025-10-15 13:16:15,486 - PlaneAnalyticsTools - INFO - PLANE analytics tools initialized for workspace: agent_c
+2025-10-15 13:16:15,487 - PlaneAnalyticsTools - INFO - PLANE analytics tools initialized for workspace: agent_c
+2025-10-15 13:19:30,220 - PlaneProjectTools - INFO - PLANE client initialized for workspace: agent_c
+2025-10-15 13:19:30,221 - PlaneProjectTools - INFO - PLANE client initialized for workspace: agent_c
+2025-10-15 13:19:30,297 - PlaneIssueTools - INFO - PLANE issue tools initialized for workspace: agent_c
+2025-10-15 13:19:30,298 - PlaneIssueTools - INFO - PLANE issue tools initialized for workspace: agent_c
+2025-10-15 13:19:30,371 - PlaneSearchTools - INFO - PLANE search tools initialized for workspace: agent_c
+2025-10-15 13:19:30,371 - PlaneSearchTools - INFO - PLANE search tools initialized for workspace: agent_c
+2025-10-15 13:19:30,461 - PlaneAnalyticsTools - INFO - PLANE analytics tools initialized for workspace: agent_c
+2025-10-15 13:19:30,462 - PlaneAnalyticsTools - INFO - PLANE analytics tools initialized for workspace: agent_c
+2025-10-15 13:33:34,366 - PlaneIssueRelationsTools - INFO - PLANE issue relations tools initialized for workspace: agent_c
+2025-10-15 13:52:42,240 - PlaneLabelTools - INFO - PLANE label tools initialized for workspace: agent_c
+2025-10-15 13:52:42,268 - PlaneBulkTools - INFO - PLANE bulk tools initialized for workspace: agent_c

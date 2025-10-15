@@ -1,0 +1,86 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32427.441
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "IFM.VR.Common", "IFM.VR.Common\IFM.VR.Common.vbproj", "{7CAE39C0-50C2-4F23-A11A-4FD7057B94E7}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "IFM.VR.Web", "IFM.VR.Web\IFM.VR.Web.vbproj", "{4FB74F9B-2934-4CA0-9949-202DF32B494D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFM.VR.Validation", "IFM.VR.Validation\IFM.VR.Validation.csproj", "{1BF73C1E-5BE4-43B4-A12C-FF360FB4C462}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VrTests", "VrTests\VrTests.csproj", "{24845BA8-5E9F-4166-90B8-0CE4722E7D0B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFM.VR.Flags", "IFM.VR.Flags\IFM.VR.Flags.csproj", "{EC6C5CAA-0414-40CB-B130-8A0359BC6A37}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFM.VR.Configuration", "IFM.VR.Configuration\IFM.VR.Configuration.csproj", "{5E9C0757-DA95-4F86-9F93-E78B0223D358}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A66B1142-5AC8-4888-BA35-B1F54A72D8A2}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet.Config = NuGet.Config
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFM.Web.Modules", "IFM.Web.Modules\IFM.Web.Modules.csproj", "{939C4C22-28C0-4B9C-8EE1-B2A592B12EAE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		ghjg|Any CPU = ghjg|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7CAE39C0-50C2-4F23-A11A-4FD7057B94E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CAE39C0-50C2-4F23-A11A-4FD7057B94E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CAE39C0-50C2-4F23-A11A-4FD7057B94E7}.ghjg|Any CPU.ActiveCfg = ghjg|Any CPU
+		{7CAE39C0-50C2-4F23-A11A-4FD7057B94E7}.ghjg|Any CPU.Build.0 = ghjg|Any CPU
+		{7CAE39C0-50C2-4F23-A11A-4FD7057B94E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CAE39C0-50C2-4F23-A11A-4FD7057B94E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FB74F9B-2934-4CA0-9949-202DF32B494D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FB74F9B-2934-4CA0-9949-202DF32B494D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FB74F9B-2934-4CA0-9949-202DF32B494D}.ghjg|Any CPU.ActiveCfg = ghjg|Any CPU
+		{4FB74F9B-2934-4CA0-9949-202DF32B494D}.ghjg|Any CPU.Build.0 = ghjg|Any CPU
+		{4FB74F9B-2934-4CA0-9949-202DF32B494D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FB74F9B-2934-4CA0-9949-202DF32B494D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BF73C1E-5BE4-43B4-A12C-FF360FB4C462}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BF73C1E-5BE4-43B4-A12C-FF360FB4C462}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BF73C1E-5BE4-43B4-A12C-FF360FB4C462}.ghjg|Any CPU.ActiveCfg = ghjg|Any CPU
+		{1BF73C1E-5BE4-43B4-A12C-FF360FB4C462}.ghjg|Any CPU.Build.0 = ghjg|Any CPU
+		{1BF73C1E-5BE4-43B4-A12C-FF360FB4C462}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BF73C1E-5BE4-43B4-A12C-FF360FB4C462}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24845BA8-5E9F-4166-90B8-0CE4722E7D0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24845BA8-5E9F-4166-90B8-0CE4722E7D0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24845BA8-5E9F-4166-90B8-0CE4722E7D0B}.ghjg|Any CPU.ActiveCfg = ghjg|Any CPU
+		{24845BA8-5E9F-4166-90B8-0CE4722E7D0B}.ghjg|Any CPU.Build.0 = ghjg|Any CPU
+		{24845BA8-5E9F-4166-90B8-0CE4722E7D0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24845BA8-5E9F-4166-90B8-0CE4722E7D0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC6C5CAA-0414-40CB-B130-8A0359BC6A37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC6C5CAA-0414-40CB-B130-8A0359BC6A37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC6C5CAA-0414-40CB-B130-8A0359BC6A37}.ghjg|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC6C5CAA-0414-40CB-B130-8A0359BC6A37}.ghjg|Any CPU.Build.0 = Debug|Any CPU
+		{EC6C5CAA-0414-40CB-B130-8A0359BC6A37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC6C5CAA-0414-40CB-B130-8A0359BC6A37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E9C0757-DA95-4F86-9F93-E78B0223D358}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E9C0757-DA95-4F86-9F93-E78B0223D358}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E9C0757-DA95-4F86-9F93-E78B0223D358}.ghjg|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E9C0757-DA95-4F86-9F93-E78B0223D358}.ghjg|Any CPU.Build.0 = Debug|Any CPU
+		{5E9C0757-DA95-4F86-9F93-E78B0223D358}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E9C0757-DA95-4F86-9F93-E78B0223D358}.Release|Any CPU.Build.0 = Release|Any CPU
+		{939C4C22-28C0-4B9C-8EE1-B2A592B12EAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{939C4C22-28C0-4B9C-8EE1-B2A592B12EAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{939C4C22-28C0-4B9C-8EE1-B2A592B12EAE}.ghjg|Any CPU.ActiveCfg = Debug|Any CPU
+		{939C4C22-28C0-4B9C-8EE1-B2A592B12EAE}.ghjg|Any CPU.Build.0 = Debug|Any CPU
+		{939C4C22-28C0-4B9C-8EE1-B2A592B12EAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{939C4C22-28C0-4B9C-8EE1-B2A592B12EAE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		VisualSVNWorkingCopyRoot = .
+		SolutionGuid = {E21BA6D4-CCF3-4383-8EE5-8531A48EAB45}
+	EndGlobalSection
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
+	EndGlobalSection
+EndGlobal

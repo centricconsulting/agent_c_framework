@@ -50,7 +50,10 @@ module.exports = {
   			},
   			card: {
   				DEFAULT: 'hsl(var(--card))',
-  				foreground: 'hsl(var(--card-foreground))'
+  				foreground: 'hsl(var(--card-foreground))',
+  				user: 'hsl(var(--card-user-message))',
+  				assistant: 'hsl(var(--card-assistant-message))',
+  				thought: 'hsl(var(--card-thought-message))'
   			},
   			chart: {
   				'1': 'hsl(var(--chart-1))',

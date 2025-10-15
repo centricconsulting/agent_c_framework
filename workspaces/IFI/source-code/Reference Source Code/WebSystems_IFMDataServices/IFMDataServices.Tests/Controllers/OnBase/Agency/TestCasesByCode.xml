@@ -1,0 +1,30 @@
+﻿<tests>
+
+  <!--test bad request - NOT POSSIBLE-->
+  
+  
+  <!--test not found agency-->
+  <TestGetAgencyInfoByCode>
+    <agencyCode>6203-2936-6</agencyCode>
+    <expectPayload>false</expectPayload>
+    <expectedResult>404</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetAgencyInfoByCode>
+
+
+  <!--testing pulling an agency-->
+  <TestGetAgencyInfoByCode>
+    <agencyCode>6203-2936</agencyCode>
+    <expectGroupCode>6203</expectGroupCode>
+    <expectLocationCode>2936</expectLocationCode>
+    <expectName>WILSON LAWSON MYERS INSURANCE AGENCY</expectName>
+    <expectState>IN</expectState>
+    <expectCommercialLinesTerritory>03</expectCommercialLinesTerritory>
+    <expectPersonalLinesTerritory>03</expectPersonalLinesTerritory>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetAgencyInfoByCode>
+  
+  
+</tests>

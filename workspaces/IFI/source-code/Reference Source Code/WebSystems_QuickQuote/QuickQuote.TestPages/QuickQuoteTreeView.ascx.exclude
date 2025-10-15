@@ -1,0 +1,671 @@
+﻿<%@ Control Language="VB" AutoEventWireup="false" CodeFile="QuickQuoteTreeView.ascx.vb" Inherits="QuickQuoteTreeView" %>
+
+<%--<asp:UpdatePanel ID="up_TreeView" runat="server">
+<ContentTemplate>--%>
+<script type="text/javascript">
+    //use # when in head and need Page.Header.DataBind() on Page_Load; use = when in body
+    var pnlPolicyholders = '<%=pnlPolicyholders.ClientID%>';
+    var pnlDrivers = '<%=pnlDrivers.ClientID%>';
+    var pnlVehicles = '<%=pnlVehicles.ClientID%>';
+    var pnlLocations = '<%=pnlLocations.ClientID%>';
+    var pnlCoverages = '<%=pnlCoverages.ClientID%>'; //added 1/27/2014
+    var hdnExpandOrCollapseAllFlagId = '<%=hdnExpandOrCollapseAllFlag.ClientID%>';
+    var hdnPhExpandedOrCollapsedId = '<%=hdnPhExpandedOrCollapsed.ClientID%>';
+    var hdnDExpandedOrCollapsedId = '<%=hdnDExpandedOrCollapsed.ClientID%>';
+    var hdnVExpandedOrCollapsedId = '<%=hdnVExpandedOrCollapsed.ClientID%>';
+    var hdnLExpandedOrCollapsedId = '<%=hdnLExpandedOrCollapsed.ClientID%>';
+    var hdnCExpandedOrCollapsedId = '<%=hdnCExpandedOrCollapsed.ClientID%>'; //added 1/27/2014
+    //added 1/22/2014
+    var hdnDeselectAllListItemsFlagId = '<%=hdnDeselectAllListItemsFlag.ClientID%>';
+    var hdnInEditModeFlagId = '<%=hdnInEditModeFlag.ClientID%>';
+
+    function expandCollapse(prefix, expandOrCollapse) {
+        var panelId;
+        var expandedOrCollapsedFlagId;
+        if (prefix == 'ph') {
+            panelId = pnlPolicyholders;
+            expandedOrCollapsedFlagId = hdnPhExpandedOrCollapsedId;
+        } else if (prefix == 'd') {
+            panelId = pnlDrivers;
+            expandedOrCollapsedFlagId = hdnDExpandedOrCollapsedId;
+        } else if (prefix == 'v') {
+            panelId = pnlVehicles;
+            expandedOrCollapsedFlagId = hdnVExpandedOrCollapsedId;
+        } else if (prefix == 'l') {
+            panelId = pnlLocations;
+            expandedOrCollapsedFlagId = hdnLExpandedOrCollapsedId;
+        } else if (prefix == 'c') {
+            //added else if 1/27/2014
+            panelId = pnlCoverages;
+            expandedOrCollapsedFlagId = hdnCExpandedOrCollapsedId;
+        }
+        if (panelId) {
+            var expImgId = prefix + '_expand';
+            var conImgId = prefix + '_collapse';
+            var expImg = document.getElementById(expImgId);
+            var conImg = document.getElementById(conImgId);
+
+            if (expImg && conImg) {
+                if (typeof (expandOrCollapse) == 'undefined') {
+                    expandOrCollapse = 'expand';
+                }
+                if (expandOrCollapse == 'collapse') {
+                    //collapse
+                    ShowOrHideBlockElement(panelId, false)
+                    ShowOrHideInlineElement(expImgId, true)
+                    ShowOrHideInlineElement(conImgId, false)
+                    if (document.getElementById(expandedOrCollapsedFlagId)) {
+                        document.getElementById(expandedOrCollapsedFlagId).value = 'collapsed';
+                    }
+                } else {
+                    //expand
+                    ShowOrHideBlockElement(panelId, true)
+                    ShowOrHideInlineElement(expImgId, false)
+                    ShowOrHideInlineElement(conImgId, true)
+                    if (document.getElementById(expandedOrCollapsedFlagId)) {
+                        document.getElementById(expandedOrCollapsedFlagId).value = 'expanded';
+                    }
+                }
+            }
+        }
+    }
+    function retainExpandedOrCollapsedSections() {
+        var hdnPhExpandedOrCollapsed = document.getElementById(hdnPhExpandedOrCollapsedId);
+        var hdnDExpandedOrCollapsed = document.getElementById(hdnDExpandedOrCollapsedId);
+        var hdnVExpandedOrCollapsed = document.getElementById(hdnVExpandedOrCollapsedId);
+        var hdnLExpandedOrCollapsed = document.getElementById(hdnLExpandedOrCollapsedId);
+        var hdnCExpandedOrCollapsed = document.getElementById(hdnCExpandedOrCollapsedId); //added 1/27/2014
+
+        if (hdnPhExpandedOrCollapsed) {
+            if (hdnPhExpandedOrCollapsed.value == 'expanded') {
+                expandCollapse('ph');
+            } else if (hdnPhExpandedOrCollapsed.value == 'collapsed') {
+                expandCollapse('ph', 'collapse');
+            }
+        }
+        if (hdnDExpandedOrCollapsed) {
+            if (hdnDExpandedOrCollapsed.value == 'expanded') {
+                expandCollapse('d');
+            } else if (hdnDExpandedOrCollapsed.value == 'collapsed') {
+                expandCollapse('d', 'collapse');
+            }
+        }
+        if (hdnVExpandedOrCollapsed) {
+            if (hdnVExpandedOrCollapsed.value == 'expanded') {
+                expandCollapse('v');
+            } else if (hdnVExpandedOrCollapsed.value == 'collapsed') {
+                expandCollapse('v', 'collapse');
+            }
+        }
+        if (hdnLExpandedOrCollapsed) {
+            if (hdnLExpandedOrCollapsed.value == 'expanded') {
+                expandCollapse('l');
+            } else if (hdnLExpandedOrCollapsed.value == 'collapsed') {
+                expandCollapse('l', 'collapse');
+            }
+        }
+
+        //added 1/27/2014
+        if (hdnCExpandedOrCollapsed) {
+            if (hdnCExpandedOrCollapsed.value == 'expanded') {
+                expandCollapse('c');
+            } else if (hdnCExpandedOrCollapsed.value == 'collapsed') {
+                expandCollapse('c', 'collapse');
+            }
+        }
+    }
+    function CheckForExpandOrCollapse() {
+        var expandOrCollapseAllFlag = document.getElementById(hdnExpandOrCollapseAllFlagId);
+        if (expandOrCollapseAllFlag) {
+            if (expandOrCollapseAllFlag.value == 'expand') {
+                ExpandAll();
+                expandOrCollapseAllFlag.value = '';
+                //document.getElementById(hdnExpandOrCollapseAllFlagId).value = '';
+                return;
+            } else if (expandOrCollapseAllFlag.value == 'collapse') {
+                CollapseAll();
+                expandOrCollapseAllFlag.value = '';
+                //document.getElementById(hdnExpandOrCollapseAllFlagId).value = '';
+                return;
+            }
+            //retainExpandedOrCollapsedSections(); //1/22/2014 note: would probably be better after next } since it's not dependent on IF
+        }
+        retainExpandedOrCollapsedSections();
+    }
+    function ExpandAll() {
+        expandCollapse('ph');
+        expandCollapse('d');
+        expandCollapse('v');
+        expandCollapse('l');
+        expandCollapse('c'); //added 1/27/2014
+    }
+    function CollapseAll() {
+        expandCollapse('ph', 'collapse');
+        expandCollapse('d', 'collapse');
+        expandCollapse('v', 'collapse');
+        expandCollapse('l', 'collapse');
+        expandCollapse('c', 'collapse'); //added 1/27/2014
+    }
+
+    function ShowOrHideTableElement(elementId, show) {
+        if (typeof (show) == 'undefined') {
+            show = true;
+        }
+
+        if (show == true) {
+            if (document.getElementById(elementId)) {
+                //document.getElementById(elementId).style.visibility = "visible";
+                document.getElementById(elementId).style.display = "table";
+            }
+        } else {
+            if (document.getElementById(elementId)) {
+                //document.getElementById(elementId).style.visibility = "hidden";
+                document.getElementById(elementId).style.display = "none";
+            }
+        }
+    }
+    function ShowOrHideBlockElement(elementId, show) {
+        if (typeof (show) == 'undefined') {
+            show = true;
+        }
+
+        if (show == true) {
+            if (document.getElementById(elementId)) {
+                document.getElementById(elementId).style.display = "block";
+            }
+        } else {
+            if (document.getElementById(elementId)) {
+                document.getElementById(elementId).style.display = "none";
+            }
+        }
+    }
+    function ShowOrHideInlineElement(elementId, show) {
+        if (typeof (show) == 'undefined') {
+            show = true;
+        }
+
+        if (show == true) {
+            if (document.getElementById(elementId)) {
+                document.getElementById(elementId).style.display = "inline";
+            }
+        } else {
+            if (document.getElementById(elementId)) {
+                document.getElementById(elementId).style.display = "none";
+            }
+        }
+    }
+
+    //added 1/15/2014
+    function GetParentElementForChild(child) {
+        if (child) {
+            var parent = child.parentNode;
+            if (parent) {
+                return parent;
+            }
+        }
+        return null;
+    }
+    function ClickRelatedChildButton(child, relatedButtonId) {
+        //updated for edit mode 1/22/2014
+        if (InEditMode(true) == true) {
+            //alert("This functionality is currently locked.");
+            return;
+        }
+
+        if (child && relatedButtonId) {
+            if (relatedButtonId.length > 0) {
+                var parent = GetParentElementForChild(child);
+                if (parent) {
+                    var children = parent.childNodes;
+                    if (children) {
+                        var keepGoing = true;
+                        for (i = 0; i < children.length; i++) {
+                            var currChild = children[i];
+                            if (currChild) {
+                                switch (currChild.nodeType) {
+                                    case 3:
+                                        //text Node
+                                        break;
+                                    case 1:
+                                        //Element node
+                                        if (currChild.id.length > 0) {
+                                            if (currChild.id.indexOf(relatedButtonId) != -1) {
+                                                currChild.click();
+                                                keepGoing = false;
+                                            }
+                                        }
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                if (!keepGoing) break; //exit for
+                            }
+                        }
+                    }
+                }
+            }            
+        }
+    }
+
+    //added 1/22/2014
+    function ChangeClassNameForElements(el, OldClass, NewClass, removeSelectedFlag) {
+        if (typeof (removeSelectedFlag) == 'undefined') {
+            removeSelectedFlag = false;
+        }
+
+        var els = document.getElementsByTagName(el);
+        if (els) {
+            for (var i = 0; i < els.length; i++) {
+                if (els[i].className == OldClass) {
+                    els[i].className = NewClass;
+                    if (removeSelectedFlag == true) {
+                        var hiddenSelectedField = GetChildHiddenSelectedField(els[i]);
+                        if (hiddenSelectedField) {
+                            hiddenSelectedField.value = '';
+                        }
+                    }                    
+                }
+            }
+        }
+    }
+    function AssignSelectedClassToElement(el) {
+        if (el) {
+            RemoveSelectedClassFromAllListItems();
+            el.className = 'selected';
+            var hiddenSelectedField = GetChildHiddenSelectedField(el);
+            if (hiddenSelectedField) {
+                hiddenSelectedField.value = 'yes';
+            }
+        }
+    }
+    function RemoveSelectedClassFromAllListItems() {
+        RetainSelectedListItems(); //needed to add this 1/24/2014 because page doesn't hold the element classNames between postbacks
+        ChangeClassNameForElements('li', 'selected', '', true);
+    }
+    function SelectParentListItem(child) {
+        //can set optional param to true to show error message... InEditMode(true)
+        if (InEditMode() == true) {
+            return;
+        }
+
+        if (child) {
+            var parent = GetParentElementForChild(child);
+            if (parent) {
+                if (parent.localName == 'li') {
+                    AssignSelectedClassToElement(parent);
+                } else {
+                    SelectParentListItem(parent);
+                    return;
+                }
+            }
+        }
+    }
+    function GetChildHiddenSelectedField(el) {
+        if (el) {
+            var children = el.childNodes;
+            if (children) {
+                var keepGoing = true;
+                for (i = 0; i < children.length; i++) {
+                    var currChild = children[i];
+                    if (currChild) {
+                        switch (currChild.nodeType) {
+                            case 3:
+                                //text Node
+                                break;
+                            case 1:
+                                //Element node
+                                if (currChild.id.length > 0) {
+                                    if (currChild.id.indexOf('hdnIsSelected') != -1) {
+                                        return currChild;
+                                        keepGoing = false;
+                                    }
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        if (!keepGoing) break; //exit for
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    function CheckForSelected() {
+        var hdnDeselectAllListItemsFlag = document.getElementById(hdnDeselectAllListItemsFlagId);
+        if (hdnDeselectAllListItemsFlag) {
+            //if (hdnDeselectAllListItemsFlag.value == 'yes') {
+            if (hdnDeselectAllListItemsFlag.value == 'yes' || InEditMode() == false) {
+                RemoveSelectedClassFromAllListItems();
+                hdnDeselectAllListItemsFlag.value = '';
+                //document.getElementById(hdnDeselectAllListItemsFlagId).value = '';
+                return;
+            }
+            //RetainSelectedListItems(); //1/22/2014 note: would probably be better after next } since it's not dependent on IF
+        } else if (InEditMode() == false) {
+            RemoveSelectedClassFromAllListItems();
+            return;
+        }
+        RetainSelectedListItems();
+    }
+    function RetainSelectedListItems() {
+        var els = document.getElementsByTagName('li');
+        if (els) {
+            for (var i = 0; i < els.length; i++) {
+                var hiddenSelectedField = GetChildHiddenSelectedField(els[i]);
+                if (hiddenSelectedField) {
+                    if (hiddenSelectedField.value == 'yes') {
+                        els[i].className = 'selected'
+                    } else {
+                        els[i].className = ''
+                    }
+                }
+            }
+        }
+    }
+    function InitializePage() {
+        CheckForExpandOrCollapse();
+        CheckForSelected();
+    }
+    function InEditMode(showError) {
+        if (typeof (showError) == 'undefined') {
+            showError = false;
+        }
+
+        var hdnInEditModeFlag = document.getElementById(hdnInEditModeFlagId);
+        if (hdnInEditModeFlag) {
+            if (hdnInEditModeFlag.value == 'true') {//changed from yes to true 1/24/2014
+                if (showError == true) {
+                    alert("This functionality is currently locked.");
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    function ToggleEditMode(onFlag) {
+        if (typeof (onFlag) == 'undefined') {
+            onFlag = false;
+        }
+
+        var hdnInEditModeFlag = document.getElementById(hdnInEditModeFlagId);
+        if (hdnInEditModeFlag) {
+            if (onFlag == true) {
+                hdnInEditModeFlag.value = 'true';
+            } else {
+                hdnInEditModeFlag.value = 'false';
+            }
+        }
+    }
+    
+</script>
+<style type="text/css">
+.clickable
+{
+    cursor:hand;
+    cursor:pointer;    
+}
+/*added 1/15/2014*/
+.clickable:hover
+{
+    /*font-weight:bold;*/
+    /*font-weight:600;*/
+    /*font-style:italic;*/
+    /*color:Blue;*/
+}
+/*added 1/14/2014; updated 1/22/2014 to add ul before class and li selected class; also updated to just affect spans; changed to all 1/23/2014*/
+ul.mainList li:hover *, ul.mainList li.selected *
+{
+    /*color:Aqua;*/
+    /*background-color:Aqua;*/
+    background-color:#f49000;/*was used*/
+    /*color:#ffffff;*/
+    /*color:#dddddd;*/
+}
+ul.subList li:hover *, ul.subList li.selected *
+{
+    /*color:Lime;*/
+    /*background-color:Lime;*/
+    background-color:#666666;/*was used*/
+    color:#ffffff;/*was used*/
+}
+ul.subList2 li:hover *, ul.subList2 li.selected *
+{
+    /*color:Orange;*/
+    /*background-color:Orange;*/
+    background-color:#dddddd;/*was used*/
+    color:#000000;/*was used*/
+    /*color:#f49000;*/
+}
+/*ul .mainList, ul .subList, ul .subList2
+{
+    color:Black;
+}*/
+/*added 1/15/2014*/
+.hidden
+{
+    display:none;
+}
+
+ul.mainList
+{
+    /*font-size:medium;*/
+    font-size:13pt;
+    font-family:Calibri;
+}
+ul.subList
+{
+    /*font-size:small;*/
+    font-size:11pt;
+    font-family:Calibri;
+}
+ul.subList2
+{
+    /*font-size:smaller;*/
+    font-size:9pt;
+    font-family:Calibri;
+}
+</style>
+
+<asp:Panel ID="pnlTreeView" runat="server" Visible="false">
+    <ul style="list-style-type:none; width:300px;" class="mainList">
+        <li style="list-style-type:square;"><input id="hdnIsSelected_QuoteDescription" name="hdnIsSelected_QuoteDescription" type="hidden" runat="server" /><asp:Label runat="server" ID="lblQuoteNumber" Visible="false"></asp:Label><asp:Label runat="server" ID="lblOriginalQuoteDescription" Visible="false"></asp:Label><b>Description:</b>&nbsp;<span runat="server" id="QuoteDescriptionViewSection"><asp:Label runat="server" ID="lblQuoteDescription"></asp:Label>&nbsp;<asp:ImageButton runat="server" ID="imgBtnEditQuoteDescription" ImageUrl="images/test/button_edit_off.gif" ToolTip="Edit Quote Description" OnClientClick="SelectParentListItem(this);" /></span><span runat="server" id="QuoteDescriptionEditSection" visible="false"><asp:TextBox runat="server" ID="txtQuoteDescription"></asp:TextBox>&nbsp;<asp:ImageButton runat="server" ID="imgBtnSaveQuoteDescription" ImageUrl="images/test/button_save_on.gif" ToolTip="Save Quote Description" /><asp:ImageButton runat="server" ID="imgBtnCancelSaveQuoteDescription" ImageUrl="images/test/button_cancel_on.gif" ToolTip="Cancel Save Quote Description" OnClientClick="RemoveSelectedClassFromAllListItems();" /></span></li>
+        <li style="list-style-type:square;"><input id="hdnIsSelected_EffectiveDate" name="hdnIsSelected_EffectiveDate" type="hidden" runat="server" /><asp:Label runat="server" ID="lblOriginalEffectiveDate" Visible="false"></asp:Label><b>Effective Date:</b>&nbsp;<span runat="server" id="EffectiveDateViewSection"><asp:Label runat="server" ID="lblEffectiveDate"></asp:Label>&nbsp;<asp:ImageButton runat="server" ID="imgBtnEditEffectiveDate" ImageUrl="images/test/button_edit_off.gif" ToolTip="Edit Effective Date" OnClientClick="SelectParentListItem(this);" /></span><span runat="server" id="EffectiveDateEditSection" visible="false"><asp:TextBox runat="server" ID="txtEffectiveDate"></asp:TextBox>&nbsp;<asp:ImageButton runat="server" ID="imgBtnSaveEffectiveDate" ImageUrl="images/test/button_save_on.gif" ToolTip="Save Effective Date" /><asp:ImageButton runat="server" ID="imgBtnCancelSaveEffectiveDate" ImageUrl="images/test/button_cancel_on.gif" ToolTip="Cancel Save Effective Date" OnClientClick="RemoveSelectedClassFromAllListItems();" /></span></li>
+        <li>
+            <span runat="server" id="ph_xImageArea" visible="false"><img src="images/test/warning.gif" alt="Policyholder Information Required" title="Policyholder Information Required" /></span>
+            <span runat="server" id="ph_expandCollapseImageArea" visible="false"><img id="ph_expand" class="clickable" alt="expand" title="expand" src="images/test/expand.png" onclick="expandCollapse('ph', 'expand');" /><img id="ph_collapse" class="clickable" alt="collapse" title="collapse" src="images/test/collapse.png" onclick="expandCollapse('ph', 'collapse');" /><input id="hdnPhExpandedOrCollapsed" name="hdnPhExpandedOrCollapsed" type="hidden" runat="server" /><img src="images/test/button_checkmark_on.gif" /></span>
+            &nbsp;<%--<img alt="Policyholders" src="images/test/insured.png" />--%><asp:ImageButton runat="server" ID="imgBtnPolicyholders" ImageUrl="images/test/insured.png" ToolTip="Show Policyholders" CssClass="hidden" /><%--&nbsp;--%><span onclick="ClickRelatedChildButton(this, 'imgBtnPolicyholders');" title="Show Policyholders" class="clickable"><b>Policyholders</b></span>
+            <asp:Panel ID="pnlPolicyholders" runat="server" Visible="false">
+                <asp:Repeater ID="rptPolicyholders" runat="server">
+                    <HeaderTemplate>
+                        <ul style="list-style-type:none;" class="subList">
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                            <li><input id="hdnIsSelected_Policyholder" name="hdnIsSelected_Policyholder" type="hidden" runat="server" /><asp:ImageButton runat="server" ID="imgBtnEditPolicyholder" ImageUrl="images/test/insured.png" OnClick="imgBtnEditPolicyholder_Click" ToolTip="Edit Policyholder" CssClass="hidden" OnClientClick="SelectParentListItem(this);" /><%--&nbsp;--%><asp:Label ID="lblPolicyholderDescription" runat="server" OnClick="ClickRelatedChildButton(this, 'imgBtnEditPolicyholder');" ToolTip="Edit Policyholder" CssClass="clickable" Text='<%# DataBinder.Eval(Container.DataItem,"PolicyholderDescription") %>'></asp:Label><asp:Label ID="lblPolicyholderNumber" runat="server" Visible="false" Text='<%# DataBinder.Eval(Container.DataItem,"PolicyholderNumber") %>'></asp:Label></li><%--label OnClick="lblPolicyholderDescription_Click"--%>
+                    </ItemTemplate>
+                    <%--<AlternatingItemTemplate>
+                    
+                    </AlternatingItemTemplate>--%>
+                    <%--<SeparatorTemplate>
+                    
+                    </SeparatorTemplate>--%>
+                    <FooterTemplate>
+                        </ul>
+                    </FooterTemplate>
+                </asp:Repeater>
+            </asp:Panel>
+        </li>
+        <li runat="server" id="liDrivers" visible="false">
+            <span runat="server" id="d_xImageArea" visible="false"><img src="images/test/warning.gif" alt="Driver Information Required" title="Driver Information Required" /></span>
+            <span runat="server" id="d_expandCollapseImageArea" visible="false"><img id="d_expand" class="clickable" alt="expand" title="expand" src="images/test/expand.png" onclick="expandCollapse('d', 'expand');" /><img id="d_collapse" class="clickable" alt="collapse" title="collapse" src="images/test/collapse.png" onclick="expandCollapse('d', 'collapse');" /><input id="hdnDExpandedOrCollapsed" name="hdnDExpandedOrCollapsed" type="hidden" runat="server" /><img src="images/test/button_checkmark_on.gif" /></span>
+            &nbsp;<%--<img alt="Drivers" src="images/test/driver.png" />--%><asp:ImageButton runat="server" ID="imgBtnDrivers" ImageUrl="images/test/driver.png" ToolTip="Show Drivers" CssClass="hidden" /><%--&nbsp;--%><span onclick="ClickRelatedChildButton(this, 'imgBtnDrivers');" title="Show Drivers" class="clickable"><b>Drivers</b>&nbsp;(<asp:Label runat="server" ID="lblNumberOfDrivers" Text="0"></asp:Label>)</span>
+            <asp:Panel ID="pnlDrivers" runat="server" Visible="false">
+                <asp:Repeater ID="rptDrivers" runat="server">
+                    <HeaderTemplate>
+                        <ul style="list-style-type:none;" class="subList">
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                            <li>
+                                <asp:ImageButton runat="server" ID="imgBtnRemoveDriver" ImageUrl="images/test/close.gif" OnClick="imgBtnRemoveDriver_Click" ToolTip="Remove Driver" />&nbsp;<input id="hdnIsSelected_Driver" name="hdnIsSelected_Driver" type="hidden" runat="server" /><asp:ImageButton runat="server" ID="imgBtnEditDriver" ImageUrl="images/test/driver.png" OnClick="imgBtnEditDriver_Click" ToolTip="Edit Driver" CssClass="hidden" OnClientClick="SelectParentListItem(this);" /><%--&nbsp;--%><asp:Label ID="lblDriverDescription" runat="server" OnClick="ClickRelatedChildButton(this, 'imgBtnEditDriver');" ToolTip="Edit Driver" CssClass="clickable" Text='<%# DataBinder.Eval(Container.DataItem,"DriverDescription") %>'></asp:Label><asp:Label ID="lblDriverNumber" runat="server" Visible="false" Text='<%# DataBinder.Eval(Container.DataItem,"DriverNumber") %>'></asp:Label><%--&nbsp;--%><%--<asp:ImageButton runat="server" ID="imgBtnRemoveDriver" ImageUrl="images/test/button_delete_on.gif" OnClick="imgBtnRemoveDriver_Click" ToolTip="Remove Driver" />--%><%--<asp:ImageButton runat="server" ID="imgBtnRemoveDriver" ImageUrl="images/test/close.gif" OnClick="imgBtnRemoveDriver_Click" ToolTip="Remove Driver" />--%>
+                                <asp:Panel ID="pnlDriverAccidentViolations" runat="server" Visible="false">
+                                    <asp:Repeater ID="rptDriverAccidentViolations" runat="server">
+                                        <HeaderTemplate>
+                                            <ul class="subList2">
+                                        </HeaderTemplate>
+                                        <ItemTemplate>
+                                            <li><asp:Label ID="lblDriverAccidentViolationDescription" runat="server" Text='<%# DataBinder.Eval(Container.DataItem,"DriverAccidentViolationDescription") %>'></asp:Label><asp:Label ID="lblDriverAccidentViolationNumber" runat="server" Visible="false" Text='<%# DataBinder.Eval(Container.DataItem,"DriverAccidentViolationNumber") %>'></asp:Label>&nbsp;<%--<asp:ImageButton runat="server" ID="imgBtnRemoveDriverAccidentViolation" ImageUrl="images/test/command_button_delete_on.gif" OnClick="imgBtnRemoveDriverAccidentViolation_Click" ToolTip="Remove Driver Accident/Violation" />--%><asp:ImageButton runat="server" ID="imgBtnRemoveDriverAccidentViolation" ImageUrl="images/test/close.gif" OnClick="imgBtnRemoveDriverAccidentViolation_Click" ToolTip="Remove Driver Accident/Violation" /></li>
+                                        </ItemTemplate>
+                                        <FooterTemplate>
+                                            </ul>
+                                        </FooterTemplate>
+                                    </asp:Repeater>
+                                </asp:Panel>
+                            </li>
+                    </ItemTemplate>
+                    <%--<AlternatingItemTemplate>
+                    
+                    </AlternatingItemTemplate>--%>
+                    <%--<SeparatorTemplate>
+                    
+                    </SeparatorTemplate>--%>
+                    <FooterTemplate>
+                            <li><asp:ImageButton runat="server" ID="imgBtnAddDriver" ImageUrl="images/test/button_add_on.gif" OnClick="imgBtnAddDriver_Click" ToolTip="Add Driver" /></li>
+                        </ul>
+                    </FooterTemplate>
+                </asp:Repeater>
+            </asp:Panel>    
+        </li>
+        <li runat="server" id="liVehicles" visible="false">
+            <span runat="server" id="v_xImageArea" visible="false"><img src="images/test/warning.gif" alt="Vehicle Information Required" title="Vehicle Information Required" /></span>
+            <span runat="server" id="v_expandCollapseImageArea" visible="false"><img id="v_expand" class="clickable" alt="expand" title="expand" src="images/test/expand.png" onclick="expandCollapse('v', 'expand');" /><img id="v_collapse" class="clickable" alt="collapse" title="collapse" src="images/test/collapse.png" onclick="expandCollapse('v', 'collapse');" /><input id="hdnVExpandedOrCollapsed" name="hdnVExpandedOrCollapsed" type="hidden" runat="server" /><img src="images/test/button_checkmark_on.gif" /></span>
+            &nbsp;<%--<img alt="Vehicles" src="images/test/vehicle.png" />--%><asp:ImageButton runat="server" ID="imgBtnVehicles" ImageUrl="images/test/vehicle.png" ToolTip="Show Vehicles" CssClass="hidden" /><%--&nbsp;--%><span onclick="ClickRelatedChildButton(this, 'imgBtnVehicles');" title="Show Vehicles" class="clickable"><b>Vehicles</b>&nbsp;(<asp:Label runat="server" ID="lblNumberOfVehicles" Text="0"></asp:Label>)</span>
+            <asp:Panel ID="pnlVehicles" runat="server" Visible="false">
+                <asp:Repeater ID="rptVehicles" runat="server">
+                    <HeaderTemplate>
+                        <ul style="list-style-type:none;" class="subList">
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                            <li>
+                                <asp:ImageButton runat="server" ID="imgBtnRemoveVehicle" ImageUrl="images/test/close.gif" OnClick="imgBtnRemoveVehicle_Click" ToolTip="Remove Vehicle" />&nbsp;<input id="hdnIsSelected_Vehicle" name="hdnIsSelected_Vehicle" type="hidden" runat="server" /><asp:ImageButton runat="server" ID="imgBtnEditVehicle" ImageUrl="images/test/vehicle.png" OnClick="imgBtnEditVehicle_Click" ToolTip="Edit Vehicle" CssClass="hidden" OnClientClick="SelectParentListItem(this);" /><%--&nbsp;--%><asp:Label ID="lblVehicleDescription" runat="server" OnClick="ClickRelatedChildButton(this, 'imgBtnEditVehicle');" ToolTip="Edit Vehicle" CssClass="clickable" Text='<%# DataBinder.Eval(Container.DataItem,"VehicleDescription") %>'></asp:Label><asp:Label ID="lblVehicleNumber" runat="server" Visible="false" Text='<%# DataBinder.Eval(Container.DataItem,"VehicleNumber") %>'></asp:Label><%--&nbsp;--%><%--<asp:ImageButton runat="server" ID="imgBtnRemoveVehicle" ImageUrl="images/test/button_delete_on.gif" OnClick="imgBtnRemoveVehicle_Click" ToolTip="Remove Vehicle" />--%><%--<asp:ImageButton runat="server" ID="imgBtnRemoveVehicle" ImageUrl="images/test/close.gif" OnClick="imgBtnRemoveVehicle_Click" ToolTip="Remove Vehicle" />--%>
+                                <asp:Panel ID="pnlVehicleDrivers" runat="server" Visible="false">
+                                    <asp:Repeater ID="rptVehicleDrivers" runat="server">
+                                        <HeaderTemplate>
+                                            <ul class="subList2">
+                                        </HeaderTemplate>
+                                        <ItemTemplate>
+                                            <li><asp:Label ID="lblVehicleDriverDescription" runat="server" Text='<%# DataBinder.Eval(Container.DataItem,"VehicleDriverDescription") %>'></asp:Label><asp:Label ID="lblVehicleDriverIdentifier" runat="server" Visible="false" Text='<%# DataBinder.Eval(Container.DataItem,"VehicleDriverIdentifier") %>'></asp:Label><asp:Label ID="lblDriverNumber" runat="server" Visible="false" Text='<%# DataBinder.Eval(Container.DataItem,"DriverNumber") %>'></asp:Label>&nbsp;<%--<asp:ImageButton runat="server" ID="imgBtnRemoveVehicleDriver" ImageUrl="images/test/command_button_delete_on.gif" OnClick="imgBtnRemoveVehicleDriver_Click" ToolTip="Remove Vehicle Driver" />--%><asp:ImageButton runat="server" ID="imgBtnRemoveVehicleDriver" ImageUrl="images/test/close.gif" OnClick="imgBtnRemoveVehicleDriver_Click" ToolTip="Remove Vehicle Driver" /></li>
+                                        </ItemTemplate>
+                                        <FooterTemplate>
+                                            </ul>
+                                        </FooterTemplate>
+                                    </asp:Repeater>
+                                </asp:Panel>
+                            </li>
+                    </ItemTemplate>
+                    <%--<AlternatingItemTemplate>
+                    
+                    </AlternatingItemTemplate>--%>
+                    <%--<SeparatorTemplate>
+                    
+                    </SeparatorTemplate>--%>
+                    <FooterTemplate>
+                            <li><asp:ImageButton runat="server" ID="imgBtnAddVehicle" ImageUrl="images/test/button_add_on.gif" OnClick="imgBtnAddVehicle_Click" ToolTip="Add Vehicle" /></li>
+                        </ul>
+                    </FooterTemplate>
+                </asp:Repeater>
+            </asp:Panel>
+        </li>
+        <li runat="server" id="liLocations" visible="false">
+            <span runat="server" id="l_xImageArea" visible="false"><img src="images/test/warning.gif" alt="Location Information Required" title="Location Information Required" /></span>
+            <span runat="server" id="l_expandCollapseImageArea" visible="false"><img id="l_expand" class="clickable" alt="expand" title="expand" src="images/test/expand.png" onclick="expandCollapse('l', 'expand');" /><img id="l_collapse" class="clickable" alt="collapse" title="collapse" src="images/test/collapse.png" onclick="expandCollapse('l', 'collapse');" /><input id="hdnLExpandedOrCollapsed" name="hdnLExpandedOrCollapsed" type="hidden" runat="server" /><img src="images/test/button_checkmark_on.gif" /></span>
+            &nbsp;<%--<img alt="Locations" src="images/test/home.png" />--%><asp:ImageButton runat="server" ID="imgBtnLocations" ImageUrl="images/test/home.png" ToolTip="Show Locations" CssClass="hidden" /><%--&nbsp;--%><span onclick="ClickRelatedChildButton(this, 'imgBtnLocations');" title="Show Locations" class="clickable"><b>Locations</b>&nbsp;(<asp:Label runat="server" ID="lblNumberOfLocations" Text="0"></asp:Label>)</span>
+            <asp:Panel ID="pnlLocations" runat="server" Visible="false">
+                <asp:Repeater ID="rptLocations" runat="server">
+                    <HeaderTemplate>
+                        <ul style="list-style-type:none;" class="subList">
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                            <li><asp:ImageButton runat="server" ID="imgBtnRemoveLocation" ImageUrl="images/test/close.gif" OnClick="imgBtnRemoveLocation_Click" ToolTip="Remove Location" />&nbsp;<input id="hdnIsSelected_Location" name="hdnIsSelected_Location" type="hidden" runat="server" /><asp:ImageButton runat="server" ID="imgBtnEditLocation" ImageUrl="images/test/home.png" OnClick="imgBtnEditLocation_Click" ToolTip="Edit Location" CssClass="hidden" OnClientClick="SelectParentListItem(this);" /><%--&nbsp;--%><asp:Label ID="lblLocationDescription" runat="server" OnClick="ClickRelatedChildButton(this, 'imgBtnEditLocation');" ToolTip="Edit Location" CssClass="clickable" Text='<%# DataBinder.Eval(Container.DataItem,"LocationDescription") %>'></asp:Label><asp:Label ID="lblLocationNumber" runat="server" Visible="false" Text='<%# DataBinder.Eval(Container.DataItem,"LocationNumber") %>'></asp:Label><%--&nbsp;--%><%--<asp:ImageButton runat="server" ID="imgBtnRemoveLocation" ImageUrl="images/test/button_delete_on.gif" OnClick="imgBtnRemoveLocation_Click" ToolTip="Remove Location" />--%><%--<asp:ImageButton runat="server" ID="imgBtnRemoveLocation" ImageUrl="images/test/close.gif" OnClick="imgBtnRemoveLocation_Click" ToolTip="Remove Location" />--%></li>
+                                <asp:Panel ID="pnlLocationBuildings" runat="server" Visible="false">
+                                    <asp:Repeater ID="rptLocationBuildings" runat="server">
+                                        <HeaderTemplate>
+                                            <ul class="subList2">
+                                        </HeaderTemplate>
+                                        <ItemTemplate>
+                                            <li><asp:Label ID="lblLocationBuildingDescription" runat="server" Text='<%# DataBinder.Eval(Container.DataItem,"LocationBuildingDescription") %>'></asp:Label><asp:Label ID="lblBuildingNumber" runat="server" Visible="false" Text='<%# DataBinder.Eval(Container.DataItem,"BuildingNumber") %>'></asp:Label>&nbsp;<%--<asp:ImageButton runat="server" ID="imgBtnRemoveLocationBuilding" ImageUrl="images/test/command_button_delete_on.gif" OnClick="imgBtnRemoveLocationBuilding_Click" ToolTip="Remove Location Building" />--%><asp:ImageButton runat="server" ID="imgBtnRemoveLocationBuilding" ImageUrl="images/test/close.gif" OnClick="imgBtnRemoveLocationBuilding_Click" ToolTip="Remove Location Building" /></li>
+                                        </ItemTemplate>
+                                        <FooterTemplate>
+                                            </ul>
+                                        </FooterTemplate>
+                                    </asp:Repeater>
+                                </asp:Panel>
+                    </ItemTemplate>
+                    <%--<AlternatingItemTemplate>
+                    
+                    </AlternatingItemTemplate>--%>
+                    <%--<SeparatorTemplate>
+                    
+                    </SeparatorTemplate>--%>
+                    <FooterTemplate>
+                            <li><asp:ImageButton runat="server" ID="imgBtnAddLocation" ImageUrl="images/test/button_add_on.gif" OnClick="imgBtnAddLocation_Click" ToolTip="Add Location" /></li>
+                        </ul>
+                    </FooterTemplate>
+                </asp:Repeater>
+            </asp:Panel>
+        </li>
+        <li runat="server" id="liCoverages" visible="false">
+            <span runat="server" id="c_xImageArea" visible="false"><img src="images/test/warning.gif" alt="Coverage Information Required" title="Coverage Information Required" /></span>
+            <span runat="server" id="c_expandCollapseImageArea" visible="false"><img id="c_expand" class="clickable" alt="expand" title="expand" src="images/test/expand.png" onclick="expandCollapse('c', 'expand');" /><img id="c_collapse" class="clickable" alt="collapse" title="collapse" src="images/test/collapse.png" onclick="expandCollapse('c', 'collapse');" /><input id="hdnCExpandedOrCollapsed" name="hdnCExpandedOrCollapsed" type="hidden" runat="server" /></span><span runat="server" id="c_checkMarkArea" visible="false"><img src="images/test/button_checkmark_on.gif" /></span>
+            &nbsp;<asp:ImageButton runat="server" ID="imgBtnCoverages" ImageUrl="images/test/dark_account_maint.png" ToolTip="Show Coverages" CssClass="hidden" /><%--&nbsp;--%><span onclick="ClickRelatedChildButton(this, 'imgBtnCoverages');" title="Show Coverages" class="clickable"><b>Coverages</b></span>
+            <asp:Panel ID="pnlCoverages" runat="server" Visible="false">
+                <asp:Repeater ID="rptCoverages" runat="server">
+                    <HeaderTemplate>
+                        <ul class="subList">
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                            <li><asp:Label ID="lblCoverageDescription" runat="server" Text='<%# DataBinder.Eval(Container.DataItem,"CoverageDescription") %>'></asp:Label></li>
+                    </ItemTemplate>
+                    <%--<AlternatingItemTemplate>
+                    
+                    </AlternatingItemTemplate>--%>
+                    <%--<SeparatorTemplate>
+                    
+                    </SeparatorTemplate>--%>
+                    <FooterTemplate>
+                        </ul>
+                    </FooterTemplate>
+                </asp:Repeater>
+            </asp:Panel>
+        </li>
+    </ul>
+    <asp:Button runat="server" ID="btnExpandAll" Text="Expand All (server-side)" />
+    <input type="button" id="btnCollapseAll" name="btnCollapseAll" value="Collapse All (client-side)" onclick="CollapseAll();" />
+</asp:Panel>
+<asp:Panel ID="pnlTreeViewError" runat="server" Visible="false">
+    <div>Nothing found!</div>
+</asp:Panel>
+<input id="hdnExpandOrCollapseAllFlag" name="hdnExpandOrCollapseAllFlag" type="hidden" runat="server" />
+<input id="hdnDeselectAllListItemsFlag" name="hdnDeselectAllListItemsFlag" type="hidden" runat="server" />
+<input id="hdnInEditModeFlag" name="hdnInEditModeFlag" type="hidden" runat="server" />
+<%--breaks added to test scrolling and maintainScrollbackPosition--%>
+<%--<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br />--%>
+
+<script type="text/javascript">
+    //CheckForExpandOrCollapse();
+    //updated 1/22/2014
+    InitializePage();
+    </script>
+<%--</ContentTemplate>
+</asp:UpdatePanel>--%>

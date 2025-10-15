@@ -1,0 +1,135 @@
+﻿'-Residential
+'Residential Estimates: https://evs.e2value.com/evs/est/bpr/default.asp
+'Residential Pro Estimates: https://evs.e2value.com/evs/est/bpp/default.asp
+'A&A Estimates: https://evs.e2value.com/evs/est/bpa/default.asp
+'A&A Pro Estimates: https://evs.e2value.com/evs/est/bap/default.asp
+'Exterior Estimates: https://evs.e2value.com/evs/est/exr/default.asp
+'Full Residential Estimates: https://evs.e2value.com/evs/est/flr/default.asp
+'Full A&A Estimates: https://evs.e2value.com/evs/est/fla/default.asp
+'Additional Structures Estimates: https://evs.e2value.com/evs/est/ada/default.asp
+
+'-Commercial
+'Quick Commercial Structures Estimates: https://evs.e2value.com/evs/est/qce/default.asp
+'QCE Pro Structures Estimates: https://evs.e2value.com/evs/est/cmm/default.asp
+
+'-Farm and Ranch
+'Farm and Ranch Structures Estimates: https://evs.e2value.com/evs/est/fnr/default.asp
+'Homestead Structures Estimates: https://evs.e2value.com/evs/est/hsd/default.asp
+
+'-Pronto ™
+'Pronto Residential: https://evs.e2value.com/evs/est/pronto_res_ln/default.aspx
+'ProntoLite™ Residential: https://evs.e2value.com/evs/est/pronto_res/default.aspx
+'Pronto Commercial: https://evs.e2value.com/evs/est/pronto_cmm/default.aspx
+'ProntoLite™ Commercial: https://evs.e2value.com/evs/est/pronto_cmm_3/default.aspx
+
+'-InVision
+'InVision Estimates: https://evs.e2value.com/evs/est/invision/default.aspx
+
+'-InQuest
+'InQuest Estimates: https://evs.e2value.com/evs/est/inquest/default.aspx
+
+'-AV3
+'Residential Banking: https://evs.e2value.com/evs/est/av3/default.aspx
+
+'To directly access the Smart Data Warehouse: https://evs.e2value.com/evs/sdw.asp
+
+'https://evs.e2value.com/evs/remote_auth.asp
+'https://evs.e2value.com/evs/remote_auth.asp?username=YOUR_USERNAME&password=YOUR_PASSWORD&vusername=YOUR_VIRTUALUSERNAME
+
+'<?xml version="1.0"?>
+'<response status="success">
+'<authid>1663</authid>
+'<authcode>kHAnhBdqgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81</authcode>
+'</response>
+
+'<?xml version="1.0"?>
+'<response status="failure">
+'<message>Sorry, your password was incorrect.</message>
+'</response>
+
+'https://evs.e2value.com/evs/est/bpr/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Residential)
+'https://evs.e2value.com/evs/est/bpp/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Residential Pro)
+'https://evs.e2value.com/evs/est/exr/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Exterior Residential)
+'https://evs.e2value.com/evs/est/flr/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Full Residential)
+'https://evs.e2value.com/evs/est/ada/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Additional Structures)
+'https://evs.e2value.com/evs/est/bpa/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (A&A)
+'https://evs.e2value.com/evs/est/bap/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (A&A Pro)
+'https://evs.e2value.com/evs/est/fla/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Full A&A)
+'https://evs.e2value.com/evs/est/qce/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Quick Commercial)
+'https://evs.e2value.com/evs/est/cmm/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (QCE Pro)
+'https://evs.e2value.com/evs/est/fnr/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Farm and Ranch)
+'https://evs.e2value.com/evs/est/hsd/default.asp?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Homestead)
+'https://evs.e2value.com/evs/est/pronto_res_ln/default.aspx?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Pronto™ Residential)
+'https://evs.e2value.com/evs/est/pronto_res/default.aspx?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Pronto Lite™ Residential)
+'https://evs.e2value.com/evs/est/pronto_cmm/default.aspx?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Pronto™ Commercial)
+'https://evs.e2value.com/evs/est/pronto_cmm_3/default.aspx?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (Pronto Lite™ Commercial)
+'https://evs.e2value.com/evs/est/invision/default.aspx?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (InVision™)
+'https://evs.e2value.com/evs/est/inquest/default.aspx?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (InQuest™)
+'https://evs.e2value.com/evs/est/av3/default.aspx?ac=kHAnhBkdgF6vgT2EYe16NgEbmkXgUyV59Ivw3C9r1GS81&ad=1663 (AV3 Residential Banking)
+
+'Estimator Types:
+'BPR – Residential
+'BPP – Residential Pro
+'EXR – Exterior Residential
+'FLR – Full Residential
+'BPA – A & A
+'BAP – A & A Pro
+'ADA – Additional Structures
+'QCE – Quick Commercial
+'CMM – QCE Pro
+'P1C – Pronto Commercial
+'P3C – Pronto Lite Commercial (3 Question)
+'P1R – Pronto Residential
+'P3R – Pronto Lite Residential (3 Question)
+'FNR – Farm and Ranch
+'HSD – Homestead
+'INV – InVision
+'INQ – InQuest
+'AV3 - Residential Banking
+
+'https://evs.e2value.com/evs/est/bpr/default.asp?ac=hE5ke7hnCC0RdQyBVAxZkdB6jhUCRvSZ3f
+'stY92oxDP2X&ad=406767&preload=1&cfn1=test&cmi1=t&cln1=riskmetertest&cfn2=test2&cmi2=
+'2&cln2=riskmetertest2&ccova=%24750%2C0000%2E00&ccovao=Previous+Coverage&paddr1=
+'123+test&paddr2=apt+%23+2&pcity=bay+shore&pstate=ny&pzip=11706&pi_carrier=carrier&pi_n
+'umber=12345678&pi_requestor=requestor&pi_interviewed=interviewed&pi_effdate=8%2F1%2F2
+'006&pi_inspdate=8%2F10%2F2006&pi_inspby=inspectby&pi_agencyName=agency+name&pi_a
+'dd1=add1&pi_add2=add2&pi_city=bay+shore&pi_state=ny&pi_zip=11706&pi_phone=111111111
+'1&pi_agencycode=1234567&pi_agent=agent&id=12345&u=http%3A%2F%2Fwww%2Ee2value%
+'2Ecom%2Flinkto%2Fcml%2Findex%2Easp%3F&bname=Return+to+System (Residential)
+
+'https://evs.e2value.com/evs/est/bpr/default.asp?ac=hE5ke7hnCC0RdQyBVAxZkdB6jhUCRvSZ3fstY92oxDP2X&ad=406767&preload=1&cfn1=test&cmi1=t&cln1=riskmetertest&cfn2=test2&cmi2=2&cln2=riskmetertest2&ccova=%24750%2C0000%2E00&ccovao=Previous+Coverage&paddr1=123+test&paddr2=apt+%23+2&pcity=bay+shore&pstate=ny&pzip=11706&pi_carrier=carrier&pi_number=12345678&pi_requestor=requestor&pi_interviewed=interviewed&pi_effdate=8%2F1%2F2006&pi_inspdate=8%2F10%2F2006&pi_inspby=inspectby&pi_agencyName=agency+name&pi_add1=add1&pi_add2=add2&pi_city=bay+shore&pi_state=ny&pi_zip=11706&pi_phone=1111111111&pi_agencycode=1234567&pi_agent=agent&id=12345&u=http%3A%2F%2Fwww%2Ee2value%2Ecom%2Flinkto%2Fcml%2Findex%2Easp%3F&bname=Return+to+System (Residential)
+
+
+'https://evs.e2value.com/evs/est/qce/default.asp?ac=3zs9Yt3CXxPHXgNwlvnp9XwS73kxhKiprZH
+'IourDMyfQn&ad=406764&preload=1&cfn1=test&cmi1=t&cln1=riskmetertest&cfn2=test2&cmi2=2
+'&cln2=riskmetertest2&ccova=%24750%2C0000%2E00&ccovao=Previous+Coverage&paddr1=1
+'23+test&paddr2=apt+%23+2&pcity=bay+shore&pstate=ny&pzip=11706&pi_carrier=carrier&pi_nu
+'mber=12345678&pi_requestor=requestor&pi_interviewed=interviewed&pi_effdate=8%2F1%2F20
+'06&pi_inspdate=8%2F10%2F2006&pi_inspby=inspectby&pi_agencyName=agency+name&pi_ad
+'d1=add1&pi_add2=add2&pi_city=bay+shore&pi_state=ny&pi_zip=11706&pi_phone=1111111111
+'&pi_agencycode=1234567&pi_agent=agent&id=12345&u=http%3A%2F%2Fwww%2Ee2value%2
+'Ecom%2Flinkto%2Fcml%2Findex%2Easp%3F&bname=Return+to+System (Quick Commercial)
+
+'https://evs.e2value.com/evs/est/qce/default.asp?ac=3zs9Yt3CXxPHXgNwlvnp9XwS73kxhKiprZHIourDMyfQn&ad=406764&preload=1&cfn1=test&cmi1=t&cln1=riskmetertest&cfn2=test2&cmi2=2&cln2=riskmetertest2&ccova=%24750%2C0000%2E00&ccovao=Previous+Coverage&paddr1=123+test&paddr2=apt+%23+2&pcity=bay+shore&pstate=ny&pzip=11706&pi_carrier=carrier&pi_number=12345678&pi_requestor=requestor&pi_interviewed=interviewed&pi_effdate=8%2F1%2F2006&pi_inspdate=8%2F10%2F2006&pi_inspby=inspectby&pi_agencyName=agency+name&pi_add1=add1&pi_add2=add2&pi_city=bay+shore&pi_state=ny&pi_zip=11706&pi_phone=1111111111&pi_agencycode=1234567&pi_agent=agent&id=12345&u=http%3A%2F%2Fwww%2Ee2value%2Ecom%2Flinkto%2Fcml%2Findex%2Easp%3F&bname=Return+to+System (Quick Commercial)
+
+
+'https://evs.e2value.com/evs/est/cmm/default.asp?ac=72uB1v7EzzRjZiPyMxOrBZyUA7mzjMkrt3J
+'KqwSfO0hsp&ad=406766&preload=1&cfn1=test&cmi1=t&cln1=cmlcmmtest&cfn2=test2&cmi2=2
+'&cln2=cmlcmmtest2&ccova=%24750%2C0000%2E00&ccovao=Previous+Coverage&paddr1=12
+'3+test&paddr2=apt+%23+2&pcity=bay+shore&pstate=ny&pzip=11706&pi_carrier=carrier&pi_nu
+'mber=12345678&pi_requestor=requestor&pi_interviewed=interviewed&pi_effdate=8%2F1%2F20
+'06&pi_inspdate=8%2F10%2F2006&pi_inspby=inspectby&pi_agencyName=agency+name&pi_ad
+'d1=add1&pi_add2=add2&pi_city=bay+shore&pi_state=ny&pi_zip=11706&pi_phone=1111111111
+'&pi_agencycode=1234567&pi_agent=agent&id=12345&u=http%3A%2F%2Fwww%2Ee2value%2
+'Ecom%2Flinkto%2Fcml%2Findex%2Easp%3F&clientisbusiness=1&bname=Return+to+System (QCE Pro)
+
+'https://evs.e2value.com/evs/est/cmm/default.asp?ac=72uB1v7EzzRjZiPyMxOrBZyUA7mzjMkrt3JKqwSfO0hsp&ad=406766&preload=1&cfn1=test&cmi1=t&cln1=cmlcmmtest&cfn2=test2&cmi2=2&cln2=cmlcmmtest2&ccova=%24750%2C0000%2E00&ccovao=Previous+Coverage&paddr1=123+test&paddr2=apt+%23+2&pcity=bay+shore&pstate=ny&pzip=11706&pi_carrier=carrier&pi_number=12345678&pi_requestor=requestor&pi_interviewed=interviewed&pi_effdate=8%2F1%2F2006&pi_inspdate=8%2F10%2F2006&pi_inspby=inspectby&pi_agencyName=agency+name&pi_add1=add1&pi_add2=add2&pi_city=bay+shore&pi_state=ny&pi_zip=11706&pi_phone=1111111111&pi_agencycode=1234567&pi_agent=agent&id=12345&u=http%3A%2F%2Fwww%2Ee2value%2Ecom%2Flinkto%2Fcml%2Findex%2Easp%3F&clientisbusiness=1&bname=Return+to+System (QCE Pro)
+
+
+'For external (agents) the login credentials are:
+'Username - INFexternal
+'Password - MjXl17#2tT    (must match exactly)
+
+'For internal (staff) the login credentials are:
+'Username - INFinternal
+'Password - i5Rt%37sN5     (must match exactly)

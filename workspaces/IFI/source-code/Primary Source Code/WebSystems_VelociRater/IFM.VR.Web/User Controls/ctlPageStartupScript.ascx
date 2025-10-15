@@ -1,0 +1,1 @@
+﻿<%@ Control Language="vb" AutoEventWireup="false" CodeBehind="ctlPageStartupScript.ascx.vb" Inherits="IFM.VR.Web.ctlPageStartupScript" %>

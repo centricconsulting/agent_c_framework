@@ -1,0 +1,50 @@
+﻿<tests>
+
+
+  <!--testing bad request-->
+  <TestGetAgencyInfoById>    
+    <agencyId>0</agencyId>
+    <expectCode>6093-2036</expectCode>
+    <expectGroupCode>6093</expectGroupCode>
+    <expectLocationCode>2036</expectLocationCode>
+    <expectName>WAYNE MADDEN INSURANCE</expectName>
+    <expectState>IN</expectState>
+    <expectCommercialLinesTerritory>02</expectCommercialLinesTerritory>
+    <expectPersonalLinesTerritory>01</expectPersonalLinesTerritory>
+    <expectPayload>false</expectPayload>
+    <expectedResult>400</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetAgencyInfoById>
+
+  <!--testing not found-->
+  <TestGetAgencyInfoById>
+    <agencyId>256000</agencyId>
+    <expectCode>6093-2036</expectCode>
+    <expectGroupCode>6093</expectGroupCode>
+    <expectLocationCode>2036</expectLocationCode>
+    <expectName>WAYNE MADDEN INSURANCE</expectName>
+    <expectState>IN</expectState>
+    <expectCommercialLinesTerritory>02</expectCommercialLinesTerritory>
+    <expectPersonalLinesTerritory>01</expectPersonalLinesTerritory>
+    <expectPayload>false</expectPayload>
+    <expectedResult>404</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetAgencyInfoById>
+  
+  <TestGetAgencyInfoById>
+    <!--testing pulling an agency-->
+    <agencyId>100</agencyId>
+    <expectCode>6093-2036</expectCode>
+    <expectGroupCode>6093</expectGroupCode>
+    <expectLocationCode>2036</expectLocationCode>
+    <expectName>WAYNE MADDEN INSURANCE</expectName>
+    <expectState>IN</expectState>
+    <expectCommercialLinesTerritory>02</expectCommercialLinesTerritory>
+    <expectPersonalLinesTerritory>01</expectPersonalLinesTerritory>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetAgencyInfoById>
+  
+  
+</tests>

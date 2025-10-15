@@ -1,0 +1,106 @@
+﻿<tests>
+
+ 
+  <testSetPayPlan>
+    <description>Expect no errors. Testing setting the payplan to rEFT.</description>
+    <payPlanId>19</payPlanId>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>mamonett@indianafarmers.com</emailAddress>
+
+    <eftUseData>true</eftUseData>
+    <eftAccountNumber>123456</eftAccountNumber>
+    <eftAccountType>1</eftAccountType>
+    <eftRoutingNumber>322271627</eftRoutingNumber>
+    <eftDeductionDay>20</eftDeductionDay>
+
+    <ccUseData>false</ccUseData>
+    <ccNumber>5413330089010681</ccNumber>
+    <ccExpireMonth>12</ccExpireMonth>
+    <ccExpireYear>2022</ccExpireYear>
+    <ccDeductionDay>10</ccDeductionDay>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testSetPayPlan>
+
+  <testSetPayPlan>
+    <description>Expect no errors. Testing setting the payplan to RCC.</description>
+    <payPlanId>18</payPlanId>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>mamonett@indianafarmers.com</emailAddress>
+
+    <eftUseData>false</eftUseData>
+    <eftAccountNumber>12345</eftAccountNumber>
+    <eftAccountType>1</eftAccountType>
+    <eftRoutingNumber>011000015</eftRoutingNumber>
+    <eftDeductionDay>10</eftDeductionDay>
+
+    <ccUseData>true</ccUseData>
+    <ccNumber>5413330089010681</ccNumber>
+    <ccExpireMonth>12</ccExpireMonth>
+    <ccExpireYear>2022</ccExpireYear>
+    <ccDeductionDay>15</ccDeductionDay>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testSetPayPlan>
+  
+
+  <testSetPayPlan>
+    <description>Expect errors as we are setting the payplan to rEFT but don't provide any checking data.</description>
+    <payPlanId>19</payPlanId>
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>mamonett@indianafarmers.com</emailAddress>
+
+    <eftUseData>false</eftUseData>
+    <eftAccountNumber>12345</eftAccountNumber>
+    <eftAccountType>1</eftAccountType>
+    <eftRoutingNumber>011000015</eftRoutingNumber>
+    <eftDeductionDay>10</eftDeductionDay>
+
+    <ccUseData>false</ccUseData>
+    <ccNumber>5413330089010681</ccNumber>
+    <ccExpireMonth>12</ccExpireMonth>
+    <ccExpireYear>2022</ccExpireYear>    
+    <ccDeductionDay>10</ccDeductionDay>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </testSetPayPlan>
+  
+ 
+
+  
+   
+  
+  <testSetPayPlan>
+    <description>Expect no errors. Testing setting the payplan to Monthly.</description>
+    <payPlanId>15</payPlanId>    
+    <agreedWithTerms>true</agreedWithTerms>
+    <emailAddress>mamonett@indianafarmers.com</emailAddress>
+
+    <eftUseData>false</eftUseData>
+    <eftAccountNumber>12345</eftAccountNumber>
+    <eftAccountType>1</eftAccountType>
+    <eftRoutingNumber>011000015</eftRoutingNumber>
+    <eftDeductionDay>15</eftDeductionDay>
+
+    <ccUseData>false</ccUseData>
+    <ccNumber>5413330089010681</ccNumber>
+    <ccExpireMonth>12</ccExpireMonth>
+    <ccExpireYear>2022</ccExpireYear>
+    <ccDeductionDay>10</ccDeductionDay>
+    
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </testSetPayPlan>
+  
+     
+  
+ 
+  
+</tests>

@@ -1,0 +1,405 @@
+﻿<tests>
+
+  <!--<TestGetRegisteredPolicyInfo>
+    <policyNumber>HOM2114872</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>
+
+   <TestGetRegisteredPolicyInfo>
+    <policyNumber>CGL1008292</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>
+
+  <TestGetRegisteredPolicyInfo>
+    <policyNumber>PPA2058934</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>
+
+  <TestGetRegisteredPolicyInfo>
+    <policyNumber>PPA1000014</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>
+
+  <TestGetRegisteredPolicyInfo>
+    <policyNumber>BOP1000317</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>
+
+  <TestGetRegisteredPolicyInfo>
+    <policyNumber>CPR1000703</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>4/18/2018 - removed temporarily in order to test specific policies below-->
+
+  <!--<TestGetRegisteredPolicyInfo>
+    --><!--testing pulling a quote--><!--
+    <policyNumber>CGL1008405</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>
+
+  <TestGetRegisteredPolicyInfo> --><!--testing pulling a quote--><!--
+    <policyNumber>cpp1010567</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>
+
+  <TestGetRegisteredPolicyInfo> --><!--testing account bill--><!--
+    <policyNumber>CAP1007181</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>
+
+
+  <TestGetRegisteredPolicyInfo> --><!--testing account bill--><!--
+    <policyNumber>CGL1008604</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>
+
+
+
+
+  <TestGetRegisteredPolicyInfo>--><!--added 3/19/2018; per bug IFMI-95 to see why adjuster phone/email isn't showing for claim # 1064349; doesn't call correct service/method--><!--
+    <policyNumber>PPA2041693</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>-->
+
+  <!--<TestGetRegisteredPolicyInfo>
+    <policyNumber>CAP1006637</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>-->
+
+  <TestGetRegisteredPolicyInfo>
+    <policyNumber>PPA2118720</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>
+
+  <!--<TestGetRegisteredPolicyInfo>--><!--added 4/18/2018 to see what comes back on policy rewrite; error encountered when fetching policies when one is non-active # but has a different # for rewrittenTo--><!--
+    <policyNumber>PPA2118680</policyNumber>
+    <nickName>no nick name</nickName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetRegisteredPolicyInfo>-->
+
+  <!--<TestVerification>
+    <description>Expect no errors. Testing prefix and suffix.</description>
+    <policyNumber>PPA2033455</policyNumber>
+    --><!--<name>WILLIAM  THOMPSON,</name>--><!--
+    <name>David E &amp; Renee Wise Family Trust</name>
+    <zip>46573</zip>
+    <dln>8904256703</dln>
+    <dob>12/11/1954</dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+
+
+  <TestVerification>
+    <description>Expect no errors. Testing prefix and suffix.</description>
+    <policyNumber>PIM1000135</policyNumber>
+    --><!--<name>WILLIAM  THOMPSON,</name>--><!--
+    <name>DR. WILLIAM C THOMPSON, II</name>
+    <zip>47597</zip>
+    <dln>8934917234</dln>
+    <dob>12/11/1954</dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>10</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+
+
+  <TestVerification>
+    <description>Expect errors. Incorrect name, zip, DLN. </description>
+    <policyNumber>PPA2058934</policyNumber>
+    <name>Mary Beth Woods</name>
+    <zip>47408</zip>
+    <dln>8914671917</dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+
+  <TestVerification>
+    <description>Expect no errors.</description>
+    <policyNumber>PPA2058934</policyNumber>
+    <name>MARK A WILKINS</name>
+    <zip>47346</zip>
+    <dln>1800028531</dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+
+  <TestVerification>
+    <description>Expect no errors.</description>
+    <policyNumber>PPA2058934</policyNumber>
+    <name>MARK WILKINS</name>
+    <zip>47346</zip>
+    <dln>1800028531</dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>-->
+
+  <TestVerification>
+    <description>Expect no errors.</description>
+    <accountNumber>ACC0000044</accountNumber>
+    <policyNumber></policyNumber>
+    <name>RITCHIE FINISHES, LLC</name>
+    <zip>46036</zip>
+    <dln></dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>60</PolicyInformationVerificationLevel>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+  
+  <!--<TestVerification>
+    <description>Expect no errors.</description>
+    <policyNumber>PPA2120087</policyNumber>
+    <name>KAY CLIFTON</name>
+    <zip>46324</zip>
+    <dln>1234567890</dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+
+  <TestVerification>
+    <description>Expect no errors.</description>
+    <policyNumber>PPA2018141</policyNumber>
+    <name>MICHAEL MCDONALD</name>
+    <zip>43001</zip>
+    <dln></dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>10</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+
+  <TestVerification>
+    <description>Expect no errors.</description>
+    <policyNumber>PPA2018141</policyNumber>
+    <name>MICHAEL MCDONALDSY</name>
+    <zip>43001</zip>
+    <dln></dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>10</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </TestVerification>-->
+
+  <!--<TestVerification>
+    <description>Expect no errors.</description>
+    <policyNumber>PPA2058934</policyNumber>
+    <name>Robin WILKINS</name>
+    <zip>47346</zip>
+    <dln>8971302860</dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+
+  <TestVerification>
+    <description>Expect no errors. Testing 4 digit SSN.</description>
+    <policyNumber>DFR1013743 </policyNumber>
+    <name>DUSTIN M  ARMSTRONG</name>
+    <zip>47356</zip>
+    <dln>0910049974</dln>
+    <dob>12/01/1982</dob>
+    <ssn>8367</ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+
+  <TestVerification>
+    <description>Expect Errors</description>
+    <policyNumber>PPA2058934</policyNumber>
+    <name>Robin WILKINS</name>
+    <zip>60002</zip>
+    <dln>8971302860</dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </TestVerification>
+
+  <TestVerification>
+    <description>Expect no errors.</description>
+    <policyNumber>PPA2058934</policyNumber>
+    <name>Robin WILKINS</name>
+    <zip>60006</zip>
+    <dln>A12345678987</dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+
+  <TestVerification>
+    <description>Expect Errors</description>
+    <policyNumber>PPA2058934</policyNumber>
+    <name>Robin WILKINS</name>
+    <zip>43004</zip>
+    <dln>8971302860</dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>
+
+  <TestVerification>
+    <description>Expect no errors.</description>
+    <policyNumber>PPA2058934</policyNumber>
+    <name>Robin WILKINS</name>
+    <zip>43001</zip>
+    <dln>AB123456</dln>
+    <dob></dob>
+    <ssn></ssn>
+    <onlinePaymentNumber></onlinePaymentNumber>
+    <PolicyInformationVerificationLevel>20</PolicyInformationVerificationLevel>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestVerification>-->
+
+
+
+  <!--added 3/20/2018-->
+  <!--<TestGetPolicyInformation>--><!--per bug IFMI-95 to see why adjuster phone/email isn't showing for claim # 1064349--><!--
+    <policyId>122352</policyId>
+    <imageNumber>23</imageNumber>
+
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInformation>-->
+  <!--<TestGetPolicyInformation>
+    <policyId>1161067</policyId>
+    <imageNumber>9</imageNumber>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInformation>-->
+  <!--<TestGetPolicyInformation>
+    <policyId>2757</policyId>
+    <imageNumber>16</imageNumber>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInformation>-->
+  
+  <!--<TestGetPolicyInformation>
+    <policyId>601029</policyId>
+    <imageNumber>48</imageNumber>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInformation>-->
+
+  <TestGetPolicyInformation>
+    <policyId>1329054</policyId>
+    <imageNumber>8</imageNumber>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInformation>
+</tests>

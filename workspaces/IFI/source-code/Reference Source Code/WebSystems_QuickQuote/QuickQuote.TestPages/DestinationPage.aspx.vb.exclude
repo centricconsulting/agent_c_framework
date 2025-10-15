@@ -1,0 +1,12 @@
+﻿
+Partial Class DestinationPage
+    Inherits System.Web.UI.Page
+
+    Private Sub DestinationPage_Load(sender As Object, e As EventArgs) Handles Me.Load
+        If Page.IsPostBack = False Then
+            If Request.UrlReferrer IsNot Nothing AndAlso Request.UrlReferrer.ToString <> "" Then
+                Me.lblUrlReferrer.Text = Request.UrlReferrer.ToString
+            End If
+        End If
+    End Sub
+End Class

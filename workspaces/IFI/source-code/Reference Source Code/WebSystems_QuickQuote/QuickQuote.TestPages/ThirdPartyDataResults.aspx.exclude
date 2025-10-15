@@ -1,0 +1,36 @@
+﻿<%@ Page Language="VB" AutoEventWireup="false" CodeFile="ThirdPartyDataResults.aspx.vb" Inherits="ThirdPartyDataResults" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Third Party Data Results</title>
+    <script type="text/javascript" src="js/CommonFunctions.js"></script>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+    <asp:datagrid id="dgrdResults" runat="server" AllowSorting="False" AllowPaging="false" HorizontalAlign="Center" CellPadding="3"
+    BorderStyle="None" width="100%" AutoGenerateColumns="False" BorderColor="#999999" BackColor="White"
+    BorderWidth="1px">
+        <FooterStyle ForeColor="Black" BackColor="#CCCCCC"></FooterStyle>
+        <SelectedItemStyle Font-Bold="True" ForeColor="White" BackColor="RoyalBlue"></SelectedItemStyle>
+        <AlternatingItemStyle Font-Size="Smaller" BackColor="#B6C7E1" HorizontalAlign="Left"></AlternatingItemStyle>
+        <ItemStyle Font-Size="Smaller" ForeColor="Black" BackColor="#D3E4FE" HorizontalAlign="Left"></ItemStyle>
+        <HeaderStyle Font-Size="Smaller" Font-Bold="True" HorizontalAlign="Center"
+	        ForeColor="Black" BackColor="#CCD1E3"></HeaderStyle>
+        <Columns>
+	        <asp:ButtonColumn Text="Load" ButtonType="PushButton" CommandName="Load" ItemStyle-HorizontalAlign="Center"></asp:ButtonColumn>
+            <asp:BoundColumn DataField="filePath" SortExpression="filePath" HeaderText="File Path" Visible="false"></asp:BoundColumn>
+	        <asp:BoundColumn DataField="fileName" SortExpression="fileName" HeaderText="File Name"></asp:BoundColumn>
+            <asp:BoundColumn DataField="modified" SortExpression="modified" HeaderText="Modified"></asp:BoundColumn>
+        </Columns>
+        <PagerStyle HorizontalAlign="Center" ForeColor="Black" BackColor="#999999" Mode="NumericPages"></PagerStyle>
+    </asp:datagrid>
+    <br />
+    <b>File Results:  </b>
+    <asp:Label runat="server" ID="lblResults"></asp:Label>
+    </div>
+    </form>
+</body>
+</html>

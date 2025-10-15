@@ -1,0 +1,29 @@
+﻿<%@ Master Language="VB" CodeFile="DiamondQuickQuotePF.master.vb" Inherits="DiamondQuickQuotePF_QQ" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1" runat="server">
+    <%--<meta http-equiv="X-UA-Compatible" content="IE=8" />--%>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <%--<title>Diamond Quick Quote</title>--%>
+    <%--<link href="IFM.css" rel="stylesheet" type="text/css" />--%><!--removed 2/25/2013-->
+    <link href="DiamondQuickQuoteStyles.css?dt=20130528x2" rel="stylesheet" type="text/css" /><!--added 2/22/2013; updated for CSS 7/12/2013 (was 20130513)-->
+    <asp:ContentPlaceHolder id="Scripts" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body id="bodytag" runat="server" onkeydown="if(event.keyCode==8 && !event.srcElement.value) {window.event.returnValue=false;}">
+    <center><form id="form1" runat="server" class="formPortal" runat="server" style="background-color:White;">
+    <asp:ScriptManager ID="ScriptManager1" runat="server">
+</asp:ScriptManager>
+    
+    <table class="layout" cellspacing="0" align="center" width="100%">
+            <tr>
+                <td valign="top" align="left">
+                    <div class="applicationPortal" id="app" runat="server"><%--<br />--%><asp:ContentPlaceHolder ID="Application" runat="server"></asp:ContentPlaceHolder></div>
+                </td>
+            </tr>                      
+        </table>
+    </form></center>
+</body>
+</html>

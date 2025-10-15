@@ -8,7 +8,7 @@ services:
       - "5173:5173"
       - "8000:8000"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./certs:/etc/nginx/certs:ro
     depends_on:
       - api
@@ -24,7 +24,7 @@ services:
       - ${AGENT_C_CONFIG_PATH}/agent_c.config
     expose:
       - "8000"
-    restart: always
+    restart: unless-stopped
     volumes:
       - ${AGENT_C_IMAGES_PATH}:/app/images
       - ${AGENT_C_PERSONAS_PATH}:/app/agent_c_config/agents/local
@@ -32,6 +32,8 @@ services:
       - ${DOWNLOADS_WORKSPACE}:/app/workspaces/downloads
       - ${DESKTOP_WORKSPACE}:/app/workspaces/desktop
       - ${AGENT_C_SAVED_CHAT_FOLDER}:/app/agent_c_config/saved_sessions
+      - ${AGENT_C_CONFIG_PATH}/chat_sessions.db:/app/agent_c_config/chat_sessions.db
+      - ${AGENT_C_CONFIG_PATH}/chat_chat_user_auth.db:/app/agent_c_config/chat_chat_user_auth.db
     environment:
       - ENVIRONMENT=TEST
       - PYTHONPATH=/app

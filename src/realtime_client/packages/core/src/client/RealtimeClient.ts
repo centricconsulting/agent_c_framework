@@ -6,7 +6,6 @@ import { EventEmitter } from '../events/EventEmitter';
 import {
     RealtimeEventMap,
     ClientEventMap,
-    ChatSessionChangedEvent,
     ChatSessionNameChangedEvent,
     AgentVoiceChangedEvent,
     TextInputEvent,
@@ -201,20 +200,9 @@ export class RealtimeClient extends EventEmitter<RealtimeEventMap> {
     private setupSessionManagerHandlers(): void {
         if (!this.sessionManager) return;
         
-        // Handle chat session changes from server
-        this.on('chat_session_changed', (event: ChatSessionChangedEvent) => {
-            if (event.chat_session) {
-                // Set the current chat session in ChatSessionManager
-                this.sessionManager!.setCurrentSession(event.chat_session);
-                
-                // Store the session ID for reconnection recovery
-                this.currentChatSessionId = event.chat_session.session_id;
-                
-                if (this.config.debug) {
-                    console.debug('Session changed:', event.chat_session.session_id, 'with', event.chat_session.messages?.length || 0, 'messages');
-                }
-            }
-        });
+        // Note: chat_session_changed events from the server are processed by EventStreamProcessor
+        // which calls sessionManager.setCurrentSession() directly. The event is not re-emitted
+        // by RealtimeClient, so we don't need a handler here.
         
         // Note: Text delta and completion events are exclusively handled by EventStreamProcessor
         // to prevent duplicate event emission and ensure proper message building

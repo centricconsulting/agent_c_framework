@@ -1,0 +1,69 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CGL_VR_Proposal_CGL_General_Control, VR_CGL_CPP_CPR_deploy" %>
+
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc1" %>
+
+<uc1:VR_PageBreakControl ID="VR_PageBreakControl1" runat="server" Visible="false" />
+<span class="p_SectionHead">
+Coverage Limits</span>
+<div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+<table class="basictbl" style="margin-bottom:15px;">
+    <tr>
+        <td class="formStandardLeftWidth ">
+            General Aggregate</td>
+        <td class="tblcellLeftSide">
+            <asp:Label ID="lblGenAgg" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Products/completed Operations</td>
+        <td class="tblcellLeftSide">
+            <asp:Label ID="lblProducts" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr style="display: none;">
+        <td class="formStandardLeftWidth ">
+            Employment Practices</td>
+        <td class="tblcellLeftSide">
+            <asp:Label ID="lblEPLIPremium" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Personal and Advertising Injury</td>
+        <td class="tblcellLeftSide">
+            <asp:Label ID="lblPersonal" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Occurrence Liability Limit</td>
+        <td class="tblcellLeftSide">
+            <asp:Label ID="lblOccurrence" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Damage to Premises Rented to You</td>
+        <td class="tblcellLeftSide">
+            <asp:Label ID="lblDamages" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+    <tr>
+        <td class="formStandardLeftWidth ">
+            Medical Expenses</td>
+        <td class="tblcellLeftSide">
+            <asp:Label ID="lblmedical" runat="server" Text=""></asp:Label>
+        </td>
+        <td style="width:120px"></td>
+    </tr>
+
+</table>
+</div>
+

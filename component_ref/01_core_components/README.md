@@ -1,58 +1,51 @@
 # Core Components
 
-This directory contains the foundational instruction patterns that can be used when building agents. Each component follows a **binary decision model** - agents either USE a component or DO NOT USE it.
+Foundational instruction patterns for building agents using the **binary decision model** - agents either USE a component or DO NOT USE it.
 
-## What's in This Directory
+---
 
-The core components are organized into tiers based on reuse value and decision clarity:
+## Tier 1: Production-Ready Components
 
-### Tier 1: Universal Components
-High reuse patterns with clear binary decisions, excellent component candidates:
+These 6 components are validated and ready for use:
 
-- **critical_interaction_guidelines_component.md** - Path verification and workspace safety rules
-- **reflection_rules_component.md** - Think tool usage patterns for different agent focuses  
-- **workspace_organization_component.md** - File and directory management patterns
-- **code_quality_python_component.md** - Python development standards and practices
-- **code_quality_csharp_component.md** - C# development standards and practices
+1. **critical_interaction_guidelines_component.md**  
+   Path verification and workspace safety rules
 
-### Tier 2: Capability Components
-Patterns for specific agent capabilities with focused variants:
+2. **reflection_rules_component.md**  
+   Think tool usage patterns for systematic reasoning
 
-- **planning_coordination_component.md** - Multi-step work coordination using planning tools
-- **clone_delegation_component.md** - Task delegation framework for clone agents
-- **human_pairing_general_component.md** - General purpose human collaboration patterns
-- **human_pairing_development_component.md** - Development-focused human collaboration patterns
-- **critical_working_rules_component.md** - Methodical work approach for complex tasks
+3. **workspace_organization_component.md**  
+   File and directory management standards
 
-### Tier 3: Specialized Components
-Focused usage patterns with variant approaches:
+4. **code_quality_python_component.md**  
+   Python development best practices
 
-- **context_management_component.md** - Context window management for complex workflows
-- **team_collaboration_component.md** - Multi-agent team coordination patterns
-- **quality_gates_component.md** - Formal validation and signoff frameworks
-- **domain_knowledge_template_component.md** - Structural template for specialist expertise
+5. **code_quality_typescript_component.md**  
+   TypeScript/JavaScript development standards
+
+6. **code_quality_csharp_component.md**  
+   C# development patterns (pattern validated, pilot testing recommended)
+
+**Additional components planned for Phase 2** (Planning, Clone Delegation, Team Collaboration)
+
+---
 
 ## How to Use Components
 
-**Binary Decision Process**:
-1. **Decide**: "Does this agent need [capability]?" → YES/NO
-2. **Choose**: If YES, use the appropriate component variant
-3. **Customize**: Adapt the component for specific agent needs
-4. **Compose**: Combine selected components with custom expertise
+1. **Decide**: "Does my agent need [capability]?" → YES/NO
+2. **Copy**: If YES, copy the component text into your agent persona
+3. **Customize**: Adapt component details for your specific needs
+4. **Compose**: Combine selected components with your domain expertise
 
-**Component Selection Criteria**:
-- Each component has clear "When to Use" guidance
-- Components work independently (no conditional logic)
-- Focused variants available for different agent roles
-- All components are fully-formed, proven patterns
+---
 
 ## Component Format
 
 Each component includes:
-- **Binary Decision**: Clear YES/NO criteria
-- **Who Uses This**: Target agent types and scenarios  
-- **Component Pattern**: The proven instruction block text
+- **Binary Decision Criteria**: Clear YES/NO guidance
+- **Who Uses This**: Target agent types and scenarios
+- **Component Pattern**: The proven instruction block
 - **Usage Notes**: Customization guidance
-- **Examples in Use**: Real agents implementing this component
+- **Examples**: Real agents using this component
 
-This approach preserves the craft of agent building while providing proven patterns as building blocks.
+Components work independently with no dependencies or conditional logic.

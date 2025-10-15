@@ -414,6 +414,29 @@ class ToolChest:
         self.__tool_opts = local_tool_opts
         await self.activate_toolset(self.__essential_toolsets, local_tool_opts)
 
+    async def call_tool_internal(self, function_id: str, function_args: Dict[str,Any], tool_context: Dict[str,Any]) -> Optional[str]:
+        """
+        Internal method to call a single tool function.
+
+        Args:
+            function_id (str): The function identifier.
+            function_args (Dict[str,Any]): Arguments to pass to the function.
+            tool_context (Dict[str, Any]): Context to pass to the tool, including bridge and session info.
+
+        Returns:
+            Any: The result of the function call.
+        """
+        try:
+            full_args = copy.deepcopy(function_args)
+            full_args['tool_context'] = tool_context
+            return await self._execute_tool_call(function_id, full_args)
+        except Exception as e:
+            self.logger.exception(f"Failed calling {function_id}. {e}", stacklevel=2)
+            await tool_context['bridge'].send_system_message(f"# CRITICAL ERROR\n\nFailed calling {function_id}.\n{e}\n", "error")
+            return None
+
+
+
     async def call_tools(self, tool_calls: List[dict], tool_context: Dict[str,Any], format_type: str = "claude") -> List[dict]:
         """
         Execute multiple tool calls concurrently and return the results.

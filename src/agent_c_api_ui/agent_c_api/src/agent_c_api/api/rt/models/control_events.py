@@ -370,3 +370,17 @@ class UISessionIDChangedEvent(BaseEvent):
     def __init__(self, **data: Any) -> None:
         data['type'] = 'ui_session_id_changed'
         super().__init__(**data)
+
+class SetAgentToolsEvent(BaseEvent):
+    """
+    Event to set the tools for the current agent.
+    Once received the server will send an updated agent configuration with the current tools equipped.
+    IMPORTANT: Just because a tool was requested to be equipped doesn't mean it was successfully equipped.
+               clients should wait for the AgentConfigurationChangedEvent to get the actual list of equipped tools.
+
+    Any errors will be sent as a system message to tu user.
+
+    Attributes:
+        tools (List[str]): The toolset names that should be equipped.
+    """
+    tools: List[str] = Field(default_factory=list)

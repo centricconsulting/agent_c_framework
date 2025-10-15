@@ -1,0 +1,36 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CPR_VR_Proposal_CPR_General_Control, VR_CGL_CPP_CPR_deploy" %>
+
+
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc1" %>
+
+<uc1:VR_PageBreakControl ID="VR_PageBreakControl1" runat="server" Visible="false" />
+<div style="margin: 15px; margin-top: 0px; margin-right: 0px;">        
+        <table class="basictbl" style="margin-top: 15px;" >
+<tr runat="server" id="tr2" style="border-bottom: 1px solid black;">
+        <td class="p_ListHead">
+            General</td>
+       
+            <td class="p_ListHead" style="width:120px; text-align:right;">
+               Premium
+            </td>
+    </tr>
+    <tr runat="server" id="trPropEnhanc"><td >
+            Property Enhancement Endorsement</td>
+       
+            <td  style="width:120px; text-align:right;">
+                <asp:Label ID="lblPropEnhance" runat="server" Text=""></asp:Label>
+            </td></tr>
+            <tr runat="server" id="trEquipment" ><td >
+            Equipment Breakdown</td>
+       
+            <td  style="width:120px; text-align:right;">
+                <asp:Label ID="lblEquipmentBreak" runat="server" Text=""></asp:Label>
+            </td></tr>
+            <tr runat="server" id="trsum" style="border-top: 1px solid black;font-weight:bold;" ><td >
+            Total</td>
+       
+            <td  style="width:120px; text-align:right;">
+                <asp:Label ID="lblSum" runat="server" Text=""></asp:Label>
+            </td></tr>
+    </table>
+    </div>

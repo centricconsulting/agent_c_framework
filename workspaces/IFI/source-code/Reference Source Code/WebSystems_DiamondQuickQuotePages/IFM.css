@@ -1,0 +1,1102 @@
+body 
+{
+	width:auto;
+}
+
+/*start portal links*/
+/*.applicationPortal a:link {
+  text-decoration:  none;
+  font-weight:      inherit;
+  background-color: #ddd;
+  color:            blue;
+  font-family:      inherit;
+  font-size:        inherit;
+  }
+.applicationPortal a:visited {
+  text-decoration:  none;
+  font-weight:      inherit;
+  background-color: #ddd;
+  color:            #f0f;
+  font-family:      inherit;
+  font-size:        inherit;
+  }
+.applicationPortal a:hover {
+  text-decoration:  underline;
+  font-weight:      inherit;
+  background-color: blue;
+  color:            #fff;
+  font-family:      inherit;
+  font-size:        inherit;
+  }
+.applicationPortal a:active {
+  text-decoration:  underline;
+  font-weight:      inherit;
+  background-color: black;
+  color:            white;
+  font-family:      inherit;
+  font-size:        inherit;
+  }*/
+/*.applicationPortal a:link {
+	color: #093F70; text-decoration: none; font-size: 16px; font-family: Verdana;
+	font-weight:bold;
+}
+.applicationPortal a:visited {
+    color: #093F70; text-decoration: none; font-size: 16px; font-family: Verdana;
+	font-weight:bold;
+}
+.applicationPortal a:hover {
+	color: #990000; text-decoration: none; font-size: 16px; font-family: Verdana;
+	font-weight:bold;
+}
+.applicationPortal a:active {
+	color: #093F70; text-decoration: none; font-size: 16px; font-family: Verdana;
+	font-weight:bold;}*/
+/*end portal links*/
+
+a:link {
+	color: #093F70; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;
+}
+a:visited {
+    color: #093F70; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;
+}
+a:hover {
+	color: #990000; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;
+}
+a:active {
+	color: #093F70; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;}
+a.breadcrumbs:link {
+	color: #093F70; text-decoration: none; font-size: 11px; font-family: Verdana;
+	font-weight:bold;
+}
+a.breadcrumbs:visited {
+    color: #093F70; text-decoration: none; font-size: 11px; font-family: Verdana;
+	font-weight:bold;
+}
+a.breadcrumbs:hover {
+	color: #990000; text-decoration: none; font-size: 11px; font-family: Verdana;
+	font-weight:bold;
+}
+a.breadcrumbs:active {
+	color: #093F70; text-decoration: none; font-size: 11px; font-family: Verdana;
+	font-weight:bold;}
+a.footer:link {
+	color: #093F70; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;
+}
+a.footer:visited {
+    color: #093F70; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;
+}
+a.footer:hover {
+	color: #990000; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;
+}
+a.footer:active {
+	color: #093F70; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;}
+a.leftnav:link {
+	color: #093F70; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;
+}
+a.leftnav:visited {
+    color: #093F70; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;
+}
+a.leftnav:hover {
+	color: #990000; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;
+}
+a.leftnav:active {
+	color: #093F70; text-decoration: none; font-size: 12px; font-family: Verdana;
+	font-weight:bold;}
+
+.WN1 {
+	font-size: 10px;
+	font-family: Verdana;
+	font-weight:bold;
+	background-color:#CCD1E3;
+	border-color:#0F3460;
+	width:166px;
+	height:20px;
+	border-width:1px;
+	border-style:solid;	
+}
+.WN2 {
+	width:166px;
+	border-width:1px;
+	height:auto;	
+	border-color:Black;
+	border-style:solid;		
+}
+.menu
+{
+ width:auto;
+ height:auto;
+ vertical-align:top;	
+}
+.application
+{
+	font-family:Verdana;
+	width:627px;	
+	height:auto;
+	vertical-align:top;
+	overflow:auto;			
+}
+.applicationPortal
+{
+	/*font-family:Verdana;*/
+	width:100%;	
+	height:auto;
+	vertical-align:top;
+	/*overflow:auto;*/
+overflow:auto; table-layout:fixed; overflow-y: hidden ! important;
+}
+form
+{  
+   width:827px;
+   max-width:827px;
+}
+.formPortal
+{  
+   width:100%;
+   max-width:100%;
+}
+h3
+{
+ text-align:center;
+ font-family:Verdana; 	
+}
+.headline
+{
+	font-family:Verdana;
+	font-size:medium;
+	font-weight:bold;
+}
+.subheadline
+{
+	font-family:Verdana;
+	font-size:small;
+	font-weight:bold;
+}
+.normaltext
+{
+	font-family:Verdana;
+	font-size:smaller;
+}
+.largertext
+{
+	font-family:Verdana;
+	font-size:small;
+}
+.oldsmallertext
+{
+	font-family:Verdana;
+	font-size:x-small;
+}
+.smallertext
+{
+	font-family:Verdana;
+	font-size:xx-small;
+}
+.xstext
+{
+	font-family:Verdana;
+	font-size:xx-small;
+	}
+
+
+.AgencyInfoTable
+{
+     width:620px;
+         padding:0px; 
+
+     
+    
+}
+
+.ageninfoheaderspace
+{
+    height:20px;
+    
+}
+
+.agencyblocktd
+{
+    width:370px;
+vertical-align:top;
+
+}
+
+.printerlinktd
+{
+    width:250px;
+    vertical-align:top;
+    text-align:right;
+   
+    
+}
+
+
+.agencyinfobotspace
+{
+ height:20px;
+vertical-align:top;
+
+}
+
+
+.policysearchheader
+{
+   
+   height:0px; 
+
+
+}
+
+.policysearch
+{
+    width:620px;
+     padding:0px;
+     border-spacing:0px;
+
+}
+
+.policyspace
+{
+    height:15px;
+  
+
+}
+
+.policysearchrow
+{
+
+
+ font-family:Verdana;
+	font-size:smaller;
+height:20px;
+}
+
+
+
+.policysearchcol1
+{
+width:90px;
+}
+
+.policysearchcol2
+{
+
+width:155px;
+
+}
+
+.policysearchcol3
+{
+
+width:20px;
+}
+
+.policysearchcol4
+{
+
+width:90px;
+
+}
+
+
+.policysearchcol5
+{
+
+width:130px;
+}
+
+
+.policysearchcol6
+{
+
+width:115px;
+
+
+}
+
+.polsearchshowallspace
+{
+height:14px; 
+
+}
+
+.tableHeaderLabel
+{
+    background-color: whitesmoke;
+    	font-size:13px;
+    font-weight:bold;
+    text-align:left;
+
+
+}
+
+
+.tableHearderStyle
+{
+     background-color:#CCD1E3; 
+    	font-size:12px;
+    font-weight:bold;
+    
+}
+
+.tableItemStyle
+{
+    background-color:#D3E4FE;
+      	font-family:Verdana;
+	font-size:12px;
+    font-weight:normal;
+    
+}
+
+
+.tableAltItemStyle
+{
+    background-color:#B6C7E1;
+      	font-family:Verdana;
+	font-size:12px;
+    font-weight:normal;
+    
+    
+}
+
+.disclaimerArea
+{
+  font-family:Verdana;
+	font-size:10px;
+    vertical-align:bottom;
+    text-align:left;
+
+    
+}
+
+.tableSelItemStyle
+{
+}
+
+.tableFootItemStyle
+{
+    background-color:#CCCCCC; 
+}
+
+
+.infoDatagrids
+{
+    background-color:#989898;
+    width:100%;
+  width:500px; 
+    
+}
+
+.autobillcoopheaderlbls
+{
+    background-color: whitesmoke;
+    	font-size:13px;
+    font-weight:bold;
+	font-family:Verdana;
+
+}
+
+
+.autobillcoopheaderstyle
+{
+	font-family:Verdana;
+     background-color:#CCD1E3; 
+    	font-size:12px;
+    font-weight:normal;
+    
+}
+
+.autobillcoopitemstyle
+{
+    background-color:#D3E4FE;
+      	font-family:Verdana;
+	font-size:12px;
+    font-weight:normal;
+    
+}
+
+
+.autobillcoopalteritemstyle
+{
+    background-color:#B6C7E1;
+      	font-family:Verdana;
+	font-size:12px;
+    font-weight:normal;
+    
+    
+}
+
+.autobillcoopbottominfolbl
+{
+  font-family:Verdana;
+	font-size:10px;
+    vertical-align:bottom;
+    text-align:left;
+
+    
+}
+
+.autobillcoopselitemstyle
+{
+}
+
+.autobillcoopfooterStyle
+{
+    background-color:#CCCCCC; 
+}
+
+
+.autobillcoopdatagrids
+{
+    background-color:#989898;
+    width:100%;
+  width:500px; 
+    
+}
+
+.accordionHeader
+{
+    border: 1px solid #2F4F4F;
+    font-family:Verdana;
+    font-size:xx-small;
+    color: black;
+    background-color: #B6C7E1;
+    font-weight: bold;
+    padding: 1px;
+    margin-top: 5px;
+    cursor: pointer;
+    width: 600px;
+}
+
+.accordionHeaderPF
+{
+    border: 1px solid #000000;
+    font-family:Verdana;
+    font-size:xx-small;
+    color: black;
+    background-color: #FFFFFF;
+    font-weight: bold;
+    padding: 1px;
+    margin-top: 5px;
+    cursor: pointer;
+    width: 600px;
+}
+
+.accordionHeaderSelected
+{
+    border: 1px solid #2F4F4F;
+    font-family:Verdana;
+    font-size:xx-small;
+    color: Black;
+    background-color: #F5F5F5;
+    font-weight: bold;
+    padding: 1px;
+    margin-top: 5px;
+    cursor: pointer;
+    width: 600px;
+}
+
+.watermarked
+{
+	background-color:#F5F5F5;
+	filter:alpha(opacity=70);	
+}
+
+.accordionHeaderSelectedPF
+{
+    border: 1px solid #000000;
+    font-family:Verdana;
+    font-size:xx-small;
+    color: Black;
+    background-color: #FFFFFF;
+    font-weight: bold;
+    padding: 1px;
+    margin-top: 5px;
+    cursor: pointer;
+    width: 600px;
+}
+
+.accordionContent
+{
+    background-color: #D3E4FE;
+    font-family:Verdana;
+    font-size:xx-small;
+    border: 1px dashed #2F4F4F;
+    border-top: none;
+    padding: 1px;
+    padding-top: 10px;
+    width: 600px;
+}
+
+.accordionContentPF
+{
+    background-color: #FFFFFF;
+    font-family:Verdana;
+    font-size:xx-small;
+    border: 1px dashed #000000;
+    border-top: none;
+    padding: 1px;
+    padding-top: 10px;
+    width: 600px;
+}
+
+.diaBillingTable
+{
+    width: 100%;
+    font-size: xx-small;
+}
+
+a.sample_attach, a.sample_attach:visited, div.sample_attach
+{
+  display: block;
+  width:   110px;
+  border:  1px solid black;
+  padding: 2px 5px;
+  background: #B6C7E1;
+  text-decoration: none;
+  font-family: Verdana;  
+  font-size: 11.5px;
+  color:   Black;
+  font-weight: normal;
+}
+
+a.sample_attach:hover
+{
+  background: #003061;
+  text-decoration: underline;
+  color: White;  
+}
+
+ /*#menu {
+	background: #013161;
+	float: right;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 290px;}
+#menu li {
+	float: left;
+	font: 67.5% "Lucida Sans Unicode", "Bitstream Vera Sans", "Trebuchet Unicode MS", "Lucida Grande", Verdana, Helvetica, sans-serif;
+	margin: 0;
+	padding: 0;
+    width: 139px;    
+}
+#menu a {
+	background: #013161 url("../images/menu/seperator.gif") bottom right no-repeat;
+	color: #ccc;
+	display: block;
+	float: left;
+	margin: 0;
+	padding: 8px 0px;
+	text-decoration: none;
+	font-weight:normal;
+	width: 139px;
+}
+#menu a:hover {
+	background: #A5874C url("../images/hover.gif") bottom center no-repeat;
+	color: #ffffff;
+	padding-bottom: 8px;
+	width: 139px;
+	}
+#menu a.menuActive {
+    background: #487DAD url("../images/hover.gif") bottom center no-repeat;
+	color: #FFF;
+	padding-bottom: 8px;
+	width: 139px;
+}*/
+/*updated 6/13/2012*/
+#menu {
+	background: #013161;
+	float: right;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 290px;}
+#menu li {
+	float: left;
+	font: 67.5% "Lucida Sans Unicode", "Bitstream Vera Sans", "Trebuchet Unicode MS", "Lucida Grande", Verdana, Helvetica, sans-serif;
+	margin: 0;
+	padding: 0;
+    width: 139px;    
+}
+#menu a {
+	background: #013161 bottom right no-repeat;
+	color: #ccc;
+	display: block;
+	float: left;
+	margin: 0;
+	padding: 8px 0px;
+	text-decoration: none;
+	font-weight:normal;
+	width: 139px;
+}
+#menu a:hover {
+	background: #A5874C bottom center no-repeat;
+	color: #ffffff;
+	padding-bottom: 8px;
+	width: 139px;
+	}
+#menu a.menuActive {
+    background: #487DAD bottom center no-repeat;
+	color: #FFF;
+	padding-bottom: 8px;
+	width: 139px;
+}
+     
+    .defaultText
+        {
+            font-family:Verdana;
+            font-size: 10px;
+            color: #000000;
+        }        
+        
+        .defaultText a
+        {
+            color: #ffffff;
+        }
+        
+        .defaultText a:hover
+        {
+            color: #CC9933;
+        }
+        
+        #btnSiteSearch
+        {
+            font-size:10px;
+            font-family:Verdana;
+        }
+        
+        #txtSiteSearch
+        {
+            width: 200px;
+            font-size:10px;
+            font-family:Verdana;
+        }
+        
+        #navigation {
+margin: 10px auto 0px auto;
+background: url(images/grey.gif) repeat-x 0 50%;
+font-size: 12px;
+z-index: 1;
+}
+
+#navigation ul {
+list-style-type: none;
+text-align: center;
+margin: 0px;
+padding: 0px;
+z-index: 2;
+}
+
+#navigation li {
+display: inline;
+text-align: center;
+margin: 0px 5px;
+}
+
+#navigation li a {
+padding: 1px 5px;
+color: #666666;
+background-color: #ffffff;
+border: 1px solid #cccccc;
+text-decoration: none;
+}
+
+#navigation li a:hover, #navigation li a#current {
+color: #000000;
+border: 1px solid #666666;
+border-top: 2px solid #666666;
+border-bottom: 2px solid #666666;
+} 
+
+
+
+
+
+
+
+/*RCC STYLES BEGIN*/
+
+/*AGREEMENT STYLES*/
+.divAgreementButtons
+{
+    width: 550px;
+    text-align:center;
+}
+
+.divAgreementText
+{
+    width: 550px;
+    margin : 25px 0px 25px 0px;
+    text-align:justify;
+font-family:Verdana;
+	font-size:smaller;
+}
+
+.pAgreementText
+{
+    
+}
+/*AGREEMENT STYLES*/
+
+/*FORM LIST STYLES*/
+.RCC-form-list-container
+{
+    list-style-type:none;
+}
+
+.RCC-form-list-label
+{
+    font-weight: bold;
+    margin: 15px 0px 0px 0px;
+}
+
+.RCC-form-list-control
+{
+        
+}
+/*FORM LIST STYLES*/
+
+/*GRIDVIEW STYLES*/
+.PolicyHolderGridview
+{
+}
+
+.PolicyHolderGridviewHeader
+{
+    font-size:smaller;
+    font-family:Tahoma;
+    font-weight:bold;
+    text-align:center;
+    height:20px;
+    color:White;
+    border-style:none;
+    vertical-align:middle;
+    background-color:#336699;    
+}
+
+.PolicyHolderGridviewRow
+{
+    font-family:Tahoma;
+    font-weight:bold;
+    font-size:smaller;
+    text-align:center;
+    color:#000040;
+    border-style:none;
+    vertical-align:middle;
+    background-color:Transparent;
+}
+
+.PolicyHolderGridviewAltRow
+{
+    font-family:Tahoma;
+    font-weight:bold;
+    font-size:smaller;
+    text-align:center;
+    color:#000040;
+    border-style:none;
+    vertical-align:middle;
+    background-color:#EAEAEA;
+}
+
+.PolicyHolderGridviewEditRow
+{
+}
+
+.PolicyHolderGridviewEmptyRow
+{
+}
+
+.PolicyHolderGridviewSelectedRow
+{
+}
+
+.PolicyHolderGridviewFooter
+{
+    font-size:smaller;
+    font-family:Tahoma;
+    font-weight:bold;
+    text-align:center;
+    height:20px;
+    color:White;
+    border-style:none;
+    vertical-align:middle;
+    background-color:#336699;  
+}
+ 
+.PolicyHolderGridviewPager
+{
+}
+/*GRIDVIEW STYLES*/
+
+/*ACCOUNT SETUP STYLES*/
+.tblAccountSetup
+{
+    width:500px;
+    text-align:right;
+}
+
+.tblAccountSetup td
+{
+    font-family:Tahoma; 
+    font-size:smaller;
+    font-weight:bold;
+    width:250px;
+    vertical-align:top;
+}
+
+.tblAccountSetup td.altRow
+{
+    background-color:#EAEAEA;
+}
+/*ACCOUNT SETUP STYLES*/
+
+/*RCC STYLES END*/
+
+
+
+
+/* COOP STYLES */
+.divCategoryListImage
+{
+    float:left; 
+    height:130px; 
+    width: 130px; 
+    border: none 1px red; 
+    padding: 10px 10px 10px 10px;
+}
+
+.hypCategory img
+{
+    border:none;
+    outline:none;
+}
+
+.divCategoryListDescription
+{
+    float:left; 
+    padding: 25px 10px 10px 10px; 
+    height:115px; 
+    width:150px; 
+    border: none 1px blue;
+}
+
+.tdItemListImage
+{
+    padding: 20px 0px 20px 0px;
+}
+
+.tdItemListName
+{
+    padding: 0px 0px 0px 20px;
+}
+
+.hypItemList img
+{
+    border:none;
+    outline:none;
+}
+
+.divItemDetailWrapper
+{
+    width:450px; 
+    margin: 0px auto 0px auto; 
+    border:none 1px red; 
+    height:auto; 
+    overflow:auto;
+}
+
+.divItemDetailImage
+{
+    margin: 25px auto 25px auto; 
+    padding-left:35px;
+}
+
+.divItemDetailLabel
+{
+    float:left; 
+    width:250px; 
+    /*padding: 0px 0px 0px 25px;*/
+    margin-bottom:7px;
+    font-family:Verdana;
+    font-size:smaller;
+}
+
+.divItemDetailControl
+{
+    float:left; 
+    width:150px;
+    margin-bottom:7px;
+    font-family:Verdana;
+    font-size:smaller;
+}
+
+.divCoopBackLink
+{
+    width:580px;
+    text-align:right;
+    margin-top:10px;
+}
+
+.divItemDetailButtons
+{
+    width:450px; 
+    text-align:center;
+    clear:both;
+    margin-top:30px;
+}
+
+.divViewCartListWrapper
+{
+    margin: 25px;
+}
+
+.tblCartTotals td
+{
+    vertical-align:top;
+    font-family:Verdana;
+	font-size:smaller;
+}
+
+.divValidationSummary
+{
+    color:Red;    
+}
+
+.vsValidationSummary li
+{
+   list-style-image:none;
+   list-style-type:none;
+}
+
+.divCartTotals
+{
+    text-align:left;
+    margin:0px 0px 0px 25px;
+}
+
+.divCheckoutAddtionalInfo
+{
+    margin: 0px 0px 0px 0px;
+    padding: 0px 25px 0px 0px;
+}
+
+.tblCheckoutAddtionalInfo td
+{
+    vertical-align:top;   
+    
+}
+
+.COOP-form-list-container
+{
+    list-style-type:none;
+    margin:0px 0px 0px 0px;
+    list-style-image:none;
+}
+
+.COOP-form-list-label
+{
+    font-weight: normal;
+    margin: 5px 0px 0px 0px;
+}
+
+.COOP-form-list-control
+{
+        
+}
+
+
+.CoopGridviewHeader
+{
+    font-size:10pt;
+    font-family:Verdana;
+    font-weight:bold;
+    text-align:center;
+    height:20px;
+    color:White;
+    border-bottom: solid 1px Black;
+    vertical-align:middle;
+    background-color:#B6C7E1;    
+}
+
+.CoopGridviewRow
+{
+    font-family:Verdana;
+    font-weight:bold;
+    font-size:10pt;
+    text-align:center;
+    border-style:none;
+    vertical-align:middle;
+    background-color:#D3E4FE;
+}
+
+.CoopGridviewAltRow
+{
+    font-family:Verdana;
+    font-weight:bold;
+    font-size:10pt;
+    text-align:center;
+    border-style:none;
+    vertical-align:middle;
+    background-color:#B6C7E1;
+}
+
+.CoopGridviewEditRow
+{
+}
+
+.CoopGridviewEmptyRow
+{
+}
+
+.CoopGridviewSelectedRow
+{
+}
+
+.CoopGridviewFooter
+{
+     
+}
+ 
+.CoopGridviewPager
+{
+    font-size:10pt;
+    font-family:Verdana;
+    font-weight:bold;
+    text-align:center;
+    height:20px;
+    color:White;
+    border-style:none;
+    vertical-align:middle;
+    background-color:#B6C7E1; 
+}
+
+.tblCoopInfo
+{
+    border:solid 1px Black;
+    font-family:Verdana;
+	font-size:smaller;
+}
+
+.trCoopInfoRow
+{
+    background-color: #B6C7E1;
+    padding:0px 0px 0px 0px;
+}
+
+.trCoopInfoAltRow
+{
+    background-color: #D3E4FE;
+}
+
+/* END COOP STYLES */

@@ -1,0 +1,40 @@
+﻿
+Partial Class VelociRaterAppIssuanceRelay
+    Inherits System.Web.UI.Page
+
+    Private Sub VelociRaterAppIssuanceRelay_Load(sender As Object, e As EventArgs) Handles Me.Load
+        If Page.IsPostBack = False Then
+            Dim polNumToIssue As String = ""
+            If Request.QueryString("polNumToIssue") IsNot Nothing AndAlso String.IsNullOrWhiteSpace(Request.QueryString("polNumToIssue").ToString) = False Then
+                polNumToIssue = Request.QueryString("polNumToIssue").ToString
+            ElseIf Request.QueryString("policyNumberToIssue") IsNot Nothing AndAlso String.IsNullOrWhiteSpace(Request.QueryString("policyNumberToIssue").ToString) = False Then
+                polNumToIssue = Request.QueryString("policyNumberToIssue").ToString
+            ElseIf Request.QueryString("policyToIssue") IsNot Nothing AndAlso String.IsNullOrWhiteSpace(Request.QueryString("policyToIssue").ToString) = False Then
+                polNumToIssue = Request.QueryString("policyToIssue").ToString
+            End If
+            Dim agentLink As String = QuickQuote.CommonMethods.QuickQuoteHelperClass.configAppSettingValueAsString("AgentsLink")
+            If String.IsNullOrWhiteSpace(agentLink) = True Then
+                agentLink = "agents.aspx"
+            End If
+
+            If String.IsNullOrWhiteSpace(polNumToIssue) = False Then
+                Dim makeAPaymentLink As String = QuickQuote.CommonMethods.QuickQuoteHelperClass.configAppSettingValueAsString("MakeAPaymentLink")
+                If String.IsNullOrWhiteSpace(makeAPaymentLink) = True Then
+                    If UCase(agentLink).Contains("AGENTS.ASPX") AndAlso Len(agentLink) > 11 Then 'has full url
+                        makeAPaymentLink = UCase(agentLink).Replace("AGENTS.ASPX", "MakeAPayment.aspx?polNum=")
+                    Else
+                        makeAPaymentLink = "MakeAPayment.aspx?polNum="
+                    End If
+                End If
+                If String.IsNullOrWhiteSpace(makeAPaymentLink) = False Then
+                    makeAPaymentLink &= polNumToIssue & "&Quote=Yes"
+                Else
+                    makeAPaymentLink = agentLink
+                End If
+                Response.Redirect(makeAPaymentLink)
+            Else
+                Response.Redirect(agentLink)
+            End If
+        End If
+    End Sub
+End Class

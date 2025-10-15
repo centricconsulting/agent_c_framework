@@ -1,0 +1,1956 @@
+﻿Imports System.Data
+Imports System.Data.SqlClient
+Imports System.Configuration.ConfigurationManager
+Imports ProposalHelper
+
+Partial Class uc_VRProposal_BOP
+    Inherits System.Web.UI.UserControl
+
+#Region "Declarations"
+    Private qqxml As New QuickQuoteXML()
+    Private ErrMsg As String = Nothing
+    Private Const ClassName As String = "uc_VRProposal_BOP.ascx.vb"
+    Private dsBOP As System.Data.DataSet = Nothing
+    Private Const FormatStringCurrency = "$###,###,##0"
+    Private LineCount As Integer = 0
+    Private PageCount As Integer = 0
+    Private LocLineCount As Integer = 0
+    Private BldLineCount As Integer = 0
+    Private LocBldLineCount As Integer = 0
+    Private PolicySectionLineCount As Integer = 0
+    Private allowPageBreak As Boolean = True
+    'Private effectiveDate As Date = Nothing
+
+    Private Const MaxLinesPerPage As Integer = 57
+
+    ' The QO property will contain the quote object and all it's values
+    Private _qo As QuickQuoteObject = Nothing
+    Public Property QO As QuickQuoteObject
+        Get
+            Return _qo
+        End Get
+        Set(value As QuickQuoteObject)
+            _qo = value
+            DisplayQuote()
+        End Set
+    End Property
+
+    ' When the QuoteNumber property is set, the qo object will be populated
+    Private _QuoteID As String = Nothing
+    Public Property QuoteID As String
+        Get
+            Return _QuoteID
+        End Get
+        Set(value As String)
+            _QuoteID = value
+            LoadQuoteObject()
+            DisplayQuote()
+        End Set
+    End Property
+#End Region
+
+#Region "Methods"
+
+    ''' <summary>
+    ''' Displays a message in a javascript dialog box
+    ''' </summary>
+    ''' <param name="MessageText"></param>
+    ''' <remarks></remarks>
+    Public Sub DisplayMessage(ByVal MessageText As String)
+        Dim sc As String = Nothing
+
+        Try
+            MessageText = ReplaceSpecialChars(MessageText)
+            sc = "<script>alert('" & MessageText & "');</script>"
+            Response.Write(sc)
+            Exit Sub
+        Catch ex As Exception
+            Exit Sub
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Replaces any special characters in the passed string so that the java Alert command can handle it
+    ''' </summary>
+    ''' <param name="MyString"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function ReplaceSpecialChars(ByVal MyString As String) As String
+        Dim SpecialChars As String = Nothing
+        Dim addstr As String = Nothing
+        Dim newstr As String = Nothing
+
+        Try
+            newstr = ""
+            SpecialChars = "<>\&'" & """"
+
+            For x = 0 To MyString.Length - 1
+                If InStr(SpecialChars, MyString.Substring(x, 1)) Then
+                    newstr = newstr & "\" & MyString.Substring(x, 1)
+                Else
+                    newstr = newstr & MyString.Substring(x, 1)
+                End If
+            Next
+
+            Return newstr
+        Catch ex As Exception
+            HandleError("ReplaceSpecialChars", ex)
+            Return ""
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' Displays error message
+    ''' </summary>
+    ''' <param name="strRoutineName"></param>
+    ''' <param name="exc"></param>
+    ''' <remarks></remarks>
+    Public Sub HandleError(ByVal strRoutineName As String, ByRef exc As Exception)
+        Dim sc As String = Nothing
+        Dim em As String = Nothing
+
+        Try
+            strRoutineName = ReplaceSpecialChars(strRoutineName)
+            em = ReplaceSpecialChars(exc.Message)
+
+            sc = "<script>alert('Error Detected in " & ClassName & "(" & strRoutineName & "): " & em & "');</script>"
+            Response.Write(sc)
+            Exit Sub
+        Catch ex As Exception
+            Exit Sub
+        End Try
+    End Sub
+
+    Private Function QuoteHasLocationCoverages(ByRef L As QuickQuoteLocation) As Boolean
+        Try
+            If QO Is Nothing Then Return False
+            If L Is Nothing Then Return False
+
+            If (L.EquipmentBreakdownDeductible IsNot Nothing AndAlso IsNumeric(L.EquipmentBreakdownDeductible) AndAlso CDec(L.EquipmentBreakdownDeductible) > 0) _
+                OrElse (L.MoneySecuritiesOnPremises IsNot Nothing AndAlso IsNumeric(L.MoneySecuritiesOnPremises) AndAlso CDec(L.MoneySecuritiesOnPremises) > 0) _
+                OrElse (L.MoneySecuritiesOffPremises IsNot Nothing AndAlso IsNumeric(L.MoneySecuritiesOffPremises) AndAlso CDec(L.MoneySecuritiesOffPremises) > 0) _
+                OrElse (L.OutdoorSignsLimit IsNot Nothing AndAlso IsNumeric(L.OutdoorSignsLimit) AndAlso CDec(L.OutdoorSignsLimit) > 0) Then
+                Return True
+            Else
+                Return False
+            End If
+        Catch ex As Exception
+            HandleError("QuoteHasLocationCoverages", ex)
+            Return False
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' This function shows or hides the location coverages table
+    ''' </summary>
+    ''' <param name="LocNum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function LocationHasCoverages(ByVal LocNum As String) As Boolean
+        Try
+            If QO Is Nothing Then Return False
+            Dim L As QuickQuoteLocation = QO.Locations(CDec(LocNum - 1))
+
+            If (L.EquipmentBreakdownDeductible IsNot Nothing AndAlso IsNumeric(L.EquipmentBreakdownDeductible) AndAlso CDec(L.EquipmentBreakdownDeductible) > 0) _
+                OrElse (L.MoneySecuritiesOnPremises IsNot Nothing AndAlso IsNumeric(L.MoneySecuritiesOnPremises) AndAlso CDec(L.MoneySecuritiesOnPremises) > 0) _
+                OrElse (L.MoneySecuritiesOffPremises IsNot Nothing AndAlso IsNumeric(L.MoneySecuritiesOffPremises) AndAlso CDec(L.MoneySecuritiesOffPremises) > 0) _
+                OrElse (L.OutdoorSignsLimit IsNot Nothing AndAlso IsNumeric(L.OutdoorSignsLimit) AndAlso CDec(L.OutdoorSignsLimit) > 0) _
+                OrElse (L.HasFineArts AndAlso isValidNumberString(L.FineArtsQuotedPremium, ComparisonOperation.GreaterThan, 0)) _
+                OrElse (L.HasTenantAutoLegalLiability AndAlso isValidNumberString(L.TenantAutoLegalLiabilityQuotedPremium, ComparisonOperation.GreaterThan, 0)) _
+                OrElse (L.HasCustomerAutoLegalLiability AndAlso isValidNumberString(L.CustomerAutoLegalLiabilityQuotedPremium, ComparisonOperation.GreaterThan, 0)) Then
+                Return True
+            Else
+                Return False
+            End If
+        Catch ex As Exception
+            HandleError("LocationHasCoverages", ex)
+            Return False
+        End Try
+    End Function
+
+    Public Function LocationHasEquipmentBreakdownCoverage(ByVal LocNum As String) As Boolean
+        Try
+            If QO Is Nothing Then Return False
+            Dim L As QuickQuoteLocation = QO.Locations(CDec(LocNum - 1))
+
+            If (L.EquipmentBreakdownDeductible IsNot Nothing AndAlso IsNumeric(L.EquipmentBreakdownDeductible) AndAlso CDec(L.EquipmentBreakdownDeductible) > 0) Then
+                Return True
+            Else
+                Return False
+            End If
+        Catch ex As Exception
+            HandleError("LocationHasEquipmentBreakdownCoverage", ex)
+            Return False
+        End Try
+    End Function
+
+    Public Function LocationHasMSONCoverage(ByVal LocNum As String) As Boolean
+        Try
+            If QO Is Nothing Then Return False
+            Dim L As QuickQuoteLocation = QO.Locations(CDec(LocNum - 1))
+
+            If (L.MoneySecuritiesOnPremises IsNot Nothing AndAlso IsNumeric(L.MoneySecuritiesOnPremises) AndAlso CDec(L.MoneySecuritiesOnPremises) > 0) Then
+                Return True
+            Else
+                Return False
+            End If
+        Catch ex As Exception
+            HandleError("LocationHasMSONCoverage", ex)
+            Return False
+        End Try
+    End Function
+
+    Public Function LocationHasMSOFFCoverage(ByVal LocNum As String) As Boolean
+        Try
+            If QO Is Nothing Then Return False
+            Dim L As QuickQuoteLocation = QO.Locations(CDec(LocNum - 1))
+
+            If (L.MoneySecuritiesOnPremises IsNot Nothing AndAlso IsNumeric(L.MoneySecuritiesOffPremises) AndAlso CDec(L.MoneySecuritiesOffPremises) > 0) Then
+                Return True
+            Else
+                Return False
+            End If
+        Catch ex As Exception
+            HandleError("LocationHasMSOFFCoverage", ex)
+            Return False
+        End Try
+    End Function
+
+    Public Function LocationHasOutdoorSignsCoverage(ByVal LocNum As String) As Boolean
+        Try
+            If QO Is Nothing Then Return False
+            Dim L As QuickQuoteLocation = QO.Locations(CDec(LocNum - 1))
+
+            If (L.OutdoorSignsLimit IsNot Nothing AndAlso IsNumeric(L.OutdoorSignsLimit) AndAlso CDec(L.OutdoorSignsLimit) > 0) Then
+                Return True
+            Else
+                Return False
+            End If
+        Catch ex As Exception
+            HandleError("LocationHasOutdoorSignsCoverage", ex)
+            Return False
+        End Try
+    End Function
+
+    Public Function LocationHasTenantAutoLegalCoverage(ByVal LocNum As String) As Boolean
+        If QO Is Nothing Then Return False
+        Dim L As QuickQuoteLocation = QO.Locations(CDec(LocNum - 1))
+
+        If L.HasTenantAutoLegalLiability = True AndAlso IsNumeric(L.TenantAutoLegalLiabilityQuotedPremium) Then
+            Return True
+        Else
+            Return False
+        End If
+    End Function
+
+    Public Function LocationHasCustomerAutoLegalCoverage(ByVal LocNum As String) As Boolean
+        If QO Is Nothing Then Return False
+        Dim L As QuickQuoteLocation = QO.Locations(CDec(LocNum - 1))
+
+        If L.HasCustomerAutoLegalLiability = True AndAlso IsNumeric(L.CustomerAutoLegalLiabilityQuotedPremium) Then
+            Return True
+        Else
+            Return False
+        End If
+    End Function
+
+    Public Function LocationHasFineArtsCoverage(ByVal LocNum As String) As Boolean
+        If QO Is Nothing Then Return False
+        Dim L As QuickQuoteLocation = QO.Locations(CDec(LocNum - 1))
+
+        If L.HasFineArts = True AndAlso IsNumeric(L.FineArtsQuotedPremium) Then
+            Return True
+        Else
+            Return False
+        End If
+    End Function
+
+    Public Function GetLiabilityLabelText() As String
+        Dim LNum As Integer = -1
+        Dim EmpCnt As Integer = 0
+        Dim Payroll As Integer = 0
+
+        Try
+            If QO Is Nothing Then Return "Liability"
+
+            For Each L As QuickQuoteLocation In QO.Locations
+                For Each B As QuickQuoteBuilding In L.Buildings
+                    If B.EmployeePayroll IsNot Nothing AndAlso IsNumeric(B.EmployeePayroll) Then
+                        Payroll = Payroll + CInt(B.EmployeePayroll)
+                    End If
+                    If B.NumberOfOfficersAndPartnersAndInsureds IsNot Nothing AndAlso IsNumeric(B.NumberOfOfficersAndPartnersAndInsureds) Then
+                        EmpCnt = EmpCnt + CInt(B.NumberOfOfficersAndPartnersAndInsureds)
+                    End If
+                Next
+            Next
+
+            If EmpCnt > 0 AndAlso Payroll > 0 Then Return "Liability " & "(Insureds: " & EmpCnt.ToString() & "; Payroll: " & Format(CDec(Payroll), FormatStringCurrency) & ")"
+            If EmpCnt > 0 AndAlso Payroll <= 0 Then Return "Liability " & "(Insureds: " & EmpCnt.ToString() & ")"
+            If EmpCnt <= 0 AndAlso Payroll > 0 Then Return "Liability " & "(Payroll: " & Format(CDec(Payroll), FormatStringCurrency) & ")"
+            Return "Liability"
+        Catch ex As Exception
+            HandleError("GetLiabilityLabelText", ex)
+            Return "Liability"
+        End Try
+    End Function
+
+    Public Function GetContractorsHeaderRowText() As String
+        Dim LNum As Integer = -1
+        Dim EmpCnt As Integer = 0
+        Dim Payroll As Integer = 0
+
+        Try
+            If QO Is Nothing Then Return "Contractors Equipment/Installation"
+
+            For Each L As QuickQuoteLocation In QO.Locations
+                For Each B As QuickQuoteBuilding In L.Buildings
+                    If B.EmployeePayroll IsNot Nothing AndAlso IsNumeric(B.EmployeePayroll) Then
+                        Payroll = Payroll + CInt(B.EmployeePayroll)
+                    End If
+                    If B.NumberOfOfficersAndPartnersAndInsureds IsNot Nothing AndAlso IsNumeric(B.NumberOfOfficersAndPartnersAndInsureds) Then
+                        EmpCnt = EmpCnt + CInt(B.NumberOfOfficersAndPartnersAndInsureds)
+                    End If
+                Next
+            Next
+
+            If EmpCnt > 0 AndAlso Payroll > 0 Then Return "Contractors Equipment/Installation " & "(Insureds: " & EmpCnt.ToString() & "; Payroll: " & Format(CDec(Payroll), FormatStringCurrency) & ")"
+            If EmpCnt > 0 AndAlso Payroll <= 0 Then Return "Contractors Equipment/Installation " & "(Insureds: " & EmpCnt.ToString() & ")"
+            If EmpCnt <= 0 AndAlso Payroll > 0 Then Return "Contractors Equipment/Installation " & "(Payroll: " & Format(CDec(Payroll), FormatStringCurrency) & ")"
+            Return "Contractors Equipment/Installation"
+        Catch ex As Exception
+            HandleError("GetContractorsHeaderRowText", ex)
+            Return "Contractors Equipment/Installation"
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' Gets the total premium amount for all coverages on a building and returns the formatted value as a string
+    ''' </summary>
+    ''' <param name="LNum"></param>
+    ''' <param name="BNum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function GetBuildingCoverageTotalPremiumAmount(ByVal LNum As String, ByVal BNum As String) As String
+        Dim tot As Decimal = 0
+        Try
+            If Not IsNumeric(LNum) OrElse Not IsNumeric(BNum) Then Return ""
+            If dsBOP.Tables("tblBuildingCoverages") Is Nothing OrElse dsBOP.Tables("tblBuildingCoverages").Rows.Count <= 0 Then Return ""
+
+            For Each dr As DataRow In dsBOP.Tables("tblBuildingCoverages").Rows
+                If dr("LocNum").ToString() = LNum AndAlso dr("BldNum").ToString() = BNum Then
+                    If IsNumeric(dr("Premium").ToString()) Then tot = tot + CDec(dr("Premium"))
+                End If
+            Next
+
+            Return Format(tot, FormatStringCurrency)
+        Catch ex As Exception
+            HandleError("GetBuildingCoverageTotalPremiumAmount", ex)
+            Return ""
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' Attempts to load the QO quote object once the QuoteID has been set
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub LoadQuoteObject()
+        Try
+            ' Check the quote id
+            If QuoteID Is Nothing OrElse Not IsNumeric(QuoteID) Then
+                QO = Nothing
+                Exit Sub
+            End If
+
+            ' Get the quote
+            qqxml.GetRatedQuote(QuoteID, QO, QuickQuoteXML.QuickQuoteSaveType.Quote, ErrMsg)
+
+            ' Check for error
+            If ErrMsg IsNot Nothing AndAlso ErrMsg.Trim() <> "" Then Throw New Exception(ErrMsg)
+
+            Exit Sub
+        Catch ex As Exception
+            HandleError("LoadQuoteObject", ex)
+            Exit Sub
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Retrieves the values for the policy liability section
+    ''' </summary>
+    ''' <param name="InfoName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function GetPolicyInfoField(ByVal InfoName As String) As String
+        Dim OLL As Decimal = 0
+
+        Try
+            If QO Is Nothing Then Return ""
+
+            ' Get the occurrence liability limit
+            If QO.OccurrenceLiabilityLimit IsNot Nothing AndAlso IsNumeric(QO.OccurrenceLiabilityLimit) Then OLL = CDec(QO.OccurrenceLiabilityLimit)
+            If OLL = 0 Then Return ""
+
+            Select Case InfoName.ToUpper().Trim()
+                Case "GEN", "PROD"      ' General Aggregate & Products/Completed Operations
+                    Return Format(OLL * 2, FormatStringCurrency)
+                    Exit Select
+                Case "PERS"     ' Personal and Advertising Injury
+                    Return Format(OLL, FormatStringCurrency)
+                    Exit Select
+                Case "OCC"      ' Occurrence Liability Limit
+                    Return Format(OLL, FormatStringCurrency)
+                    Exit Select
+                Case "DMG"      ' Damage to Premises Rented to Others
+                    Return "$100,000"
+                    Exit Select
+                Case "MED"      ' Medical Expenses
+                    Return "$5,000"
+                    Exit Select
+                Case "PDLIAB"   ' Property Damage Liability
+                    If QO.PropertyDamageLiabilityDeductible Is Nothing OrElse QO.PropertyDamageLiabilityDeductible = "" OrElse (Not IsNumeric(QO.PropertyDamageLiabilityDeductible)) Then
+                        Return ""
+                    Else
+                        Dim pd As String = Format(CDec(QO.PropertyDamageLiabilityDeductible), FormatStringCurrency)
+
+                        ' Painters class deductible is ALWAYS per claim MGB 8/5/2013 Bug 1673
+                        If PaintersClassExistsOnPolicy() Then
+                            pd = pd & " Per Claim"
+                            Return pd
+                        End If
+
+                        ' Add logic to not show "N/A" when it's in the deductible option MGB 8/5/13 
+                        If QO.PropertyDamageLiabilityDeductibleOption IsNot Nothing AndAlso QO.PropertyDamageLiabilityDeductibleOption <> "" AndAlso QO.PropertyDamageLiabilityDeductibleOption <> "N/A" Then
+                            pd = pd & " " & QO.PropertyDamageLiabilityDeductibleOption
+                        End If
+
+                        Return pd
+                    End If
+                Case Else
+                    Return ""
+            End Select
+        Catch ex As Exception
+            HandleError("GetPolicyInfoField", ex)
+            Return ""
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' Checks to see if the policy has any optional policy-level coverages.
+    ''' Returns true if so, false if no
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function QuoteHasOptionalPolicyCoverages() As Boolean
+        Try
+            If QO Is Nothing Then Return False
+
+            If (QO.AdditionalInsureds IsNot Nothing AndAlso QO.AdditionalInsureds.Count > 0) _
+                OrElse QO.HasAdditionalInsuredsCheckboxBOP _
+                OrElse (QO.EmployeeBenefitsLiabilityQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.EmployeeBenefitsLiabilityQuotedPremium)) _
+                OrElse (QO.ContractorsEquipmentInstallationLimitQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.ContractorsEquipmentInstallationLimitQuotedPremium)) _
+                OrElse (QO.CrimeEmpDisLimit IsNot Nothing AndAlso IsNumeric(QO.CrimeEmpDisLimit)) _
+                OrElse (QO.CrimeForgeryLimit IsNot Nothing AndAlso IsNumeric(QO.CrimeForgeryLimit)) _
+                OrElse (QO.HasEarthquake) _
+                OrElse (QO.HasNonOwnedAuto) _
+                OrElse (QO.HasHiredAuto) _
+                OrElse (QO.HasElectronicData) Then
+                Return True
+            Else
+                Return False
+            End If
+        Catch ex As Exception
+            HandleError("QuoteHasOptionalPolicyCoverages", ex)
+            Return False
+        End Try
+    End Function
+
+    Public Function LocatonHasOptionalCoverages(ByRef L As DataRowView) As Boolean
+        Try
+            If (Not IsDBNull(L("EquipmentBreakdownDetails")) AndAlso L("EquipmentBreakdownDetails").ToString().Trim() <> "" AndAlso L("EquipmentBreakdownDetails").ToString().Trim().ToUpper() <> "NOT SELECTED") _
+                OrElse (Not IsDBNull(L("MSONDetails")) AndAlso L("MSONDetails").ToString().Trim() <> "" AndAlso L("MSONDetails").ToString().Trim().ToUpper() <> "NOT SELECTED") _
+                OrElse (Not IsDBNull(L("MSOFFDetails")) AndAlso L("MSOFFDetails").ToString().Trim() <> "" AndAlso L("MSOFFDetails").ToString().Trim().ToUpper() <> "NOT SELECTED") _
+                OrElse (Not IsDBNull(L("OutdoorSignsDetails")) AndAlso L("OutdoorSignsDetails").ToString().Trim() <> "" AndAlso L("OutdoorSignsDetails").ToString().Trim().ToUpper() <> "NOT SELECTED") Then
+                Return True
+            Else
+                Return False
+            End If
+        Catch ex As Exception
+            HandleError("LocatonHasOptionalCoverages", ex)
+            Return False
+        End Try
+    End Function
+
+    Private Sub InsertPageBreak(ByRef ph As PlaceHolder)
+        Dim pageBreak As Panel = Nothing
+        Dim pageBreakSection As Panel = Nothing
+
+        Try
+            If ph Is Nothing Then Throw New Exception("ph is nothing!")
+
+            pageBreak = New Panel
+            pageBreak.CssClass = "page-break"
+            pageBreakSection = New Panel
+            pageBreakSection.CssClass = "page-break-section"
+            ph.Controls.Add(pageBreak)
+            ph.Controls.Add(pageBreakSection)
+
+            LineCount = 0
+            PageCount += 1
+
+            Exit Sub
+        Catch ex As Exception
+            HandleError("InsertPageBreak", ex)
+            Exit Sub
+        End Try
+    End Sub
+
+    Private Function GetLocationBuildingCount(ByVal LocNum As String) As Integer
+        Try
+            For Each dr As DataRow In dsBOP.Tables("tblLocations").Rows
+                If dr("LocNum") = LocNum Then
+                    Return CInt(dr("NumberOfBuildings"))
+                End If
+            Next
+
+            Return 0
+        Catch ex As Exception
+            HandleError("GetLocationBuildingCount", ex)
+            Return 0
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' Checks to see if any of the painters class codes exist on any of the policy's buildings.
+    ''' Returns TRUE if so, FALSE if no
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function PaintersClassExistsOnPolicy() As Boolean
+        Try
+            If QO Is Nothing Then Return False
+
+            For Each L As QuickQuoteLocation In QO.Locations
+                For Each B As QuickQuoteBuilding In L.Buildings
+                    If B.ClassCode = "98305" OrElse B.ClassCode = "75601" OrElse B.ClassCode = "75631" _
+                        OrElse B.ClassCode = "75611" OrElse B.ClassCode = "75641" Then
+                        Return True
+                    End If
+                Next
+            Next
+
+            Return False
+        Catch ex As Exception
+            HandleError("PaintersClassExistsOnPolicy", ex)
+            Return False
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' Displays the loaded quote on the control
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub DisplayQuote()
+        Dim bldRow As System.Data.DataRow = Nothing
+        Dim bcovRow As System.Data.DataRow = Nothing
+        Dim locrow As System.Data.DataRow = Nothing
+        Dim lcovRow As System.Data.DataRow = Nothing
+        Dim tblLocations As System.Data.DataTable = Nothing
+        Dim tblLocationCoverages As System.Data.DataTable = Nothing
+        Dim tblBuildings As System.Data.DataTable = Nothing
+        Dim tblBuildingCoverages As System.Data.DataTable = Nothing
+        Dim LocNum As Integer = 0
+        Dim BldNum As Integer = 0
+        Dim CovNum As Integer = 0
+        Dim NameHold As String = Nothing
+        Dim ParentColumns(1) As DataColumn
+        Dim ChildColumns(1) As DataColumn
+        Dim LocCovTotal As Decimal = 0
+        Dim opt As Boolean = False
+        Dim lim As String = Nothing
+        Dim OptTot As Decimal = 0
+        Dim ConTot As Decimal = 0
+        Dim r As Repeater = Nothing
+        Dim t As Table = Nothing
+        Dim val As Decimal = 0
+
+        Try
+            If QO Is Nothing Then Exit Sub
+
+            'effectiveDate = QO.EffectiveDate
+
+            LineCount = 0
+
+            ' Copy the professional liability info from the polciy to the buildings
+            QO.CopyProfessionalLiabilityCoveragesFromPolicyToBuildings()
+
+            ' Clear the form
+            rptLocationRepeater.DataSource = Nothing
+            rptLocationRepeater.DataBind()
+
+            ' POLICY LEVEL
+            ' Populate the POLICY FEATURES section
+            lblGeneralAggregate.Text = GetPolicyInfoField("GEN")
+            lblProductsCompletedOperations.Text = GetPolicyInfoField("PROD")
+
+            '' For the LAWYERS classifications, print "EXCLUDED" on for the Personal & Advertising Injury amount
+            '' all others print occurrence liability limit
+            'Dim cc As New List(Of String)
+            '' The Lawyer class codes
+            'cc.Add("65121")
+            'cc.Add("65198")
+            'cc.Add("60999")
+            'If HasBuildingClassCode(cc) Then
+            '    lblPersonalAndAdvertisingInjury.Text = "EXCLUDED"
+            'Else
+            '    lblPersonalAndAdvertisingInjury.Text = GetPolicyInfoField("PERS")
+            'End If
+
+            ' New LAWYERS logic
+            ' Apparently we can't use the class codes because they can apply to more than one classification
+            If HasLawyerClassOnABuilding() Then
+                lblPersonalAndAdvertisingInjury.Text = "EXCLUDED"
+            Else
+                lblPersonalAndAdvertisingInjury.Text = GetPolicyInfoField("PERS")
+            End If
+
+            lblOccurrenceLiabilityLimit.Text = GetPolicyInfoField("OCC")
+            lblDamageToPremesisRentedToOthers.Text = GetPolicyInfoField("DMG")
+            lblMedicalExpenses.Text = GetPolicyInfoField("MED")
+
+            Dim pd As String = GetPolicyInfoField("PDLIAB")
+            If pd Is Nothing OrElse pd = "" Then
+                trPDLiabilityDeductibleRow.Visible = False
+            Else
+                trPDLiabilityDeductibleRow.Visible = True
+                lblPDLiabilityDeductible.Text = pd
+            End If
+
+            If AppSettings("TestOrProd").ToUpper().Trim = "TEST" Then
+                ' Add a couple lines for the test controls
+                PolicySectionLineCount += 15
+            Else
+                PolicySectionLineCount += 12
+            End If
+            LineCount = LineCount + PolicySectionLineCount
+
+            'If QuoteHasOptionalPolicyCoverages() Then
+            tblOptionalPolicyCoverages.Visible = True
+            ' Populate the OPTIONAL POLICY COVERAGES section
+            ' Additional Insureds
+            If (QO.AdditionalInsureds IsNot Nothing AndAlso QO.AdditionalInsureds.Count > 0) OrElse (doUseNewBOPVersion(QO.EffectiveDate) AndAlso QO.HasAdditionalInsuredsCheckboxBOP) Then
+                Dim aiCount As Integer = 0
+                lblAddlInsuredsLimit.Text = ""
+                Dim aiPremium As Decimal = 0
+                If QO.AdditionalInsureds IsNot Nothing AndAlso QO.AdditionalInsureds.Count > 0 Then
+                    aiCount += QO.AdditionalInsureds.Count
+                End If
+                If doUseNewBOPVersion(QO.EffectiveDate) AndAlso QO.AdditionalInsuredsCheckboxBOP IsNot Nothing AndAlso QO.AdditionalInsuredsCheckboxBOP.Count > 0 Then
+                    aiCount += QO.AdditionalInsuredsCheckboxBOP.Count
+                End If
+                If aiCount > 0 Then
+                    trAddlInsuredsRow.Visible = True
+                    LineCount += 1
+                    PolicySectionLineCount += 1
+                    opt = True
+                    lblAddlInsuredsDetails.Text = aiCount.ToString() & " Addl Insureds"
+
+                    If QO.AdditionalInsuredsQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.AdditionalInsuredsQuotedPremium) Then
+                        aiPremium += Format(CDec(QO.AdditionalInsuredsQuotedPremium), FormatStringCurrency)
+                    End If
+
+                    If doUseNewBOPVersion(QO.EffectiveDate) AndAlso QO.AdditionalInsuredsCheckboxBOP IsNot Nothing AndAlso QO.AdditionalInsuredsCheckboxBOP.Count > 0 Then
+                        aiPremium += Format(CDec(QO.AdditionalInsuredsCheckboxBOPPremium), FormatStringCurrency)
+                    End If
+
+                    If Not String.IsNullOrWhiteSpace(aiPremium) AndAlso IsNumeric(aiPremium) AndAlso CDec(aiPremium > 0) Then
+                        lblAddlInsuredsPremium.Text = Format(CDec(aiPremium), FormatStringCurrency)
+                        OptTot = OptTot + CDec(aiPremium)
+                    Else
+                        lblAddlInsuredsPremium.Text = "$0"
+                    End If
+                End If
+            Else
+                trAddlInsuredsRow.Visible = False
+            End If
+            ' Employee Benefits Liability
+            If QO.EmployeeBenefitsLiabilityQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.EmployeeBenefitsLiabilityQuotedPremium) Then
+                trEmployeeBenefitsLiabilityRow.Visible = True
+                LineCount += 1
+                PolicySectionLineCount += 1
+                opt = True
+                lblEmployeeBenefitsLiabilityDetails.Text = QO.EmployeeBenefitsLiabilityText & " Employees"
+                lblEmployeeBenefitsLiabilityLimit.Text = "Included"
+                lblEmployeeBenefitsLiabilityPremium.Text = Format(CDec(QO.EmployeeBenefitsLiabilityQuotedPremium), FormatStringCurrency)
+                OptTot = OptTot + CDec(QO.EmployeeBenefitsLiabilityQuotedPremium)
+            Else
+                trEmployeeBenefitsLiabilityRow.Visible = False
+            End If
+
+            'EPLI - 4-17-2014
+            trEPLIRow.Visible = False
+            If QO.HasEPLI Then
+                If QO.EPLICoverageTypeID = "22" Then
+                    lblEPLI_Premium.Text = QO.EPLIPremium
+                    trEPLIRow.Visible = True
+                    LineCount += 1
+                    PolicySectionLineCount += 1
+                    opt = True
+                    OptTot = OptTot + CDec(QO.EPLIPremium)
+                End If
+            End If
+
+            'TODO: Dan - new changes
+            If doUseNewBOPVersion(QO.EffectiveDate) = True AndAlso QO.HasElectronicData = True Then
+                trComputer.Visible = True
+                lblComputerLimit.Text = QO.ElectronicDataLimit
+                lblComputerPremium.Text = Format(CDec(QO.ElectronicDataQuotedPremium), FormatStringCurrency)
+                PolicySectionLineCount += 1
+                opt = True
+                OptTot = OptTot + CDec(QO.ElectronicDataQuotedPremium)
+            Else
+                trComputer.Visible = False
+            End If
+
+
+            ' Contractors equipment and installation
+            ' Fixed selection statement per Bug 1968 MGB 9/6/13
+            ConTot = 0
+            If (QO.ContractorsEquipmentInstallationLimit IsNot Nothing AndAlso IsNumeric(QO.ContractorsEquipmentInstallationLimit)) _
+                OrElse (QO.ContractorsToolsEquipmentBlanket IsNot Nothing AndAlso IsNumeric(QO.ContractorsToolsEquipmentBlanket)) _
+                OrElse (QO.ContractorsToolsEquipmentScheduled IsNot Nothing AndAlso IsNumeric(QO.ContractorsToolsEquipmentScheduled)) _
+                OrElse (QO.ContractorsToolsEquipmentRented IsNot Nothing AndAlso IsNumeric(QO.ContractorsToolsEquipmentRented)) _
+                OrElse (QO.ContractorsEmployeeTools IsNot Nothing AndAlso IsNumeric(QO.ContractorsEmployeeTools)) Then
+                trContractorsSectionHeaderRow.Visible = True
+                LineCount += 1
+                PolicySectionLineCount += 1
+                lblContractorsHeaderText.Text = "Contractors Equipment/Installation"
+                'lblContractorsHeaderText.Text = GetContractorsHeaderRowText()
+                trContractorsEmployeesToolsLimitRow.Visible = True
+                trContractorsInstallationPropertyLimitRow.Visible = True
+                trContractorsRentedLeasedToolsEquipLimitRow.Visible = True
+                trContractorsToolsEquipBlanketLimitRow.Visible = True
+                trContractorsToolsEquipScheduledLimitRow.Visible = True
+
+                If IsNumeric(QO.ContractorsEquipmentInstallationLimit) AndAlso CDec(QO.ContractorsEquipmentInstallationLimit) > 0 Then
+                    opt = True
+                    trContractorsInstallationPropertyLimitRow.Visible = True
+                    LineCount += 1
+                    PolicySectionLineCount += 1
+                    val = CDec(QO.ContractorsEquipmentInstallationLimit)
+                    lblContractorsInstallationPropertyLimit.Text = Format(val, FormatStringCurrency)
+                    lblContractorsInstallationPropertyDetails.Text = ""
+                    lblContractorsInstallationPropertyPremium.Text = Format(CDec(QO.ContractorsEquipmentInstallationLimitQuotedPremium), FormatStringCurrency)
+                Else
+                    trContractorsInstallationPropertyLimitRow.Visible = False
+                    val = 0
+                    lblContractorsInstallationPropertyLimit.Text = Format(val, FormatStringCurrency)
+                    lblContractorsInstallationPropertyDetails.Text = ""
+                    lblContractorsInstallationPropertyPremium.Text = Format(val, FormatStringCurrency)
+                End If
+                If IsNumeric(QO.ContractorsEquipmentInstallationLimitQuotedPremium) Then
+                    OptTot = OptTot + CDec(QO.ContractorsEquipmentInstallationLimitQuotedPremium)
+                    ConTot = ConTot + CDec(QO.ContractorsEquipmentInstallationLimitQuotedPremium)
+                End If
+
+                If IsNumeric(QO.ContractorsToolsEquipmentBlanket) AndAlso CDec(QO.ContractorsToolsEquipmentBlanket) > 0 Then
+                    opt = True
+                    trContractorsToolsEquipBlanketLimitRow.Visible = True
+                    LineCount += 1
+                    PolicySectionLineCount += 1
+                    val = CDec(QO.ContractorsToolsEquipmentBlanket)
+                    lblContractorsToolsEquipBlanketLimit.Text = Format(val, FormatStringCurrency)
+                    lblContractorsToolsEquipBlanketDetails.Text = ""
+                    lblContractorsToolsEquipBlanketPremium.Text = Format(CDec(QO.ContractorsToolsEquipmentBlanketQuotedPremium), FormatStringCurrency)
+                Else
+                    trContractorsToolsEquipBlanketLimitRow.Visible = False
+                    val = 0
+                    lblContractorsToolsEquipBlanketLimit.Text = Format(val, FormatStringCurrency)
+                    lblContractorsToolsEquipBlanketDetails.Text = ""
+                    lblContractorsToolsEquipBlanketPremium.Text = Format(val, FormatStringCurrency)
+                End If
+                If IsNumeric(QO.ContractorsToolsEquipmentBlanketQuotedPremium) Then
+                    OptTot = OptTot + CDec(QO.ContractorsToolsEquipmentBlanketQuotedPremium)
+                    ConTot = ConTot + CDec(QO.ContractorsToolsEquipmentBlanketQuotedPremium)
+                End If
+
+                If IsNumeric(QO.ContractorsToolsEquipmentScheduled) AndAlso CDec(QO.ContractorsToolsEquipmentScheduled) > 0 Then
+                    opt = True
+                    trContractorsToolsEquipScheduledLimitRow.Visible = True
+                    LineCount += 1
+                    PolicySectionLineCount += 1
+                    val = CDec(QO.ContractorsToolsEquipmentScheduled)
+                    lblContractorsToolsEquipScheduledLimit.Text = Format(val, FormatStringCurrency)
+                    lblContractorsToolsEquipScheduledDetails.Text = ""
+                    lblContractorsToolsEquipScheduledPremium.Text = Format(CDec(QO.ContractorsToolsEquipmentScheduledQuotedPremium), FormatStringCurrency)
+                Else
+                    trContractorsToolsEquipScheduledLimitRow.Visible = False
+                    val = 0
+                    lblContractorsToolsEquipScheduledLimit.Text = Format(val, FormatStringCurrency)
+                    lblContractorsToolsEquipScheduledDetails.Text = ""
+                    lblContractorsToolsEquipScheduledPremium.Text = Format(val, FormatStringCurrency)
+                End If
+                If IsNumeric(QO.ContractorsToolsEquipmentScheduledQuotedPremium) Then
+                    OptTot = OptTot + CDec(QO.ContractorsToolsEquipmentScheduledQuotedPremium)
+                    ConTot = ConTot + CDec(QO.ContractorsToolsEquipmentScheduledQuotedPremium)
+                End If
+
+                If IsNumeric(QO.ContractorsToolsEquipmentRented) AndAlso CDec(QO.ContractorsToolsEquipmentRented) > 0 Then
+                    opt = True
+                    trContractorsRentedLeasedToolsEquipLimitRow.Visible = True
+                    LineCount += 1
+                    PolicySectionLineCount += 1
+                    val = CDec(QO.ContractorsToolsEquipmentRented)
+                    lblContractorsRentedLeasedToolsEquipLimit.Text = Format(val, FormatStringCurrency)
+                    lblContractorsRentedLeasedToolsEquipDetails.Text = ""
+                    lblContractorsRentedLeasedToolsEquipPremium.Text = Format(CDec(QO.ContractorsToolsEquipmentRentedQuotedPremium), FormatStringCurrency)
+                Else
+                    trContractorsRentedLeasedToolsEquipLimitRow.Visible = False
+                    val = 0
+                    lblContractorsRentedLeasedToolsEquipLimit.Text = Format(val, FormatStringCurrency)
+                    lblContractorsRentedLeasedToolsEquipDetails.Text = ""
+                    lblContractorsRentedLeasedToolsEquipPremium.Text = Format(val, FormatStringCurrency)
+                End If
+                If IsNumeric(QO.ContractorsToolsEquipmentRentedQuotedPremium) Then
+                    OptTot = OptTot + CDec(QO.ContractorsToolsEquipmentRentedQuotedPremium)
+                    ConTot = ConTot + CDec(QO.ContractorsToolsEquipmentRentedQuotedPremium)
+                End If
+
+                If IsNumeric(QO.ContractorsEmployeeTools) AndAlso CDec(QO.ContractorsEmployeeTools) > 0 Then
+                    opt = True
+                    trContractorsEmployeesToolsLimitRow.Visible = True
+                    LineCount += 1
+                    PolicySectionLineCount += 1
+                    val = CDec(QO.ContractorsEmployeeTools)
+                    lblContractorsEmployeesToolsLimit.Text = Format(val, FormatStringCurrency)
+                    lblContractorsEmployeesToolsDetails.Text = ""
+                    lblContractorsEmployeesToolsPremium.Text = Format(CDec(QO.ContractorsEmployeeToolsQuotedPremium), FormatStringCurrency)
+                Else
+                    trContractorsEmployeesToolsLimitRow.Visible = False
+                    val = 0
+                    lblContractorsEmployeesToolsLimit.Text = Format(val, FormatStringCurrency)
+                    lblContractorsEmployeesToolsDetails.Text = ""
+                    lblContractorsEmployeesToolsPremium.Text = Format(val, FormatStringCurrency)
+                End If
+                If IsNumeric(QO.ContractorsEmployeeToolsQuotedPremium) Then
+                    OptTot = OptTot + CDec(QO.ContractorsEmployeeToolsQuotedPremium)
+                    ConTot = ConTot + CDec(QO.ContractorsEmployeeToolsQuotedPremium)
+                End If
+
+                'lblContractorsPremium.Text = Format(ConTot, FormatStringCurrency)
+                'lblContractorsPremium.Text = ""
+            Else
+                trContractorsEmployeesToolsLimitRow.Visible = False
+                trContractorsInstallationPropertyLimitRow.Visible = False
+                trContractorsRentedLeasedToolsEquipLimitRow.Visible = False
+                trContractorsSectionHeaderRow.Visible = False
+                trContractorsToolsEquipBlanketLimitRow.Visible = False
+                trContractorsToolsEquipScheduledLimitRow.Visible = False
+            End If
+
+            ' Crime - Employee Dishonesty
+            If QO.CrimeEmpDisLimit IsNot Nothing AndAlso IsNumeric(QO.CrimeEmpDisLimit) AndAlso CDec(QO.CrimeEmpDisLimit) > 0 Then
+                trCrimeEmployeeDishonestyRow.Visible = True
+                LineCount += 1
+                PolicySectionLineCount += 1
+                opt = True
+                Dim txt As String = QO.CrimeEmpDisEmployeeText & " Empls; "
+                txt = txt & QO.CrimeEmpDisLocationText & " Locs"
+                'txt = txt & "Limit: " & Format(CDec(QO.CrimeEmpDisLimit), FormatStringCurrency)
+                lblCrimeEmployeeDishonestyDetails.Text = txt
+                lblCrimeEmployeeDishonestyLimit.Text = Format(CDec(QO.CrimeEmpDisLimit), FormatStringCurrency)
+                lblCrimeEmployeeDishonestyPremium.Text = Format(CDec(QO.CrimeEmpDisQuotedPremium), FormatStringCurrency)
+                OptTot = OptTot + CDec(QO.CrimeEmpDisQuotedPremium)
+            Else
+                trCrimeEmployeeDishonestyRow.Visible = False
+            End If
+            ' Crime - Forgery
+            If QO.CrimeForgeryLimit IsNot Nothing AndAlso IsNumeric(QO.CrimeForgeryLimit) AndAlso CDec(QO.CrimeForgeryLimit) > 0 Then
+                trCrimeForgery.Visible = True
+                LineCount += 1
+                PolicySectionLineCount += 1
+                opt = True
+                lblCrimeForgeryDetails.Text = ""
+                lblCrimeForgeryLimit.Text = Format(CDec(QO.CrimeForgeryLimit), FormatStringCurrency)
+                lblCrimeForgeryPremium.Text = Format(CDec(QO.CrimeForgeryQuotedPremium), FormatStringCurrency)
+                OptTot = OptTot + CDec(QO.CrimeForgeryQuotedPremium)
+            Else
+                trCrimeForgery.Visible = False
+            End If
+            ' Earthquake
+            If QO.HasEarthquake Then
+                trEarthquakeRow.Visible = True
+                LineCount += 1
+                PolicySectionLineCount += 1
+                opt = True
+                lblEarthquakePremium.Text = Format(CDec(QO.EarthquakeQuotedPremium), FormatStringCurrency)
+                OptTot = OptTot + CDec(QO.EarthquakeQuotedPremium)
+            Else
+                trEarthquakeRow.Visible = False
+            End If
+            ' Hired Auto
+            If QO.HasHiredAuto Then
+                trHiredAutoRow.Visible = True
+                LineCount += 1
+                PolicySectionLineCount += 1
+                opt = True
+                lblHiredAutoPremium.Text = Format(CDec(QO.HiredAutoQuotedPremium), FormatStringCurrency)
+                OptTot = OptTot + CDec(QO.HiredAutoQuotedPremium)
+            Else
+                trHiredAutoRow.Visible = False
+            End If
+            ' Non-Owned
+            If QO.HasNonOwnedAuto Then
+                trNonOwnedRow.Visible = True
+                LineCount += 1
+                PolicySectionLineCount += 1
+                opt = True
+                lblNonOwnedPremium.Text = Format(CDec(QO.NonOwnedAutoQuotedPremium), FormatStringCurrency)
+                OptTot = OptTot + CDec(QO.NonOwnedAutoQuotedPremium)
+            Else
+                trNonOwnedRow.Visible = False
+            End If
+            ' Liability
+            If QO.OccurrencyLiabilityQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.OccurrencyLiabilityQuotedPremium) AndAlso CDec(QO.OccurrencyLiabilityQuotedPremium) > 0 Then
+                trLiabilityRow.Visible = True
+                LineCount += 1
+                PolicySectionLineCount += 1
+                opt = True
+                lblLiabilityLabel.Text = GetLiabilityLabelText()
+                lblLiabilityDetails.Text = "Included"
+                lblLiabilityPremium.Text = Format(CDec(QO.OccurrencyLiabilityQuotedPremium), FormatStringCurrency)
+                OptTot = OptTot + CDec(QO.OccurrencyLiabilityQuotedPremium)
+            Else
+                trLiabilityRow.Visible = False
+            End If
+
+            ' Business Income (always shown)
+            trBusinessIncomeRow.Visible = True
+            LineCount += 1
+            PolicySectionLineCount += 1
+            opt = True
+
+            ' Enhancement endorsement
+            If QO.BusinessMasterEnhancementQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.BusinessMasterEnhancementQuotedPremium) AndAlso CDec(QO.BusinessMasterEnhancementQuotedPremium) > 0 Then
+                trBusinessMasterEnhancementRow.Visible = True
+                LineCount += 1
+                PolicySectionLineCount += 1
+                opt = True
+                lblBusinessMasterDetails.Text = "Included"
+                lblBusinessMasterPremium.Text = Format(CDec(QO.BusinessMasterEnhancementQuotedPremium), FormatStringCurrency)
+                OptTot = OptTot + CDec(QO.BusinessMasterEnhancementQuotedPremium)
+            Else
+                trBusinessMasterEnhancementRow.Visible = False
+            End If
+
+            ' If no optional coverages were selected, show the no coverages row
+            If opt Then
+                trNoOptionalPolicyCOveragesRow.Visible = False
+            Else
+                trNoOptionalPolicyCOveragesRow.Visible = True
+                LineCount += 1
+            End If
+
+            ' Set the optional coverages total
+            trOptionalPolicyCoveragesTotalRow.Visible = True
+            lblOptionalPolicyCoveragesTotalPremium.Text = Format(OptTot, FormatStringCurrency)
+
+            PolicySectionLineCount += 4
+            LineCount += 4
+            'Else
+            'tblOptionalPolicyCoverages.Visible = False
+            'End If
+
+            ' Build the Buildings and BuildingCoverages table from the quote object
+            If QO.Locations IsNot Nothing AndAlso QO.Locations.Count > 0 Then
+                ' Set up the dataset and the Buildings and BuildingCoverages tables
+                dsBOP = New System.Data.DataSet()
+
+                ' LOCATIONS table
+                tblLocations = New System.Data.DataTable()
+                tblLocations.TableName = "tblLocations"
+                tblLocations.Columns.Add("LocNum", Type.GetType("System.Int32"))
+                tblLocations.Columns.Add("Name")
+                tblLocations.Columns.Add("PoolsDetails")
+                tblLocations.Columns.Add("PoolsPremium")
+                tblLocations.Columns.Add("PlaygroundsDetails")
+                tblLocations.Columns.Add("PlaygroundsPremium")
+                tblLocations.Columns.Add("AmusementsDetails")
+                tblLocations.Columns.Add("AmusementsPremium")
+                tblLocations.Columns.Add("EquipmentBreakdownDetails")
+                tblLocations.Columns.Add("EquipmentBreakdownLimit")
+                tblLocations.Columns.Add("EquipmentBreakdownPremium")
+                tblLocations.Columns.Add("MSONDetails")
+                tblLocations.Columns.Add("MSONPremium")
+                tblLocations.Columns.Add("MSOFFDetails")
+                tblLocations.Columns.Add("MSOFFPremium")
+                tblLocations.Columns.Add("OutdoorSignsDetails")
+                tblLocations.Columns.Add("OutdoorSignsPremium")
+                tblLocations.Columns.Add("FineArtsDetails")
+                tblLocations.Columns.Add("FineArtsLimit")
+                tblLocations.Columns.Add("FineArtsPremium")
+                tblLocations.Columns.Add("CustomerAutoLegalDetails")
+                tblLocations.Columns.Add("CustomerAutoLegalLimit")
+                tblLocations.Columns.Add("CustomerAutoLegalPremium")
+                tblLocations.Columns.Add("TenantAutoLegalDetails")
+                tblLocations.Columns.Add("TenantAutoLegalLimit")
+                tblLocations.Columns.Add("TenantAutoLegalPremium")
+                tblLocations.Columns.Add("LocationCoveragesTotal")
+                tblLocations.Columns.Add("NumberOfBuildings", Type.GetType("System.Int32"))
+                tblLocations.Columns.Add("BreakBefore", Type.GetType("System.Boolean"))
+                tblLocations.Columns.Add("BreakAfter", Type.GetType("System.Boolean"))
+
+                ' LOCATION COVERAGES
+                tblLocationCoverages = New System.Data.DataTable()
+                tblLocationCoverages.TableName = "tblLocationCoverages"
+                tblLocationCoverages.Columns.Add("LocNum", Type.GetType("System.Int32"))
+                tblLocationCoverages.Columns.Add("Name")
+                tblLocationCoverages.Columns.Add("Basis")
+                tblLocationCoverages.Columns.Add("Premium")
+
+                ' BUILDINGS table
+                tblBuildings = New System.Data.DataTable()
+                tblBuildings.TableName = "tblBuildings"
+                tblBuildings.Columns.Add("LocNum", Type.GetType("System.Int32"))
+                tblBuildings.Columns.Add("BldNum", Type.GetType("System.Int32"))
+                tblBuildings.Columns.Add("Name")
+                tblBuildings.Columns.Add("Deductible")
+                tblBuildings.Columns.Add("CauseOfLoss")
+                tblBuildings.Columns.Add("Valuation")
+                tblBuildings.Columns.Add("Coinsurance")
+                tblBuildings.Columns.Add("Program")
+                tblBuildings.Columns.Add("Classification")
+                tblBuildings.Columns.Add("Occupancy")
+                tblBuildings.Columns.Add("BarbersPL")
+                tblBuildings.Columns.Add("BarbersPLPremium")
+                tblBuildings.Columns.Add("BeauticiansPL")
+                tblBuildings.Columns.Add("BeauticiansPLPremium")
+                tblBuildings.Columns.Add("FuneralPL")
+                tblBuildings.Columns.Add("FuneralPLPremium")
+                tblBuildings.Columns.Add("PrintersPL")
+                tblBuildings.Columns.Add("PrintersPLPremium")
+                tblBuildings.Columns.Add("SelfStorage")
+                tblBuildings.Columns.Add("SelfStoragePremium")
+                tblBuildings.Columns.Add("VeterinariansPL")
+                tblBuildings.Columns.Add("VeterinariansPLPremium")
+                tblBuildings.Columns.Add("OpticalHearingAidPL")
+                tblBuildings.Columns.Add("OpticalHearingAidPLPremium")
+                tblBuildings.Columns.Add("EmployeePayroll")
+                tblBuildings.Columns.Add("NumberOfOfficersAndPartnersAndInsureds")
+                tblBuildings.Columns.Add("PageLines", Type.GetType("System.Int32"))
+                tblBuildings.Columns.Add("BreakBefore", Type.GetType("System.Boolean"))
+
+                ' BUILDING COVERAGES table
+                tblBuildingCoverages = New System.Data.DataTable()
+                tblBuildingCoverages.TableName = "tblBuildingCoverages"
+                tblBuildingCoverages.Columns.Add("LocNum", Type.GetType("System.Int32"))
+                tblBuildingCoverages.Columns.Add("BldNum", Type.GetType("System.Int32"))
+                tblBuildingCoverages.Columns.Add("Coverage")
+                tblBuildingCoverages.Columns.Add("Limit")
+                tblBuildingCoverages.Columns.Add("Detail")
+                tblBuildingCoverages.Columns.Add("Premium")
+
+                dsBOP.Tables.Add(tblLocations)
+                dsBOP.Tables.Add(tblLocationCoverages)
+                dsBOP.Tables.Add(tblBuildings)
+                dsBOP.Tables.Add(tblBuildingCoverages)
+
+                ' Add relationships between the tables
+
+                ' Buildings --> BuildingCoverages
+                ParentColumns(0) = dsBOP.Tables("tblBuildings").Columns("LocNum")
+                ParentColumns(1) = dsBOP.Tables("tblBuildings").Columns("BldNum")
+                ChildColumns(0) = dsBOP.Tables("tblBuildingCoverages").Columns("LocNum")
+                ChildColumns(1) = dsBOP.Tables("tblBuildingCoverages").Columns("BldNum")
+                dsBOP.Relations.Add("REL_BLD_BLDCOVERAGES", ParentColumns, ChildColumns)
+
+                ' Locations --> Buildings
+                ReDim ParentColumns(0)
+                ReDim ChildColumns(0)
+                ParentColumns(0) = dsBOP.Tables("tblLocations").Columns("LocNum")
+                ChildColumns(0) = dsBOP.Tables("tblBuildings").Columns("LocNum")
+                dsBOP.Relations.Add("REL_LOC_BLD", ParentColumns, ChildColumns)
+
+                ' LOCATIONS
+                For Each L As QuickQuoteLocation In QO.Locations
+                    LocLineCount = 0
+                    LocBldLineCount = 0
+                    LocNum += 1
+                    BldNum = 0
+                    locrow = dsBOP.Tables("tblLocations").NewRow()
+                    locrow("LocNum") = LocNum
+
+                    NameHold = "Location #" & LocNum.ToString().Trim()
+                    If L.Description IsNot Nothing AndAlso L.Description.Trim() <> "" Then
+                        NameHold = NameHold & ": " & L.Description
+                    End If
+                    If L.Address.DisplayAddress IsNot Nothing AndAlso L.Address.DisplayAddress.Trim() <> "" Then
+                        NameHold = NameHold & " - " & L.Address.DisplayAddress
+                    End If
+                    locrow("Name") = NameHold
+
+                    ' LOCATION LEVEL COVERAGES
+                    'If QuoteHasLocationCoverages(L) Then
+                    '    tbl.Visible = True
+                    LocCovTotal = 0
+                    If L.EquipmentBreakdownDeductible IsNot Nothing AndAlso IsNumeric(L.EquipmentBreakdownDeductible) Then
+                        locrow("EquipmentBreakdownLimit") = ""
+                        locrow("EquipmentBreakdownDetails") = "Deductible: " & Format(CDec(L.EquipmentBreakdownDeductible), FormatStringCurrency)
+                        If L.EquipmentBreakdownDeductibleQuotedPremium IsNot Nothing AndAlso IsNumeric(L.EquipmentBreakdownDeductibleQuotedPremium) Then
+                            locrow("EquipmentBreakdownPremium") = Format(CDec(L.EquipmentBreakdownDeductibleQuotedPremium), FormatStringCurrency)
+                            LocCovTotal = LocCovTotal + CDec(L.EquipmentBreakdownDeductibleQuotedPremium)
+                        Else
+                            locrow("EquipmentBreaddownPremium") = "$0"
+                        End If
+                    Else
+                        locrow("EquipmentBreakdownLimit") = "Not Selected"
+                        locrow("EquipmentBreakdownDetails") = ""
+                        locrow("EquipmentBreakdownPremium") = "$0"
+                    End If
+                    If L.MoneySecuritiesOnPremises IsNot Nothing AndAlso IsNumeric(L.MoneySecuritiesOnPremises) Then
+                        locrow("MSONDetails") = Format(CDec(L.MoneySecuritiesOnPremises), FormatStringCurrency)
+                        If L.MoneySecuritiesQuotedPremium IsNot Nothing AndAlso IsNumeric(L.MoneySecuritiesQuotedPremium) Then
+                            locrow("MSONPremium") = Format(CDec(L.MoneySecuritiesQuotedPremium), FormatStringCurrency)
+                            LocCovTotal = LocCovTotal + CDec(L.MoneySecuritiesQuotedPremium)
+                        Else
+                            locrow("MSONPremium") = "$0"
+                        End If
+                    Else
+                        locrow("MSONDetails") = "Not Selected"
+                        locrow("MSONPremium") = "$0"
+                    End If
+                    If L.MoneySecuritiesOffPremises IsNot Nothing AndAlso IsNumeric(L.MoneySecuritiesOffPremises) Then
+                        locrow("MSOFFDetails") = Format(CDec(L.MoneySecuritiesOffPremises), FormatStringCurrency)
+                        If L.MoneySecuritiesQuotedPremium IsNot Nothing AndAlso IsNumeric(L.MoneySecuritiesQuotedPremium) Then
+                            locrow("MSOFFPremium") = "Incl."
+                            'locrow("MSOFFPremium") = Format(CDec(L.MoneySecuritiesQuotedPremium), FormatStringCurrency)
+                            'LocCovTotal = LocCovTotal + CDec(L.MoneySecuritiesQuotedPremium)
+                        Else
+                            locrow("MSOFFPremium") = "$0"
+                        End If
+                    Else
+                        locrow("MSOFFDetails") = "Not Selected"
+                        locrow("MSOFFPremium") = "$0"
+                    End If
+                    If L.OutdoorSignsLimit IsNot Nothing AndAlso IsNumeric(L.OutdoorSignsLimit) Then
+                        locrow("OutdoorSignsDetails") = Format(CDec(L.OutdoorSignsLimit), FormatStringCurrency)
+                        If L.OutdoorSignsQuotedPremium IsNot Nothing AndAlso IsNumeric(L.OutdoorSignsQuotedPremium) Then
+                            locrow("OutdoorSignsPremium") = Format(CDec(L.OutdoorSignsQuotedPremium), FormatStringCurrency)
+                            LocCovTotal = LocCovTotal + CDec(L.OutdoorSignsQuotedPremium)
+                        Else
+                            locrow("OutdoorSignsPremium") = "$0"
+                        End If
+                    Else
+                        locrow("OutdoorSignsDetails") = "Not Selected"
+                        locrow("OutdoorSignsPremium") = "$0"
+                    End If
+                    If isValidNumberString(L.PoolsQuotedPremium, ComparisonOperation.GreaterThan, 0) Then
+
+                    End If
+                    If isValidNumberString(L.PlaygroundsQuotedPremium, ComparisonOperation.GreaterThan, 0) Then
+
+                    End If
+                    If isValidNumberString(L.AmusementAreasQuotedPremium, ComparisonOperation.GreaterThan, 0) Then
+
+                    End If
+                    'TODO: Dan - new changes
+                    If doUseNewBOPVersion(QO.EffectiveDate) Then
+                        locrow("TenantAutoLegalPremium") = "$0"
+                        locrow("TenantAutoLegalDetails") = "Not Selected"
+                        locrow("TenantAutoLegalLimit") = ""
+                        locrow("FineArtsPremium") = "$0"
+                        locrow("FineArtsLimit") = ""
+                        locrow("FineArtsDetails") = "Not Selected"
+                        locrow("CustomerAutoLegalPremium") = "$0"
+                        locrow("CustomerAutoLegalDetails") = "Not Selected"
+                        locrow("CustomerAutoLegalLimit") = ""
+                        If L.HasTenantAutoLegalLiability Then
+                            If isValidNumberString(L.TenantAutoLegalLiabilityQuotedPremium) Then
+                                locrow("TenantAutoLegalPremium") = FormatAsPremium(L.TenantAutoLegalLiabilityQuotedPremium)
+                                LocCovTotal += L.TenantAutoLegalLiabilityQuotedPremium
+                            End If
+                            If isValidString(L.TenantAutoLegalLiabilityDeductible) Then
+                                If L.TenantAutoLegalLiabilityDeductible.Contains("/") Then
+                                    Dim deductible As String = ""
+                                    'Dim ded1 As String = FormatAsPremium(L.TenantAutoLegalLiabilityDeductible.Split("/")(0)) & " : OTC-Per Auto Ded<br />"
+                                    'Dim ded2 As String = FormatAsPremium(L.TenantAutoLegalLiabilityDeductible.Split("/")(1)) & " : OTC-Max Per Event Ded<br />"
+                                    'Dim ded3 As String = FormatAsPremium(L.TenantAutoLegalLiabilityDeductible.Split("/")(2)) & " : OTC-Collision Ded"
+                                    deductible = "A " & FormatAsPremium(L.TenantAutoLegalLiabilityDeductible.Split("/")(0)) & " comprehensive deductible per auto applies, subject to an event maximum of " & FormatAsPremium(L.TenantAutoLegalLiabilityDeductible.Split("/")(1)) & ". A " & FormatAsPremium(L.TenantAutoLegalLiabilityDeductible.Split("/")(2)) & " collision deductible applies."
+                                    'deductible = ded1 & ded2 & ded3
+                                    locrow("TenantAutoLegalDetails") = deductible
+                                End If
+                            End If
+                            locrow("TenantAutoLegalLimit") = FormatAsPremium(L.TenantAutoLegalLiabilityLimitOfLiability)
+                            LocLineCount += 3
+                        End If
+
+                        If L.HasFineArts Then
+                            locrow("FineArtsDetails") = ""
+                            locrow("FineArtsLimit") = "$25,000"
+                            If isValidNumberString(L.FineArtsQuotedPremium) Then
+                                locrow("FineArtsPremium") = FormatAsPremium(L.FineArtsQuotedPremium)
+                                LocCovTotal += L.FineArtsQuotedPremium
+                            End If
+                            LocLineCount += 1
+                        End If
+                        If L.HasCustomerAutoLegalLiability Then
+                            If isValidNumberString(L.CustomerAutoLegalLiabilityQuotedPremium) Then
+                                locrow("CustomerAutoLegalPremium") = FormatAsPremium(L.CustomerAutoLegalLiabilityQuotedPremium)
+                                LocCovTotal += L.CustomerAutoLegalLiabilityQuotedPremium
+                            End If
+                            If isValidString(L.CustomerAutoLegalLiabilityDeductible) Then
+                                If L.CustomerAutoLegalLiabilityDeductible.Contains("/") Then
+                                    Dim deductible As String = ""
+                                    'Dim ded1 As String = FormatAsPremium(L.CustomerAutoLegalLiabilityDeductible.Split("/")(0)) & " : OTC-Per Auto Ded<br />"
+                                    'Dim ded2 As String = FormatAsPremium(L.CustomerAutoLegalLiabilityDeductible.Split("/")(1)) & " : OTC-Max Per Event Ded<br />"
+                                    'Dim ded3 As String = FormatAsPremium(L.CustomerAutoLegalLiabilityDeductible.Split("/")(2)) & " : OTC-Collision Ded"
+                                    deductible = "A " & FormatAsPremium(L.CustomerAutoLegalLiabilityDeductible.Split("/")(0)) & " comprehensive deductible per auto applies, subject to an event maximum of " & FormatAsPremium(L.CustomerAutoLegalLiabilityDeductible.Split("/")(1)) & ". A " & FormatAsPremium(L.CustomerAutoLegalLiabilityDeductible.Split("/")(2)) & " collision deductible applies."
+                                    'deductible = ded1 & ded2 & ded3
+                                    locrow("CustomerAutoLegalDetails") = deductible
+                                End If
+                            End If
+                            locrow("CustomerAutoLegalLimit") = FormatAsPremium(L.CustomerAutoLegalLiabilityLimitOfLiability)
+                            LocLineCount += 3
+                        End If
+                    End If
+
+                    locrow("LocationCoveragesTotal") = Format(LocCovTotal, FormatStringCurrency)
+
+                    ' The location coverage section is not shown when there are no coverages
+                    If LocationHasCoverages(LocNum) Then
+                        LocLineCount = 9
+                    Else
+                        LocLineCount = 2
+                    End If
+                    LineCount = LineCount + LocLineCount
+
+                    locrow("NumberOfBuildings") = L.Buildings.Count
+
+                    dsBOP.Tables("tblLocations").Rows.Add(locrow)
+
+                    ' BUILDINGS
+                    If L.Buildings IsNot Nothing AndAlso L.Buildings.Count > 0 Then
+                        QO.CopyProfessionalLiabilityCoveragesFromBuildingsToPolicy()
+                        For Each B As QuickQuoteBuilding In L.Buildings
+                            BldLineCount = 0
+                            BldNum += 1
+                            bldRow = dsBOP.Tables("tblBuildings").NewRow()
+                            bldRow("LocNum") = LocNum
+                            bldRow("BldNum") = BldNum
+
+                            ' Name of building = "Building#n: Description"
+                            NameHold = "Building #" & BldNum.ToString().Trim()
+                            If B.Description IsNot Nothing AndAlso B.Description.Trim() <> "" Then
+                                NameHold = NameHold & ": " & B.Description.Trim
+                            End If
+
+                            bldRow("Name") = NameHold
+
+                            If B.PropertyDeductible IsNot Nothing AndAlso IsNumeric(B.PropertyDeductible) Then
+                                bldRow("Deductible") = Format(CDec(B.PropertyDeductible), FormatStringCurrency)
+                            Else
+                                bldRow("Deductible") = "$0"
+                            End If
+                            bldRow("CauseOfLoss") = B.CauseOfLossType
+                            ' Fix valuation for personal property only (look at ValuationMethod) MGB 7/15/13
+                            If B.Valuation IsNot Nothing AndAlso B.Valuation <> "" AndAlso IsNumeric(B.Valuation) Then
+                                bldRow("Valuation") = Format(CDec(B.Valuation), FormatStringCurrency)
+                            ElseIf B.Valuation IsNot Nothing AndAlso B.Valuation <> "" Then
+                                bldRow("Valuation") = B.Valuation
+                            ElseIf B.ValuationMethod IsNot Nothing AndAlso B.ValuationMethod <> "" Then
+                                bldRow("Valuation") = B.ValuationMethod
+                            Else
+                                bldRow("Valuation") = ""
+                            End If
+                            bldRow("Coinsurance") = B.CoinsuranceType
+                            bldRow("Program") = B.Program
+                            bldRow("Classification") = B.Classification
+                            ' Deal with the painting class codes MGB 7/15/13
+                            ' Now we're putting the painting deductible in the policy level coverages MGB 8/5/13 Bug 1673
+                            bldRow("Classification") = B.Classification
+                            'Select Case B.ClassCode
+                            '    Case "98305", "75601", "75631", "75611", "75641"   ' Painting class codes
+                            '        bldRow("Classification") = B.Classification & " ($250 per claim property damage)"
+                            '    Case Else
+                            '        bldRow("Classification") = B.Classification
+                            'End Select
+                            bldRow("Occupancy") = B.Occupancy
+                            If B.EmployeePayroll IsNot Nothing AndAlso IsNumeric(B.EmployeePayroll) Then bldRow("EmployeePayroll") = B.EmployeePayroll
+                            If B.NumberOfOfficersAndPartnersAndInsureds IsNot Nothing AndAlso IsNumeric(B.NumberOfOfficersAndPartnersAndInsureds) Then bldRow("NumberOfOfficersAndPartnersAndInsureds") = B.NumberOfOfficersAndPartnersAndInsureds
+
+                            BldLineCount += 9
+
+                            ' OPTIONAL BUILDING COVERAGES
+                            ' Optical & Hearing Aid
+                            If B.HasOpticalAndHearingAidProfessionalLiability Then
+                                bldRow("OpticalHearingAidPL") = B.OpticalAndHearingAidProfessionalLiabilityEmpNum & " Employees"
+                                If QO.OpticalAndHearingAidProfessionalLiabilityQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.OpticalAndHearingAidProfessionalLiabilityQuotedPremium) Then
+                                    bldRow("OpticalHearingAidPLPremium") = Format(CDec(QO.OpticalAndHearingAidProfessionalLiabilityQuotedPremium), FormatStringCurrency)
+                                Else
+                                    bldRow("OpticalHearingAidPLPremium") = "$0"
+                                End If
+                                BldLineCount += 5
+                            Else
+                                bldRow("OpticalHearingAidPL") = ""
+                                bldRow("OpticalHearingAidPLPremium") = ""
+                            End If
+
+                            ' Barbershops
+                            If B.HasBarbersProfessionalLiability Then
+                                bldRow("BarbersPL") = B.BarbersProfessionalLiabilityFullTimeEmpNum & " Full-Time; " & B.BarbersProfessionalLiabilityPartTimeEmpNum & " Part-Time"
+                                If QO.BarbersProfessionalLiabiltyQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.BarbersProfessionalLiabiltyQuotedPremium) Then
+                                    bldRow("BarbersPLPremium") = Format(CDec(QO.BarbersProfessionalLiabiltyQuotedPremium), FormatStringCurrency)
+                                Else
+                                    bldRow("BarbersPLPremium") = "$0"
+                                End If
+                                BldLineCount += 5
+                            Else
+                                bldRow("BarbersPL") = ""
+                                bldRow("BarbersPLPremium") = ""
+                            End If
+
+                            ' Beauty Parlors
+                            If B.HasBeauticiansProfessionalLiability Then
+                                bldRow("BeauticiansPL") = B.BeauticiansProfessionalLiabilityFullTimeEmpNum & " Full-Time; " & B.BeauticiansProfessionalLiabilityPartTimeEmpNum & " Part-Time"
+                                If QO.BeauticiansProfessionalLiabilityQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.BeauticiansProfessionalLiabilityQuotedPremium) Then
+                                    bldRow("BeauticiansPLPremium") = Format(CDec(QO.BeauticiansProfessionalLiabilityQuotedPremium), FormatStringCurrency)
+                                Else
+                                    bldRow("BeauticiansPLPremium") = "$0"
+                                End If
+                                BldLineCount += 5
+                            Else
+                                bldRow("BeauticiansPL") = ""
+                                bldRow("BeauticiansPLPremium") = ""
+                            End If
+
+                            ' Funeral Directors
+                            If B.HasFuneralDirectorsProfessionalLiability Then
+                                bldRow("FuneralPL") = B.FuneralDirectorsProfessionalLiabilityEmpNum & " Employees"
+                                If QO.FuneralDirectorsProfessionalLiabilityQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.FuneralDirectorsProfessionalLiabilityQuotedPremium) Then
+                                    bldRow("FuneralPLPremium") = Format(CDec(QO.FuneralDirectorsProfessionalLiabilityQuotedPremium), FormatStringCurrency)
+                                Else
+                                    bldRow("FuneralPLPremium") = "$0"
+                                End If
+                                BldLineCount += 5
+                            Else
+                                bldRow("FuneralPL") = ""
+                                bldRow("FuneralPLPremium") = ""
+                            End If
+
+                            ' Printers
+                            If B.HasPrintersProfessionalLiability Then
+                                bldRow("PrintersPL") = B.PrintersProfessionalLiabilityLocNum & " Locations"
+                                If QO.PrintersProfessionalLiabilityQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.PrintersProfessionalLiabilityQuotedPremium) Then
+                                    bldRow("PrintersPLPremium") = Format(CDec(QO.PrintersProfessionalLiabilityQuotedPremium), FormatStringCurrency)
+                                Else
+                                    bldRow("PrintersPLPremium") = "$0"
+                                End If
+                                BldLineCount += 5
+                            Else
+                                bldRow("PrintersPL") = ""
+                                bldRow("PrintersPLPremium") = ""
+                            End If
+
+                            ' Self Storage
+                            If B.HasSelfStorageFacility Then
+                                bldRow("SelfStorage") = B.SelfStorageFacilityLimit & " Limit"
+                                If QO.SelfStorageFacilityQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.SelfStorageFacilityQuotedPremium) Then
+                                    bldRow("SelfStoragePremium") = Format(CDec(QO.SelfStorageFacilityQuotedPremium), FormatStringCurrency)
+                                Else
+                                    bldRow("SelfStoragePremium") = "$0"
+                                End If
+                                BldLineCount += 5
+                            Else
+                                bldRow("SelfStorage") = ""
+                                bldRow("SelfStoragePremium") = ""
+                            End If
+
+                            ' Veterinarians
+                            If B.HasVeterinariansProfessionalLiability Then
+                                bldRow("VeterinariansPL") = B.VeterinariansProfessionalLiabilityEmpNum & " Employees"
+                                If QO.VeterinariansProfessionalLiabilityQuotedPremium IsNot Nothing AndAlso IsNumeric(QO.VeterinariansProfessionalLiabilityQuotedPremium) Then
+                                    bldRow("VeterinariansPLPremium") = Format(CDec(QO.VeterinariansProfessionalLiabilityQuotedPremium), FormatStringCurrency)
+                                Else
+                                    bldRow("VeterinariansPLPremium") = "$0"
+                                End If
+                                BldLineCount += 5
+                            Else
+                                bldRow("VeterinariansPL") = ""
+                                bldRow("VeterinariansPLPremium") = ""
+                            End If
+
+                            bldRow("PageLines") = BldLineCount
+                            dsBOP.Tables("tblBuildings").Rows.Add(bldRow)
+
+                            If doUseNewBOPVersion(QO.EffectiveDate) Then
+                                'Temporarily add these coverages into Buildingcoverages list so that the code below can do it's thing
+                                InsertNewCoveragesIntoBuildingCoverages(bldRow, B, QO)
+                            End If
+
+                            ' BUILDING COVERAGES
+                            If B.BuildingCoverages IsNot Nothing AndAlso B.BuildingCoverages.Count > 0 Then
+                                For Each CV As QuickQuoteCoverage In B.BuildingCoverages
+                                    ' Only display the coverages with a premium > 0  MGB 5/22/13
+                                    If isValidNumberString(CV.FullTermPremium, ComparisonOperation.NotEquals, 0) Then
+                                        CovNum += 1
+                                        BldLineCount += 1
+                                        bcovRow = dsBOP.Tables("tblBuildingCoverages").NewRow()
+                                        bcovRow("LocNum") = LocNum
+                                        bcovRow("BldNum") = BldNum
+                                        If isValidString(CV.Comments) AndAlso doUseNewBOPVersion(QO.EffectiveDate) Then
+                                            bcovRow("Coverage") = CV.Comments
+                                        Else
+                                            bcovRow("Coverage") = GetCoverageCodeDescription(CV.CoverageCodeId)
+                                        End If
+
+                                        ' Handle Spoilage and it's sub-coverages MGB 8/7/13
+                                        If bcovRow("Coverage").ToString().ToUpper() = "SPOILAGE" Then
+
+                                        Else
+                                        End If
+
+                                        If Not CV.CoverageCodeId = "80400" Then
+                                            If (CV.ManualLimitAmount Is Nothing OrElse Not IsNumeric(CV.ManualLimitAmount) OrElse CDec(CV.ManualLimitAmount) = 0) AndAlso Not CV.ManualLimitAmount.Contains("/") Then
+                                                If CV.CoverageLimitId IsNot Nothing AndAlso IsNumeric(CV.CoverageLimitId) Then
+                                                    lim = GetCoverageLimitDescription(CV.CoverageLimitId)
+                                                    If lim <> "" Then
+                                                        If IsNumeric(lim) Then
+                                                            bcovRow("Limit") = Format(CDec(lim), FormatStringCurrency)
+                                                        Else
+                                                            bcovRow("Limit") = "Included"
+                                                            'bcovRow("Limit") = lim
+                                                        End If
+                                                    Else
+                                                        bcovRow("Limit") = "$0"
+                                                    End If
+                                                End If
+
+                                            Else
+                                                If CV.ManualLimitAmount.Contains("/") Then
+                                                    Dim newLimitFormat As String = ""
+                                                    Dim first As Boolean = True
+                                                    For Each part As String In CV.ManualLimitAmount.Split("/")
+                                                        If Not String.IsNullOrWhiteSpace(part) AndAlso IsNumeric(part) Then
+                                                            part = Format(CDec(part), FormatStringCurrency)
+                                                            If first = True Then
+                                                                newLimitFormat += part
+                                                                first = False
+                                                            Else
+                                                                newLimitFormat += "/" & part
+                                                            End If
+                                                        End If
+                                                    Next
+                                                    'bcovRow("Limit") = CV.ManualLimitAmount
+                                                    bcovRow("Limit") = newLimitFormat
+                                                Else
+                                                    bcovRow("Limit") = Format(CDec(CV.ManualLimitAmount), FormatStringCurrency)
+                                                End If
+                                            End If
+
+                                            If Not String.IsNullOrWhiteSpace(CV.Description) Then
+                                                bcovRow("Detail") = CV.Description
+                                            Else
+                                                bcovRow("Detail") = ""
+                                            End If
+                                        Else
+                                            Select Case CV.CoverageCodeId
+                                                Case "80400"
+                                                    Dim autoIncreaseID As Integer = 0
+                                                    If B.BuildingCoverages.Find(Function(x) x.CoverageCodeId = 165).AutomaticIncreasePercentTypeId IsNot Nothing Then
+                                                        autoIncreaseID = B.BuildingCoverages.Find(Function(x) x.CoverageCodeId = 165).AutomaticIncreasePercentTypeId
+                                                    End If
+
+                                                    'As of coding this, the AutomaticIncreasePercent happens to be 2 multiplied by AutomaticIncreasePercentTypeId
+                                                    If autoIncreaseID > 0 Then
+                                                        bcovRow("Limit") = (autoIncreaseID * 2).ToString & "%"
+                                                    Else
+                                                        bcovRow("Limit") = ""
+                                                    End If
+                                                    bcovRow("Detail") = ""
+                                            End Select
+                                        End If
+                                        If CV.FullTermPremium Is Nothing OrElse Not IsNumeric(CV.FullTermPremium) Then
+                                            bcovRow("Premium") = "$0"
+                                        Else
+                                            bcovRow("Premium") = Format(CDec(CV.FullTermPremium), FormatStringCurrency)
+                                        End If
+                                        dsBOP.Tables("tblBuildingCoverages").Rows.Add(bcovRow)
+                                    End If
+                                Next
+                            End If
+                            ' I would advise against messing with any of this page break logic
+                            LocBldLineCount = LocBldLineCount + BldLineCount
+                            ' The first building never gets a break before on all except the first location
+                            If LocNum = 1 AndAlso BldNum = 1 Then
+                                UpdateBuildingBreaks(LocNum, BldNum)
+                            ElseIf BldNum <> 1 Then
+                                UpdateBuildingBreaks(LocNum, BldNum)
+                            End If
+                        Next  ' For each - BUILDINGS
+                    End If
+                    ' Break before all locations except for the first
+                    If LocNum <> 1 Then UpdateLocationBreaks(LocNum, True, False)
+                Next  ' For each - LOCATIONS
+            End If
+
+            rptLocationRepeater.DataSource = dsBOP.Tables("tblLocations")
+            rptLocationRepeater.DataBind()
+
+            Exit Sub
+        Catch ex As Exception
+            HandleError("DisplayQuote", ex)
+            Exit Sub
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Pass in a list of class codes and this routine will check to see if any of them are in
+    ''' any builing in the quote object.  Returns true if so, false if not
+    ''' </summary>
+    ''' <param name="ClassCodes"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function HasBuildingClassCode(ByVal ClassCodes As List(Of String)) As Boolean
+        Try
+            If QO.Locations Is Nothing Then Return False
+
+            For Each L As QuickQuoteLocation In QO.Locations
+                If L.Buildings IsNot Nothing Then
+                    For Each B As QuickQuoteBuilding In L.Buildings
+                        For Each CC As String In ClassCodes
+                            If B.ClassCode = CC Then
+                                Return True
+                            End If
+                        Next
+                    Next
+                End If
+            Next
+
+            Return False
+        Catch ex As Exception
+            HandleError("HasBuildingClassCode", ex)
+            Return False
+        End Try
+    End Function
+
+    Private Function HasLawyerClassOnABuilding() As Boolean
+        Try
+            For Each L As QuickQuoteLocation In QO.Locations
+                If L.Buildings IsNot Nothing Then
+                    For Each B As QuickQuoteBuilding In L.Buildings
+                        If B.Classification IsNot Nothing AndAlso B.Classification.Contains("Lawyer") Then Return True
+                    Next
+                End If
+            Next
+
+            Return False
+        Catch ex As Exception
+            HandleError("HasLawyerClassOnABuilding", ex)
+            Return False
+        End Try
+    End Function
+
+
+    ''' <summary>
+    ''' Inserts break markers in the location records as they're processed
+    ''' </summary>
+    ''' <param name="LocNum"></param>
+    ''' <param name="beforevalue"></param>
+    ''' <param name="aftervalue"></param>
+    ''' <remarks></remarks>
+    Private Sub UpdateLocationBreaks(ByVal LocNum As String, ByVal beforevalue As Boolean, ByVal aftervalue As Boolean)
+        Try
+            For Each dr As DataRow In dsBOP.Tables("tblLocations").Rows
+                If dr("locnum") = LocNum Then
+                    dr("BreakBefore") = beforevalue
+                    If beforevalue Then LineCount = 0
+                    dr("BreakAfter") = aftervalue
+                    Exit Sub
+                End If
+            Next
+        Catch ex As Exception
+            HandleError("UpdateLocationBreaks", ex)
+            Exit Sub
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Inserts break markers in the building records as they're processed
+    ''' </summary>
+    ''' <param name="LocNum"></param>
+    ''' <param name="BldNum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Sub UpdateBuildingBreaks(ByVal LocNum As String, ByVal BldNum As String)
+        For Each dr As DataRow In dsBOP.Tables("tblBuildings").Rows()
+            If (dr("LocNum") = LocNum) AndAlso (dr("BldNum") = BldNum) Then
+                dr("PageLines") = LocBldLineCount
+                If LocBldLineCount + LineCount > MaxLinesPerPage Then
+                    If allowPageBreak = False Then
+                        'a rare scenario where the previous page was perfectly filled and thus a natural page break would occur. 
+                        'However, the code was then adding another page break on top of that creating a blank page
+                        dr("BreakBefore") = False
+                        allowPageBreak = True
+                    Else
+                        dr("BreakBefore") = True
+                    End If
+                    LineCount = LocBldLineCount
+                    LocBldLineCount = 0
+                Else
+                    If LocBldLineCount + LineCount = MaxLinesPerPage Then
+                        allowPageBreak = False
+                    End If
+                    dr("BreakBefore") = False
+                End If
+            End If
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' Returns a dataview for the building coverage repeater to bind to
+    ''' </summary>
+    ''' <param name="dr"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function GetBuildingCoveragesDataView(ByRef dr As DataRow) As DataView
+        Dim ln As String = ""
+        Dim bn As String = ""
+        Dim dv As DataView = Nothing
+
+        Try
+            If dr Is Nothing Then Return New DataView()
+            ln = dr("LocNum").ToString()
+            bn = dr("BldNum").ToString()
+
+            dv = New DataView(dsBOP.Tables("tblBuildingCoverages"), "LocNum = " & ln & " AND BldNum = " & bn, "Coverage", DataViewRowState.CurrentRows)
+
+            Return dv
+        Catch ex As Exception
+            HandleError("GetBuildingCoveragesDataView", ex)
+            Return New DataView()
+        End Try
+    End Function
+
+    Public Sub InsertNewCoveragesIntoBuildingCoverages(ByVal BldRow As DataRow, b As QuickQuoteBuilding, quickQuote As QuickQuoteObject)
+        Dim buildingCov As QuickQuoteCoverage
+
+        If b.HasMotelCoverage Then
+            If isValidString(b.MotelCoveragePerGuestLimit) Then
+                SetBuildingCoverage(buildingCov, b, "80376", QO.MotelCoveragePerGuestLimit, "", QO.MotelCoveragePerGuestQuotedPremium, "Motel - Guest Property")
+            End If
+            If isValidNumberString(b.MotelCoverageSafeDepositLimit, ComparisonOperation.GreaterThan, 0) AndAlso isValidNumberString(b.MotelCoverageSafeDepositDeductible, ComparisonOperation.GreaterThan, 0) Then
+                SetBuildingCoverage(buildingCov, b, "80377", QO.MotelCoverageSafeDepositLimit, QO.MotelCoverageSafeDepositDeductible & " :Ded", QO.MotelCoverageSafeDepositQuotedPremium, "Motel - Safe Deposit Box")
+            End If
+        End If
+        If b.HasApartmentBuildings Then
+            SetBuildingCoverage(buildingCov, b, "80375", "", "", QO.ApartmentQuotedPremium)
+        End If
+        If b.HasRestaurantEndorsement Then
+            SetBuildingCoverage(buildingCov, b, "80381", "", "", QO.RestaurantQuotedPremium)
+        End If
+        If b.HasPhotographyCoverage Then
+            If b.HasPhotographyMakeupAndHair Then
+                SetBuildingCoverage(buildingCov, b, "80378", "", "", QO.PhotographyMakeupAndHairQuotedPremium)
+            End If
+            If b.HasPhotographyCoverageScheduledCoverages Then
+                SetBuildingCoverage(buildingCov, b, "80398", QO.PhotographyTotalScheduledLimits, "", QO.PhotographyCoverageQuotedPremium)
+            End If
+        End If
+        If b.HasPharmacistProfessionalLiability Then
+            SetBuildingCoverage(buildingCov, b, "80373", "Included", QO.PharmacistAnnualGrossSales & ": Annual Sales", QO.PharmacistQuotedPremium)
+        End If
+        If b.HasLiquorLiability Then
+            Dim receipts As String = ""
+            If b.LiquorLiabilityClassCodeTypeId = "13" Then
+                receipts = "Receipts: " & b.LiquorLiabilityAnnualGrossPackageSalesReceipts
+            ElseIf b.LiquorLiabilityClassCodeTypeId = "12" Then
+                receipts = "Receipts: " & b.LiquorLiabilityAnnualGrossAlcoholSalesReceipts
+            End If
+            SetBuildingCoverage(buildingCov, b, "21134", quickQuote.OccurrenceLiabilityLimit, receipts, QO.LiquorLiabilityQuotedPremium)
+        End If
+    End Sub
+
+    Public Sub SetBuildingCoverage(bCov As QuickQuoteCoverage, b As QuickQuoteBuilding, coveragecodeId As String, limit As String, detail As String, premium As String, Optional ManualCoverageName As String = "")
+        bCov = New QuickQuoteCoverage
+        If isValidString(ManualCoverageName) Then
+            bCov.Comments = ManualCoverageName
+        Else
+            If isValidNumberString(coveragecodeId, ComparisonOperation.GreaterThan, 0) Then
+                bCov.CoverageCodeId = coveragecodeId
+            End If
+        End If
+        If isValidString(limit) Then
+            bCov.ManualLimitAmount = limit
+        End If
+        If isValidString(detail) Then
+            bCov.Description = detail
+        End If
+        If isValidNumberString(premium) Then
+            bCov.FullTermPremium = premium
+        Else
+            bCov.FullTermPremium = "$0"
+        End If
+        b.BuildingCoverages.Add(bCov)
+    End Sub
+
+    ''' <summary>
+    ''' This controls whether the building optional coverages section is visible or not
+    ''' </summary>
+    ''' <param name="LN"></param>
+    ''' <param name="BN"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function BuildingOptionalCoveragesVisible(ByVal LN As String, ByVal BN As String) As String
+        Try
+            For Each dr As DataRow In dsBOP.Tables("tblBuildings").Rows
+                If dr("LocNum").ToString() = LN AndAlso dr("BldNum").ToString() = BN Then
+                    If dr("BarbersPL").ToString() <> "" OrElse dr("BeauticiansPL").ToString() <> "" _
+                    OrElse dr("FuneralPL").ToString() <> "" OrElse dr("PrintersPL").ToString() <> "" _
+                    OrElse dr("SelfStorage").ToString() <> "" OrElse dr("VeterinariansPL").ToString() <> "" _
+                    OrElse dr("OpticalHearingAidPL").ToString() <> "" Then
+                        Return True
+                    Else
+                        Return False
+                    End If
+                    Exit For
+                End If
+            Next
+
+            Return "false"
+        Catch ex As Exception
+            HandleError("BuildingOptionalCoveragesVisible", ex)
+            Return "false"
+        End Try
+    End Function
+
+    Public Function GetBuildingOptionalCoverageName(ByVal LN As String, ByVal BN As String) As String
+        Try
+            For Each dr As DataRow In dsBOP.Tables("tblBuildings").Rows
+                If dr("LocNum").ToString() = LN AndAlso dr("BldNum").ToString() = BN Then
+                    If dr("BarbersPL").ToString() <> "" Then Return "Barbers Liability"
+                    If dr("BeauticiansPL").ToString() <> "" Then Return "Beauticians Liability"
+                    If dr("FuneralPL").ToString() <> "" Then Return "Funeral Directors Liability"
+                    If dr("PrintersPL").ToString() <> "" Then Return "Printers Liability"
+                    If dr("SelfStorage").ToString() <> "" Then Return "Self Storage Liability"
+                    If dr("VeterinariansPL").ToString() <> "" Then Return "Veterinarians Liability"
+                    If dr("OpticalHearingAidPL").ToString() <> "" Then Return "Optical and Hearing Aid Liability"
+                    Exit For
+                End If
+            Next
+
+            Return ""
+        Catch ex As Exception
+            HandleError("GetBuildingOptionalCoverageName", ex)
+            Return ""
+        End Try
+    End Function
+
+    Public Function GetBuildingOptionalCoverageDetails(ByVal LN As String, ByVal BN As String) As String
+        Try
+            For Each dr As DataRow In dsBOP.Tables("tblBuildings").Rows
+                If dr("LocNum").ToString() = LN AndAlso dr("BldNum").ToString() = BN Then
+                    If dr("BarbersPL").ToString() <> "" Then Return dr("BarbersPL").ToString()
+                    If dr("BeauticiansPL").ToString() <> "" Then Return dr("BeauticiansPL").ToString()
+                    If dr("FuneralPL").ToString() <> "" Then Return dr("FuneralPL").ToString()
+                    If dr("PrintersPL").ToString() <> "" Then Return dr("PrintersPL").ToString()
+                    If dr("SelfStorage").ToString() <> "" Then Return dr("SelfStorage").ToString()
+                    If dr("VeterinariansPL").ToString() <> "" Then Return dr("VeterinariansPL").ToString()
+                    If dr("OpticalHearingAidPL").ToString() <> "" Then Return dr("OpticalHearingAidPL").ToString()
+                    Exit For
+                End If
+            Next
+
+            Return ""
+        Catch ex As Exception
+            HandleError("GetBuildingOptionalCoverageDetails", ex)
+            Return ""
+        End Try
+    End Function
+    Public Function GetBuildingOptionalCoveragePremium(ByVal LN As String, ByVal BN As String) As String
+        Try
+            For Each dr As DataRow In dsBOP.Tables("tblBuildings").Rows
+                If dr("LocNum").ToString() = LN AndAlso dr("BldNum").ToString() = BN Then
+                    If dr("BarbersPL").ToString() <> "" Then Return dr("BarbersPLPremium").ToString()
+                    If dr("BeauticiansPL").ToString() <> "" Then Return dr("BeauticiansPLPremium").ToString()
+                    If dr("FuneralPL").ToString() <> "" Then Return dr("FuneralPLPremium").ToString()
+                    If dr("PrintersPL").ToString() <> "" Then Return dr("PrintersPLPremium").ToString()
+                    If dr("SelfStorage").ToString() <> "" Then Return dr("SelfStoragePremium").ToString()
+                    If dr("VeterinariansPL").ToString() <> "" Then Return dr("VeterinariansPLPremium").ToString()
+                    If dr("OpticalHearingAidPL").ToString() <> "" Then Return dr("OpticalHearingAidPLPremium").ToString()
+                    Exit For
+                End If
+            Next
+
+            Return ""
+        Catch ex As Exception
+            HandleError("GetBuildingOptionalCoveragePremium", ex)
+            Return ""
+        End Try
+    End Function
+
+
+    ''' <summary>
+    ''' Reads the Diamond CoverageCode table and returns CoverageCode - Description
+    ''' </summary>
+    ''' <param name="CoverageCodeID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function GetCoverageCodeDescription(ByVal CoverageCodeID As String) As String
+        Dim cn As New SqlConnection(AppSettings("ConnDiamond"))
+        Dim tbl As New DataTable()
+        Dim da As New SqlDataAdapter()
+        Dim cmd As New SqlCommand()
+
+        Try
+            cn.Open()
+            cmd.Connection = cn
+            cmd.CommandType = CommandType.Text
+            cmd.CommandText = "SELECT * FROM CoverageCode WHERE coveragecode_id = " & CoverageCodeID
+            da.SelectCommand = cmd
+            da.Fill(tbl)
+
+            If tbl.Rows.Count > 0 Then
+                ' Just return the description with no code MGB 5/22/13
+                Return tbl.Rows(0)("dscr").ToString().Trim()
+
+                'If tbl.Rows(0)("CoverageCode").Equals(DBNull.Value) OrElse tbl.Rows(0)("CoverageCode").ToString().Trim() = "" Then
+                '    ' No Coverage Code on record
+                '    Return tbl.Rows(0)("dscr").ToString().Trim()
+                'Else
+                '    ' Coverage Code and Description are available
+                '    Return tbl.Rows(0)("CoverageCode").ToString().Trim() & " - " & tbl.Rows(0)("dscr").ToString().Trim()
+                'End If
+            Else
+                ' No Record Found!
+                Return ""
+            End If
+        Catch ex As Exception
+            HandleError("GetCoverageCodeDescription", ex)
+            Return ""
+        Finally
+            If cn.State = ConnectionState.Open Then cn.Close()
+            cn.Dispose()
+            cmd.Dispose()
+        End Try
+    End Function
+
+
+    ''' <summary>
+    ''' Reads the Diamond CoverageLimit table and returns CoverageLimit - Description
+    ''' </summary>
+    ''' <param name="CoverageLimitID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function GetCoverageLimitDescription(ByVal CoverageLimitID As String) As String
+        Dim cn As New SqlConnection(AppSettings("ConnDiamond"))
+        Dim tbl As New DataTable()
+        Dim da As New SqlDataAdapter()
+        Dim cmd As New SqlCommand()
+
+        Try
+            cn.Open()
+            cmd.Connection = cn
+            cmd.CommandType = CommandType.Text
+            cmd.CommandText = "SELECT * FROM CoverageLimit WHERE coveragelimit_id = " & CoverageLimitID
+            da.SelectCommand = cmd
+            da.Fill(tbl)
+
+            If tbl.Rows.Count > 0 Then
+                Return tbl.Rows(0)("dscr").ToString().Trim()
+            Else
+                ' No Record Found!
+                Return ""
+            End If
+        Catch ex As Exception
+            HandleError("GetCoverageLimitDescription", ex)
+            Return ""
+        Finally
+            If cn.State = ConnectionState.Open Then cn.Close()
+            cn.Dispose()
+            cmd.Dispose()
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' Returns true if the building passed is the last building in the table
+    ''' </summary>
+    ''' <param name="LocNum"></param>
+    ''' <param name="BldNum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function IsLastBuilding(ByVal LocNum As String, ByVal BldNum As String) As Boolean
+        Try
+            ' If it's not the last location it's not the last building either
+            Dim w As Integer = dsBOP.Tables("tblLocations").Rows.Count
+            If CInt(LocNum) < w Then Return False
+
+            ' Last Location.  Check to see if last building
+            For x As Integer = 0 To dsBOP.Tables("tblBuildings").Rows.Count - 1
+                Dim dr As DataRow = dsBOP.Tables("tblBuildings").Rows(x)
+                If dr("LocNum") = LocNum AndAlso dr("BldNum") = BldNum Then
+                    If x = dsBOP.Tables("tblBuildings").Rows.Count - 1 Then
+                        Return True
+                    Else
+                        Return False
+                    End If
+                End If
+            Next
+
+            Return False
+        Catch ex As Exception
+            HandleError("IsLastBuilding", ex)
+            Return False
+        End Try
+    End Function
+#End Region
+
+#Region "Events"
+
+    Protected Sub rptLocationRepeater_ItemDataBound(sender As Object, e As System.Web.UI.WebControls.RepeaterItemEventArgs) Handles rptLocationRepeater.ItemDataBound
+        Try
+            Dim phPre As PlaceHolder = e.Item.FindControl("phPreLocationPlaceholder")
+            Dim phPost As PlaceHolder = e.Item.FindControl("phPostLocationPlaceholder")
+
+            If phPre Is Nothing OrElse phPost Is Nothing Then Exit Sub
+
+            ' Insert break before location
+            If Not IsDBNull(e.Item.DataItem("BreakBefore")) AndAlso CBool(e.Item.DataItem("BreakBefore")) Then
+                InsertPageBreak(phPre)
+                Exit Sub
+            End If
+
+            ' Insert break after location
+            If Not IsDBNull(e.Item.DataItem("BreakAfter")) AndAlso CBool(e.Item.DataItem("BreakAfter")) Then
+                InsertPageBreak(phPost)
+                Exit Sub
+            End If
+        Catch ex As Exception
+            HandleError("rptVehicles_ItemDataBound", ex)
+            Exit Sub
+        End Try
+    End Sub
+
+    Protected Sub rptBuildingRepeater_ItemDataBound(sender As Object, e As System.Web.UI.WebControls.RepeaterItemEventArgs)
+        Try
+            Dim phPreBuilding As PlaceHolder = e.Item.FindControl("phPreBuildingPlaceholder")
+
+            If phPreBuilding Is Nothing Then Exit Sub
+
+            ' Don't ever break after the last building!
+            If IsLastBuilding(e.Item.DataItem("locnum"), e.Item.DataItem("bldnum")) Then Exit Sub
+            Dim bldgcount As Integer = GetLocationBuildingCount(e.Item.DataItem("LocNum"))
+
+            ' MORE THAN ONE BUILDING
+            If Not IsDBNull(e.Item.DataItem("BreakBefore")) AndAlso CBool(e.Item.DataItem("BreakBefore")) Then
+                InsertPageBreak(phPreBuilding)
+            End If
+
+            Exit Sub
+        Catch ex As Exception
+            HandleError("rptBuildingRepeater_ItemDataBound", ex)
+            Exit Sub
+        End Try
+    End Sub
+
+#End Region
+
+End Class

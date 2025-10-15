@@ -1,0 +1,726 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1"><meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    
+    <!--removed 2/25/2013-->
+    <link href="DiamondQuickQuoteStyles.css?dt=20130513" rel="stylesheet" type="text/css" /><!--added 2/22/2013-->
+    
+    <title>Diamond Quote Proposal</title>
+<script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
+    <reference path="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2-vsdoc.js"/>
+    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.9.0/jquery-ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.9.0/themes/smoothness/jquery-ui.css" />
+    <script type="text/javascript" src="js/CGL-general.js"></script>    
+    <link rel="stylesheet" type="text/css" href="Styles/CGLStyle.css" />
+     <link rel="stylesheet" type="text/css" href="Styles/Vr_NearMono.css" />
+     <!--[if lt IE 9]>
+	    <link rel="stylesheet" type="text/css" href="Styles/Vr_NearMono_Legacy.css" />
+    <![endif]-->
+    
+    <!--[if gte IE 9]>
+        <link rel="stylesheet" type="text/css" href="Styles/Vr_NearMono_IE_9_Only.css" />
+    <![endif]-->
+    <script type="text/javascript">
+        //changed = to #; need Page.Header.DataBind() on Page_Load
+        var hdnPdfFilePath = 'Application_hdnPdfFilePath';
+        var pdfButtonArea = 'Application_pdfButtonArea';
+
+//        function openPdf() {
+//            if (document.getElementById(hdnPdfFilePath)) {
+//                var PdfFilePath = document.getElementById(hdnPdfFilePath).value;
+//                if (PdfFilePath == (0 || "0" || "")) {
+//                    return;
+//                } else {
+//                    if (UrlExists(PdfFilePath)) {
+//                        //if (fileExists(PdfFilePath)) {
+//                        window.open(PdfFilePath);
+//                    } else {
+//                        return;
+//                    }
+//                }
+//            }
+//        }
+        function openPdf() {
+            if (document.getElementById(pdfButtonArea)) {
+                if (document.getElementById(hdnPdfFilePath)) {
+                    var PdfFilePath = document.getElementById(hdnPdfFilePath).value;
+                    if (PdfFilePath == (0 || "0" || "")) {
+                        return;
+                    } else {
+                        if (UrlExists(PdfFilePath)) {
+                            //if (fileExists(PdfFilePath)) {
+                            //window.open(PdfFilePath);
+                            document.getElementById(pdfButtonArea).style.display = "table";
+                        } else {
+                            return;
+                        }
+                    }
+                }                
+            }
+        }
+        function openPdfWindow() {
+            if (document.getElementById(hdnPdfFilePath)) {
+                var PdfFilePath = document.getElementById(hdnPdfFilePath).value;
+                if (PdfFilePath == (0 || "0" || "")) {
+                    return;
+                } else {
+                    if (UrlExists(PdfFilePath)) {
+                        //if (fileExists(PdfFilePath)) {
+                        window.open(PdfFilePath);
+                    } else {
+                        return;
+                    }
+                }
+            }
+        }
+
+        function UrlExists(url) {
+            var http = new XMLHttpRequest();
+            http.open('HEAD', url, false);
+            http.send();
+            return http.status != 404;
+        }
+        function fileExists(url) {
+            if (url) {
+                var req = new XMLHttpRequest();
+                req.open('GET', url, false);
+                req.send();
+                return req.status == 200;
+            } else {
+                return false;
+            }
+        }
+    </script>
+       
+
+<title>
+
+</title></head>
+<body id="bodytag" onkeydown="if(event.keyCode==8 &amp;&amp; !event.srcElement.value) {window.event.returnValue=false;}">
+    <center><form method="post" action="DiamondQuoteProposal.aspx?PrinterFriendlyQuoteIds=1368" id="form1" class="formPortal" style="background-color:White;">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJMjkwODAyODYwD2QWAmYPZBYEAgEPZBYCAgQPZBYCZg8VAhpBcHBsaWNhdGlvbl9oZG5QZGZGaWxlUGF0aBlBcHBsaWNhdGlvbl9wZGZCdXR0b25BcmVhZAIDD2QWAgIBD2QWAgIDD2QWAmYPZBYCAgEPZBYGZg9kFgICAQ8WAh4Dc3JjBSF+L2ltYWdlcy9JRk1JbnRyYW5ldExvZ28tMjAxMy5qcGdkAgMPZBYEAgEPFgIfAAUhfi9pbWFnZXMvSUZNSW50cmFuZXRMb2dvLTIwMTMuanBnZAIJD2QWAgIBDw8WAh4EVGV4dAUXU2F0dXJkYXksIEp1bHkgMjcsIDIwMTNkZAIKD2QWAgJtD2QWAgIBDw8WAh8BBRdTYXR1cmRheSwgSnVseSAyNywgMjAxM2RkZJyGPAXexgioHcUi16aR4eQlD2i5r6UM4S5c9XGWFaQ8" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['form1'];
+if (!theForm) {
+    theForm = document.form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/DiamondQuickQuotePages/WebResource.axd?d=DWW5JM2wZLAhjK5HK_FqAW1o1qOG4bN-ddm5DwqKRmjW2rVgN9UbQNnsgJR1UZNrYydOWBjmbfKpwoKExEubGCBWK2uArDcVgfbDL7Zcy801&amp;t=635012101791519963" type="text/javascript"></script>
+
+
+<script src="/DiamondQuickQuotePages/ScriptResource.axd?d=9ybHh0BXwjSO4joc9XUl7seJQ66CL8MH1RX_o9jX3CAfKOfOKDmQN671FKtby0Rtf-rAiJdMXhPAjGserU7Knq063L8R8Csl8DrCM0STTEnOsN5WFJkgkllTr1ymgFoSa5ooyrTL95J2Vj6LwQsdN2WAAM5a1q9QvTkUN61gme4ACrNeGWNNayti9pyPYBsF0&amp;t=3284cfe3" type="text/javascript"></script>
+<script type="text/javascript">
+//<![CDATA[
+if (typeof(Sys) === 'undefined') throw new Error('ASP.NET Ajax client-side framework failed to load.');
+//]]>
+</script>
+
+<script src="/DiamondQuickQuotePages/ScriptResource.axd?d=-1u7ZnvP0V4xUv7WM0QGD3DMhblwxxaJQKixTH2T81vBeu9wadqnVC8M_Ked1Ibfa16wo4U2DzrEIJOwb7tNWNV0d65KIsyI1p142mPuuJdWnbW7G83Z46L-2402erKlk9gUTQ65_jxW1EAbcwaEf3LShu814a59ck_HRpUlD5YLdk7PIP48yj1GR1vKq-iw0&amp;t=3284cfe3" type="text/javascript"></script>
+    <script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ctl00$ScriptManager1', 'form1', [], [], [], 90, 'ctl00');
+//]]>
+</script>
+
+    
+    <table class="layout" cellspacing="0" align="center" width="100%">
+            <tr>
+                <td valign="top" align="left">
+                    <div id="app" class="applicationPortal">
+
+<div class="tableField" style="width:900px; margin-left:auto; margin-right:auto;">
+
+    
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td align="left">
+            <img src="images/IFMIntranetLogo-2013.jpg" id="Application_ctl00_HeaderLogo" class="QuickQuoteProposalHeaderLogo" />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+        </td>
+    </tr>
+    <tr style="border-top: 2px solid black; border-bottom: 2px solid black; border-left: 2px solid black; border-right: 2px solid black;">
+        <td align="center">
+            <br />
+            <span class="tableRowHeaderLarger">Commercial Insurance Proposal</span>
+            <br />
+            <br />
+            <br />
+            <span class="tableRowHeader">Prepared For:</span>
+            <br />
+            
+            <span id="Application_ctl00_lblClientInfo" class="tableFieldHeaderLarger">Jody Davis<br />903  N Vincennes Ave<br />Petersburg , IN 47567-0000</span>
+            <br />
+            <br />
+            <span id="Application_ctl00_lblDateText">Tuesday, May 28, 2013</span>
+            <br /><br />
+        </td>
+    </tr>
+    <tr>
+        
+        <td align="center">
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            
+            <span id="Application_ctl00_lblAgencyInfo" class="tableFieldHeaderLarger">BREWTON INSURANCE AGENCY, INC. <br />BREWTON INSURANCE<br />21797 OMEGA COURT<br />GOSHEN, IN 46528-0000<br />(574)875-8506</span>
+        </td>
+    </tr>
+    <tr>
+        <td align="center">
+            <br />
+            <br />
+            <span id="Application_ctl00_lblLogo"><img src="http://ifmwebtest/AgentsOnly/images/QuickQuoteProposal/Logo_1840.jpg" class="QuickQuoteProposalAgencyLogoSection" /></span>
+        </td>
+    </tr>
+</table>
+<br /><div class="pdf_page-break">
+
+</div><div class="pdf_page-break-section">
+
+</div>
+
+<br />
+<div class="tableField">
+<img src="images/IFMIntranetLogo-2013.jpg" id="Application_ctl03_HeaderLogo" class="QuickQuoteProposalHeaderLogo" />
+<br />
+<br />
+<p width="100%" align="center" class="tableRowHeaderLarger">
+    Commercial Insurance Quote Summary
+</p>
+
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td width="50%" valign="top">
+            <span id="Application_ctl03_VRProposal_ClientAndAgencyInfo1_lblClientInfo">Jody Davis<br />903  N Vincennes Ave<br />Petersburg , IN 47567-0000</span>
+        </td>
+        <td width="50%" valign="top">
+            <span id="Application_ctl03_VRProposal_ClientAndAgencyInfo1_lblAgencyInfo">BREWTON INSURANCE AGENCY, INC. <br />BREWTON INSURANCE<br />21797 OMEGA COURT<br />GOSHEN, IN 46528-0000<br />(574)875-8506</span>
+        </td>
+    </tr>
+</table>
+<br />
+<p width="100%" align="center" class="tableRowHeader">
+    Total Quote Premiums
+</p>
+
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td colspan="2" class="tableFieldHeaderLarger">
+            Workers Compensation - <span id="Application_ctl03_ctl00_lblQuoteNumber">QWCP011621</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Total Estimated Plan Premium
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblEstPlanPrem">$310.00</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Increased Limit
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblIncreasedLimit">$0.00</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Experience Modification
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblExpMod">$0.00</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Schedule Modification
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblSchedMod">$0.00</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Premium Discount
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblPremDiscount">$0.00</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Loss Constant
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblLossConstant">$0.00</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Expense Constant
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblExpConstant">$250.00</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Certified Acts of Terrorism Coverage
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblCertActsOfTerr">$2.00</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Amount to Equal Minimum Premium - (<span id="Application_ctl03_ctl00_lblMinPrem">$1,227.00</span>)
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblAmtForMinPrem">$665.00</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Total Estimated Written Premium
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblTotalPremium">$1,227.00</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Indiana Second Injury Fund Surcharge
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblSecInjFund">$6.00</span>
+        </td>
+    </tr>
+    <tr style="border-top: 1px solid black;">
+        <td class="tableFieldHeader">
+            Total Premium Due
+        </td>
+        <td align="right" class="tableFieldValue">
+            <span id="Application_ctl03_ctl00_lblTotalPlusSecInjFund">$1,233.00</span>
+        </td>
+    </tr>
+</table>
+<br />
+<!--testing-->
+
+
+</div>
+<p width="100%" align="center" class="tableRowHeader">
+    Total Combined Premium:  <span id="Application_ctl03_lblCombinedPremium">$1,233.00</span>
+</p>
+<br />
+<br />
+
+<br />
+<div class="tableField">
+
+    <div class="pdf_DisclaimerHolder"><div class="pdf_QuickQuoteProposalDisclaimer">
+        <ul>
+            <li>This quotation has been developed based on the information provided to Indiana Farmers Mutual Insurance Company and does not bind or provide actual coverage. It is subject to final underwriting approval, acceptable loss experience and favorable loss control inspection.</li>
+            <li>This quotation is valid for 60 days, until <span id="Application_ctl03_VRProposal_Disclaimer1_lblValidQuoteDate">Saturday, July 27, 2013</span></li>
+            <li>Additional coverages, exposures, or increased limits may be added for additional premium.</li>
+        </ul>
+    </div></div>
+</div>
+<br />
+<br /><div class="pdf_page-break">
+
+</div><div class="pdf_page-break-section">
+
+</div>
+
+<div align="center">
+    <span id="Application_ctl06_lblHeader" class="p_ControlTitle">WCP - Work Comp</span>
+</div>
+<br />
+<div align="center">
+    <div id="Application_ctl06_pnlMain" style="width:100%;">
+	
+        <!-- First Table - Employer Liability Limits" -->
+        <table id="Application_ctl06_table1">
+		<tr align="left">
+			<td colspan="2">
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                    <span id="Application_ctl06_Label1" class="p_SectionHead">Employers Liability Limits</span>
+                </td>
+		</tr>
+		<tr align="left">
+			<td width="600px">
+                    <span id="Application_ctl06_Label2" class="p_ListItem">Each Accident</span>
+                </td>
+			<td width="300px" align="right">
+                    <span id="Application_ctl06_lblEachAccidentLimit" class="p_ListItem">$100,000</span>
+                </td>
+		</tr>
+		<tr align="left">
+			<td width="600px">
+                    <span id="Application_ctl06_Label4" class="p_ListItem">Policy Limit</span>
+                </td>
+			<td width="300px" align="right">
+                    <span id="Application_ctl06_lblPolicyLimit" class="p_ListItem">$500,000</span>
+                </td>
+		</tr>
+		<tr align="left">
+			<td width="600px">
+                    <span id="Application_ctl06_Label3" class="p_ListItem">Per Employee</span>
+                </td>
+			<td width="300px" align="right">
+                    <span id="Application_ctl06_lblPerEmployeeLimit" class="p_ListItem">$100,000</span>
+                </td>
+		</tr>
+	</table>
+	
+        <br />
+        <br />
+        <!-- First Table - Employee Payroll Classification" -->
+        <table id="Application_ctl06_table2" style="border-collapse:collapse;">
+		<tr align="left">
+			<td colspan="3">
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                    <span id="Application_ctl06_Label6" class="p_SectionHead">Employers Payroll Classification</span>
+                </td>
+		</tr>
+		<tr align="left" style="border-bottom: 1px solid black;">
+			<td>
+                    <span id="Application_ctl06_Label7" class="p_ListHead" style="display:inline-block;width:600px;">Classification</span>
+                </td>
+			<td align="right">
+                    <span id="Application_ctl06_Label8" class="p_ListHead" style="display:inline-block;width:150px;">Payroll</span>
+                </td>
+			<td align="right">
+                    <span id="Application_ctl06_Label9" class="p_ListHead" style="display:inline-block;width:150px;">Premium</span>
+                </td>
+		</tr>
+		<tr align="left" style="border-bottom: 1px solid black">
+			<td colspan="3">
+                    <!-- The repeater for the classifications -->
+                    
+                            <table id="tblRptClassifications">
+                                <tr align="left" >
+                                    <td width="600px">
+                                        <span id="Application_ctl06_rptClassifications_lblClassDscr_0" class="p_ListItem">2014 - BARLEY MILLING</span>
+                                    </td>
+                                    <td width="150px" align="right">
+                                        <span id="Application_ctl06_rptClassifications_lblPayroll_0" class="p_ListItem">$10,000</span>
+                                    </td>
+                                    <td width="150px" align="right">
+                                        <span id="Application_ctl06_rptClassifications_lblPremium_0" class="p_ListItem">$310</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        
+                            <table id="tblRptClassifications">
+                                <tr align="left" >
+                                    <td width="600px">
+                                        <span id="Application_ctl06_rptClassifications_lblClassDscr_1" class="p_ListItem">0000 - Fees/Surcharges</span>
+                                    </td>
+                                    <td width="150px" align="right">
+                                        <span id="Application_ctl06_rptClassifications_lblPayroll_1" class="p_ListItem">N/A</span>
+                                    </td>
+                                    <td width="150px" align="right">
+                                        <span id="Application_ctl06_rptClassifications_lblPremium_1" class="p_ListItem">$917</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        
+                </td>
+		</tr>
+		<tr align="left">
+			<td width="600px">
+                    <span id="Application_ctl06_lblTotalLabel" class="p_ListItem" style="font-weight:bold;">Total</span>
+                </td>
+			<td width="150px">
+                    &nbsp
+                </td>
+			<td width="150px" align="right">
+                    <span id="Application_ctl06_lblTotalValue" class="p_ListItem" style="font-weight:bold;">$1,227</span>
+                </td>
+		</tr>
+	</table>
+	
+    
+</div>
+</div><div class="pdf_page-break">
+
+</div><div class="pdf_page-break-section">
+
+</div>
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td width="50%" valign="top">
+            <span id="Application_ctl09_lblClientInfo">Jody Davis<br />903  N Vincennes Ave<br />Petersburg , IN 47567-0000</span>
+        </td>
+        <td width="50%" valign="top">
+            <span id="Application_ctl09_lblAgencyInfo">BREWTON INSURANCE AGENCY, INC. <br />BREWTON INSURANCE<br />21797 OMEGA COURT<br />GOSHEN, IN 46528-0000<br />(574)875-8506</span>
+        </td>
+    </tr>
+</table>
+<br />
+
+<br />
+<p width="100%" align="center" class="tableRowHeader">
+    Payment Schedule
+</p>
+<table width="100%" class="quickQuoteSectionTable">
+    <tr style="border-bottom: 1px solid black;">
+        <td class="tableFieldHeader">
+            <b>Plan</b>
+        </td>
+        
+        
+        <td class="tableFieldHeader">
+            <b>Down Payment</b>
+        </td>
+        
+        <td class="tableFieldHeader">
+            <b>Remaining Installments</b>
+        </td>
+        
+        <td class="tableFieldHeader">
+            <b>Installment Amount</b>
+        </td>
+        
+    </tr>            
+    <tr>
+        <td class="tableFieldValue">
+            Simple Pay (EFT)*
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblEftMonthly_BasicDownPayment">$102.75</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblEftMonthly_RemainingInstallments">11</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblEftMonthly_BasicInstallmentAmount">$102.75</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct Bill Monthly**
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblMonthly_BasicDownPayment">$102.75</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblMonthly_RemainingInstallments">11</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblMonthly_BasicInstallmentAmount">$105.75</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct/Agent Bill Quarterly
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblQuarterly_BasicDownPayment">$308.25</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblQuarterly_RemainingInstallments">3</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblQuarterly_BasicInstallmentAmount">$308.25</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct/Agent Bill Semi Annual
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblSemiAnnual_BasicDownPayment">$616.50</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblSemiAnnual_RemainingInstallments">1</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblSemiAnnual_BasicInstallmentAmount">$616.50</span>
+        </td>
+        
+    </tr>
+    <tr>
+        <td class="tableFieldValue">
+            Direct/Agent Bill Annual
+        </td>
+        
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblAnnual_BasicDownPayment">$1,233.00</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblAnnual_RemainingInstallments">N/A</span>
+        </td>
+        
+        <td class="tableFieldValue">
+            <span id="Application_ctl10_lblAnnual_BasicInstallmentAmount">N/A</span>
+        </td>
+        
+    </tr>    
+    
+    
+    
+    
+</table>
+<div class="tableFieldHeader">
+<br />
+The payment plan options listed above are a summary of all policies quoted and are displayed for evaluation purposes only. Currently all policies are separately billed.
+<br />
+*If down payment is not collected, the annual premium will be spread amongst the remaining payments.
+<br />
+**$3 Service fee applies to installments
+</div>
+<br />
+<br />
+
+<br />
+<div class="tableField">
+
+    <div class="pdf_DisclaimerHolder"><div class="pdf_QuickQuoteProposalDisclaimer">
+        <ul>
+            <li>This quotation has been developed based on the information provided to Indiana Farmers Mutual Insurance Company and does not bind or provide actual coverage. It is subject to final underwriting approval, acceptable loss experience and favorable loss control inspection.</li>
+            <li>This quotation is valid for 60 days, until <span id="Application_ctl10_VRProposal_Disclaimer1_lblValidQuoteDate">Saturday, July 27, 2013</span></li>
+            <li>Additional coverages, exposures, or increased limits may be added for additional premium.</li>
+        </ul>
+    </div></div>
+</div>
+<br />
+<br />
+    
+    <input name="ctl00$Application$hdnPdfFilePath" type="hidden" id="Application_hdnPdfFilePath" value="/DiamondQuickQuotePages/Proposals/Proposal_1368_05282013 20922 PM.pdf" />
+    <div id="Application_pdfButtonArea" style="display:none; width:100%;" class="hideFromPrinter">
+        <br />
+        <center><input type="button" value="Open as PDF" onclick="openPdfWindow()" class="quickQuoteButton hideFromPrinter" /></center>
+    </div>
+<!--using styles here to overwrite css file-->
+<style type="text/css">
+.tableFieldValue
+{
+font-family: Calibri;
+font-size: 13pt;/*normally 10pt*/
+font-weight: normal;
+}
+table.quickQuoteSectionTable 
+{
+font-family: Calibri;
+font-size: 13pt;/*normally 10pt*/
+/*font-weight: normal;*//*not needed*/
+border-collapse: collapse;
+}
+.tableFieldHeader
+{
+font-family: Calibri;
+/*font-size: 14pt;*//*normally 10pt*/
+font-size: 13pt;/*changed*/
+font-weight: bold;
+}
+.tableFieldHeaderLarger
+{
+font-family: Calibri;
+font-size: 14pt;/*normally 12pt*/
+font-weight: bold;
+}
+.tableRowHeader
+{
+font-family: Calibri;
+font-size: 14pt;/*normally 12pt*/
+font-weight: bolder;
+}
+.tableField
+{
+font-family: Calibri;
+font-size: 13pt;/*normally 10pt*/
+}
+
+/*added*/
+.tableRowHeaderLarger
+{
+    font-family:Calibri;
+    font-size:15pt;/*normally 14pt*/
+    font-weight:bolder;
+}
+</style>
+</div>
+</div>
+                </td>
+            </tr>                      
+        </table>
+    
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__SCROLLPOSITIONX" id="__SCROLLPOSITIONX" value="0" />
+	<input type="hidden" name="__SCROLLPOSITIONY" id="__SCROLLPOSITIONY" value="0" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEWAgLxosX2AgLCls/aBVDl1u1UUgdvznYy2QY0jloEUtvF1aekZ4icRjoYUFBf" />
+</div>
+<script language=JavaScript> openPdf();</script>
+<script type="text/javascript">
+//<![CDATA[
+
+theForm.oldSubmit = theForm.submit;
+theForm.submit = WebForm_SaveScrollPositionSubmit;
+
+theForm.oldOnSubmit = theForm.onsubmit;
+theForm.onsubmit = WebForm_SaveScrollPositionOnSubmit;
+//]]>
+</script>
+</form></center>
+</body>
+</html>

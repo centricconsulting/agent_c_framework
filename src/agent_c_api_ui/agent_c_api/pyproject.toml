@@ -30,6 +30,7 @@ dependencies = [
     "aiosqlite>=0.19.0",
     "python-jose[cryptography]",
     "python-multipart",
+    "bcrypt==4.0.1",
     "passlib[bcrypt]",
     "openai-agents[voice]"
 ]

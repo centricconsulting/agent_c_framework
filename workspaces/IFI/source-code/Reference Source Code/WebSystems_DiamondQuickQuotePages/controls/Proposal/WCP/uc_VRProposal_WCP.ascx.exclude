@@ -1,0 +1,129 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="uc_VRProposal_WCP, Velocirater_Proposal_CAP_WCP_BOP_deploy" %>
+
+<div align="center">
+    <asp:Label ID="lblHeader" runat="server" Text="WCP - Work Comp" CssClass="p_ControlTitle"></asp:Label>
+</div>
+<br />
+<div align="center">
+    <asp:Panel ID="pnlMain" runat="server" Width="100%">
+        <!-- First Table - Employer Liability Limits" -->
+        <table id="table1" runat="server">
+            <tr align="left">
+                <td colspan="2">
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                    <asp:Label ID="Label1" runat="server" Text="Employers Liability Limits" CssClass="p_SectionHead"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left">
+                <td width="600px">
+                    <asp:Label ID="Label2" runat="server" Text="Each Accident" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="300px" align="right">
+                    <asp:Label runat="server" ID="lblEachAccidentLimit" Text="$100,000" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left">
+                <td width="600px">
+                    <asp:Label ID="Label4" runat="server" Text="Policy Limit" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="300px" align="right">
+                    <asp:Label runat="server" ID="lblPolicyLimit" Text="$100,000" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left">
+                <td width="600px">
+                    <asp:Label ID="Label3" runat="server" Text="Per Employee" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="300px" align="right">
+                    <asp:Label runat="server" ID="lblPerEmployeeLimit" Text="$100,000" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+        </table>
+        <br />
+        <br />
+        <!-- First Table - Employee Payroll Classification" -->
+        <table id="table2" runat="server" style="border-collapse:collapse;">
+            <tr align="left">
+                <td colspan="4">
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                    <asp:Label ID="Label6" runat="server" Text="Employers Payroll Classification" CssClass="p_SectionHead"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left" style="border-bottom: 1px solid black;">
+                <td>
+                    <asp:Label ID="Label5" runat="server" Text="State"  CssClass="p_ListHead" Width="100px"></asp:Label>
+                </td>
+                <td>
+                    <asp:Label ID="Label7" runat="server" Text="Classification" CssClass="p_ListHead" Width="500px"></asp:Label>
+                </td>
+                
+                <td align="right">
+                    <asp:Label ID="Label8" runat="server" Text="Payroll"  CssClass="p_ListHead" Width="150px"></asp:Label>
+                </td>
+                <td align="right">
+                    <asp:Label ID="Label9" runat="server" Text="Premium"  CssClass="p_ListHead" Width="150px"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left" style="border-bottom: 1px solid black">
+                <td colspan="4">
+                    <!-- The repeater for the classifications -->
+                    <asp:Repeater ID="rptClassifications" runat="server">
+                        <ItemTemplate>
+                            <table id="tblRptClassifications">
+                                <tr align="left" >
+                                    <td width="100px">
+                                        <asp:Label ID="lblState" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "State") %>></asp:Label>
+                                    </td>
+                                    <td width="500px">
+                                        <asp:Label ID="lblClassDscr" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "Classification") %>></asp:Label>
+                                    </td>
+                                    <td width="150px" align="right">
+                                        <asp:Label ID="lblPayroll" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "Payroll") %>></asp:Label>
+                                    </td>
+                                    <td width="150px" align="right">
+                                        <asp:Label ID="lblPremium" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "Premium") %>></asp:Label>
+                                    </td>
+                                </tr>
+                            </table>
+                        </ItemTemplate>
+                    </asp:Repeater>
+                </td>
+            </tr>
+
+            <tr id="trBlanketWaiverOfSubro" runat="server" align="left" visible="false">
+                <td width="600px" colspan="2">
+                    <asp:Label ID="lblBlanketWaiverSubro" runat="server" Text="Blanket Waiver of Subrogation" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td Width="150px">
+                </td>
+                <td width="150px" align="right">
+                    <asp:Label ID="lblBlanketWaiverSubroPremium" runat="server" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+
+            <tr id="trWaiverOfSubro" runat="server" align="left" visible="false">
+                <td  width="600px" colspan="2">
+                    <asp:Label ID="lblWaiverSubro" runat="server" Text="Waiver of Subrogation" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td Width="150px">
+                </td>
+                <td width="150px" align="right">
+                    <asp:Label ID="lblWaiverSubroPremium" runat="server" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+
+            <tr align="left" runat="server" id="trTotals">
+                <td width="600px">
+                    <asp:Label ID="lblTotalLabel" runat="server" Text="Total" CssClass="p_ListItem" Font-Bold="true"></asp:Label>
+                </td>
+                <td width="150px">
+                    &nbsp
+                </td>
+                <td width="150px" align="right">
+                    <asp:Label ID="lblTotalValue" runat="server" Text = "$0.00" CssClass="p_ListItem" Font-Bold="true"></asp:Label>
+                </td>
+            </tr>
+        </table>
+        <asp:Label runat="server" ID="lblWCP_Comments" Visible="false"></asp:Label>
+    </asp:Panel>
+</div>

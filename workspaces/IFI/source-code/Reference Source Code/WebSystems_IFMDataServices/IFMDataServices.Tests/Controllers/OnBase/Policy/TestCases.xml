@@ -1,0 +1,212 @@
+﻿<tests>
+  <!--policy tests-->
+
+  <!--Bad Request Policy - NOT Possible-->
+  <TestGetPolicyInfo>
+    <policyNumber>CPP1020846</policyNumber>
+    <expectPolicyholderName1>CHAD CLARK</expectPolicyholderName1>
+    <expectPolicyholderName2></expectPolicyholderName2>
+    <expectPolicyholderName3></expectPolicyholderName3>
+    <expectPolicyholderName4></expectPolicyholderName4>
+    <expectPolicyholderName5></expectPolicyholderName5>
+    <expectPolicyholderDBA></expectPolicyholderDBA>
+    <expectQuoteNumber1></expectQuoteNumber1>
+    <expectAgencyName>OFFICE ACCOUNT</expectAgencyName>
+    <expectAgencyCode>6108-9999</expectAgencyCode>
+    <expectAgencyGroupCode>6108</expectAgencyGroupCode>
+    <expectAgencyLocationCode>9999</expectAgencyLocationCode>
+    <expectAgencyState>IN</expectAgencyState>
+    <expectAgencyTerritory>05</expectAgencyTerritory>
+    <expectOfficeAccount>yes</expectOfficeAccount>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>
+  
+  <!--Home Policy for office account-->
+  <!--<TestGetPolicyInfo>
+    <policyNumber>HOM1000645</policyNumber>
+    <expectPolicyholderName1>CHAD CLARK</expectPolicyholderName1>
+    <expectPolicyholderName2></expectPolicyholderName2>
+    <expectPolicyholderName3></expectPolicyholderName3>
+    <expectPolicyholderName4></expectPolicyholderName4>
+    <expectPolicyholderDBA></expectPolicyholderDBA>
+    <expectQuoteNumber1></expectQuoteNumber1>
+    <expectAgencyName>OFFICE ACCOUNT</expectAgencyName>
+    <expectAgencyCode>6108-9999</expectAgencyCode>
+    <expectAgencyGroupCode>6108</expectAgencyGroupCode>
+    <expectAgencyLocationCode>9999</expectAgencyLocationCode>
+    <expectAgencyState>IN</expectAgencyState>
+    <expectAgencyTerritory>05</expectAgencyTerritory>
+    <expectOfficeAccount>yes</expectOfficeAccount>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>
+
+  --><!--Farm Quote--><!--
+  <TestGetPolicyInfo>
+    <policyNumber>QFAR010005</policyNumber>
+    <expectPolicyholderName1>JERRY MURPHY</expectPolicyholderName1>
+    <expectPolicyholderName3></expectPolicyholderName3>
+    <expectPolicyholderName4></expectPolicyholderName4>
+    <expectPolicyholderDBA></expectPolicyholderDBA>
+    <expectQuoteNumber1>QFAR010005</expectQuoteNumber1>
+    <expectAgencyName>WELKER &amp; ASSOCIATES INSURANCE</expectAgencyName>
+    <expectAgencyCode>6372-2434</expectAgencyCode>
+    <expectAgencyGroupCode>6372</expectAgencyGroupCode>
+    <expectAgencyLocationCode>2434</expectAgencyLocationCode>
+    <expectAgencyState>IN</expectAgencyState>
+    <expectAgencyTerritory>03</expectAgencyTerritory>
+    <expectOfficeAccount>no</expectOfficeAccount>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>
+
+  --><!--Not found Policy--><!--
+  <TestGetPolicyInfo>
+    <policyNumber>PPA2092490-6</policyNumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>404</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>
+
+  --><!--Farm Policy with quote number--><!--
+  <TestGetPolicyInfo>
+    <policyNumber>PPA2092490</policyNumber>
+    <expectPolicyholderName1>JEREMY JONES</expectPolicyholderName1>
+    <expectPolicyholderName2>CASANDRA JONES</expectPolicyholderName2>
+    <expectPolicyholderName3></expectPolicyholderName3>
+    <expectPolicyholderName4></expectPolicyholderName4>
+    <expectPolicyholderDBA></expectPolicyholderDBA>
+    <expectQuoteNumber1>QPPA223762</expectQuoteNumber1>
+    <expectAgencyName>WILSON LAWSON MYERS INSURANCE AGENCY</expectAgencyName>
+    <expectAgencyCode>6203-2936</expectAgencyCode>
+    <expectAgencyGroupCode>6203</expectAgencyGroupCode>
+    <expectAgencyLocationCode>2936</expectAgencyLocationCode>
+    <expectAgencyState>IN</expectAgencyState>
+    <expectAgencyTerritory>03</expectAgencyTerritory>
+    <expectOfficeAccount>no</expectOfficeAccount>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>
+
+  --><!--Farm Policy with multiple policyholders--><!--
+  <TestGetPolicyInfo>
+    <policyNumber>FAR1019239</policyNumber>
+    <expectPolicyholderName1>JAMES W KENNEDY</expectPolicyholderName1>
+    <expectPolicyholderName2>MARY MARGARET KENNEDY</expectPolicyholderName2>
+    <expectPolicyholderName3>C/O MIKE &amp; SHARON COOKMAN</expectPolicyholderName3>
+    <expectPolicyholderDBA></expectPolicyholderDBA>
+    <expectQuoteNumber1></expectQuoteNumber1>
+    <expectAgencyName>W.C. HESS INSURANCE INC.</expectAgencyName>
+    <expectAgencyCode>6059-2042</expectAgencyCode>
+    <expectAgencyGroupCode>6059</expectAgencyGroupCode>
+    <expectAgencyLocationCode>2042</expectAgencyLocationCode>
+    <expectAgencyState>IN</expectAgencyState>
+    <expectAgencyTerritory>03</expectAgencyTerritory>
+    <expectOfficeAccount>no</expectOfficeAccount>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>
+
+  --><!--Farm Policy with dba--><!--
+  <TestGetPolicyInfo>
+    <policyNumber>FAR1021134</policyNumber>
+    <expectPolicyholderName1>JOHN WADE</expectPolicyholderName1>
+    <expectPolicyholderName2>LORI WADE</expectPolicyholderName2>
+    <expectPolicyholderDBA>SPEEDWAY MOTORS</expectPolicyholderDBA>
+    <expectQuoteNumber1></expectQuoteNumber1>
+    <expectAgencyName>THE HOOSIER INSURANCE AGENCY</expectAgencyName>
+    <expectAgencyCode>6359-1100</expectAgencyCode>
+    <expectAgencyGroupCode>6359</expectAgencyGroupCode>
+    <expectAgencyLocationCode>1100</expectAgencyLocationCode>
+    <expectAgencyState>IN</expectAgencyState>
+    <expectAgencyTerritory>02</expectAgencyTerritory>
+    <expectOfficeAccount>no</expectOfficeAccount>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>
+
+  --><!--BOP Policy with dba, additional policyholders with duplicate names and quote number--><!--
+  <TestGetPolicyInfo>
+    <policyNumber>BOP1001037</policyNumber>
+    <expectPolicyholderName1>WILLIAM KNOTT</expectPolicyholderName1>
+    <expectPolicyholderName2>ARLENE KNOTT</expectPolicyholderName2>
+    <expectPolicyholderDBA>ARLENE KNOTT</expectPolicyholderDBA>
+    <expectQuoteNumber1>QBOP015343</expectQuoteNumber1>
+    <expectAgencyName>HUGHES INSURANCE GROUP</expectAgencyName>
+    <expectAgencyCode>6260-3225</expectAgencyCode>
+    <expectAgencyGroupCode>6260</expectAgencyGroupCode>
+    <expectAgencyLocationCode>3225</expectAgencyLocationCode>
+    <expectAgencyState>IN</expectAgencyState>
+    <expectAgencyTerritory>06</expectAgencyTerritory>
+    <expectOfficeAccount>no</expectOfficeAccount>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>
+
+  --><!--BOP Policy with additional policyholders--><!--
+  <TestGetPolicyInfo>
+    <policyNumber>BOP1001572</policyNumber>
+    <expectPolicyholderName1>ERA FIRST ADVANTAGE REALTY INC</expectPolicyholderName1>
+    <expectPolicyholderName2>FIRST ADVANTAGE PROPERTY MANAGEMENT</expectPolicyholderName2>
+    <expectPolicyholderName3>FIRST ADVANTAGE REFERRAL, INC.</expectPolicyholderName3>
+    <expectPolicyholderName4>FIRST ADVANTAGE COMMERCIAL, INC.</expectPolicyholderName4>
+    <expectPolicyholderName5>8711 WEST HWY 66 ERA LLC</expectPolicyholderName5>
+    <expectQuoteNumber1></expectQuoteNumber1>
+    <expectAgencyName>FIRST ADVANTAGE INSURANCE</expectAgencyName>
+    <expectAgencyCode>6039-2792</expectAgencyCode>
+    <expectAgencyGroupCode>6039</expectAgencyGroupCode>
+    <expectAgencyLocationCode>2792</expectAgencyLocationCode>
+    <expectAgencyState>IN</expectAgencyState>
+    <expectAgencyTerritory>04</expectAgencyTerritory>
+    <expectOfficeAccount>no</expectOfficeAccount>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>
+
+  --><!--BOP Policy with additional policyholders and DBA--><!--
+  <TestGetPolicyInfo>
+    <policyNumber>BOP1000847</policyNumber>
+    <expectPolicyholderName1>GEN-DELL LLC</expectPolicyholderName1>
+    <expectPolicyholderDBA>LOW BOB'S TOBACCO STORE</expectPolicyholderDBA>
+    <expectQuoteNumber1></expectQuoteNumber1>
+    <expectAgencyName>J &amp; J INSURANCE SOLUTIONS, INC.</expectAgencyName>
+    <expectAgencyCode>6229-2229</expectAgencyCode>
+    <expectAgencyGroupCode>6229</expectAgencyGroupCode>
+    <expectAgencyLocationCode>2229</expectAgencyLocationCode>
+    <expectAgencyState>IN</expectAgencyState>
+    <expectAgencyTerritory>01</expectAgencyTerritory>
+    <expectOfficeAccount>no</expectOfficeAccount>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>
+
+  --><!--BOP Policy with additional policyholders and DBA--><!--
+  <TestGetPolicyInfo>
+    <policyNumber>BOP1000553</policyNumber>
+    <expectPolicyholderName1>DAVID W NEUHOUSER</expectPolicyholderName1>
+    <expectPolicyholderDBA>LEO BARBER SHOP &amp; STYLING SALON</expectPolicyholderDBA>
+    <expectQuoteNumber1></expectQuoteNumber1>
+    <expectAgencyName>WORMAN-LIGHTFOOT-HOCH INSURANCE</expectAgencyName>
+    <expectAgencyCode>6062-2967</expectAgencyCode>
+    <expectAgencyGroupCode>6062</expectAgencyGroupCode>
+    <expectAgencyLocationCode>2967</expectAgencyLocationCode>
+    <expectAgencyState>IN</expectAgencyState>
+    <expectAgencyTerritory>01</expectAgencyTerritory>
+    <expectOfficeAccount>no</expectOfficeAccount>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetPolicyInfo>-->
+
+
+</tests>

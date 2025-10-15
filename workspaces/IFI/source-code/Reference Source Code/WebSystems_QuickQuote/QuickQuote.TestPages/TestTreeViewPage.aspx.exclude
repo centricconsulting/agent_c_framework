@@ -1,0 +1,227 @@
+﻿<%@ Page Language="VB" AutoEventWireup="false" CodeFile="TestTreeViewPage.aspx.vb" Inherits="TestTreeViewPage" %>
+
+<%@ Register src="QuickQuoteTreeView.ascx" tagname="QuickQuoteTreeView" tagprefix="uc1" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Test TreeView Page</title>
+    <%--<script type="text/javascript">
+        //added 1/15/2014
+        function GetParentElementForChildId(childId) {
+            var child = document.getElementById(childId);
+            if (child) {
+                return GetParentElementForChild(child);
+            }
+            return null;
+        }
+        function GetParentElementForChild(child) {
+            if (child) {
+                //var parentId = child.parentNode.id;//id isn't valid
+                //var parent = document.getElementById(parentId);
+                var parent = child.parentNode;
+                if (parent) {
+                    return parent;
+                }
+            }
+            return null;
+        }
+        function LoopThruAllRelatedChildrenFromOneChild(child) {
+            if (child) {
+                var parent = GetParentElementForChild(child);
+                if (parent) {
+                    var children = parent.childNodes;
+                    if (children) {
+                        var keepGoing = true;
+                        for (i = 0; i < children.length; i++) {
+                            var currChild = children[i];
+                            if (currChild) {
+                                switch (currChild.nodeType) {
+                                    case 3:
+                                        //text Node
+                                        break;
+                                    case 1:
+                                        //Element node
+                                        //alert(currChild.getAttribute('name'));
+                                        if (currChild.id.length > 0) {
+                                            if (currChild.id.indexOf("imgBtnEditPolicyholder") != -1) {
+                                                currChild.click();
+                                                keepGoing = false;
+                                            }
+                                        }
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                if (!keepGoing) break;
+                            }
+                            //alert(children[i].getAttribute('name'));//catches error when it's not an element
+                        }
+                    }
+                }
+            }
+        }
+    </script>--%>
+    <%--<script type="text/javascript">
+        //added 1/22/2014
+        function ChangeClassNameForElements(el, OldClass, NewClass) {
+            var els = document.getElementsByTagName(el);
+            if (els) {
+                for (var i = 0; i < els.length; i++) {
+                    if (els[i].className == OldClass)
+                        els[i].className = NewClass;
+                }
+            }
+        }
+        function AssignSelectedClassToElement(el) {
+            if (el) {
+                RemoveSelectedClassFromAllListItems();
+                el.className = 'selected';
+            }
+        }
+        function RemoveSelectedClassFromAllListItems() {
+            ChangeClassNameForElements('li', 'selected', '');
+        }
+        function SelectParentListItem(child) {
+            if (child) {
+                var parent = GetParentElementForChild(child);
+                if (parent) {
+                    if (parent.localName == 'li') {
+                        AssignSelectedClassToElement(parent);
+                    } else {
+                        SelectParentListItem(parent);
+                        return;
+                    }
+                }
+            }
+        }
+    </script>--%>
+    <%--<script type="text/javascript">
+        function ChangeClassNameForElements(el, OldClass, NewClass, removeSelectedFlag) {
+            if (typeof (removeSelectedFlag) == 'undefined') {
+                removeSelectedFlag = false;
+            }
+
+            var els = document.getElementsByTagName(el);
+            if (els) {
+                for (var i = 0; i < els.length; i++) {
+                    if (els[i].className == OldClass) {
+                        els[i].className = NewClass;
+                        ChangeClassNameForElements_part2(els[i], removeSelectedFlag);
+//                        if (removeSelectedFlag == true) {
+//                            var hiddenSelectedField = GetChildHiddenSelectedField(els[i]);
+//                            if (hiddenSelectedField) {
+//                                hiddenSelectedField.value = '';
+//                                                        }                            
+//                        }
+                    }
+                }
+            }
+        }
+        function ChangeClassNameForElements_part2(el, removeSelectedFlag) {
+            if (typeof (removeSelectedFlag) == 'undefined') {
+                removeSelectedFlag = false;
+            }
+            if (removeSelectedFlag == true) {
+                if (el) {
+                    var hiddenSelectedField = GetChildHiddenSelectedField(el);
+                    if (hiddenSelectedField) {
+                        hiddenSelectedField.value = '';
+                    }
+                }   
+            }                     
+        }
+    </script>--%>
+    <%--<script type="text/javascript">
+        function TestCheckbox(el) {
+            if (el) {
+
+            }
+        }
+    </script>--%>
+    <script type="text/javascript">
+        function RefreshCheckbox() {
+            var cb = document.getElementById('cbTreeViewEditModeJs');
+            if (cb) {
+                cb.checked = InEditMode();
+            }
+        }
+        function ToggleEditModeFromCheckbox(onFlag) {
+            if (typeof (onFlag) == 'undefined') {
+                onFlag = false;
+            }
+
+            var okayToOverrideEditMode = true;
+            //var lblManuallyPutInEditMode = document.getElementById('=lblManuallyPutInEditMode.ClientID');//removed 'left bracket / percent' and 'right bracket / percent' so runtime wouldn't try to find it
+            //1/27/2014: changed to hidden field
+            var hdnManuallyPutInEditMode = document.getElementById('<%=hdnManuallyPutInEditMode.ClientID%>');
+            if (InEditMode() == true) {
+                okayToOverrideEditMode = false;
+                //if (lblManuallyPutInEditMode) {
+                //1/27/2014: changed to hidden field
+                if (hdnManuallyPutInEditMode) {
+                    //if (lblManuallyPutInEditMode.innerText == 'Yes') {
+                    //1/27/2014: changed to hidden field
+                    if (hdnManuallyPutInEditMode.value == 'Yes') {
+                        okayToOverrideEditMode = true;
+                    }
+                }
+            }
+
+            if (okayToOverrideEditMode == false) {
+                alert('the treeview is currently in edit mode');
+                RefreshCheckbox();
+                return;
+            } else {
+                //if (lblManuallyPutInEditMode) {
+                //1/27/2014: changed to hidden field
+                if (hdnManuallyPutInEditMode) {
+                    if (onFlag == true) {
+                        //lblManuallyPutInEditMode.innerText = 'Yes';
+                        //1/27/2014: changed to hidden field
+                        hdnManuallyPutInEditMode.value = 'Yes';
+                    } else {
+                        //lblManuallyPutInEditMode.innerText = '';
+                        //1/27/2014: changed to hidden field
+                        hdnManuallyPutInEditMode.value = '';
+                    }
+                }
+                var cbTreeViewEditMode = document.getElementById('<%=cbTreeViewEditMode.ClientID%>');
+                if (cbTreeViewEditMode) {
+                    cbTreeViewEditMode.checked = onFlag;
+                }
+                ToggleEditMode(onFlag);
+            }
+        }
+    </script>
+    <style type="text/css">
+    .hiddenLabel
+    {
+        display:none;
+    }
+    </style>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <asp:ScriptManager ID="asm" runat="server" />
+    <div>
+        QuoteId: <asp:TextBox runat="server" ID="txtQuoteId"></asp:TextBox>&nbsp;<asp:Button runat="server" ID="btnGo" Text="Go" />
+        <br />        
+        <br />
+        <uc1:QuickQuoteTreeView ID="QuickQuoteTreeView1" runat="server" />
+        <br />
+        <br />
+        <asp:CheckBox runat="server" ID="cbTreeViewEditMode" Text="Edit Mode" ToolTip="click to turn on Edit Mode" AutoPostBack="true" /><%--<asp:Label runat="server" ID="lblManuallyPutInEditMode" Text="" CssClass="hiddenLabel"></asp:Label>--%><%--1/24/2014: removed Visible="false" and added CssClass so js could find it--%><!--1/27/2014: changed to hidden field to retain through postbacks--><input id="hdnManuallyPutInEditMode" name="hdnManuallyPutInEditMode" type="hidden" runat="server" />
+        <br />
+        <%--<asp:CheckBox runat="server" ID="cbTreeViewEditModeJs" Text="Edit Mode (js)" ToolTip="click to turn on Edit Mode via javascript" OnCheckedChanged="TestCheckbox(this);" />--%><%--OnCheckedChanged="ToggleEditMode(this.checked);"--%>
+        <%--<input type="checkbox" id="cbTreeViewEditModeJs" name="cbTreeViewEditModeJs" value="Edit mode (js)" title="click to turn on Edit Mode via javascript" onclick="TestCheckbox(this);"/>--%>
+        <%--<input type="checkbox" id="cbTreeViewEditModeJs" name="cbTreeViewEditModeJs" title="click to turn on Edit Mode via javascript" onclick="ToggleEditMode(this.checked);"/>--%>
+        <input type="checkbox" id="cbTreeViewEditModeJs" name="cbTreeViewEditModeJs" title="click to turn on Edit Mode via javascript" onclick="ToggleEditModeFromCheckbox(this.checked);"/>
+    </div>
+    <script type="text/javascript">
+        RefreshCheckbox();
+    </script>
+    </form>
+</body>
+</html>

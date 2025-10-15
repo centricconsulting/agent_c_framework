@@ -1,0 +1,342 @@
+﻿Imports QuickQuote.CommonObjects 'added 1/15/2014
+Imports QuickQuote.CommonMethods 'added 1/15/2014
+
+Partial Class TestMVR
+    Inherits System.Web.UI.Page
+
+    Dim qqHelper As New QuickQuoteHelperClass
+    Dim qqXml As New QuickQuoteXML 'added 9/16/2013
+
+    Protected Sub Page_Load(sender As Object, e As System.EventArgs) Handles Me.Load
+        If Page.IsPostBack = False Then
+            Page.MaintainScrollPositionOnPostBack = True
+            If qqHelper.IsHomeOfficeStaffUser = True Then
+                Me.btnOrderMVR.Attributes.Add("onclick", "btnSubmit_Click(this, 'Processing...');") 'for disable button and server-side logic
+                Me.btnOrderMVR2.Attributes.Add("onclick", "btnSubmit_Click(this, 'Processing...');") 'for disable button and server-side logic
+                Me.btnSaveThirdPartyData.Attributes.Add("onclick", "btnSubmit_Click(this, 'Saving...');") 'for disable button and server-side logic
+                Me.btnOrderMVR.Enabled = True
+                Me.btnOrderMVR2.Enabled = True
+                Me.cbSaveRequest.Checked = True '4/30/2013 - this allows the data to be saved in Diamond
+                Me.cbFillData.Checked = True '4/30/2013 - this allows us to get the data back
+                SetFocus(Me.txtPolicyId)
+            Else
+                Me.btnOrderMVR.Enabled = False
+                Me.btnOrderMVR2.Enabled = False
+                ShowError("You're not authorized to use this page")
+            End If
+        End If
+    End Sub
+
+    Protected Sub btnOrderMVR_Click(sender As Object, e As System.EventArgs) Handles btnOrderMVR.Click
+        'LoadImage; 4/30/2013 - this works without acquiring quote; doesn't appear to need a pending image either
+        System.Threading.Thread.Sleep(500) 'delay 1/2 second
+
+        Me.lblResults.Text = ""
+        Me.SaveSection.Visible = False
+        Me.lblSavedFile.Text = ""
+        Me.lblSaveResults.Text = ""
+
+        If Me.txtPolicyId.Text = "" OrElse IsNumeric(Me.txtPolicyId.Text) = False Then
+            ShowError("Invalid policy id format")
+            SetFocus(Me.txtPolicyId)
+        ElseIf Me.txtPolicyImageNum.Text = "" OrElse IsNumeric(Me.txtPolicyImageNum.Text) = False Then
+            ShowError("Invalid policy image num format")
+            SetFocus(Me.txtPolicyImageNum)
+        ElseIf Me.txtDriverNum.Text = "" OrElse IsNumeric(Me.txtDriverNum.Text) = False Then
+            ShowError("Invalid driver num format")
+            SetFocus(Me.txtDriverNum)
+        Else
+            Dim imgReq As New Diamond.Common.Services.Messages.PolicyService.LoadImage.Request
+            Dim imgResp As New Diamond.Common.Services.Messages.PolicyService.LoadImage.Response
+            With imgReq
+
+                'added token logic for testing 9/23/2013 (received error because it was unable to obtain security token; gets token initially but it's overwritten at some point during the service call)
+                'Dim loginName As String = ""
+                'Dim loginPassword As String = ""
+                'If System.Web.HttpContext.Current.Session("DiamondUsername") IsNot Nothing AndAlso System.Web.HttpContext.Current.Session("DiamondUsername").ToString <> "" Then
+                '    loginName = System.Web.HttpContext.Current.Session("DiamondUsername").ToString
+                'ElseIf ConfigurationManager.AppSettings("TestOrProd") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("TestOrProd").ToString) = "TEST" AndAlso ConfigurationManager.AppSettings("QuickQuote_UseTestVariables") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("QuickQuote_UseTestVariables").ToString) = "YES" Then
+                '    loginName = ConfigurationManager.AppSettings("QuickQuoteTestUsername").ToString
+                'End If
+                'If System.Web.HttpContext.Current.Session("DiamondPassword") IsNot Nothing AndAlso System.Web.HttpContext.Current.Session("DiamondPassword").ToString <> "" Then
+                '    loginPassword = System.Web.HttpContext.Current.Session("DiamondPassword").ToString
+                'ElseIf ConfigurationManager.AppSettings("TestOrProd") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("TestOrProd").ToString) = "TEST" AndAlso ConfigurationManager.AppSettings("QuickQuote_UseTestVariables") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("QuickQuote_UseTestVariables").ToString) = "YES" Then
+                '    loginPassword = ConfigurationManager.AppSettings("QuickQuoteTestPassword").ToString
+                'End If
+                'If loginName <> "" AndAlso loginPassword <> "" Then
+                '    Using dia As New DiamondWebClass.DiamondPrinting
+                '        .DiamondSecurityToken = dia.loginDiamond(loginName, loginPassword)
+                '    End Using
+                'End If
+
+                With .RequestData
+                    .PolicyId = CInt(Me.txtPolicyId.Text)
+                    .ImageNumber = CInt(Me.txtPolicyImageNum.Text)
+                End With
+            End With
+
+            Using imgProxy As New Diamond.Common.Services.Proxies.PolicyServices.PolicyServiceProxy
+                imgResp = imgProxy.LoadImage(imgReq)
+            End Using
+
+            If imgResp IsNot Nothing AndAlso imgResp.ResponseData IsNot Nothing AndAlso imgResp.ResponseData.Image IsNot Nothing Then
+                Dim mvrReq As New Diamond.Common.Services.Messages.ThirdPartyService.OrderMvr.Request
+                Dim mvrResp As New Diamond.Common.Services.Messages.ThirdPartyService.OrderMvr.Response
+                With mvrReq
+                    With .RequestData
+                        .PolicyImage = imgResp.ResponseData.Image
+                        .DriverNums.Add(CInt(Me.txtDriverNum.Text))
+                        .BatchOrder = Me.cbBatchOrder.Checked
+                        .RenewalPreProcess = Me.cbRenewalPreProcess.Checked
+                        .SystemGenerated = Me.cbSystemGenerated.Checked
+                        .SupportTransaction = Me.cbSupportTransaction.Checked
+                        .SaveRequest = Me.cbSaveRequest.Checked '4/30/2013 - this allows the data to be saved in Diamond
+                        '.IsChanged = Me.cbIsChanged.Checked
+                        .ForcedMvr = Me.cbForcedMvr.Checked
+                        .FillData = Me.cbFillData.Checked '4/30/2013 - this allows us to get the data back
+                    End With
+                End With
+
+                Using mvrProxy As New Diamond.Common.Services.Proxies.ThirdPartyServiceProxy
+                    mvrResp = mvrProxy.OrderMvr(mvrReq)
+                End Using
+
+                If mvrResp IsNot Nothing Then
+                    Me.lblResults.Text = "mvrResp.ConnectivityTestSuccessful: " & mvrResp.ConnectivityTestSuccessful.ToString
+                    If mvrResp.DiamondValidation IsNot Nothing Then
+                        Me.lblResults.Text &= "<br />Valid mvrResp.DiamondValidation"
+                        If mvrResp.DiamondValidation.ValidationItems IsNot Nothing AndAlso mvrResp.DiamondValidation.ValidationItems.Count > 0 Then
+                            Me.lblResults.Text &= "<br />mvrResp.DiamondValidation.ValidationItems: "
+                            Dim valCounter As Integer = 0
+                            For Each v As Diamond.Common.Objects.ValidationItem In mvrResp.DiamondValidation.ValidationItems
+                                valCounter += 1
+                                Me.lblResults.Text &= "<br />Validation Item # " & valCounter.ToString & ": " & v.Message
+                            Next
+                        Else
+                            Me.lblResults.Text &= "<br />No mvrResp.DiamondValidation.ValidationItems"
+                        End If
+                    Else
+                        Me.lblResults.Text &= "<br />No mvrResp.DiamondValidation"
+                    End If
+                    If mvrResp.ResponseData IsNot Nothing Then
+                        Me.lblResults.Text &= "<br />mvrResp.ResponseData.IsChanged: " & mvrResp.ResponseData.IsChanged.ToString
+                        If mvrResp.ResponseData.ThirdPartyData IsNot Nothing Then
+                            ShowError("Valid mvrResp.ResponseData.ThirdPartyData on ThirdPartyService.OrderMvr call")
+                            ViewState.Item("thirdPartyData") = mvrResp.ResponseData.ThirdPartyData
+                            Me.SaveSection.Visible = True
+                            With mvrResp.ResponseData.ThirdPartyData
+                                If .AccidentViolations IsNot Nothing AndAlso .AccidentViolations.Count > 0 Then
+                                    Me.lblResults.Text &= "<br />mvrResp.ResponseData.ThirdPartyData.AccidentViolations: "
+                                    Dim accViolCounter As Integer = 0
+                                    For Each accViol As Diamond.Common.Objects.Policy.AccidentViolation In .AccidentViolations
+                                        accViolCounter += 1
+                                        Me.lblResults.Text &= "<br />Accident/Violdation # " & accViolCounter.ToString & ": " & accViol.Description
+                                    Next
+                                Else
+                                    Me.lblResults.Text &= "<br />No mvrResp.ResponseData.ThirdPartyData.AccidentViolations"
+                                End If
+                            End With
+                            'added 9/16/2013
+                            Me.lblResults.Text &= "<br /><br /><br />Using TestEvaluateThirdPartyData:<br />"
+                            Dim res As String = ""
+                            qqXml.TestEvaluateThirdPartyData(mvrResp.ResponseData.ThirdPartyData, res)
+                            Me.lblResults.Text &= res
+                        Else
+                            ShowError("No mvrResp.ResponseData.ThirdPartyData on ThirdPartyService.OrderMvr call")
+                        End If
+                    Else
+                        ShowError("No mvrResp.ResponseData on ThirdPartyService.OrderMvr call")
+                    End If
+                Else
+                    ShowError("No resonse on ThirdPartyService.OrderMvr call")
+                End If
+                'If mvrResp IsNot Nothing AndAlso mvrResp.ResponseData IsNot Nothing AndAlso mvrResp.ResponseData.ThirdPartyData IsNot Nothing AndAlso mvrResp.ConnectivityTestSuccessful = True Then
+                '    With mvrResp.ResponseData.ThirdPartyData
+                '        If .AccidentViolations IsNot Nothing AndAlso .AccidentViolations.Count > 0 Then
+                '            For Each accViol As Diamond.Common.Objects.Policy.AccidentViolation In .AccidentViolations
+
+                '            Next
+                '        End If
+                '    End With
+                'Else
+                '    ShowError("Problem getting 3rd party data")
+                'End If
+            Else
+                ShowError("Problem w/ LoadImage")
+            End If
+        End If
+    End Sub
+
+    Private Sub ShowError(ByVal message As String, Optional ByVal redirect As Boolean = False, Optional ByVal redirectPage As String = "")
+        message = Replace(message, "\", "\\")
+        message = Replace(message, "<br>", "\n")
+        message = Replace(message, vbCrLf, "\n")
+
+        Dim strScript As String = "<script language=JavaScript>"
+        strScript &= "alert(""" & message & """);"
+        If redirect = True Then
+            If redirectPage = "" Then
+                redirectPage = ConfigurationManager.AppSettings("QuickQuote_SavedQuotes").ToString
+            End If
+            strScript &= " window.location.href='" & redirectPage & "';"
+        End If
+        strScript &= "</script>"
+
+        Page.RegisterStartupScript("clientScript", strScript)
+
+    End Sub
+
+    Protected Sub btnOrderMVR2_Click(sender As Object, e As System.EventArgs) Handles btnOrderMVR2.Click
+        'AcquirePendingImage; 4/30/2013 - this isn't necessarily needed; LoadImage works by itself w/o acquiring; doesn't appear to need a pending image either
+        System.Threading.Thread.Sleep(500) 'delay 1/2 second
+
+        Me.lblResults.Text = ""
+        Me.SaveSection.Visible = False
+        Me.lblSavedFile.Text = ""
+        Me.lblSaveResults.Text = ""
+
+        If Me.txtPolicyId.Text = "" OrElse IsNumeric(Me.txtPolicyId.Text) = False Then
+            ShowError("Invalid policy id format")
+            SetFocus(Me.txtPolicyId)
+        ElseIf Me.txtPolicyImageNum.Text = "" OrElse IsNumeric(Me.txtPolicyImageNum.Text) = False Then
+            ShowError("Invalid policy image num format")
+            SetFocus(Me.txtPolicyImageNum)
+        ElseIf Me.txtDriverNum.Text = "" OrElse IsNumeric(Me.txtDriverNum.Text) = False Then
+            ShowError("Invalid driver num format")
+            SetFocus(Me.txtDriverNum)
+        ElseIf Diamond.Web.BaseControls.SignedOnUserID = Nothing OrElse Diamond.Web.BaseControls.SignedOnUserID = 0 Then
+            ShowError("No Diamond.Web.BaseControls.SignedOnUserID")
+        Else
+            Dim imgReq As New Diamond.Common.Services.Messages.PolicyService.AcquirePendingImage.Request
+            Dim imgResp As New Diamond.Common.Services.Messages.PolicyService.AcquirePendingImage.Response
+            With imgReq
+                With .RequestData
+                    .PolicyId = CInt(Me.txtPolicyId.Text)
+                    .PolicyImageNum = CInt(Me.txtPolicyImageNum.Text)
+                    .UsersId = Diamond.Web.BaseControls.SignedOnUserID
+                End With
+            End With
+
+            Using imgProxy As New Diamond.Common.Services.Proxies.PolicyServices.PolicyServiceProxy
+                imgResp = imgProxy.AcquirePendingImage(imgReq)
+            End Using
+
+            If imgResp IsNot Nothing AndAlso imgResp.ResponseData IsNot Nothing AndAlso imgResp.ResponseData.PolicyImage IsNot Nothing Then
+                Dim mvrReq As New Diamond.Common.Services.Messages.ThirdPartyService.OrderMvr.Request
+                Dim mvrResp As New Diamond.Common.Services.Messages.ThirdPartyService.OrderMvr.Response
+                With mvrReq
+                    With .RequestData
+                        .PolicyImage = imgResp.ResponseData.PolicyImage
+                        .DriverNums.Add(CInt(Me.txtDriverNum.Text))
+                        .BatchOrder = Me.cbBatchOrder.Checked
+                        .RenewalPreProcess = Me.cbRenewalPreProcess.Checked
+                        .SystemGenerated = Me.cbSystemGenerated.Checked
+                        .SupportTransaction = Me.cbSupportTransaction.Checked
+                        .SaveRequest = Me.cbSaveRequest.Checked 'this allows the data to be saved in Diamond
+                        '.IsChanged = Me.cbIsChanged.Checked
+                        .ForcedMvr = Me.cbForcedMvr.Checked
+                        .FillData = Me.cbFillData.Checked 'this allows us to get the data back
+                    End With
+                End With
+
+                Using mvrProxy As New Diamond.Common.Services.Proxies.ThirdPartyServiceProxy
+                    mvrResp = mvrProxy.OrderMvr(mvrReq)
+                End Using
+
+                If mvrResp IsNot Nothing Then
+                    Me.lblResults.Text = "mvrResp.ConnectivityTestSuccessful: " & mvrResp.ConnectivityTestSuccessful.ToString
+                    If mvrResp.DiamondValidation IsNot Nothing Then
+                        Me.lblResults.Text &= "<br />Valid mvrResp.DiamondValidation"
+                        If mvrResp.DiamondValidation.ValidationItems IsNot Nothing AndAlso mvrResp.DiamondValidation.ValidationItems.Count > 0 Then
+                            Me.lblResults.Text &= "<br />mvrResp.DiamondValidation.ValidationItems: "
+                            Dim valCounter As Integer = 0
+                            For Each v As Diamond.Common.Objects.ValidationItem In mvrResp.DiamondValidation.ValidationItems
+                                valCounter += 1
+                                Me.lblResults.Text &= "<br />Validation Item # " & valCounter.ToString & ": " & v.Message
+                            Next
+                        Else
+                            Me.lblResults.Text &= "<br />No mvrResp.DiamondValidation.ValidationItems"
+                        End If
+                    Else
+                        Me.lblResults.Text &= "<br />No mvrResp.DiamondValidation"
+                    End If
+                    If mvrResp.ResponseData IsNot Nothing Then
+                        Me.lblResults.Text &= "<br />mvrResp.ResponseData.IsChanged: " & mvrResp.ResponseData.IsChanged.ToString
+                        If mvrResp.ResponseData.ThirdPartyData IsNot Nothing Then
+                            ShowError("Valid mvrResp.ResponseData.ThirdPartyData on ThirdPartyService.OrderMvr call")
+                            ViewState.Item("thirdPartyData") = mvrResp.ResponseData.ThirdPartyData
+                            Me.SaveSection.Visible = True
+                            With mvrResp.ResponseData.ThirdPartyData
+                                If .AccidentViolations IsNot Nothing AndAlso .AccidentViolations.Count > 0 Then
+                                    Me.lblResults.Text &= "<br />mvrResp.ResponseData.ThirdPartyData.AccidentViolations: "
+                                    Dim accViolCounter As Integer = 0
+                                    For Each accViol As Diamond.Common.Objects.Policy.AccidentViolation In .AccidentViolations
+                                        accViolCounter += 1
+                                        Me.lblResults.Text &= "<br />Accident/Violdation # " & accViolCounter.ToString & ": " & accViol.Description
+                                    Next
+                                Else
+                                    Me.lblResults.Text &= "<br />No mvrResp.ResponseData.ThirdPartyData.AccidentViolations"
+                                End If
+                            End With
+                            'added 9/16/2013
+                            Me.lblResults.Text &= "<br /><br /><br />Using TestEvaluateThirdPartyData:<br />"
+                            Dim res As String = ""
+                            qqXml.TestEvaluateThirdPartyData(mvrResp.ResponseData.ThirdPartyData, res)
+                            Me.lblResults.Text &= res
+                        Else
+                            ShowError("No mvrResp.ResponseData.ThirdPartyData on ThirdPartyService.OrderMvr call")
+                        End If
+                    Else
+                        ShowError("No mvrResp.ResponseData on ThirdPartyService.OrderMvr call")
+                    End If
+                Else
+                    ShowError("No resonse on ThirdPartyService.OrderMvr call")
+                End If
+                'If mvrResp IsNot Nothing AndAlso mvrResp.ResponseData IsNot Nothing AndAlso mvrResp.ResponseData.ThirdPartyData IsNot Nothing AndAlso mvrResp.ConnectivityTestSuccessful = True Then
+                '    With mvrResp.ResponseData.ThirdPartyData
+                '        If .AccidentViolations IsNot Nothing AndAlso .AccidentViolations.Count > 0 Then
+                '            For Each accViol As Diamond.Common.Objects.Policy.AccidentViolation In .AccidentViolations
+
+                '            Next
+                '        End If
+                '    End With
+                'Else
+                '    ShowError("Problem getting 3rd party data")
+                'End If
+            Else
+                ShowError("Problem w/ AcquirePendingImage")
+            End If
+        End If
+    End Sub
+
+    Protected Sub btnSaveThirdPartyData_Click(sender As Object, e As System.EventArgs) Handles btnSaveThirdPartyData.Click
+        System.Threading.Thread.Sleep(500) 'delay 1/2 second
+
+        If Me.lblSavedFile.Text <> "" Then
+            ShowError("It appears that this file has already been saved")
+        ElseIf ViewState.Item("thirdPartyData") Is Nothing Then
+            ShowError("The ThirdPartyData element could not be loaded from ViewState")
+        Else
+            Dim thirdPartyData As Diamond.Common.Objects.ThirdParty.ThirdPartyData = CType(ViewState.Item("thirdPartyData"), Diamond.Common.Objects.ThirdParty.ThirdPartyData)
+            If thirdPartyData Is Nothing Then
+                ShowError("The ThirdPartyData element appears to be Nothing")
+            Else
+                If ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath") IsNot Nothing AndAlso ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString <> "" Then
+                    Try
+                        'Me.lblSavedFile.Text = ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString & "MVR_" & Me.txtPolicyId.Text & "_" & Me.txtPolicyImageNum.Text & "_" & Me.txtDriverNum.Text & "_" & Date.Now.ToString("s").Replace(":", "").Replace("-", "").Replace("/", "").Replace(" ", "") & ".txt"
+                        Me.lblSavedFile.Text = ConfigurationManager.AppSettings("QuickQuote_ThirdPartyData_SavePath").ToString & "MVR_" & Me.txtPolicyId.Text & "_" & Me.txtPolicyImageNum.Text & "_" & Me.txtDriverNum.Text & "_" & Date.Now.ToString("s").Replace(":", "").Replace("-", "").Replace("/", "").Replace(" ", "") & ".xml"
+                        thirdPartyData.DumpToFile(Me.lblSavedFile.Text)
+                        Me.lblSaveResults.Text = "Successful Save"
+                        ShowError("sucess saving file")
+                    Catch ex As Exception
+                        Me.lblSavedFile.Text = ""
+                        Me.lblSaveResults.Text = "Failed Save: <br />" & ex.ToString
+                        ShowError("error saving file")
+                    End Try
+                Else
+                    ShowError("The configuration key, QuickQuote_ThirdPartyData_SavePath, is either missing or empty")
+                End If
+            End If
+        End If
+    End Sub
+End Class

@@ -1,0 +1,79 @@
+{
+  "analysis_metadata": {
+    "feature_name": "BOP Application Section",
+    "line_of_business": "BOP",
+    "analysis_date": "2024-12-19",
+    "analyzer": "Rex (IFI Pattern Miner)",
+    "completeness_target": "90-95%",
+    "status": "Complete"
+  },
+  "core_controls_analyzed": {
+    "ctl_AppSection_BOP.ascx.vb": {
+      "business_rules": 7,
+      "database_queries": 2,
+      "external_services": 1,
+      "completeness": "90%",
+      "key_patterns": [
+        "Application workflow orchestration",
+        "Business rules validation",
+        "External service integration"
+      ]
+    },
+    "ctl_WorkflowManager_App_BOP.ascx.vb": {
+      "workflow_states": 8,
+      "state_management": "complete",
+      "cross_control_coordination": true,
+      "completeness": "95%",
+      "key_patterns": [
+        "Workflow state management",
+        "Cross-control communication",
+        "Application progression logic"
+      ]
+    },
+    "ctl_BOP_App_Location.ascx.vb": {
+      "location_patterns": "location_indexing",
+      "address_display": true,
+      "building_coordination": true,
+      "completeness": "85%",
+      "key_patterns": [
+        "Location data management",
+        "Address validation patterns",
+        "Building relationship management"
+      ]
+    },
+    "ctl_BOP_App_Building.ascx.vb": {
+      "building_characteristics": "property_rating_factors",
+      "rating_factors": true,
+      "additional_interest_mgmt": true,
+      "completeness": "85%",
+      "key_patterns": [
+        "Building property management",
+        "Rating factor calculation",
+        "Additional interest handling"
+      ]
+    }
+  },
+  "supporting_controls_analyzed": {
+    "ctl_BOP_App_LocationList.ascx.vb": {
+      "pattern_type": "simple_repeater",
+      "completeness": "95%"
+    }
+  },
+  "technical_patterns": {
+    "workflow_management": {
+      "pattern_count": 8,
+      "implementation": "state_driven_workflow",
+      "complexity": "high"
+    },
+    "business_rules": {
+      "pattern_count": 7,
+      "implementation": "validation_engine",
+      "complexity": "medium"
+    },
+    "data_management": {
+      "pattern_count": 12,
+      "implementation": "location_building_hierarchy",
+      "complexity": "high"
+    }
+  }
+}

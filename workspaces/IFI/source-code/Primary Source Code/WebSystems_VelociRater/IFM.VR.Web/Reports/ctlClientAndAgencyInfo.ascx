@@ -1,0 +1,22 @@
+﻿<%@ Control Language="vb" AutoEventWireup="false" CodeBehind="ctlClientAndAgencyInfo.ascx.vb" Inherits="IFM.VR.Web.ctlClientAndAgencyInfo" %>
+<br />
+<table width="100%" class="quickQuoteSectionTable">
+    <tr>
+        <td width="50%" valign="top">
+            <asp:Label ID="lblPrepared" runat="server" Text="Prepared for:"></asp:Label>
+            <br />
+            <asp:Label runat="server" ID="lblClientInfo"></asp:Label>
+        </td>
+        <td width="50%" valign="top">
+            <asp:Label ID="lblAgent" runat="server" Text="Prepared by:"></asp:Label>
+            <br />
+            <asp:Label runat="server" ID="lblAgencyInfo"></asp:Label>
+            <br />
+            <asp:Panel ID="pnlProducer" runat="server">
+                <asp:Label ID="lblProducer" runat="server" Text="Producer Code: "></asp:Label>
+                <asp:Label ID="lblProducerCode" runat="server"></asp:Label>
+            </asp:Panel>
+        </td>
+    </tr>
+</table>
+<br />

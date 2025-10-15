@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-*_auth.db
+agent_c_config/*.db
 .agent_c.meta.yaml
 agent_c_config/saved_sessions
 agent_c_config/chat_sessions.db

@@ -196,7 +196,6 @@ export class ChatSessionManager extends EventEmitter<ChatSessionManagerEventMap>
     }
 
     const previousSession = this.getCurrentSession();
-    const previousId = this.currentSessionId;
 
     // Update or add the session
     this.sessions.set(session.session_id, session);
@@ -213,13 +212,17 @@ export class ChatSessionManager extends EventEmitter<ChatSessionManagerEventMap>
       tokenCount: session.token_count
     });
 
-    // Emit events if session actually changed
-    if (previousId !== session.session_id) {
-      this.emit('chat-session-changed', {
-        previousChatSession: previousSession,
-        currentChatSession: session
-      });
-    }
+    // Always emit chat-session-changed event
+    // The server is the source of truth - if it sent us a chat_session_changed event,
+    // we must treat it as a session change even if the session ID matches.
+    // This handles cases like:
+    // - Client reconnection during an active interaction
+    // - Server-side message history revision
+    // - Any scenario where session content changes without ID change
+    this.emit('chat-session-changed', {
+      previousChatSession: previousSession,
+      currentChatSession: session
+    });
 
     this.emit('sessions-updated', {
       sessions: this.sessions

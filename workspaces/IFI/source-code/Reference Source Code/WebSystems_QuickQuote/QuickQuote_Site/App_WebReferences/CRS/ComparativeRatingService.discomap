@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DiscoveryClientResultsFile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Results>
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.SchemaReference" url="http://www.ifmig.net/RTRService/ComparativeRatingService.svc?xsd=xsd1" filename="ComparativeRatingService.xsd" />
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.ContractReference" url="http://www.ifmig.net/RTRService/ComparativeRatingService.svc?wsdl" filename="ComparativeRatingService.wsdl" />
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.SchemaReference" url="http://www.ifmig.net/RTRService/ComparativeRatingService.svc?xsd=xsd0" filename="ComparativeRatingService0.xsd" />
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.SchemaReference" url="http://www.ifmig.net/RTRService/ComparativeRatingService.svc?xsd=xsd2" filename="ComparativeRatingService1.xsd" />
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.DiscoveryDocumentReference" url="http://www.ifmig.net/RTRService/ComparativeRatingService.svc?disco" filename="ComparativeRatingService.disco" />
+  </Results>
+</DiscoveryClientResultsFile>

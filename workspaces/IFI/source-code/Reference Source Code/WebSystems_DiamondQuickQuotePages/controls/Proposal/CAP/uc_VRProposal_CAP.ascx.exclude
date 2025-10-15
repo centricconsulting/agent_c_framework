@@ -1,0 +1,375 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="uc_VRProposal_CAP, Velocirater_Proposal_CAP_WCP_BOP_deploy" %>
+<style type="text/css">
+    .make_model_column {
+        width: 300px;
+        text-align: left;
+    }
+    .state_column {
+        width: 50px;
+        text-align: right;
+    }
+    .code_column {
+        width: 100px;
+        text-align: right;
+    }
+    .towing_column {
+        width: 75px;
+        text-align: right;
+    }
+    .comp_column {
+        width: 75px;
+        text-align: right;
+    }
+    .coll_column {
+        width: 75px;
+        text-align: right;
+    }
+    .umpd_column {
+        width: 100px;
+        text-align: right;
+    }
+    .premium_column {
+        width: 120px;
+        text-align: right;
+    }
+</style>
+<div align="center">
+    <asp:Label ID="lblHeader" runat="server" Text="CAP - Commercial Auto" CssClass="p_ControlTitle"></asp:Label>
+</div>
+<br />
+<div align="center">
+    <asp:Panel ID="pnlMain" runat="server" Width="100%">
+        <!-- First Table - Liability Limits" -->
+        <table id="table1" runat="server">
+            <tr align="left">
+                <td colspan="2">
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                    <asp:Label ID="Label1" runat="server" Text="Liability Limits" CssClass="p_SectionHead"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left">
+                <td width="600px">
+                    <asp:Label ID="Label2" runat="server" Text="Liability" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="300px" align="right">
+                    <asp:Label runat="server" ID="lblLiabilityLimit" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left">
+                <td width="600px">
+                    <asp:Label ID="Label4" runat="server" Text="Medical Payments" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="300px" align="right">
+                    <asp:Label runat="server" ID="lblMedicalPaymentsLimit" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left">
+                <td width="600px">
+                    <asp:Label ID="Label3" runat="server" Text="Uninsured Motorists" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="300px" align="right">
+                    <asp:Label runat="server" ID="lblUninsuredMotoristsLimit" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left">
+                <td width="600px">
+                    <asp:Label ID="Label5" runat="server" Text="Underinsured Motorists" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="300px" align="right">
+                    <asp:Label runat="server" ID="lblUnderInsuredMotoristsLimit" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+        </table>
+        <br />
+
+        <asp:PlaceHolder runat="server" ID="phPreVehicleListPlaceholder"></asp:PlaceHolder>
+
+        <!-- Second Table - Listed Vehicles -->
+        <table id="tblVehicles" runat="server" style="border-collapse:collapse;">
+            <tr align="left">
+                <td colspan="8">
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                    <asp:Label ID="Label6" runat="server" Text="Listed Vehicles" CssClass="p_SectionHead"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left" style="border-bottom:1px solid black;">
+                <td class="make_model_column">
+                    <asp:Label ID="Label7" runat="server" Text="Yr/Make/Model" CssClass="p_ListHead"></asp:Label>
+                </td>
+                <td class="state_column">
+                    <asp:Label ID="Label21" runat="server" Text="State" CssClass="p_ListHead"></asp:Label>
+                </td>
+                <td class="code_column">
+                    <asp:Label ID="Label8" runat="server" Text="Code" CssClass="p_ListHead"></asp:Label>
+                </td>
+                <td class="towing_column" align="right">
+                    <asp:Label ID="Label20" runat="server" Text="Towing" CssClass="p_ListHead"></asp:Label>
+                </td>
+                <td class="comp_column" align="right">
+                    <asp:Label ID="Label9" runat="server" Text="Comp" CssClass="p_ListHead"></asp:Label>
+                </td>
+                <td class="coll_column" align="right">
+                    <asp:Label ID="Label10" runat="server" Text="Coll" CssClass="p_ListHead"></asp:Label>
+                </td>
+                <td class="umpd_column" align="right">
+                    <asp:Label ID="Label28" runat="server" Text="UMPD" CssClass="p_ListHead"></asp:Label>
+                </td>
+                <td class="premium_column" align="right">
+                    <asp:Label ID="Label11" runat="server" Text="Premium" CssClass="p_ListHead"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left">
+                <td colspan="8">
+                    <!-- The repeater for the vehicles -->
+                    <asp:Repeater ID="rptVehicles" runat="server">
+                        <ItemTemplate>
+                            <table>
+                                <tr align="left">
+                                    <td class="make_model_column">
+                                        <asp:Label ID="lblVehicleDscr" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "VehicleDscr") %>></asp:Label>
+                                    </td>
+                                    <td class="state_column">
+                                        <asp:Label ID="lblState" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "State") %>></asp:Label>
+                                    </td>
+                                    <td class="code_column">
+                                        <asp:Label ID="lblClassCode" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "ClassCode") %>></asp:Label>
+                                    </td>
+                                    <td class="towing_column">
+                                        <asp:Label ID="lblTowing" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "Towing") %>></asp:Label>
+                                    </td>
+                                    <td class="comp_column">
+                                        <asp:Label ID="lblComprehensive" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "Comprehensive") %>></asp:Label>
+                                    </td>
+                                    <td class="coll_column">
+                                        <asp:Label ID="lblCollision" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "Collision") %>></asp:Label>
+                                    </td>
+                                    <td class="umpd_column">
+                                        <asp:Label ID="lblUMPD" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "UMPD") %>></asp:Label>
+                                    </td>
+                                    <td class="premium_column">
+                                        <asp:Label ID="lblPremium" runat="server" CssClass="p_ListItem" Text=<%# DataBinder.Eval(Container.DataItem, "Premium") %>></asp:Label>
+                                    </td>
+                                </tr>
+                            </table>
+                            <asp:PlaceHolder runat="server" ID="phVehicleLinePlaceholder"></asp:PlaceHolder>
+                        </ItemTemplate>
+                    </asp:Repeater>
+                </td>
+            </tr>
+            <tr style="text-align: left" runat="server" id="trIncludedInAutoEnhancement" visible="false">
+                <td colspan="7">
+                    <br />
+                    *Included in Auto Enhancement Endorsement
+                </td>
+            </tr>
+        </table>
+        <br />
+
+        <asp:PlaceHolder runat="server" ID="phPostVehicleListPlaceholder"></asp:PlaceHolder>
+        <asp:PlaceHolder runat="server" ID="phPreCoveragePlaceholder"></asp:PlaceHolder>
+
+        <!-- Third Table - Additional Information and Optional Coverages -->
+        <table id="tblAddlInfoOptionalCoverages" runat="server" style="border-collapse:collapse;">
+            <tr align="left">
+                <td colspan="4">
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                    <asp:Label ID="Label12" runat="server" Text="Additional Information and Optional Coverages" CssClass="p_SectionHead"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left" style="border-bottom: 1px solid black;">
+                <td width="300px">
+                    <asp:Label ID="Label13" runat="server" Text="Coverage" CssClass="p_ListHead"></asp:Label>
+                </td>
+                <td width="500px" colspan="2">
+                    <asp:Label ID="Label14" runat="server" Text="Details" CssClass="p_ListHead"></asp:Label>
+                </td>
+                <%--<td width="250px">
+                    <asp:Label ID="Label14" runat="server" Text="Details" CssClass="p_ListHead"></asp:Label>
+                </td>
+                <td width="250px" align="left">
+                    <asp:Label ID="Label21" runat="server" Text="Deductible" CssClass="p_ListHead"></asp:Label>
+                </td>--%>
+                <td width="100px" align="right">
+                    <asp:Label ID="Label15" runat="server" Text="Premium" CssClass="p_ListHead"></asp:Label>
+                </td>
+            </tr>
+            <tr id="trNonOwnershipRow" runat="server" align="left" visible="false">
+                <td>
+                    <asp:Label ID="lblNO" runat="server" Text="Non-Ownership Liability" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td colspan="2">
+                    <asp:Label ID="lblNODetails" runat="server" Text="" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td align="right">
+                    <asp:Label ID="lblNOPremium" runat="server" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr id="trHiredBorrowedLiabilityRow" runat="server" align="left" visible="false">
+                <td>
+                    <asp:Label ID="lblHBL" runat="server" Text="Hired/Borrowed/Liability" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td colspan="2">
+                    <asp:Label ID="lblHBLDetails" runat="server" Text="" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td align="right">
+                    <asp:Label ID="lblHBLPremium" runat="server" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr id="trHiredCarPhysicalDamageRow" runat="server" align="left" visible="false">
+                <td>
+                    <asp:Label ID="lblHiredCarPhysicalDamage" runat="server" Text="Hired Car Physical Damage" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td colspan="2">
+                    <asp:Label ID="lblHiredCarPhysicalDamageDetails" runat="server" Text="" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td align="right">
+                    <asp:Label ID="lblHiredCarPhysicalDamagePremium" runat="server" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr id="trFarmPollutionLiabilityRow" runat="server" align="left" visible="false">
+                <td>
+                    <asp:Label ID="lblFPL" runat="server" Text="Farm Pollution Liability" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td colspan="2">
+                    <asp:Label ID="lblFPLDetails" runat="server" Text="" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td align="right">
+                    <asp:Label ID="lblFPLPremium" runat="server" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr id="trTowingAndLaborRow" runat="server" align="left" visible="false">
+                <td>
+                    <asp:Label ID="lblTowingAndLabor" runat="server" Text="Towing and Labor" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td colspan="2">
+                    <asp:Label ID="lblTowingAndLaborDetails" runat="server" Text="" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td align="right">
+                    <asp:Label ID="lblTowingAndLaborPremium" runat="server" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr id="trEnhancementRow" runat="server" align="left" visible="false">
+                <td>
+                    <asp:Label ID="lblENH" runat="server" Text="Auto Enhancement Endorsement" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td colspan="2">
+                    <asp:Label ID="lblENHDetails" runat="server" Text="" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td align="right">
+                    <asp:Label ID="lblENHPremium" runat="server" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+             <tr id="trBlanketWaiverOfSubro" runat="server" align="left" visible="false">
+                <td>
+                    <asp:Label ID="lblBlanketWaiverSubro" runat="server" Text="Waiver of Subrogation - When required by Written Contract" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td colspan="2">
+                    <asp:Label ID="lblBlanketWaiverSubroDetails" runat="server" Text="" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td align="right">
+                    <asp:Label ID="lblBlanketWaiverSubroPremium" runat="server" Text="$0" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+             <tr id="trGarageKeepers" align="left" runat="server">
+                <%--Matt A 5-9-17--%>
+                <td>Garagekeepers</td>
+                <td><%--Direct Primary--%><asp:Label runat="server" ID="lblGarageKeepersBasisType"></asp:Label></td>
+                <td></td>
+                <td align="right"></td>
+            </tr>
+            <tr id="trGarageKeepersOTCType" align="left" runat="server">
+                <%--Matt A 5-9-17--%>
+                <td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                    <asp:Label ID="lblGarageKeepersOTCType" runat="server" Text="OTC Type"></asp:Label>
+                     </td>
+                <td>
+                    <asp:Label ID="lblGarageKeepersOTCTypeDetails" runat="server" Text="Label"></asp:Label>
+                </td>
+                <td>
+                    <asp:Label ID="lblGarageKeepersOTCTypeDeductible" runat="server" Text="Label"></asp:Label>
+                </td>
+                <td align="right">
+                    <asp:Label ID="lblGarageKeepersOTCTypePremium" runat="server" Text="Label"></asp:Label>
+                </td>
+            </tr>
+            <tr id="trGarageKeepersCollision" align="left" runat="server">
+                <%--Matt A 5-9-17--%>
+                <td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                                Collision</td>
+                <td>
+                    <asp:Label ID="lblGarageKeepersCollisionDetails" runat="server" Text="Label"></asp:Label>
+                </td>
+                <td>
+                    <asp:Label ID="lblGarageKeepersCollisionDeductible" runat="server" Text="Label"></asp:Label>
+                </td>
+                <td align="right">
+                    <asp:Label ID="lblGarageKeepersCollisionPremium" runat="server" Text="Label"></asp:Label>
+                </td>
+            </tr>
+
+            <tr style="text-align: left" runat="server" id="GarageKeepersDeductibleRow" visible="false">
+                <td colspan="4">
+                    <br />
+                    *Deductible for each covered auto / Maximum Deductible for any one event
+                </td>
+            </tr>
+
+        </table>
+        <br />
+
+        <!-- Fourth table - Premiums -->
+        <table id="tblPremiums" runat="server" style="border-collapse:collapse;">
+            <tr align="left">
+                <td colspan="2">
+                    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                    <asp:Label ID="Label16" runat="server" Text="Premiums" CssClass="p_SectionHead"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left">
+                <td width="700px">
+                    <asp:Label ID="Label17" runat="server" Text="Total Covered Scheduled Autos - Premium" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="200px" align="right">
+                    <asp:Label ID="lblTotalCoveredScheduledAutosPremium" runat="server" Text="$0.00" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left" runat="server" id="trPolicyCoveragesPremium" visible="false">
+                <td width="700px">
+                    <asp:Label ID="Label25" runat="server" Text="Total Policy Coverages - Premium" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="200px" align="right">
+                    <asp:Label ID="lblTotalPolicyCoveragesPremium" runat="server" Text="$0.00" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left" runat="server" id="trLocationCoveragesPremium" visible="false">
+                <td width="700px">
+                    <asp:Label ID="Label27" runat="server" Text="Total Location Coverages - Premium" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="200px" align="right">
+                    <asp:Label ID="lblTotalLocationCoveragesPremium" runat="server" Text="$0.00" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left"><%-- style="border-bottom: 1px solid black;"--%>
+                <td width="700px">
+                    <asp:Label ID="Label18" runat="server" Text="Total Optional Coverages - Premium" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="200px" align="right">
+                    <asp:Label ID="lblTotalOptionalCoveragesPremium" runat="server" Text="$0.00" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+            <tr id="CAP_CommentsRow" runat="server" class="p_ListItem" visible="false">
+                <td colspan="2">
+                    <asp:Label runat="server" ID="lblCAP_Comments"></asp:Label>
+                </td>
+            </tr>
+            <tr align="left" style="border-top: 1px solid black;"><%--moved border style from above 5/2/2017--%>
+                <td width="700px">
+                    <asp:Label ID="Label19" runat="server" Text="Total Premium" Font-Bold="true" CssClass="p_ListItem"></asp:Label>
+                </td>
+                <td width="200px" align="right">
+                    <asp:Label ID="lblTotalPremium" runat="server" Text="$0.00" Font-Bold="true" CssClass="p_ListItem"></asp:Label>
+                </td>
+            </tr>
+        </table>
+    </asp:Panel>
+</div>

@@ -1,0 +1,54 @@
+﻿
+
+***************** DFR - Vr Upload 2/1/2016   ****************************************
+  
+  **  Add LOBID 3 to Accepted LOBs config **  
+  <add key="QuickQuote_DFR_Input" value="VR3DwellingFire.aspx" />
+  <add key="QuickQuote_DFR_APP" value="VR3DwellingFireApp.aspx" />
+  <add key="VrFileUploadAcceptableExtensionList" value="doc,docx,rtf,txt,csv,mp3,m4a,wav,bmp,gif,jpg,png,tif,xls,xlsx,pdf,mp4,wmv,mpg,avi,mov"/>
+
+  No New Database Items
+
+  Normal Pages, Controls, Dlls, JS, Ect
+
+
+
+
+**************   Farm Deployment 10-29-15  *************************************
+
+    <add key="UAT_Testing_LOB_Agency_HasAccess" value="" /> make sure this value is empty
+
+ 
+
+*****************  Farm Deployment Notes (Feb 2015) *****************************
+
+New Tables/Stored Procs (Include Server and Database Names)
+	quickquote->[usp_QuickQuote_PersonalApplicantSearch_Matt]
+	quickquote->[usp_Get_Townships_for_CountyName]
+	
+
+Modified Tables/Stored Procs (Include Server and Database Names)
+	quickquote->[usp_MyVelocirater_Search]
+	quickquote->[usp_QuickQuote_PersonalClientSearch_Matt] 
+	quickquote->[usp_GetLob_UWQuestions]
+
+
+New Keys
+	<add key="QuickQuote_FAR_Input" value="VR3Farm.aspx" />
+	<add key="QuickQuote_FAR_APP" value="VR3FarmApp.aspx" />
+
+
+Modified Key
+	supportedLobIds - added "17" for farm lobid
+	
+
+New Images
+	policy_farm.png
+
+New/Modified JS (I assume we will just move all js files on each deployment)
+	VrApplicantSearch.js
+
+
+General Notes
+	Updated Styles - Just Deploy all Custom Style Folders
+	Added a new Generic handler - GetTownshipForCounty

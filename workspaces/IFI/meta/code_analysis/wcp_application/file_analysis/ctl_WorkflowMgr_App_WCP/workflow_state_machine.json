@@ -1,0 +1,93 @@
+{
+  "workflow_sections": {
+    "na": {
+      "description": "Default/initial state",
+      "transition_target": "uwQuestions",
+      "line_reference": "19-21"
+    },
+    "app": {
+      "description": "Application section",
+      "controls_visible": ["ctl_AppSection_WCP", "wf_returnButton"],
+      "line_reference": "22-24, 201-204"
+    },
+    "uwQuestions": {
+      "description": "Underwriting questions",
+      "controls_visible": ["ctlCommercialUWQuestionList", "wf_returnButton"],
+      "line_reference": "25-27, 213-216",
+      "validation_dependency": "Must complete UW questions before proceeding to app"
+    },
+    "summary": {
+      "description": "Quote/Application summary",
+      "controls_visible": ["ctl_WCP_QuoteSummary", "wf_returnButton"],
+      "line_reference": "28-34, 206-210",
+      "entry_condition": "No validation errors (ctlDisplayDiamondRatingErrors.ValidationHelper.HasErrros = False)",
+      "populate_method": "ctl_WCP_QuoteSummary.Populate()"
+    },
+    "fileUpload": {
+      "description": "File attachment upload",
+      "controls_visible": ["ctl_AttachmentUpload"],
+      "line_reference": "35-37, 211-212"
+    },
+    "farmIRPM": {
+      "description": "Farm IRPM processing",
+      "controls_visible": ["ctlCommercial_IRPM"],
+      "line_reference": "38-40, 217-219"
+    },
+    "documentPrinting": {
+      "description": "Document printing section",
+      "controls_visible": ["ctlCommercial_DocPrint"],
+      "line_reference": "41-45, 220-224",
+      "special_behavior": "wf_returnButton.Visible = False",
+      "populate_method": "ctlCommercial_DocPrint.Populate()"
+    },
+    "drivers": {
+      "description": "Print-Friendly summary",
+      "controls_visible": ["Ctl_WCP_PFSummary"],
+      "line_reference": "46-48, 225-228",
+      "populate_method": "Ctl_WCP_PFSummary.Populate()"
+    }
+  },
+  "transition_triggers": {
+    "tree_events": {
+      "ShowApplication": {
+        "target": "app",
+        "validation_required": "UW questions must be completed",
+        "business_rule": "WCP has 6 kill questions, must have more than 6 total questions",
+        "line_reference": "266-289"
+      },
+      "ShowApplicationSummary": {
+        "target": "summary",
+        "line_reference": "291-293"
+      },
+      "ShowUnderwritingQuestions": {
+        "target": "uwQuestions",
+        "line_reference": "295-297"
+      },
+      "ShowIRPM": {
+        "target": "farmIRPM",
+        "line_reference": "299-301"
+      },
+      "ShowFileUpload": {
+        "target": "fileUpload",
+        "line_reference": "303-305"
+      }
+    },
+    "rating_events": {
+      "App_Rate_ApplicationRatedSuccessfully": {
+        "target": "summary",
+        "condition": "ratedQuote.Success = True",
+        "line_reference": "307-311"
+      }
+    }
+  },
+  "workflow_management": {
+    "hide_all_method": {
+      "description": "Hides all child VR controls except ctl_ReturnToQuoteSide",
+      "line_reference": "188-193"
+    },
+    "current_workflow_property": {
+      "description": "Tracks current workflow state",
+      "line_reference": "230"
+    }
+  }
+}

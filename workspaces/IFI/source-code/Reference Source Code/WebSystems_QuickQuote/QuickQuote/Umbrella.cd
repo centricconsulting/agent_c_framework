@@ -1,0 +1,233 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" GroupingSetting="Access" MembersFormat="NameAndType">
+  <Class Name="QuickQuote.CommonObjects.Umbrella.CommercialAutoPolicy">
+    <Position X="5" Y="2" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\CommercialAutoPolicy.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.DwellingFirePolicy" Collapsed="true">
+    <Position X="26.5" Y="1.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\DwellingFirePolicy.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.FarmLiability" Collapsed="true">
+    <Position X="16.75" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\FarmLiability.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.FarmPolicy" Collapsed="true">
+    <Position X="15" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\FarmPolicy.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.HomePolicy">
+    <Position X="20.75" Y="1.75" Width="5.5" />
+    <Members>
+      <Field Name="_CanUsePersonalLiabilityNumForPersonalLiabilityReconciliation" Hidden="true" />
+      <Field Name="_FarmLiabilities" Hidden="true" />
+      <Field Name="_InvestmentProperties" Hidden="true" />
+      <Field Name="_MiscellaneousLiabilities" Hidden="true" />
+      <Field Name="_PersonalLiabilities" Hidden="true" />
+      <Field Name="_ProfessionalLiabilities" Hidden="true" />
+      <Field Name="_RecreationalVehicles" Hidden="true" />
+      <Field Name="_RvWaterCraft" Hidden="true" />
+      <Field Name="_WaterCrafts" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>CAQAACAAAiAZAECBCAARAIAABQAAAAAgAAAAQAABAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\HomePolicy.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.InvestmentProperty" Collapsed="true">
+    <Position X="6.25" Y="7" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\InvestmentProperty.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.MiscellaneousLiability" Collapsed="true">
+    <Position X="16.75" Y="9.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\MiscellaneousLiability.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.PersonalLiability" Collapsed="true">
+    <Position X="16.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEBAACAAABAAAAAAAAAAKAAAACAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\PersonalLiability.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.ProfessionalLiability" Collapsed="true">
+    <Position X="16.75" Y="11" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\ProfessionalLiability.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.QuickQuotePolicyInfo" Collapsed="true">
+    <Position X="11.5" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAAEQAAAAAADQAAAAAAACAAAhAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\QuickQuotePolicyInfo.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.QuickQuoteUnderlyingPolicy">
+    <Position X="0.5" Y="1.75" Width="4" />
+    <Members>
+      <Field Name="_CanUsePolicyInfoNumForPolicyInfoReconciliation" Hidden="true" />
+      <Field Name="_Company" Hidden="true" />
+      <Field Name="_CompanyTypeId" Hidden="true" />
+      <Field Name="_DetailStatusCode" Hidden="true" />
+      <Field Name="_EffectiveDate" Hidden="true" />
+      <Field Name="_ExpirationDate" Hidden="true" />
+      <Field Name="_LobId" Hidden="true" />
+      <Field Name="_PolicyInfos" Hidden="true" />
+      <Field Name="_PrimaryPolicyNumber" Hidden="true" />
+      <Field Name="_UnderlyingPolicyNum" Hidden="true" />
+      <Method Name="Dispose" Hidden="true" />
+      <Field Name="disposedValue" Hidden="true" />
+      <Field Name="qqHelper" Hidden="true" />
+      <Method Name="SetDefaults" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQCAAAAAUQAEgEgEDQBZABAFACAAAhgAQAgA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\QuickQuoteUnderlyingPolicy.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.RecreationalVehicle" Collapsed="true">
+    <Position X="8.75" Y="8.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\RecreationalVehicle.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.StopGapEmployersLiabilityPolicy" Collapsed="true">
+    <Position X="16.75" Y="2" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\StopGapEmployersLiabilityPolicy.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.Watercraft">
+    <Position X="6.5" Y="8.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAABAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\Watercraft.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.WorkersCompensationPolicy">
+    <Position X="8" Y="2" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAEAAAAAABAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\WorkersCompensationPolicy.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.Vehicle" Collapsed="true">
+    <Position X="11" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\Vehicle.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.PersonalAutoPolicy">
+    <Position X="10.75" Y="2" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>DAAAAAAAAAAAAAEAQAAAAAAAAAAAIAAAAAAAAAAAAEA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\PersonalAutoPolicy.vb</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.TrackedPolicyItem">
+    <Position X="30" Y="1.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAEAAOCAAAAAAAkAAgAgAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\TrackedPolicyItem.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.LinkedPolicyItem">
+    <Position X="32.75" Y="1.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAACAAAAAAAAAAAAgAAIAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\LinkedPolicyItem.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.Address">
+    <Position X="36" Y="9.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAAQAAAAACIAAAACAQCAEAQCAAAAAAAgAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\Address.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.Driver">
+    <Position X="36.25" Y="5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQCAAAACAAAAAAAgAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\Driver.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.Location">
+    <Position X="14" Y="6.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAACAAAAAAACAAAAgAAQAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\Location.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.Name">
+    <Position X="38" Y="7.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAABAAAoAAAAAAgAAQCIAgAAAAAAAAAgAAAAAg=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\Name.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="QuickQuote.CommonObjects.Umbrella.BasePolicyItem">
+    <Position X="34.75" Y="1.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>EAAgAAAAAAAAAAAAAAAAIAACABBAAEAAAAAAgAAAAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\BasePolicyItem.vb</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Interface Name="System.Xml.Serialization.IXmlSerializable" Collapsed="true">
+    <Position X="18.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="QuickQuote.CommonObjects.Umbrella.ILinkedPolicyItem">
+    <Position X="17.5" Y="4.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>EAAgAAAAAAAAAAAAAAAAIAAAAAAAAEAAAAAAAAAIAAA=</HashCode>
+      <FileName>C:\Users\kejam\source\Workspaces\Internet\Velocirater\QuickQuote\Dev\FUPPUP_20200318\QuickQuote_Site\App_Code\Umbrella\ILinkedPolicyItem.vb</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

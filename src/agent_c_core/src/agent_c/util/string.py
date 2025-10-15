@@ -24,6 +24,14 @@ def to_snake_case(s: str) -> str:
     return ''.join(['_' + i.lower() if i.isupper() else i for i in s]).lstrip('_')
 
 
+def pascal_to_spaced(text):
+    """
+    Convert PascalCase string to space-separated words.
+
+    Example: "RemoveToolCommand" -> "Remove Tool Command"
+    """
+    return re.sub(r'(?<!^)(?=[A-Z])', ' ', text)
+
 def generate_path_tree(start_path: str, prefix: str = "", ignore_patterns: List[str] = None) -> List[str]:
     """
     Generates a directory structure tree as a list of formatted lines indicating structure.

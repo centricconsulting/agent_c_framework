@@ -1,0 +1,81 @@
+# This config file is used to populate environment variables for the agent_c server.
+#
+#  The most critical variables to set up are the API keys for the LLMs you want to use.
+#  You will need an Anthropic API key at a minimum. While Agent C is model agnostic,
+#  Claude is BY FAR a better model for complex agents.
+
+# Needed for Claude support
+ANTHROPIC_API_KEY=FROM-ANTHROPIC
+
+# Open AI support
+OPENAI_API_KEY=FROM-OPEN-AI
+
+# Needed to use Azure OpenAI.
+#AZURE_OPENAI_API_KEY=FROM-AZURE
+#AZURE_OPENAI_ENDPOINT=https://YOURNAME.openai.azure.com/
+#AZURE_OPENAI_MODEL=YOURMODEL
+#AZURE_OPENAI_API_VERSION=2024-03-01-preview
+
+# Configure Claude server tools
+
+## Claud web fetch
+max_web_fetches=5
+
+## Claude computer use config
+display_width_px=3840
+display_height_px=2160
+
+# Basic Setup
+
+# You will want this set to LOCAL_DEV or DEVELOPMENT.
+ENVIRONMENT=LOCAL_DEV
+
+# JWT key for securing the FastAPI backend.  This should be changed for non-local use.
+# If you change this you will invalidate all existing tokens and have to reset all passwords
+# If you don't know how to to that, don't change it, and don't expose this to the internet
+#
+JWT_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkb25hdmFuIiwicGVybWlzc2lvbnMiOltdLCJleHAiOjE3ODQxNzk2OTMsImlhdCI6MTc1NTM3OTY5M30.r4Ni7w0qLMDnmh7sS0t_NQD55U-DSkd52iFEOI7OmMw
+
+
+# API keys for various services consumed by tools.
+
+# SERPAPI_API_KEY for using google_search_results package
+# SERPAPI_API_KEY=
+
+# SEC_API Key for accessing SEC filings via sec-api.io
+# SEC_API_KEY=
+
+# Tavili API Key for using the tavili package
+# TAVILI_API_KEY=tavilyapikey
+
+# NewsAPI Key for using the https://newsapi.org
+#NEWSAPI_API_KEY=newsapikey
+
+# For Salesforce Tool
+# to get token, click on your profile picture, settings, reset my security token, and click the reset security token button
+# new security token will be emailed to you
+SALESFORCE_USERID=
+SALESFORCE_PASSWORD=
+SALESFORCE_SECURITY_TOKEN=
+SALESFORCE_DOMAIN=
+
+# For AWS S3 workspaces
+#AWS_REGION_NAME=your-region-name
+#AWS_SECRET_ACCESS_KEY=your-secret-access-key
+#AWS_ACCESS_KEY_ID=your-access-key-id
+
+# For Dynamics API
+CENTRIC_ID=email address
+CENTRIC_PW=password
+REDIRECT_URI='https://login.microsoftonline.com/common/oauth2/nativeclient'
+DYNAMICS_CLIENT_ID=Dynamics client id
+AUTH_ENDPOINT='https://login.microsoftonline.com/{secret}/oauth2/v2.0/authorize'
+TOKEN_ENDPOINT='https://login.microsoftonline.com/{secret}/oauth2/v2.0/token'
+DYNAMICS_SCOPE='https://centricconsulting.crm.dynamics.com/user_impersonation'
+DYNAMICS_ENDPOINT='https://centricconsulting.crm.dynamics.com/api/data/v9.2/'#AWS_ACCESS_KEY_ID=your-access-key-id
+
+# For Azure Blob Storage workspaces
+# AZURE_STORAGE_CONNECTION_STRING=Connection string for the Azure Storage account
+# AZURE_STORAGE_ACCOUNT_NAME=Storage account name (used if connection string not provided)
+# AZURE_STORAGE_ACCOUNT_KEY=Storage account key (used with account name)
+# AZURE_STORAGE_SAS_TOKEN=SAS token (can be used instead of account key)

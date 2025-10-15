@@ -1,0 +1,9 @@
+﻿<tests>
+  <Info>
+    <description>Expect no errors.</description>
+    <DiamondUserID>10327</DiamondUserID>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </Info>
+</tests>

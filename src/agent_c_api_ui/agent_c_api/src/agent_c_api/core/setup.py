@@ -230,18 +230,8 @@ def create_application(router: APIRouter, **kwargs) -> FastAPI:
         "https://localhost:5173",
         "http://localhost:3000",
         "https://localhost:3000",
-        "http://localhost:3001",
-        "https://localhost:3001",
-        "http://127.0.0.1:5173",
-        "https://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-        "https://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-        "https://127.0.0.1:3001",
-        "http://[::1]:5173",
-        "https://[::1]:5173",
-        "http://[::1]:3000",
-        "https://[::1]:3000",
+        "http://agentc.local:5173",
+        "https://agentc.local:5173",
     ]
     #logger.info(f"CORS allowed host regex: {origin_regex}")
     app.add_middleware(

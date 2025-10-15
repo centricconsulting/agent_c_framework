@@ -1,0 +1,145 @@
+{
+  "lob_contamination_analysis": {
+    "file_location": {
+      "path": "User Controls/VR Commercial/Application/WCP/",
+      "file": "ctl_WorkflowMgr_App_WCP.ascx.vb",
+      "expected_lob": "WorkersCompensation (WCP)",
+      "directory_structure_compliance": "✅ COMPLIANT - File in correct WCP directory"
+    },
+    "lob_specific_code": {
+      "wcp_specific_logic": [
+        {
+          "pattern": "WCP Kill Questions Count Validation",
+          "code": "Quote.PolicyUnderwritings.Count > 6",
+          "business_rule": "WCP has 6 kill questions",
+          "location": "line 283",
+          "lob_reference": "QuickQuote.CommonObjects.QuickQuoteObject.QuickQuoteLobType.WorkersCompensation",
+          "line_reference": "280",
+          "contamination_status": "✅ PROPER LOB-SPECIFIC LOGIC"
+        },
+        {
+          "pattern": "WC Policy Level Validation",
+          "code": "IFM.VR.Validation.ObjectValidation.CommLines.LOB.WC.PolicyLevelValidations.ValidatePolicyLevel",
+          "location": "line 160",
+          "contamination_status": "✅ PROPER LOB-SPECIFIC VALIDATION"
+        }
+      ],
+      "generic_commercial_logic": [
+        {
+          "pattern": "Commercial UW Questions Control",
+          "control": "ctlCommercialUWQuestionList",
+          "contamination_assessment": "✅ APPROPRIATE - Commercial control in commercial LOB",
+          "usage": "Multiple references throughout workflow"
+        },
+        {
+          "pattern": "Commercial IRPM Control",
+          "control": "ctlCommercial_IRPM", 
+          "contamination_assessment": "✅ APPROPRIATE - Commercial IRPM applicable to WCP",
+          "usage": "farmIRPM workflow section"
+        },
+        {
+          "pattern": "Commercial Document Printing",
+          "control": "ctlCommercial_DocPrint",
+          "contamination_assessment": "✅ APPROPRIATE - Commercial doc printing for WCP",
+          "usage": "documentPrinting workflow section"
+        }
+      ]
+    },
+    "cross_lob_patterns": {
+      "personal_lines_references": [
+        {
+          "pattern": "WebHelper_Personal.GatherRatingErrorsAndWarnings",
+          "location": "line 114",
+          "usage_context": "Rating error gathering from quote object",
+          "contamination_assessment": "⚠️ POTENTIAL CONTAMINATION - Personal helper used in Commercial WCP",
+          "risk_level": "MEDIUM",
+          "business_impact": "May not handle commercial-specific rating errors properly",
+          "recommendation": "Investigate if WebHelper_Commercial equivalent exists"
+        }
+      ],
+      "generic_helpers": [
+        {
+          "pattern": "QuickQuote.CommonMethods references",
+          "usage": "QuickQuoteXML.QuickQuoteStatusType enums",
+          "contamination_assessment": "✅ APPROPRIATE - Common enums across all LOBs",
+          "examples": ["QuoteKilled", "AppKilled", "QuoteStopped", "AppStopped"]
+        },
+        {
+          "pattern": "IFM.VR.Common.Workflow.Workflow patterns",
+          "usage": "Workflow section enums and management",
+          "contamination_assessment": "✅ APPROPRIATE - Common workflow infrastructure",
+          "examples": ["WorkflowSection.app", "WorkflowSection.summary"]
+        }
+      ]
+    },
+    "service_integration_contamination": {
+      "save_and_rate_services": [
+        {
+          "service": "Common.QuoteSave.QuoteSaveHelpers.SaveAndRate",
+          "contamination_assessment": "✅ APPROPRIATE - Common rating service across LOBs",
+          "save_type": "QuickQuoteXML.QuickQuoteSaveType.AppGap",
+          "lob_neutral": true
+        },
+        {
+          "service": "Common.QuoteSave.QuoteSaveHelpers.SuccessfullySavedAndRatedEndorsementQuoteFromContext",
+          "contamination_assessment": "✅ APPROPRIATE - Common endorsement service",
+          "lob_neutral": true
+        }
+      ],
+      "quote_management_services": [
+        {
+          "service": "IFM.VR.Common.Helpers.QuickQuoteObjectHelper.CheckQuoteForKillorStopEvent",
+          "contamination_assessment": "✅ APPROPRIATE - Common quote lifecycle management",
+          "lob_neutral": true
+        }
+      ]
+    },
+    "namespace_analysis": {
+      "imports": [
+        {
+          "namespace": "IFM.VR.Common.Workflow",
+          "contamination_status": "✅ CLEAN - Common workflow infrastructure"
+        },
+        {
+          "namespace": "IFM.VR.Web.Helpers",
+          "contamination_status": "✅ CLEAN - Common web helpers"
+        },
+        {
+          "namespace": "QuickQuote.CommonMethods",
+          "contamination_status": "✅ CLEAN - Common quote methods across LOBs"
+        }
+      ],
+      "class_inheritance": {
+        "base_class": "VRMasterControlBase",
+        "contamination_status": "✅ CLEAN - Common base class for all VR controls"
+      }
+    },
+    "contamination_summary": {
+      "total_patterns_analyzed": 15,
+      "clean_patterns": 13,
+      "potential_contamination": 1,
+      "confirmed_contamination": 0,
+      "contamination_score": "93% CLEAN",
+      "primary_concern": {
+        "pattern": "WebHelper_Personal usage in Commercial WCP context",
+        "risk": "MEDIUM", 
+        "requires_investigation": true
+      }
+    }
+  },
+  "architectural_boundaries": {
+    "proper_boundaries": [
+      "WCP-specific business logic properly isolated",
+      "Commercial controls appropriately used",
+      "Common services properly shared across LOBs",
+      "Workflow infrastructure properly shared"
+    ],
+    "boundary_violations": [
+      {
+        "violation": "Personal helper used in Commercial context",
+        "details": "WebHelper_Personal.GatherRatingErrorsAndWarnings in WCP workflow",
+        "impact": "May miss commercial-specific rating error patterns"
+      }
+    ]
+  }
+}

@@ -1,0 +1,181 @@
+{
+  "file_metadata": {
+    "file_path": "User Controls/VR Commercial/Application/WCP/ctl_AppSection_WCP.ascx.vb",
+    "lines_of_code": 457,
+    "complexity": "HIGH",
+    "analysis_completeness": "94%",
+    "confidence_level": "HIGH"
+  },
+  "architectural_patterns": {
+    "multi_state_orchestration": {
+      "pattern_type": "State Management",
+      "complexity": "HIGH",
+      "description": "Sophisticated multi-state business logic coordination between governing state and sub-states",
+      "states_managed": ["Governing State", "Indiana (IN)", "Kentucky (KY)", "Illinois (IL)"],
+      "key_methods": [
+        "GoverningStateQuote",
+        "SubQuotesContainsState(state)",
+        "SubQuoteForState(QuickQuoteState)"
+      ]
+    },
+    "named_individual_workflow": {
+      "pattern_type": "Business Workflow", 
+      "complexity": "HIGH",
+      "description": "Complex Named Individual type management with state-specific eligibility",
+      "workflow_count": 6,
+      "types_managed": [
+        "InclusionOfSoleProprietersEtc",
+        "WaiverOfSubrogation", 
+        "ExclusionOfAmishWorkers",
+        "ExclusionOfSoleOfficer",
+        "ExclusionOfSoleProprietor_IL",
+        "RejectionOfCoverageEndorsement"
+      ]
+    },
+    "conditional_display_orchestration": {
+      "pattern_type": "UI State Management",
+      "complexity": "MEDIUM-HIGH",
+      "description": "Dynamic show/hide logic based on coverage selections and state eligibility",
+      "pattern": "Initial hide all → Conditional show based on coverage + state eligibility"
+    },
+    "event_driven_coordination": {
+      "pattern_type": "Event Architecture",
+      "complexity": "MEDIUM-HIGH", 
+      "description": "Complex event handler attachment and coordination across repeater controls",
+      "event_categories": ["Workplace Management", "Named Individual State", "Rating Events"]
+    }
+  },
+  "business_logic_patterns": {
+    "state_specific_coverage_rules": {
+      "governing_state_rules": {
+        "coverages": ["Inclusion", "Waiver"],
+        "business_rule": "Primary state controls inclusion and waiver availability"
+      },
+      "indiana_rules": {
+        "coverages": ["Amish Exclusion", "Officer Exclusion"],
+        "business_rule": "Indiana-specific exclusions including religious exemptions"
+      },
+      "kentucky_rules": {
+        "coverages": ["Officer Exclusion", "Rejection Endorsement"],
+        "business_rule": "Kentucky exclusions and rejection with effective date requirements",
+        "effective_date_dependency": "KentuckyWCPEffectiveDate"
+      },
+      "illinois_rules": {
+        "coverages": ["Officer Exclusion (IL)"],
+        "business_rule": "Illinois-specific exclusions requiring multistate capability",
+        "effective_date_dependency": "IsMultistateCapableEffectiveDate"
+      }
+    },
+    "effective_date_driven_features": {
+      "pattern": "Feature availability controlled by effective date thresholds",
+      "examples": [
+        "Illinois exclusions require multistate capability effective date",
+        "Kentucky rejection endorsement requires KentuckyWCPEffectiveDate"
+      ]
+    }
+  },
+  "data_access_patterns": {
+    "sub_quote_collections": {
+      "pattern_type": "Indirect Data Access",
+      "description": "No direct database queries - uses pre-loaded sub-quote collections",
+      "access_pattern": "Sub-quote object → Collection property → Repeater data binding",
+      "collections_count": 6,
+      "state_distribution": {
+        "governing_state": 2,
+        "indiana": 2, 
+        "kentucky": 2,
+        "illinois": 1
+      }
+    },
+    "workplace_management": {
+      "pattern_type": "Direct Collection Access",
+      "description": "Direct manipulation of Quote.Locations collection for workplace management",
+      "operations": ["Add", "Delete", "Clear"],
+      "data_flow": "Quote.Locations → rptWorkplaces → ctl_WCP_Workplace controls"
+    }
+  },
+  "ui_control_patterns": {
+    "accordion_state_management": {
+      "pattern_type": "UI State Persistence",
+      "complexity": "MEDIUM-HIGH",
+      "accordion_count": 10,
+      "state_persistence": "Hidden field values track accordion state",
+      "coordination": "SetNamedIndividualCurrentAccordion coordinates state across NI types"
+    },
+    "repeater_management": {
+      "pattern_type": "Dynamic UI Generation",
+      "complexity": "MEDIUM-HIGH",
+      "repeater_count": 7,
+      "pattern": "Reset → Data bind → Event attachment → Property setting",
+      "child_control_coordination": "Property setting and event handler attachment post-binding"
+    }
+  },
+  "event_handling_patterns": {
+    "workplace_events": {
+      "events": ["AddWorkplaceRequested", "ClearWorkplaceRequested", "DeleteWorkplaceRequested"],
+      "pattern": "Event → Collection manipulation → Populate → Save → Populate",
+      "complexity": "MEDIUM"
+    },
+    "named_individual_events": {
+      "events": ["ChangeNIActiveAccordion"],
+      "pattern": "Event → Accordion state update → Hidden field value setting", 
+      "complexity": "MEDIUM"
+    },
+    "rating_events": {
+      "events": ["ApplicationRated", "ApplicationRatedSuccessfully"],
+      "pattern": "Child control event → Bubble up → Parent event raise",
+      "complexity": "LOW"
+    }
+  },
+  "configuration_dependencies": [
+    {
+      "dependency": "hasEsigOption",
+      "type": "Feature Flag",
+      "impact": "E-signature control visibility",
+      "source": "Base class property"
+    },
+    {
+      "dependency": "KentuckyWCPEffectiveDate", 
+      "type": "Effective Date Configuration",
+      "impact": "Kentucky rejection endorsement availability",
+      "source": "IFM.VR.Common.Helpers.MultiState.General"
+    },
+    {
+      "dependency": "IsMultistateCapableEffectiveDate",
+      "type": "Effective Date Helper",
+      "impact": "Illinois exclusion availability",
+      "source": "IFM.VR.Common.Helpers.MultiState.General"
+    }
+  ],
+  "external_dependencies": [
+    {
+      "dependency": "Sub-quote object collections",
+      "type": "Data Dependency",
+      "analysis_required": "Sub-quote structure and Named Individual record content",
+      "priority": "HIGH"
+    },
+    {
+      "dependency": "Multi-state helper methods", 
+      "type": "Logic Dependency",
+      "analysis_required": "State determination and sub-quote retrieval implementation",
+      "priority": "HIGH"
+    },
+    {
+      "dependency": "Base class VRControlBase",
+      "type": "Infrastructure Dependency", 
+      "analysis_required": "Inherited functionality and shared patterns",
+      "priority": "MEDIUM"
+    }
+  ],
+  "lob_contamination_assessment": {
+    "contamination_level": "MINIMAL",
+    "lob_boundary_compliance": "CLEAN",
+    "shared_components": [
+      "VRControlBase (appropriate base class)",
+      "Common quote objects (justified for data consistency)",
+      "Multistate helpers (justified for cross-state operations)", 
+      "E-signature control (feature flag controlled)"
+    ],
+    "cross_state_logic_assessment": "APPROPRIATE - Multi-state coordination is legitimate business requirement"
+  }
+}

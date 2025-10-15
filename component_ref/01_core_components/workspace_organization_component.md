@@ -66,6 +66,11 @@ A foundational workspace management pattern that establishes standard convention
 - **Comprehensive Coverage**: Addresses all major workspace operations from file management to collaboration
 - **Scalable Structure**: Designed to work for both simple and complex workspace scenarios
 - **Template Integration**: Replace `{workspace}` placeholder with actual workspace name when implementing
+- **Customizing {workspace} Placeholder**:
+  - **Dedicated Workspace Agents**: Replace with specific workspace name (e.g., `myproject/.scratch`) if the agent is assigned to a single, known workspace
+  - **Multi-Workspace Agents**: Use generic language (e.g., "your assigned workspace", ".scratch directory in your workspace") if the agent should adapt to any workspace it's given
+  - **Domo Agents**: Typically use generic language since they may work across different user workspaces
+  - **Specialist Agents**: Typically use specific workspace names since they're often dedicated to a particular project
 
 **Integration Tips**:
 - Works independently - no dependencies on other components

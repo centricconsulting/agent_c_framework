@@ -4,7 +4,7 @@ from agent_c.models.events import BaseEvent
 from agent_c.models.events.chat import AudioInputDeltaEvent
 from agent_c_api.api.rt.models.control_events import GetAgentsEvent, GetAvatarsEvent, TextInputEvent, SetAvatarEvent, SetAgentEvent, SetAvatarSessionEvent, ResumeChatSessionEvent, \
     NewChatSessionEvent, SetAgentVoiceEvent, GetUserSessionsEvent, PingEvent, PongEvent, \
-    GetToolCatalogEvent, GetVoicesEvent, DeleteChatSessionEvent, ClientWantsCancelEvent
+    GetToolCatalogEvent, GetVoicesEvent, DeleteChatSessionEvent, ClientWantsCancelEvent, SetAgentToolsEvent
 from agent_c_api.api.rt.models.control_events import SetChatSessionNameEvent, SetSessionMessagesEvent, SetSessionMetadataEvent
 
 
@@ -98,3 +98,7 @@ class ClientEventHandler:
     @handle_client_event.register
     async def _(self, event: SetAgentEvent) -> None:
         await self.set_agent(event.agent_key)
+
+    @handle_client_event.register
+    async def _(self, event: SetAgentToolsEvent) -> None:
+        await self.update_tools(event.tools)

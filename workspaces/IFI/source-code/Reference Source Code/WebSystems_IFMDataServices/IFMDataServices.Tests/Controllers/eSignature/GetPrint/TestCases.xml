@@ -1,0 +1,61 @@
+﻿<tests>
+  <getPrintInfo>
+    <description>Expect no errors. Return Application form</description>
+    <policyNumber>PPA2151944</policyNumber>
+    <printFormCategories>9</printFormCategories>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </getPrintInfo>
+  <!--<getPrintInfo>
+    <description>Expect no errors. Return Application form</description>
+    <policyNumber>PPA2147882</policyNumber>
+    <printFormCategories>9</printFormCategories>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </getPrintInfo>-->
+  <!--<getPrintInfo>
+    <description>Expect no errors. Return Proxy form</description>
+    <policyNumber>CPR1000760</policyNumber>
+    <printFormCategories>0,6</printFormCategories>
+    <expectPayload>true</expectPayload>
+    <expectedResult>true</expectedResult>
+    <expectErrors>false</expectErrors>
+  </getPrintInfo>
+  <getPrintInfo>
+    <description>Expect errors because no policy number provided.</description>
+    <policyNumber></policyNumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </getPrintInfo>
+  <getPrintInfo>
+    <description>Expect errors because of incorrect format.</description>
+    <policyNumber>PPA10</policyNumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </getPrintInfo>
+  <getPrintInfo>
+    <description>Expect errors because of incorrect format.</description>
+    <policyNumber>32165</policyNumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </getPrintInfo>
+  <getPrintInfo>
+    <description>Expect errors because of incorrect format.</description>
+    <policyNumber>asdfasd</policyNumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </getPrintInfo>
+  <getPrintInfo>
+    <description>Expect errors because of incorrect format.</description>
+    <policyNumber>CAP1010996</policyNumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>true</expectErrors>
+  </getPrintInfo>-->
+</tests>

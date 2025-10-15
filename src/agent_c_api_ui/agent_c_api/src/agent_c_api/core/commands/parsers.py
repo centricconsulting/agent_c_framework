@@ -84,35 +84,9 @@ class FunctionCallParser(CommandParser):
 
 
 
-class CallToolCommand(Command):
-    def __init__(self):
-        super().__init__(FunctionCallParser())
-
-    async def execute(self, context, function_name: str, params: dict, **kwargs):
-        # Get the tool from tool_chest
-        if function_name not in context.tool_chest.active_tools:
-            context.chat_ui.fake_role_message("system",
-                                              f"Tool '{function_name}' not found")
-            return
-
-        tool = context.tool_chest.active_tools[function_name]
-        result = await tool(**params)
-        context.chat_ui.print_result(result)
 
 
-class RemindCommand(Command):
-    def __init__(self):
-        super().__init__(JsonStyleParser())
 
-    async def execute(self, context, args: list, **kwargs):
-        if len(args) < 2:
-            context.chat_ui.fake_role_message("system",
-                                              "Usage: !remind \"time\", \"message\"")
-            return
 
-        time, message = args[0], args[1]
-        # Your reminder logic here
-        context.chat_ui.fake_role_message("system",
-                                          f"Reminder set for {time}: {message}")
 
 

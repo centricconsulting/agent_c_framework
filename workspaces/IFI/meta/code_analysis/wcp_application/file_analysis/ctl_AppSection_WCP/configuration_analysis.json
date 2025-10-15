@@ -1,0 +1,189 @@
+{
+  "configuration_dependencies": {
+    "feature_flags": [
+      {
+        "flag_reference": "Me.hasEsigOption",
+        "purpose": "E-signature feature availability control",
+        "usage": "If Me.hasEsigOption = False Then ctl_Esignature.Visible = False",
+        "location": "Lines 25-27",
+        "content_status": "⚠️ Property from base class - implementation needs analysis",
+        "business_impact": "Controls visibility of e-signature functionality"
+      }
+    ],
+    "effective_date_configurations": [
+      {
+        "config_reference": "IFM.VR.Common.Helpers.MultiState.General.KentuckyWCPEffectiveDate",
+        "purpose": "Kentucky WCP feature effective date threshold",
+        "usage": "CDate(Quote.EffectiveDate).Date >= CDate(KentuckyWCPEffectiveDate).Date",
+        "location": "Line 229",
+        "content_status": "⚠️ Configuration value - actual date needs validation",
+        "business_impact": "Determines availability of Kentucky Rejection of Coverage Endorsement",
+        "dependent_feature": "Kentucky Rejection of Coverage Endorsement"
+      },
+      {
+        "config_reference": "IFM.VR.Common.Helpers.MultiState.General.IsMultistateCapableEffectiveDate()",
+        "purpose": "Multistate capability effective date validation",
+        "usage": "IsMultistateCapableEffectiveDate(Quote.EffectiveDate) AndAlso SubQuotesContainsState(\"IL\")",
+        "location": "Line 203", 
+        "content_status": "⚠️ Helper method - logic and threshold needs analysis",
+        "business_impact": "Determines availability of Illinois-specific exclusions",
+        "dependent_feature": "Exclusion Of Sole Proprietors Etc (Illinois)"
+      }
+    ],
+    "commented_out_config": [
+      {
+        "config_reference": "System.Configuration.ConfigurationManager.AppSettings(\"WC_KY_EffectiveDate\")",
+        "purpose": "Kentucky effective date from app settings (DISABLED)",
+        "code": "Private ReadOnly Property WCKYEffDate As DateTime",
+        "location": "Lines 8-16 (commented out)",
+        "status": "DISABLED - Code is commented out", 
+        "replacement_logic": "Uses IFM.VR.Common.Helpers.MultiState.General.KentuckyWCPEffectiveDate instead"
+      }
+    ]
+  },
+  "multistate_helper_usage": {
+    "helper_methods": [
+      {
+        "method": "SubQuotesContainsState(state)",
+        "purpose": "Check if sub-quotes contain specified state",
+        "usage_patterns": [
+          "SubQuotesContainsState(\"IN\")",
+          "SubQuotesContainsState(\"KY\")", 
+          "SubQuotesContainsState(\"IL\")"
+        ],
+        "locations": ["Line 122", "Line 164", "Line 203"],
+        "content_status": "⚠️ Helper method - implementation needs analysis",
+        "business_logic": "Determines state-specific coverage availability"
+      },
+      {
+        "method": "SubQuoteForState(QuickQuoteState)",
+        "purpose": "Retrieve sub-quote for specified state",
+        "usage_patterns": [
+          "SubQuoteForState(QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteState.Indiana)",
+          "SubQuoteForState(QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteState.Kentucky)",
+          "SubQuoteForState(QuickQuote.CommonMethods.QuickQuoteHelperClass.QuickQuoteState.Illinois)"
+        ],
+        "locations": ["Lines 124, 146, 164, 205, 230"],
+        "content_status": "⚠️ Helper method - sub-quote retrieval logic needs analysis",
+        "business_logic": "Provides access to state-specific coverage data"
+      },
+      {
+        "method": "Me.GoverningStateQuote",
+        "purpose": "Access governing state sub-quote",
+        "usage": "Primary state for inclusion and waiver coverages",
+        "locations": ["Lines 81, 109, 358, 368"],
+        "content_status": "⚠️ Property - governing state determination logic needs analysis",
+        "business_logic": "Determines primary state for coverage calculations"
+      }
+    ]
+  },
+  "accordion_configuration": {
+    "accordion_setup": [
+      {
+        "accordion_id": "MainAccordionDivId",
+        "element": "Me.div_master_wcp_app.ClientID", 
+        "hidden_field": "hdn_master_wcp_app",
+        "default_state": "0"
+      },
+      {
+        "accordion_id": "ListAccordionDivId",
+        "element": "Me.divWorkplacesList.ClientID",
+        "hidden_field": "hdnAccordWorkplaceList",
+        "default_state": "0"
+      },
+      {
+        "accordion_id": "divWorkplaces",
+        "hidden_field": "hdnAccordWorkplace", 
+        "default_state": "0"
+      },
+      {
+        "accordion_id": "divNamedIndividuals",
+        "hidden_field": "hdnAccordNamedIndiv",
+        "default_state": "0"
+      }
+    ],
+    "named_individual_accordions": [
+      {
+        "type": "Inclusion",
+        "div_id": "divInclOfSoleProprietersEtc",
+        "hidden_field": "hdnInclSoleProprieterList",
+        "default_state": "0"
+      },
+      {
+        "type": "Waiver",
+        "div_id": "divWaiverOfSubro",
+        "hidden_field": "hdnWaiverOfSubroList",
+        "default_state": "0"
+      },
+      {
+        "type": "ExclusionAmish", 
+        "div_id": "divExclOfAmish",
+        "hidden_field": "hdnExclOfAmishList",
+        "default_state": "0"
+      },
+      {
+        "type": "ExclusionOfficer",
+        "div_id": "divExclOfSoleOfficer", 
+        "hidden_field": "hdnExclOfSoleOfficerList",
+        "default_state": "0"
+      },
+      {
+        "type": "ExclusionIL",
+        "div_id": "divExclOfSoleProprietorsEtc_IL",
+        "hidden_field": "hdnExclOfSoleProprietorList_IL",
+        "default_state": "0"
+      },
+      {
+        "type": "RejectionKY",
+        "div_id": "divRejectionOfCoverageEndorsement",
+        "hidden_field": "hdnRejectionOfCoverageEndorsement", 
+        "default_state": "0"
+      }
+    ]
+  },
+  "client_script_configuration": {
+    "stop_event_propagation": [
+      "Me.lnkSave.ClientID",
+      "Me.lnkSaveNI.ClientID", 
+      "Me.lbSaveWorkplaces.ClientID",
+      "Me.lbAddNewWorkplace.ClientID"
+    ],
+    "accordion_creation": "Me.VRScript.CreateAccordion(divId, hiddenFieldId, defaultState)",
+    "location": "Lines 31-48"
+  },
+  "state_specific_business_rules": [
+    {
+      "state": "Governing State",
+      "coverages": [
+        "Inclusion Of Sole Proprietors Partners Officers And Others",
+        "Waiver Of Subrogation" 
+      ],
+      "business_rule": "Primary state controls inclusion and waiver coverage availability"
+    },
+    {
+      "state": "Indiana",
+      "coverages": [
+        "Exclusion Of Amish Workers",
+        "Exclusion Of Sole Proprietors Partners Officers And Others"
+      ],
+      "business_rule": "Indiana-specific exclusions including religious exemptions"
+    },
+    {
+      "state": "Kentucky", 
+      "coverages": [
+        "Exclusion Of Sole Proprietors Partners Officers And Others",
+        "Kentucky Rejection Of Coverage Endorsement"
+      ],
+      "business_rule": "Kentucky exclusions and rejection endorsements with effective date requirements",
+      "effective_date_requirement": "KentuckyWCPEffectiveDate"
+    },
+    {
+      "state": "Illinois",
+      "coverages": [
+        "Exclusion Of Sole Proprietors Partners Officers And Others (IL)"
+      ],
+      "business_rule": "Illinois-specific exclusions requiring multistate capability",
+      "effective_date_requirement": "IsMultistateCapableEffectiveDate"
+    }
+  ]
+}

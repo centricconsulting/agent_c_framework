@@ -1,0 +1,39 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CPR_VR_Proposal_CPR_Blanket_Control, VR_CGL_CPP_CPR_deploy" %>
+
+
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc1" %>
+
+<uc1:VR_PageBreakControl ID="VR_PageBreakControl1" Visible="false" runat="server" />
+<div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+        
+        <table class="basictbl" style="margin-top: 15px;" >
+<tr runat="server" id="tr2" style="border-bottom: 1px solid black;">
+        <td class="p_ListHead">
+            Property Blanket</td>
+             <td class="p_ListHead" style="width:150px; text-align:right;">
+                Limit
+            </td>
+       <td class="p_ListHead" style="width:220px; text-align:right;">
+                Blanket Type
+            </td>
+            <td class="p_ListHead" style="width:120px; text-align:right;">
+               
+            </td>
+    </tr>
+    <tr runat="server" id="trPropEnhanc"><td >
+            Blanket </td>
+            
+       
+            <td  style="width:150px; text-align:right;">
+                <asp:Label ID="lblBlanketLimit" runat="server" Text=""></asp:Label>
+            </td>
+            
+            <td  style="width:180px; text-align:right;">
+                <asp:Label ID="lblBlanketType" runat="server" Text=""></asp:Label>
+            </td>
+            <td></td>
+            </tr>
+            
+            
+    </table>
+    </div>

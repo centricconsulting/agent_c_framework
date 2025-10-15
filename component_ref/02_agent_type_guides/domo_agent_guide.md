@@ -127,6 +127,28 @@ For each component, make a clear **YES** or **NO** decision based on your agent'
 
 Based on the binary component decisions above, here's the recommended persona organization:
 
+### Component Ordering Principle
+
+**Recommended Order (Foundation → Specialization → Personality)**:
+
+1. **Core Guidelines First** (Critical Interaction Guidelines, Reflection Rules)
+   - Establishes safety and thinking patterns
+   - Foundation that all other sections build upon
+
+2. **Operational Standards** (Workspace Organization, Code Quality)
+   - Defines how the agent performs its work
+   - Sets quality and organizational standards
+
+3. **Domain Expertise** (Custom sections)
+   - Specialized knowledge and capabilities
+   - Built on top of the foundational patterns
+
+4. **Personality Last** (Communication style, approach)
+   - Defines how the agent expresses itself
+   - Applied across all previous sections
+
+This ordering ensures that fundamental safety and quality patterns are established before adding specialized capabilities and personality customization.
+
 ### Standard Domo Agent Structure
 
 ```markdown

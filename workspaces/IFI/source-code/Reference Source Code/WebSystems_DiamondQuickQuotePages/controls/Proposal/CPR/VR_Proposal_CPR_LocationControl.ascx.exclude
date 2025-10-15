@@ -1,0 +1,38 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CPR_VR_Proposal_CPR_LocationControl, VR_CGL_CPP_CPR_deploy" %>
+
+<%@ Register src="VR_Proposal_CPR_Building_Control.ascx" tagname="VR_Proposal_CPR_Building_Control" tagprefix="uc1" %>
+<%@ Register src="VR_Proposal_CPR_PITO_Control.ascx" tagname="VR_Proposal_CPR_PITO_Control" tagprefix="uc2" %>
+
+<%@ Register src="../VR_PageBreakControl.ascx" tagname="VR_PageBreakControl" tagprefix="uc3" %>
+
+<uc3:VR_PageBreakControl ID="VR_PageBreakControl1" runat="server" Visible="false" />
+<asp:Label ID="lblMainLocationTitle" CssClass="p_SectionHead" runat="server" Text=""></asp:Label><%--added 12/15/2017--%>
+<br /><%--added 12/15/2017--%>
+<br /><%--added 12/15/2017--%>
+<div runat="server" id="LocationOptionalCovsSection" visible="false"><%--added 12/12/2017; around 5 lines with EB only; matches styles from Building Control--%>
+    <asp:Label runat="server" ID="lblLocationOptCovsHeader" CssClass="p_SectionHead panelIndentationSmall"></asp:Label><%--updated 12/18/2017 w/ new panelIndentation class--%>
+    <div style="margin: 15px; margin-top: 0px; margin-right: 0px;">
+        <table class="basictbl" style="margin-top: 15px;" >
+            <tr style="border-bottom: 1px solid black;">
+                <td class="p_ListHead" style="width:50%; text-align:left;">Coverage</td>
+                <td class="p_ListHead" style="width:50%; text-align:right;">Premium</td>
+            </tr>
+            <tr>
+                <td style="width:50%; text-align:left;">Equipment Breakdown</td>
+                <td style="width:50%; text-align:right;"><asp:Label runat="server" ID="lblEquipmentBreakdownPrem"></asp:Label></td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div runat="server" id="divNoBuildingOrPito" style="margin-bottom: 15px; " Visible="false">
+    
+<%--<asp:Label ID="lblLocationTitle" CssClass="p_SectionHead" runat="server" Text=""></asp:Label>--%><%--removed 12/15/2017--%>
+<%--<br />--%><%--removed 12/15/2017--%>
+<span style="margin-left:15px">No buildings or Property in the Open items applied to this location</span>
+</div>
+<asp:Panel ID="pnlBuildings" runat="server">
+</asp:Panel>
+
+
+
+

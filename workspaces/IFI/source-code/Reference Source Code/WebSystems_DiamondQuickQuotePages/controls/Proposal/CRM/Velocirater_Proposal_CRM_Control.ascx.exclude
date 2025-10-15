@@ -1,0 +1,180 @@
+﻿<%@ control language="VB" autoeventwireup="false" inherits="Controls_Proposal_CRM_Velocirater_Proposal_CRM_Control, VR_CGL_CPP_CPR_deploy" %>
+
+<style>
+    .CoverageColumn {
+        width: 450px;
+        text-align: left;
+    }
+    .LimitColumn {
+        width: 150px;
+        text-align: right;
+    }
+    .DeductibleColumn {
+        width: 150px;
+        text-align: right;
+    }
+    .PremiumColumn {
+        width: 150px;
+        text-align: right;
+    }
+</style>
+
+<div align="center">
+    <table id="tblCRM" runat="server" style="border-collapse: collapse;">
+        <tr>
+            <td colspan="4" style="text-align: center;">
+                <asp:Label ID="label0" runat="server" Text="CRM - Crime" CssClass="p_ControlTitle" Font-Bold="true"></asp:Label>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                &nbsp;
+            </td>
+        </tr>
+        <tr style="border-bottom: 1px solid black;" class="p_SectionHead">
+            <td class="CoverageColumn">
+                <asp:Label ID="label1" runat="server" Text="Coverage" Font-Bold="true"></asp:Label>
+            </td>
+            <td class="LimitColumn">
+                <asp:Label ID="label2" runat="server" Text="Limit" Font-Bold="true"></asp:Label>
+            </td>
+            <td class="DeductibleColumn">
+                <asp:Label ID="label3" runat="server" Text="Deductible" Font-Bold="true"></asp:Label>
+            </td>
+            <td class="PremiumColumn">
+                <asp:Label ID="label4" runat="server" Text="Premium" Font-Bold="true"></asp:Label>
+            </td>
+        </tr>
+        <tr id="trEmployeeTheftRow" runat="server" class="p_ListItem">
+            <td class="CoverageColumn">
+                <asp:Label ID="label5" runat="server" Text="Employee Theft"></asp:Label>
+            </td>
+            <td class="LimitColumn">
+                <asp:Label ID="lblEmployeeTheftLimit" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="DeductibleColumn">
+                <asp:Label ID="lblEmployeeTheftDeductible" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="PremiumColumn">
+                <asp:Label ID="lblEmployeeTheftPremium" runat="server" Text=""></asp:Label>
+            </td>
+        </tr>
+        <tr id="trInsidePremisesRow" runat="server" class="p_ListItem">
+            <td class="CoverageColumn">
+                <asp:Label ID="label6" runat="server" Text="Inside Premises - Money and Securities"></asp:Label>
+            </td>
+            <td class="LimitColumn">
+                <asp:Label ID="lblInsidePremisesLimit" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="DeductibleColumn">
+                <asp:Label ID="lblInsidePremisesDeductible" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="PremiumColumn">
+                <asp:Label ID="lblInsidePremisesPremium" runat="server" Text=""></asp:Label>
+            </td>
+        </tr>
+        <tr id="trOutsidePremisesRow" runat="server" class="p_ListItem">
+            <td class="CoverageColumn">
+                <asp:Label ID="label7" runat="server" Text="Outside the Premises"></asp:Label>
+            </td>
+            <td class="LimitColumn">
+                <asp:Label ID="lblOutsideLimit" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="DeductibleColumn">
+                <asp:Label ID="lblOutsideDeductible" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="PremiumColumn">
+                <asp:Label ID="lblOutsidePremium" runat="server" Text=""></asp:Label>
+            </td>
+        </tr>
+        <tr id="trForgeryAlteration" runat="server" class="p_ListItem">
+            <td class="CoverageColumn">
+                <asp:Label ID="label9" runat="server" Text="Forgery or Alteration"></asp:Label>
+            </td>
+            <td class="LimitColumn">
+                <asp:Label ID="lblForgeryAlterationLimit" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="DeductibleColumn">
+                <asp:Label ID="lblForgeryAlterationDeductible" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="PremiumColumn">
+                <asp:Label ID="lblForgeryAlterationPremium" runat="server" Text=""></asp:Label>
+            </td>
+        </tr>
+        <tr id="trComputerFraud" runat="server" class="p_ListItem">
+            <td class="CoverageColumn">
+                <asp:Label ID="label11" runat="server" Text="Computer Fraud"></asp:Label>
+            </td>
+            <td class="LimitColumn">
+                <asp:Label ID="lblComputerFraudLimit" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="DeductibleColumn">
+                <asp:Label ID="lblComputerFraudDeductible" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="PremiumColumn">
+                <asp:Label ID="lblComputerFraudPremium" runat="server" Text=""></asp:Label>
+            </td>
+        </tr>
+        <tr id="trFundsTransferFraud" runat="server" class="p_ListItem">
+            <td class="CoverageColumn">
+                <asp:Label ID="label10" runat="server" Text="Funds Transfer Fraud"></asp:Label>
+            </td>
+            <td class="LimitColumn">
+                <asp:Label ID="lblFundsTransferFraudLimit" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="DeductibleColumn">
+                <asp:Label ID="lblFundsTransferFraudDeductible" runat="server" Text=""></asp:Label>
+            </td>
+            <td class="PremiumColumn">
+                <asp:Label ID="lblFundsTransferFraudPremium" runat="server" Text=""></asp:Label>
+            </td>
+        </tr>
+        <tr id="trAmountToMeetMinimunRow" runat="server" class="p_ListItem">
+            <td class="CoverageColumn">
+                <asp:Label ID="lblAmountToMeetMinimumLabel" runat="server" Text="Amount to Equal Minimum Premium"></asp:Label>
+            </td>
+            <td class="LimitColumn">
+                &nbsp;
+            </td>
+            <td class="DeductibleColumn">
+                &nbsp;
+            </td>
+            <td class="PremiumColumn">
+                <asp:Label ID="lblAmountToMeetMinimumAmount" runat="server" Text="0"></asp:Label>
+            </td>
+        </tr>
+        <tr id="CRM_CommentsRow" runat="server" class="p_ListItem" visible="false">
+            <td colspan="5">
+                <asp:Label runat="server" ID="lblCRM_Comments"></asp:Label>
+            </td>
+        </tr>
+        <tr id="trCrimeTotalPremiumRow" runat="server" class="p_ListItem" style="border-top: 1px solid black;">
+            <td class="CoverageColumn">
+                <asp:Label ID="label8" runat="server" Text="Crime Total Premium Due" Font-Bold="true"></asp:Label>
+            </td>
+            <td class="LimitColumn">
+                &nbsp;
+            </td>
+            <td class="DeductibleColumn">
+                &nbsp;
+            </td>
+            <td class="PremiumColumn">
+                <asp:Label ID="lblTotalPremiumDue" runat="server" Text="" Font-Bold="true"></asp:Label>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <asp:Label ID="lblMsg" Visible="false" runat="server" Text="" ForeColor="Red" Font-Bold="true"></asp:Label>
+            </td>
+        </tr>
+    </table>
+
+    <table id="tblRunStats" runat="server" visible="false">
+        <tr>
+            <td>
+                <asp:Label ID="lblNumLines" runat="server" Text="Number of Lines: "></asp:Label>
+            </td>
+        </tr>
+    </table>
+
+</div>

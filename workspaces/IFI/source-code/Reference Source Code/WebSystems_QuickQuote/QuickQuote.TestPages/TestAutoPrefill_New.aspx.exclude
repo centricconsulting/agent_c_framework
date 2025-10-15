@@ -1,0 +1,39 @@
+﻿<%@ Page Language="VB" AutoEventWireup="false" CodeFile="TestAutoPrefill_New.aspx.vb" Inherits="TestAutoPrefill_New" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Test Auto Prefill New</title>
+    <script type="text/javascript" src="js/CommonFunctions.js"></script>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+    <br /><br />
+    <b>Policy Id:  </b><asp:TextBox runat="server" ID="txtPolicyId"></asp:TextBox>
+    <br />
+    <b>Policy Image Num:  </b><asp:TextBox runat="server" ID="txtPolicyImageNum"></asp:TextBox>
+    <br />
+    <b>VR QuoteId (to get Client Info):  </b><asp:TextBox runat="server" ID="txtQuoteId"></asp:TextBox>
+    <br />
+    <asp:Button runat="server" ID="btnOrderAutoPrefill" Text="Order Auto Prefill (LoadImage)" />
+    &nbsp;&nbsp;<asp:Button runat="server" ID="btnOrderAutoPrefillForClient" Text="Order Auto Prefill (Client)" />
+    <br /><asp:Button runat="server" ID="btnOrderAutoPrefillForNewQuote" Text="Order Auto Prefill (New Quote using copied Client)" />
+    &nbsp;&nbsp;<asp:Button runat="server" ID="btnOrderAutoPrefillForExistingQuote" Text="Order Auto Prefill (Existing Quote using QuoteId)" />
+    <br /><asp:Button runat="server" ID="btnOrderAutoPrefillNewDemoData" Text="Order Auto Prefill (New Demo Data)" />
+    <br />
+    <b>Results:  </b>
+    <asp:Label runat="server" ID="lblResults"></asp:Label>
+    <div runat="server" id="SaveSection" visible="false">
+    <br />
+    <asp:Label runat="server" ID="lblSavedFile" Visible="false"></asp:Label>
+    <asp:Button runat="server" ID="btnSaveThirdPartyData" Text="Save Third Party Data" />
+    <br />
+    <b>Results:  </b>
+    <asp:Label runat="server" ID="lblSaveResults"></asp:Label>
+    </div>
+    </div>
+    </form>
+</body>
+</html>

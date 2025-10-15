@@ -1,0 +1,135 @@
+{
+  "direct_validation_messages": [
+    {
+      "message": "Missing Type",
+      "location": "ValidateControl method, line 315",
+      "context": "ddlType dropdown validation for InclusionOfSoleProprietersEtc",
+      "trigger_condition": "ddlType.SelectedIndex < 0 AND NIType = InclusionOfSoleProprietersEtc",
+      "message_type": "required_field_validation",
+      "control_reference": "ddlType",
+      "business_rule": "Type selection is required for Inclusion of Sole Proprietors"
+    },
+    {
+      "message": "Missing Name", 
+      "location": "ValidateControl method, line 328",
+      "context": "txtName textbox validation for all NITypes",
+      "trigger_condition": "txtName.Text.Trim = '' (empty or whitespace)",
+      "message_type": "required_field_validation", 
+      "control_reference": "txtName",
+      "business_rule": "Name is required for all Named Individual types"
+    },
+    {
+      "message": "*Error*",
+      "location": "UpdateAccordHeader method, line 153",
+      "context": "Accordion header text when NIType is unknown",
+      "trigger_condition": "NIType not matching any known enum values",
+      "message_type": "system_error_indicator",
+      "control_reference": "lblAccordHeader",
+      "business_rule": "Indicates system error when NIType is invalid"
+    }
+  ],
+  "dynamic_header_messages": [
+    {
+      "message": "Inclusion of Sole Proprietors... - #{index}",
+      "location": "UpdateAccordHeader method, line 143",
+      "context": "Header text for inclusion type",
+      "trigger_condition": "NIType = InclusionOfSoleProprietersEtc",
+      "message_type": "ui_header_text",
+      "business_purpose": "Display accordion header for inclusion endorsements"
+    },
+    {
+      "message": "Waiver of Subrogation - #{index}",
+      "location": "UpdateAccordHeader method, line 145",
+      "context": "Header text for waiver type",
+      "trigger_condition": "NIType = WaiverOfSubrogation",
+      "message_type": "ui_header_text",
+      "business_purpose": "Display accordion header for subrogation waivers"
+    },
+    {
+      "message": "Exclusion of Amish Workers - #{index}",
+      "location": "UpdateAccordHeader method, line 147",
+      "context": "Header text for Amish exclusion type",
+      "trigger_condition": "NIType = ExclusionOfAmishWorkers",
+      "message_type": "ui_header_text",
+      "business_purpose": "Display accordion header for Amish worker exclusions"
+    },
+    {
+      "message": "Exclusion of Sole Officer - #{index}",
+      "location": "UpdateAccordHeader method, line 149",
+      "context": "Header text for sole officer exclusion",
+      "trigger_condition": "NIType = ExclusionOfSoleOfficer", 
+      "message_type": "ui_header_text",
+      "business_purpose": "Display accordion header for sole officer exclusions"
+    },
+    {
+      "message": "Exclusion of Sole Proprietors... IL - #{index}",
+      "location": "UpdateAccordHeader method, line 151",
+      "context": "Header text for Illinois-specific exclusion",
+      "trigger_condition": "NIType = ExclusionOfSoleProprietor_IL",
+      "message_type": "ui_header_text",
+      "business_purpose": "Display accordion header for Illinois sole proprietor exclusions"
+    },
+    {
+      "message": "Rejection of Coverage Endorsement - #{index}",
+      "location": "UpdateAccordHeader method, line 152",
+      "context": "Header text for Kentucky rejection endorsement",
+      "trigger_condition": "NIType = RejectionOfCoverageEndorsement",
+      "message_type": "ui_header_text", 
+      "business_purpose": "Display accordion header for Kentucky rejection endorsements"
+    }
+  ],
+  "validation_group_names": [
+    {
+      "group_name": "Inclusion of Sole Proprietors... - #{index}",
+      "location": "ValidateControl method, line 309",
+      "context": "Validation group for inclusion type",
+      "trigger_condition": "NIType = InclusionOfSoleProprietersEtc",
+      "purpose": "Group validation messages for inclusion type"
+    },
+    {
+      "group_name": "Waiver of Subrogation - #{index}",
+      "location": "ValidateControl method, line 317",
+      "context": "Validation group for waiver type", 
+      "trigger_condition": "NIType = WaiverOfSubrogation",
+      "purpose": "Group validation messages for waiver type"
+    },
+    {
+      "group_name": "Exclusion of Amish Workers - #{index}",
+      "location": "ValidateControl method, line 319",
+      "context": "Validation group for Amish exclusion",
+      "trigger_condition": "NIType = ExclusionOfAmishWorkers",
+      "purpose": "Group validation messages for Amish exclusion type"
+    },
+    {
+      "group_name": "Exclusion of Sole Officer - #{index}",
+      "location": "ValidateControl method, line 321",
+      "context": "Validation group for sole officer exclusion",
+      "trigger_condition": "NIType = ExclusionOfSoleOfficer",
+      "purpose": "Group validation messages for sole officer exclusion type"
+    },
+    {
+      "group_name": "Exclusion of Sole Proprietors... IL - #{index}",
+      "location": "ValidateControl method, line 323",
+      "context": "Validation group for Illinois exclusion",
+      "trigger_condition": "NIType = ExclusionOfSoleProprietor_IL",
+      "purpose": "Group validation messages for Illinois exclusion type"
+    },
+    {
+      "group_name": "Rejection Of Coverage Endorsement - #{index}",
+      "location": "ValidateControl method, line 325",
+      "context": "Validation group for Kentucky rejection",
+      "trigger_condition": "NIType = RejectionOfCoverageEndorsement", 
+      "purpose": "Group validation messages for Kentucky rejection type"
+    }
+  ],
+  "error_handling_messages": [
+    {
+      "message_pattern": "{RoutineName}: {ex.Message}",
+      "location": "HandleError method, line 99",
+      "context": "Generic error message formatting",
+      "trigger_condition": "Any exception in try-catch blocks",
+      "message_type": "exception_handling",
+      "display_logic": "Show in lblMsg if not PROD, otherwise throw exception"
+    }
+  ]
+}

@@ -1,6 +1,10 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from .base_command import Command
+
+if TYPE_CHECKING:
+    from agent_c_api.core.realtime_bridge import RealtimeBridge
+
 
 class HelpCommand(Command):
     @property
@@ -11,7 +15,7 @@ class HelpCommand(Command):
     def help_text(self) -> str:
         return "Show available commands or help for a specific command - Usage: !help [command]"
 
-    async def execute(self, context, **kwargs):
+    async def execute(self, context: 'RealtimeBridge', **kwargs):
         # Get the command handler from context
         handler = context.command_handler
 
@@ -25,21 +29,21 @@ class HelpCommand(Command):
             if target in handler.command_map:
                 cmd = handler.command_map[target]
                 aliases = ', '.join(cmd.command_strings)
-                context.chat_ui.fake_role_message("system",
-                                                  f"{aliases}\n  {cmd.help_text}")
+                message = f"## {cmd.cmd_name} Help\n\n{cmd.help_text}\n\n**Aliases:** {aliases}\n\n"
+                await context.send_system_message(message)
             else:
-                context.chat_ui.fake_role_message("system",
-                                                  f"Unknown command: {target}")
+                await context.send_system_message(f"Unknown command: {target}", severity="error")
         else:
             # Show all commands
-            lines = ["Available commands:"]
+            lines = ["# Agent C Chat Command Help\n\nChat commands allow you to interact with the Agent C runtime, without dedicated UI or Agent support.\n\n ## Available commands\n"]
             # Group by command instance to avoid duplicates
             seen_commands = set()
             for cmd_str, cmd in handler.command_map.items():
                 if id(cmd) not in seen_commands:
+                    name = cmd.cmd_name
                     seen_commands.add(id(cmd))
                     aliases = ', '.join(cmd.command_strings)
-                    lines.append(f"  {aliases}")
-                    lines.append(f"    {cmd.help_text}")
+                    line = f"### {name}\n\n{cmd.help_text}\n\n**Aliases:** {aliases}\n\n"
+                    lines.append(line)
 
-            context.chat_ui.fake_role_message("system", "\n".join(lines))
+            await context.raise_render_media_markdown("\n".join(lines))

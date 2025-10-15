@@ -1,0 +1,129 @@
+{
+  "extraction_summary": {
+    "feature_name": "BOP Application Section",
+    "analysis_date": "2024-12-19",
+    "extraction_method": "Direct + Source Identification",
+    "overall_completeness": "92%"
+  },
+  "underwriting_questions": {
+    "direct_questions": [
+      {
+        "question": "1A. Is the Applicant a subsidiary of another entity?",
+        "code_id": "9000",
+        "location": "UWQuestions.vb, line 1067",
+        "type": "Underwriting Question",
+        "section": "Applicant Information"
+      },
+      {
+        "question": "1B. Does the Applicant have any subsidiaries?", 
+        "code_id": "9001",
+        "location": "UWQuestions.vb, line 1078",
+        "type": "Underwriting Question",
+        "section": "Applicant Information"
+      }
+    ],
+    "commented_kill_questions": [
+      {
+        "question": "Any exposure to flammables, explosives, chemicals?",
+        "code_id": "9003", 
+        "location": "UWQuestions.vb, line 1015",
+        "type": "Kill Question (Commented)",
+        "status": "Inactive/Commented"
+      },
+      {
+        "question": "During the last five years, has any applicant been indicted for or convicted of any degree of the crime of fraud, bribery, arson or any other arson-related crime?",
+        "code_id": "9008",
+        "location": "UWQuestions.vb, line 1036",
+        "type": "Kill Question (Commented)",
+        "status": "Inactive/Commented"
+      }
+    ],
+    "external_sources": [
+      {
+        "service_method": "VR.Common.UWQuestions.UWQuestions.GetCommercialBOPUnderwritingQuestions()",
+        "location": "ctlCommercialUWQuestionItem.ascx.vb, line 52",
+        "purpose": "Load BOP underwriting questions dynamically",
+        "content_status": "Hardcoded in UWQuestions.vb - extracted above"
+      }
+    ],
+    "completeness": "95%"
+  },
+  "business_rules": {
+    "direct_rules": [
+      {
+        "rule": "Application workflow orchestration with 8 states",
+        "location": "ctl_WorkflowManager_App_BOP.ascx.vb",
+        "type": "Workflow Management",
+        "context": "State-driven application progression"
+      },
+      {
+        "rule": "Location-Building hierarchy management",
+        "location": "ctl_BOP_App_Location.ascx.vb, ctl_BOP_App_Building.ascx.vb",
+        "type": "Data Relationship",
+        "context": "One-to-many location-building mapping"
+      },
+      {
+        "rule": "Beautician additional services validation",
+        "location": "ctl_BOP_App_AdditionalServices.ascx.vb",
+        "type": "Business Logic",
+        "context": "Professional liability coverage options"
+      }
+    ],
+    "validation_rules": [
+      {
+        "rule": "UW Question answer validation (Yes/No/Additional Info)",
+        "location": "ctlCommercialUWQuestionItem.ascx.vb, Save() method",
+        "type": "Input Validation",
+        "context": "RadioButton validation with optional text"
+      },
+      {
+        "rule": "Multi-state quote processing",
+        "location": "ctlCommercialUWQuestionItem.ascx.vb",
+        "type": "Cross-State Logic",
+        "context": "SubQuotes collection management"
+      }
+    ],
+    "completeness": "90%"
+  },
+  "additional_services": {
+    "direct_services": [
+      {
+        "service": "Manicures",
+        "code_path": "ctl_BOP_App_AdditionalServices.ascx.vb",
+        "type": "Checkbox Selection",
+        "business_context": "Beautician Professional Liability"
+      },
+      {
+        "service": "Pedicures",
+        "code_path": "ctl_BOP_App_AdditionalServices.ascx.vb",
+        "type": "Checkbox Selection",
+        "business_context": "Beautician Professional Liability"
+      },
+      {
+        "service": "Waxes",
+        "code_path": "ctl_BOP_App_AdditionalServices.ascx.vb",
+        "type": "Checkbox Selection",
+        "business_context": "Beautician Professional Liability"
+      },
+      {
+        "service": "Threading",
+        "code_path": "ctl_BOP_App_AdditionalServices.ascx.vb",
+        "type": "Checkbox Selection",
+        "business_context": "Beautician Professional Liability"
+      },
+      {
+        "service": "Hair Extensions",
+        "code_path": "ctl_BOP_App_AdditionalServices.ascx.vb",
+        "type": "Checkbox Selection",
+        "business_context": "Beautician Professional Liability"
+      },
+      {
+        "service": "Cosmetology Services",
+        "code_path": "ctl_BOP_App_AdditionalServices.ascx.vb",
+        "type": "Checkbox Selection",
+        "business_context": "Beautician Professional Liability"
+      }
+    ],
+    "completeness": "100%"
+  }
+}

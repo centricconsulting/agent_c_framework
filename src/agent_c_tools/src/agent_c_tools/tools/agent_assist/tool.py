@@ -183,7 +183,7 @@ class AgentAssistTools(AgentAssistToolBase):
         calling_agent_key: str = calling_agent_config.key
         content = f"**{calling_agent_key}** requesting assistance:\n\n{message}"
 
-        await tool_context['bridge'].send_system_message(f"Char interaction started by {calling_agent_key} with {agent_config.key}.", "info")
+        await tool_context['bridge'].send_system_message(f"Chat interaction started by {calling_agent_key} with {agent_config.key}.", "info")
 
         agent_session_id, messages = await self.agent_chat(content,
                                                            agent_config,
@@ -196,7 +196,7 @@ class AgentAssistTools(AgentAssistToolBase):
                                                            sub_agent_type="assist",
                                                            prime_agent_key=calling_agent_config.key
                                                            )
-        await tool_context['bridge'].send_system_message(f"Char interaction complete between {calling_agent_key} and {agent_config.key}.", "info")
+        await tool_context['bridge'].send_system_message(f"Chat interaction complete between {calling_agent_key} and {agent_config.key}.", "info")
 
         if messages is not None and len(messages) > 0:
             last_message = messages[-1]

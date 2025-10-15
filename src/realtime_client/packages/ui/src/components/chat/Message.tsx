@@ -145,7 +145,7 @@ const ThoughtMessage: React.FC<ThoughtMessageProps> = ({
         <div
           className={cn(
             "relative rounded-xl px-4 py-2.5 transition-all duration-200 overflow-hidden",
-            "bg-card/50 border border-border/50",
+            "bg-card-thought border border-border/50",
             "max-w-[85%]", // Match assistant message width
             isStreaming && "after:content-[''] after:inline-block after:w-1.5 after:h-4 after:ml-1 after:bg-current after:animate-pulse after:rounded-full"
           )}
@@ -360,8 +360,8 @@ const MessageComponent = React.forwardRef<HTMLDivElement, MessageProps>(
             className={cn(
               "relative rounded-xl px-4 py-2.5 transition-all duration-200 overflow-hidden",
               isUser 
-                ? "bg-muted max-w-[85%]" 
-                : "bg-card border border-border/50",
+                ? "bg-card-user max-w-[85%]" 
+                : "bg-card-assistant border border-border/50",
               isError && "bg-destructive/10 border border-destructive",
               isStreaming && "after:content-[''] after:inline-block after:w-1.5 after:h-4 after:ml-1 after:bg-current after:animate-pulse after:rounded-full",
               isSubSession && "border-l-2 border-primary/30",

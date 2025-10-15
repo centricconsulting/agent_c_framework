@@ -1,0 +1,82 @@
+{
+  "file_analysis": {
+    "file_name": "ctl_WCP_Workplace.ascx.vb",
+    "file_path": "//project/workspaces/IFI/source-code/Primary Source Code/WebSystems_VelociRater/IFM.VR.Web/User Controls/VR Commercial/Application/WCP/ctl_WCP_Workplace.ascx.vb",
+    "lines_of_code": 245,
+    "analysis_date": "2024-12-19",
+    "complexity": "Medium",
+    "line_of_business": "Workers Compensation (WCP)",
+    "control_type": "ASP.NET User Control",
+    "inherits_from": "VRControlBase"
+  },
+  "technical_patterns": {
+    "architecture_patterns": [
+      {
+        "pattern_type": "User Control Architecture",
+        "pattern_name": "ASP.NET User Control with Event-Driven Architecture",
+        "location": "Class declaration, line 6",
+        "description": "Inherits VRControlBase, implements workplace management with custom events",
+        "evidence": "Public Class ctl_WCP_Workplace Inherits VRControlBase"
+      },
+      {
+        "pattern_type": "ViewState Management",
+        "pattern_name": "Property with ViewState Persistence",
+        "location": "WorkplaceIndex property, lines 10-18",
+        "description": "Uses ViewState for persisting WorkplaceIndex across postbacks",
+        "evidence": "ViewState.GetInt32(\"vs_WCPWorkplaceIndex\", -1)"
+      }
+    ],
+    "data_access_patterns": [
+      {
+        "pattern_type": "Property Chain Navigation",
+        "pattern_name": "Safe Navigation with Null Checks",
+        "location": "MyWorkplace property, lines 20-27",
+        "description": "Safely navigates Quote.Locations collection with null checking",
+        "evidence": "If Quote IsNot Nothing AndAlso Quote.Locations IsNot Nothing AndAlso Quote.Locations.HasItemAtIndex(WorkplaceIndex)"
+      }
+    ],
+    "validation_patterns": [
+      {
+        "pattern_type": "Field Validation",
+        "pattern_name": "Required Field Validation with Error Display",
+        "location": "ValidateControl method, lines 143-171",
+        "description": "Validates required address fields with specific error messages",
+        "evidence": "Me.ValidationHelper.AddError(txtStreetNum, \"Missing Street Number\", accordList)"
+      }
+    ],
+    "javascript_integration_patterns": [
+      {
+        "pattern_type": "Client-Side Integration",
+        "pattern_name": "JavaScript Event Binding for Address Lookup",
+        "location": "AddScriptWhenRendered method, lines 58-62",
+        "description": "Binds ZIP code field to city/county lookup JavaScript function",
+        "evidence": "Me.VRScript.CreateJSBinding(Me.txtZipcode, ctlPageStartupScript.JsEventType.onkeyup, \"DoCityCountyLookup\")"
+      }
+    ],
+    "business_logic_patterns": [
+      {
+        "pattern_type": "Multi-Location Logic",
+        "pattern_name": "First Location Special Handling",
+        "location": "IsFirstLocationForStatePart property, lines 29-33",
+        "description": "Determines if location is first for any sub-quote in multi-state scenarios",
+        "evidence": "IFM.VR.Common.Helpers.MultiState.Locations.IsFirstLocationForAnySubQuote"
+      },
+      {
+        "pattern_type": "Conditional UI Logic",
+        "pattern_name": "First Location UI Restrictions",
+        "location": "Populate method, lines 78-83",
+        "description": "Disables delete/clear for first location, disables state dropdown",
+        "evidence": "If IsFirstLocationForStatePart Then Me.lnkDelete.Visible = False"
+      }
+    ],
+    "event_patterns": [
+      {
+        "pattern_type": "Custom Events",
+        "pattern_name": "Workplace Management Events",
+        "location": "Event declarations, lines 39-41",
+        "description": "Defines events for workplace add, delete, clear operations",
+        "evidence": "Public Event AddWorkplaceRequested(), DeleteWorkplaceRequested, ClearWorkplaceRequested"
+      }
+    ]
+  }
+}

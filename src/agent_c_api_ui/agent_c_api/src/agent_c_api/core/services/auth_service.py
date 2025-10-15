@@ -34,7 +34,7 @@ class AuthService:
         self.auth_repo: Optional[AuthRepository] = None
         
         # Initialize password hashing context
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        self.pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
     
     async def initialize(self):
         """

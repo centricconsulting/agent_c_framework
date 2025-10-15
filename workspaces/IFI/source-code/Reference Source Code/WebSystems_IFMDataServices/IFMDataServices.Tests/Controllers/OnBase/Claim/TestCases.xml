@@ -1,0 +1,74 @@
+﻿<tests>
+
+  <!-- Test Bad Request - NOT Possible-->
+
+  <!--testing pulling a claim for an office account-->
+
+  <!--<TestGetClaimInfo>
+    <claimNumber>1098117</claimNumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>404</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetClaimInfo>-->
+  
+  
+  <TestGetClaimInfo>
+    <claimNumber>1206651</claimNumber>
+    <expectClaimantName1>RONALD MORRISETT</expectClaimantName1>
+    <expectClaimantName2>LISA MORRISETT</expectClaimantName2>
+    <expectClaimantName3></expectClaimantName3>
+    <expectPolicyHolderName1>RONALD MORRISETT</expectPolicyHolderName1>
+    <expectPolicyHolderName2>LISA MORRISETT</expectPolicyHolderName2>
+    <expectPolicyNumber>HOM1001276</expectPolicyNumber>
+    <expectOfficeAccount>yes</expectOfficeAccount>
+    <expectedRepName>JACQUI HUMPHREYS</expectedRepName>
+    <expectedRepUserName>JAHUM</expectedRepUserName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetClaimInfo>
+
+  <!--test claim not found-->
+  <TestGetClaimInfo>
+    <claimNumber>1070573-6</claimNumber>
+    <expectPayload>false</expectPayload>
+    <expectedResult>404</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetClaimInfo>
+
+  <!--testing pulling a claim with individual claimant-->
+  <TestGetClaimInfo>
+    <claimNumber>1070573</claimNumber>
+    <expectClaimantName1>LARRY MILLER</expectClaimantName1>
+    <expectClaimantName2>L MILLER</expectClaimantName2>
+    <expectClaimantName3>MICHELLE MILLER</expectClaimantName3>
+    <expectPolicyHolderName1>L MILLER</expectPolicyHolderName1>
+    <expectPolicyNumber>PPA2052219</expectPolicyNumber>
+    <expectOfficeAccount>no</expectOfficeAccount>
+    <expectedRepName>CANDICE DELHAGEN</expectedRepName>
+    <expectedRepUserName>CADEL</expectedRepUserName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetClaimInfo>
+
+  <!--testing pulling a claim with commercial claimant-->
+  <TestGetClaimInfo>
+    <claimNumber>1000001</claimNumber>
+    <expectClaimantName1>MARIE HENDRIX</expectClaimantName1>
+    <expectClaimantName2>HECTOR BURTON</expectClaimantName2>
+    <expectClaimantName3>Loyd &amp; Sandra Fletcher DBA Lucas Wrecker</expectClaimantName3>
+    <expectClaimantName4>ARNOLD HENDRIX</expectClaimantName4>
+    <expectPolicyHolderName1>MARIA HENDRIX</expectPolicyHolderName1>
+    <expectPolicyHolderName2>ARNOLD HENDRIX</expectPolicyHolderName2>
+    <expectPolicyNumber>PPA1000164</expectPolicyNumber>
+    <expectOfficeAccount>no</expectOfficeAccount>
+    <expectedRepName>CANDICE DELHAGEN</expectedRepName>
+    <expectedRepUserName>CADEL</expectedRepUserName>
+    <expectPayload>true</expectPayload>
+    <expectedResult>false</expectedResult>
+    <expectErrors>false</expectErrors>
+  </TestGetClaimInfo>
+
+
+</tests>

@@ -1,0 +1,287 @@
+﻿
+Partial Class VrPrintForm
+    Inherits System.Web.UI.Page
+
+    Dim qqHelper As New QuickQuote.CommonMethods.QuickQuoteHelperClass
+    Dim policyId As String = ""
+    Dim printFormType As String = ""
+    Dim printFormSearch As String = ""
+    Dim hasPrintFormSearch As Boolean = False
+    Dim formBytes As Byte() = Nothing
+
+    Enum PrintType
+        All = 1
+        JustWorksheet = 2
+        JustApplication = 3
+        Search = 4
+    End Enum
+
+    Protected Sub Page_Load(sender As Object, e As System.EventArgs) Handles Me.Load
+        If Page.IsPostBack = False Then
+            If Request.QueryString("PolicyId") IsNot Nothing AndAlso Request.QueryString("PolicyId").ToString <> "" Then
+                policyId = Request.QueryString("PolicyId").ToString
+            End If
+            If Request.QueryString("PrintFormString") IsNot Nothing AndAlso Request.QueryString("PrintFormString").ToString <> "" Then
+                SplitPrintFormString(Request.QueryString("PrintFormString").ToString)
+            End If
+
+            If policyId <> "" Then
+                If Session("VrPrintFormBytes_" & policyId) IsNot Nothing Then
+                    formBytes = CType(Session("VrPrintFormBytes_" & policyId), Byte())
+                Else
+                    If printFormType <> "" Then
+                        If UCase(printFormType) = "WORKSHEET" Then
+                            GetDiamondPrintHistory(PrintType.JustWorksheet)
+                        ElseIf UCase(printFormType) = "APPLICATION" Then
+                            GetDiamondPrintHistory(PrintType.JustApplication)
+                        Else
+                            GetDiamondPrintHistory()
+                        End If
+                    ElseIf hasPrintFormSearch = True Then
+                        If printFormSearch = "" OrElse printFormSearch = "*" Then
+                            'pull all
+                            GetDiamondPrintHistory()
+                        Else
+                            GetDiamondPrintHistory(PrintType.Search, printFormSearch)
+                        End If
+                    Else
+                        If ConfigurationManager.AppSettings("QuickQuotePrintHistory_Worksheet_or_All") IsNot Nothing AndAlso ConfigurationManager.AppSettings("QuickQuotePrintHistory_Worksheet_or_All").ToString <> "" AndAlso UCase(ConfigurationManager.AppSettings("QuickQuotePrintHistory_Worksheet_or_All").ToString) = "WORKSHEET" Then
+                            GetDiamondPrintHistory(PrintType.JustWorksheet)
+                        ElseIf ConfigurationManager.AppSettings("QuickQuotePrintHistory_Worksheet_or_All") IsNot Nothing AndAlso ConfigurationManager.AppSettings("QuickQuotePrintHistory_Worksheet_or_All").ToString <> "" AndAlso UCase(ConfigurationManager.AppSettings("QuickQuotePrintHistory_Worksheet_or_All").ToString) = "APPLICATION" Then
+                            GetDiamondPrintHistory(PrintType.JustApplication)
+                        Else
+                            GetDiamondPrintHistory()
+                        End If
+                    End If
+                End If
+
+                If formBytes IsNot Nothing Then
+                    Response.ContentType = "application/pdf"
+                    Response.BinaryWrite(formBytes)
+                    Response.Flush()
+
+                    If Session("VrPrintFormBytes_" & policyId) IsNot Nothing Then
+                        Session("VrPrintFormBytes_" & policyId) = Nothing
+                    End If
+                Else
+                    Response.Write("No print form found. Please try again.")
+                End If
+            Else
+                Response.Write("No print form parameters were found.  Please try again.")
+            End If
+
+        End If
+    End Sub
+    'added 6/20/2014
+    Enum PrintFormDescriptionEvaluationType
+        UseDefaultForPrintType = 1
+        IgnoreFormDescription = 2
+        OnlyUniqueFormDescriptions = 3
+    End Enum
+    Private Sub GetDiamondPrintHistory(Optional ByVal pType As PrintType = PrintType.All, Optional ByVal searchText As String = "", Optional ByVal formDescriptionEvaluationType As PrintFormDescriptionEvaluationType = PrintFormDescriptionEvaluationType.UseDefaultForPrintType) '6/20/2014 - added optional param for formDescriptionEvaluationType
+        If policyId <> "" AndAlso IsNumeric(policyId) = True Then
+            'updated 6/20/2014 for PrintFormDescriptionEvaluationType
+            Dim onlyPullUniqueFormDescriptions As Boolean = False
+            If formDescriptionEvaluationType <> Nothing Then
+                Select Case formDescriptionEvaluationType
+                    Case PrintFormDescriptionEvaluationType.OnlyUniqueFormDescriptions
+                        onlyPullUniqueFormDescriptions = True
+                    Case PrintFormDescriptionEvaluationType.UseDefaultForPrintType
+                        If pType <> Nothing Then
+                            Select Case pType
+                                Case PrintType.JustApplication, PrintType.JustWorksheet
+                                    onlyPullUniqueFormDescriptions = True
+                                Case Else 'Search, All
+                                    'already defaulted to False above
+                            End Select
+                        End If
+                    Case Else 'IgnoreFormDescription
+                        'already defaulted to False above
+                End Select
+            End If
+
+            Using dia As New DiamondWebClass.DiamondPrinting
+                Dim forms As Diamond.Common.Objects.InsCollection(Of Diamond.Common.Objects.Printing.PrintForm) = Nothing '6/20/2014 added '= Nothing' to initialize... just in case
+                'updated 3/12/2013 to not send new credentials to Diamond
+                Dim loginName As String = ""
+                Dim loginPassword As String = ""
+                If System.Web.HttpContext.Current.Session("DiamondUsername") IsNot Nothing AndAlso System.Web.HttpContext.Current.Session("DiamondUsername").ToString <> "" Then
+                    loginName = System.Web.HttpContext.Current.Session("DiamondUsername").ToString
+                ElseIf ConfigurationManager.AppSettings("TestOrProd") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("TestOrProd").ToString) = "TEST" AndAlso ConfigurationManager.AppSettings("QuickQuote_UseTestVariables") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("QuickQuote_UseTestVariables").ToString) = "YES" Then
+                    loginName = ConfigurationManager.AppSettings("QuickQuoteTestUsername").ToString
+                End If
+                If System.Web.HttpContext.Current.Session("DiamondPassword") IsNot Nothing AndAlso System.Web.HttpContext.Current.Session("DiamondPassword").ToString <> "" Then
+                    loginPassword = System.Web.HttpContext.Current.Session("DiamondPassword").ToString
+                ElseIf ConfigurationManager.AppSettings("TestOrProd") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("TestOrProd").ToString) = "TEST" AndAlso ConfigurationManager.AppSettings("QuickQuote_UseTestVariables") IsNot Nothing AndAlso UCase(ConfigurationManager.AppSettings("QuickQuote_UseTestVariables").ToString) = "YES" Then
+                    loginPassword = ConfigurationManager.AppSettings("QuickQuoteTestPassword").ToString
+                End If
+                If loginName <> "" AndAlso loginPassword <> "" Then
+                    '5/7/2013 - doesn't need Try/Catch to prevent unhandled exception (since method in DiamondPrinting class already has it)
+                    forms = dia.getPrintFormsForPolicyId(dia.loginDiamond(loginName, loginPassword), CInt(policyId))
+                End If
+
+                If forms IsNot Nothing Then
+                    Dim pfs As Generic.List(Of Diamond.Common.Objects.Printing.PrintForm)
+                    Dim formDescriptions As New List(Of String) 'added 6/20/2014 for PrintFormDescriptionEvaluationType
+                    For Each pf As Diamond.Common.Objects.Printing.PrintForm In forms
+                        Dim okayToUse As Boolean = False
+                        If pType = PrintType.JustWorksheet AndAlso UCase(pf.Description).Contains("SHEET") = True Then
+                            okayToUse = True
+                        ElseIf pType = PrintType.JustApplication AndAlso UCase(pf.Description).Contains("APPLICATION") Then
+                            okayToUse = True
+                        ElseIf pType = PrintType.Search AndAlso UCase(pf.Description).Contains(UCase(searchText)) Then
+                            okayToUse = True
+                        ElseIf pType = PrintType.All Then
+                            okayToUse = True
+                        End If
+
+                        'If okayToUse = True Then
+                        'updated 6/20/2014 for PrintFormDescriptionEvaluationType; will currently use the 1st one found when onlyPullUniqueFormDescriptions = true... may need to update to return the last one
+                        If okayToUse = True AndAlso (onlyPullUniqueFormDescriptions = False OrElse formDescriptions.Contains(pf.Description) = False) Then
+                            formDescriptions.Add(pf.Description) 'added 6/20/2014
+                            If pfs Is Nothing Then
+                                pfs = New Generic.List(Of Diamond.Common.Objects.Printing.PrintForm)
+                            End If
+                            pfs.Add(pf)
+                        End If
+                    Next
+                    If pfs IsNot Nothing Then
+                        formBytes = GetPrintForm(pfs)
+                    End If
+                End If
+            End Using
+            If formBytes IsNot Nothing Then
+                'good
+            End If
+        End If
+    End Sub
+    Private Function GetPrintForm(ByVal pf As Diamond.Common.Objects.Printing.PrintForm) As Byte()
+        Dim reprintRequest As New Diamond.Common.Services.Messages.PrintingService.ReprintJob.Request
+        Dim reprintResponse As New Diamond.Common.Services.Messages.PrintingService.ReprintJob.Response
+
+        With reprintRequest.RequestData
+            .PolicyId = pf.PolicyId
+            .PolicyImageNum = pf.PolicyImageNum
+
+            .PrintForms = New Diamond.Common.Objects.InsCollection(Of Diamond.Common.Objects.Printing.PrintForm)
+            .PrintForms.Add(New Diamond.Common.Objects.Printing.PrintForm() {pf})
+        End With
+
+        Using reprintProxy As New Diamond.Common.Services.Proxies.PrintingServiceProxy
+            Try
+                '5/7/2013 - enclosed in Try/Catch to prevent unhandled exception (so page would still work)
+                reprintResponse = reprintProxy.ReprintJob(reprintRequest)
+            Catch ex As Exception
+
+            End Try
+        End Using
+
+        If reprintResponse IsNot Nothing AndAlso reprintResponse.ResponseData IsNot Nothing AndAlso reprintResponse.ResponseData.Data IsNot Nothing Then
+            Return reprintResponse.ResponseData.Data
+        Else
+            If reprintResponse.DiamondValidation.HasErrors Then
+                For Each diaVal As Diamond.Common.Objects.ValidationItem In reprintResponse.DiamondValidation.ValidationItems
+                    If diaVal.ItemType = Diamond.Common.Objects.ValidationItemType.ValidationError Then
+                        'errMsg &= diaVal.Message & Environment.NewLine & Environment.NewLine
+                    End If
+                Next
+            End If
+            Return Nothing
+        End If
+    End Function
+    Private Function GetPrintForm(ByVal pfs As Generic.List(Of Diamond.Common.Objects.Printing.PrintForm)) As Byte()
+        If pfs IsNot Nothing AndAlso pfs.Count > 0 Then
+            Dim reprintRequest As New Diamond.Common.Services.Messages.PrintingService.ReprintJob.Request
+            Dim reprintResponse As New Diamond.Common.Services.Messages.PrintingService.ReprintJob.Response
+
+            With reprintRequest.RequestData
+                .PrintForms = New Diamond.Common.Objects.InsCollection(Of Diamond.Common.Objects.Printing.PrintForm)
+                For Each pf As Diamond.Common.Objects.Printing.PrintForm In pfs
+                    .PolicyId = pf.PolicyId
+                    .PolicyImageNum = pf.PolicyImageNum
+
+                    .PrintForms.Add(New Diamond.Common.Objects.Printing.PrintForm() {pf})
+                    'testing 1/26/2015
+                    'Dim conditions As New Diamond.Common.Objects.InsCollection(Of Diamond.Common.Objects.Printing.PrintForm).SortCondition
+                    'conditions.Condition(New Diamond.Common.Objects.Printing.PrintForm)
+                    'conditions.Order = Diamond.Common.Enums.SortOrder.Ascending
+                    '.PrintForms.Sort(conditions)
+                    '.ReprintByFormCategory = True 'didn't seem to do anything
+                    '.ReprintByPrintType = True 'didn't seem to do anything
+                    '.OnlyMostRecent = True 'didn't seem to do anything
+                    '.UserSelected = True 'didn't seem to do anything
+                Next
+                'testing 1/26/2015; switching order didn't make a difference
+                'Dim done As Boolean = False
+                'Dim currIndex As Integer = pfs.Count - 1
+                'Do Until done = True
+                '    Dim pf As Diamond.Common.Objects.Printing.PrintForm = pfs.Item(currIndex)
+                '    .PolicyId = pf.PolicyId
+                '    .PolicyImageNum = pf.PolicyImageNum
+
+                '    .PrintForms.Add(New Diamond.Common.Objects.Printing.PrintForm() {pf})
+
+                '    currIndex -= 1
+                '    If currIndex < 0 Then
+                '        done = True
+                '        Exit Do
+                '    End If
+                'Loop
+            End With
+
+            Using reprintProxy As New Diamond.Common.Services.Proxies.PrintingServiceProxy
+                Try
+                    '5/7/2013 - enclosed in Try/Catch to prevent unhandled exception (so page would still work)
+                    reprintResponse = reprintProxy.ReprintJob(reprintRequest)
+                Catch ex As Exception
+
+                End Try
+            End Using
+
+            If reprintResponse IsNot Nothing AndAlso reprintResponse.ResponseData IsNot Nothing AndAlso reprintResponse.ResponseData.Data IsNot Nothing Then
+                Return reprintResponse.ResponseData.Data
+            Else
+                If reprintResponse.DiamondValidation.HasErrors Then
+                    For Each diaVal As Diamond.Common.Objects.ValidationItem In reprintResponse.DiamondValidation.ValidationItems
+                        If diaVal.ItemType = Diamond.Common.Objects.ValidationItemType.ValidationError Then
+                            'errMsg &= diaVal.Message & Environment.NewLine & Environment.NewLine
+                        End If
+                    Next
+                End If
+                Return Nothing
+            End If
+        Else
+            Return Nothing
+        End If
+    End Function
+
+    Private Sub SplitPrintFormString(ByVal PrintFormString As String)
+        '?PrintFormString=policyId==12345||printFormType==Application
+        '?PrintFormString=policyId==12345||printFormSearch==App
+        If PrintFormString <> "" AndAlso PrintFormString.Contains("==") = True Then
+            Dim arNameValuePair As Array
+            If PrintFormString.Contains("||") = True Then
+                'multiple values
+                Dim arDecString As String()
+                arDecString = Split(PrintFormString, "||")
+                For Each nameValuePair As String In arDecString
+                    If nameValuePair.Contains("==") = True Then
+                        arNameValuePair = Split(nameValuePair, "==")
+                        Select Case UCase(arNameValuePair(0).ToString.Trim)
+                            Case "POLICYID", "POLID"
+                                policyId = arNameValuePair(1).ToString.Trim
+                            Case "PRINTFORMTYPE", "FORMTYPE", "TYPE"
+                                printFormType = arNameValuePair(1).ToString.Trim
+                            Case "PRINTFORMSEARCH", "FORMSEARCH", "SEARCH"
+                                printFormSearch = arNameValuePair(1).ToString.Trim
+                                hasPrintFormSearch = True
+                        End Select
+                    End If
+                Next
+            ElseIf policyId = "" AndAlso UCase(PrintFormString).Contains("POLICYID") = True OrElse UCase(PrintFormString).Contains("POLID") = True Then
+                arNameValuePair = Split(PrintFormString, "==")
+                policyId = arNameValuePair(1).ToString.Trim
+            End If
+        End If
+    End Sub
+End Class
