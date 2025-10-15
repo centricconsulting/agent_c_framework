@@ -13,8 +13,8 @@ from pathlib import Path
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from agent_c_tools.tools.plane.auth.cookie_refresh import PlaneCookieRefresh
-from agent_c_tools.tools.plane.auth.cookie_manager import PlaneCookieManager
+from plane import PlaneCookieRefresh
+from plane import PlaneCookieManager
 
 
 async def main():
@@ -69,7 +69,7 @@ async def main():
         
         # Test
         print("\n🧪 Testing new cookies...")
-        from agent_c_tools.tools.plane.auth.plane_session import PlaneSession
+        from plane import PlaneSession
         
         try:
             session = PlaneSession(base_url, workspace, new_cookies)

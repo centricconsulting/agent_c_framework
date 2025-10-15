@@ -77,20 +77,22 @@ Add to your Agent C tools registration (usually in `agent_c_tools/__init__.py`):
 
 ```python
 # Import PLANE toolsets to trigger registration
-from agent_c_tools.tools.plane.tools.plane_projects import PlaneProjectTools
-from agent_c_tools.tools.plane.tools.plane_issues import PlaneIssueTools
-from agent_c_tools.tools.plane.tools.plane_search import PlaneSearchTools
-from agent_c_tools.tools.plane.tools.plane_analytics import PlaneAnalyticsTools
-from agent_c_tools.tools.plane.tools.plane_issue_relations import PlaneIssueRelationsTools
-from agent_c_tools.tools.plane.tools.plane_labels import PlaneLabelTools
-from agent_c_tools.tools.plane.tools.plane_bulk import PlaneBulkTools
+from plane import PlaneProjectTools
+from plane import PlaneIssueTools
+from plane import PlaneSearchTools
+from plane import PlaneAnalyticsTools
+from plane import PlaneIssueRelationsTools
+from plane import PlaneLabelTools
+from plane import PlaneBulkTools
 
 # Toolsets auto-register via Toolset.register() calls
 ```
 
 Or simpler:
+
 ```python
-from agent_c_tools.tools.plane import register_tools
+
+from plane.plane import register_tools
 ```
 
 ### Step 2: Configure Rupert's Toolsets

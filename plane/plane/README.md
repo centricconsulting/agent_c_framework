@@ -284,7 +284,7 @@ Test scripts available in `//plane/.scratch/`:
 ### Via Python
 
 ```python
-from agent_c_tools.tools.plane.tools.plane_projects import PlaneProjectTools
+from plane import PlaneProjectTools
 
 # Initialize toolset
 tools = PlaneProjectTools()

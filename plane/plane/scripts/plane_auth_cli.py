@@ -11,8 +11,8 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from agent_c_tools.tools.plane.auth.cookie_manager import PlaneCookieManager
-from agent_c_tools.tools.plane.auth.plane_session import PlaneSession
+from plane import PlaneCookieManager
+from plane import PlaneSession
 
 
 def setup_cookies(workspace_slug: str = "agent_c"):
