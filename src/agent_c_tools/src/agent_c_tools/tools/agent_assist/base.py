@@ -120,7 +120,7 @@ class AgentAssistToolBase(Toolset):
                        }
 
         if len(agent.tools):
-            await self.tool_chest.initialize_toolsets(agent.tools)
+            await self.tool_chest.activate_toolset(agent.tools)
             tool_params = self.tool_chest.get_inference_data(agent.tools, agent_runtime.tool_format)
             tool_params["toolsets"] = agent.tools
 
