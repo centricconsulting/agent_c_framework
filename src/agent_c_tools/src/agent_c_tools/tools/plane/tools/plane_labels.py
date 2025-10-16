@@ -63,12 +63,12 @@ class PlaneLabelTools(Toolset):
             else:
                 endpoint = f"/api/workspaces/{self.workspace_slug}/labels/"
             
-            response = self.client.session.get(endpoint)
+            response = await self.client.session.get(endpoint)
             
-            if response.status_code != 200:
-                return f"ERROR: Failed to list labels (status {response.status_code})"
+            if response.status != 200:
+                return f"ERROR: Failed to list labels (status {response.status})"
             
-            labels = response.json()
+            labels = await response.json()
             
             if not labels:
                 return "No labels found."
@@ -136,13 +136,13 @@ class PlaneLabelTools(Toolset):
         
         try:
             endpoint = f"/api/workspaces/{self.workspace_slug}/labels/"
-            response = self.client.session.post(endpoint, json=label_data)
+            response = await self.client.session.post(endpoint, json=label_data)
             
-            if response.status_code not in [200, 201]:
-                error = response.json() if response.content else {}
+            if response.status not in [200, 201]:
+                error = await response.json() if response.content else {}
                 return f"ERROR: Failed to create label: {error}"
             
-            label = response.json()
+            label = await response.json()
             
             result = f"✅ Label created successfully!\n\n"
             result += f"**{label.get('name')}**\n"
@@ -163,6 +163,11 @@ class PlaneLabelTools(Toolset):
             "issue_id": {
                 "type": "string",
                 "description": "Issue ID",
+                "required": True
+            },
+            "project_id": {
+                "type": "string",
+                "description": "Project ID",
                 "required": True
             },
             "label_id": {
@@ -186,16 +191,19 @@ class PlaneLabelTools(Toolset):
         self._ensure_client()
         
         issue_id = kwargs.get("issue_id")
+        project_id = kwargs.get("project_id")
         label_id = kwargs.get("label_id")
         
         if not issue_id:
             return "ERROR: issue_id is required"
+        if not project_id:
+            return "ERROR: project_id is required"
         if not label_id:
             return "ERROR: label_id is required"
         
         try:
             # Get current issue to get its labels
-            issue = self.client.get_issue(issue_id)
+            issue = await self.client.get_issue(issue_id, project_id)
             current_labels = issue.get('labels', [])
             
             # Add new label if not already present
@@ -203,7 +211,7 @@ class PlaneLabelTools(Toolset):
                 updated_labels = current_labels + [label_id]
                 
                 # Update issue with new labels
-                self.client.update_issue(issue_id, {"labels": updated_labels})
+                await self.client.update_issue(issue_id, project_id, {"labels": updated_labels})
                 return f"✅ Label added to issue {issue_id}"
             else:
                 return f"ℹ️  Label already exists on issue {issue_id}"
@@ -220,6 +228,11 @@ class PlaneLabelTools(Toolset):
             "issue_id": {
                 "type": "string",
                 "description": "Issue ID",
+                "required": True
+            },
+            "project_id": {
+                "type": "string",
+                "description": "Project ID",
                 "required": True
             },
             "label_id": {
@@ -243,16 +256,19 @@ class PlaneLabelTools(Toolset):
         self._ensure_client()
         
         issue_id = kwargs.get("issue_id")
+        project_id = kwargs.get("project_id")
         label_id = kwargs.get("label_id")
         
         if not issue_id:
             return "ERROR: issue_id is required"
+        if not project_id:
+            return "ERROR: project_id is required"
         if not label_id:
             return "ERROR: label_id is required"
         
         try:
             # Get current issue labels
-            issue = self.client.get_issue(issue_id)
+            issue = await self.client.get_issue(issue_id, project_id)
             current_labels = issue.get('labels', [])
             
             # Remove label if present
@@ -260,7 +276,7 @@ class PlaneLabelTools(Toolset):
                 updated_labels = [l for l in current_labels if l != label_id]
                 
                 # Update issue
-                self.client.update_issue(issue_id, {"labels": updated_labels})
+                await self.client.update_issue(issue_id, project_id, {"labels": updated_labels})
                 return f"✅ Label removed from issue {issue_id}"
             else:
                 return f"ℹ️  Label not found on issue {issue_id}"
@@ -299,12 +315,12 @@ class PlaneLabelTools(Toolset):
         
         try:
             endpoint = f"/api/workspaces/{self.workspace_slug}/labels/{label_id}/"
-            response = self.client.session.delete(endpoint)
+            response = await self.client.session.delete(endpoint)
             
-            if response.status_code in [200, 204]:
+            if response.status in [200, 204]:
                 return f"✅ Label {label_id} deleted successfully"
             else:
-                return f"ERROR: Failed to delete label (status {response.status_code})"
+                return f"ERROR: Failed to delete label (status {response.status})"
             
         except PlaneSessionExpired as e:
             return f"ERROR: {str(e)}"

@@ -59,7 +59,7 @@ class PlaneProjectTools(Toolset):
         self._ensure_client()
         
         try:
-            projects = self.client.list_projects()
+            projects = await self.client.list_projects()
             
             if not projects:
                 return "No projects found in workspace."
@@ -116,7 +116,7 @@ class PlaneProjectTools(Toolset):
             return "ERROR: project_id is required"
         
         try:
-            project = self.client.get_project(project_id)
+            project = await self.client.get_project(project_id)
             return self._format_project(project)
             
         except PlaneSessionExpired as e:
@@ -182,7 +182,7 @@ class PlaneProjectTools(Toolset):
                 "description": description,
             }
             
-            project = self.client.create_project(project_data)
+            project = await self.client.create_project(project_data)
             
             result = f"✅ Project created successfully!\n\n"
             result += self._format_project(project)
@@ -243,7 +243,7 @@ class PlaneProjectTools(Toolset):
             return "ERROR: No updates provided. Specify name and/or description."
         
         try:
-            project = self.client.update_project(project_id, updates)
+            project = await self.client.update_project(project_id, updates)
             
             result = f"✅ Project updated successfully!\n\n"
             result += self._format_project(project)
@@ -285,11 +285,11 @@ class PlaneProjectTools(Toolset):
         
         try:
             # Get project name first for confirmation
-            project = self.client.get_project(project_id)
+            project = await self.client.get_project(project_id)
             project_name = project.get('name', 'Unknown')
             
             # Delete the project
-            self.client.delete_project(project_id)
+            await self.client.delete_project(project_id)
             
             return f"✅ Project '{project_name}' (ID: {project_id}) has been archived."
             

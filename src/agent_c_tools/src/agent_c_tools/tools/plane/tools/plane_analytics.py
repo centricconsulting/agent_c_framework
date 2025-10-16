@@ -49,13 +49,13 @@ class PlaneAnalyticsTools(Toolset):
         
         try:
             # Get workspace info
-            workspace = self.client.get_workspace()
+            workspace = await self.client.get_workspace()
             
             # Get projects
-            projects = self.client.list_projects()
+            projects = await self.client.list_projects()
             
             # Get workspace members
-            members = self.client.get_workspace_members()
+            members = await self.client.get_workspace_members()
             
             # Count issues across all projects
             total_issues = 0
@@ -65,7 +65,7 @@ class PlaneAnalyticsTools(Toolset):
                 if not project.get('archived_at'):
                     active_projects += 1
                     try:
-                        issues = self.client.list_issues(project_id=project.get('id'))
+                        issues = await self.client.list_issues(project_id=project.get('id'))
                         if isinstance(issues, dict) and 'results' in issues:
                             issues = issues['results']
                         if isinstance(issues, list):
@@ -123,10 +123,10 @@ class PlaneAnalyticsTools(Toolset):
         
         try:
             # Get project details
-            project = self.client.get_project(project_id)
+            project = await self.client.get_project(project_id)
             
             # Get all issues for project
-            issues = self.client.list_issues(project_id=project_id)
+            issues = await self.client.list_issues(project_id=project_id)
             
             # Handle response format
             if isinstance(issues, dict) and 'results' in issues:
@@ -224,14 +224,14 @@ class PlaneAnalyticsTools(Toolset):
         
         try:
             # Get workspace members
-            members = self.client.get_workspace_members()
+            members = await self.client.get_workspace_members()
             
             # Get issues
             if project_id:
-                issues = self.client.list_issues(project_id=project_id)
+                issues = await self.client.list_issues(project_id=project_id)
             else:
                 # Get all workspace issues
-                issues = self.client.list_issues()
+                issues = await self.client.list_issues()
             
             # Handle response format
             if isinstance(issues, dict) and 'results' in issues:

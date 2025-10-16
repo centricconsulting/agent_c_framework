@@ -114,7 +114,7 @@ class PlaneSearchTools(Toolset):
             elif search_type == "issues":
                 filters["entity_type"] = "issue"
             
-            results = self.client.search(query, filters if filters else None)
+            results = await self.client.search(query, filters if filters else None)
             
             return self._format_search_results(results)
             
@@ -182,7 +182,7 @@ class PlaneSearchTools(Toolset):
             filters["assignee"] = kwargs["assignee"]
         
         try:
-            issues = self.client.list_issues(
+            issues = await self.client.list_issues(
                 project_id=project_id,
                 filters=filters if filters else None
             )
@@ -252,7 +252,7 @@ class PlaneSearchTools(Toolset):
         
         try:
             # First get current user ID
-            user = self.client.get_current_user()
+            user = await self.client.get_current_user()
             user_id = user.get('id')
             
             if not user_id:
@@ -266,7 +266,7 @@ class PlaneSearchTools(Toolset):
                 filters["priority"] = kwargs["priority"]
             
             # Get all issues for user (workspace-level)
-            issues = self.client.list_issues(filters=filters)
+            issues = await self.client.list_issues(filters=filters)
             
             # Handle response format
             if isinstance(issues, dict) and 'results' in issues:

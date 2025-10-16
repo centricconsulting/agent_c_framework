@@ -33,8 +33,9 @@
 ```
 
 **Usage:**
+
 ```python
-from agent_c_tools.tools.plane.auth.plane_session import PlaneSession
+from agent_c_tools.tools.plane import PlaneSession
 
 # Cookies auto-load from ~/.plane/cookies/agent_c.enc
 session = PlaneSession("http://localhost", "agent_c")
@@ -69,8 +70,9 @@ response = session.get("/api/workspaces/agent_c/projects/")
 ```
 
 **Usage:**
+
 ```python
-from agent_c_tools.tools.plane.client.plane_client import PlaneClient
+from agent_c_tools.tools.plane import PlaneClient
 
 client = PlaneClient("http://localhost", "agent_c")
 projects = client.list_projects()

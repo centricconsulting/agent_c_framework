@@ -45,14 +45,7 @@ from agent_c_tools.tools.workspace.tool import WorkspaceTools
 from agent_c_tools.tools.think.tool import ThinkTools
 from agent_c_tools.tools.web_search.web_search_tools import WebSearchTools
 
-# Import PLANE toolsets to trigger registration
-# from plane import PlaneProjectTools
-# from plane import PlaneIssueTools
-# from plane import PlaneSearchTools
-# from plane import PlaneAnalyticsTools
-# from plane import PlaneIssueRelationsTools
-# from plane import PlaneLabelTools
-# from plane import PlaneBulkTools
+# PLANE tools auto-discovered via tool.py
 
 def __getattr__(name: str):
     if name in _tools_mapping:
@@ -62,7 +55,7 @@ def __getattr__(name: str):
     # Handle manually registered tools
     if name == 'WebSearchTools':
         return WebSearchTools
-
+    
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 

@@ -82,7 +82,7 @@ class PlaneBulkTools(Toolset):
             
             for issue_id in issue_ids:
                 try:
-                    self.client.update_issue(issue_id, updates)
+                    await self.client.update_issue(issue_id, updates)
                     success_count += 1
                 except Exception as e:
                     failed_count += 1
@@ -287,13 +287,13 @@ class PlaneBulkTools(Toolset):
             for issue_id in issue_ids:
                 try:
                     # Get current labels
-                    issue = self.client.get_issue(issue_id)
+                    issue = await self.client.get_issue(issue_id)
                     current_labels = issue.get('labels', [])
                     
                     # Add label if not present
                     if label_id not in current_labels:
                         updated_labels = current_labels + [label_id]
-                        self.client.update_issue(issue_id, {"labels": updated_labels})
+                        await self.client.update_issue(issue_id, {"labels": updated_labels})
                     
                     success_count += 1
                 except:

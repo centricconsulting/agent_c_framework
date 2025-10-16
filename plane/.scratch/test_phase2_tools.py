@@ -9,7 +9,7 @@ from pathlib import Path
 tools_path = Path(__file__).parent.parent.parent / "tools" / "src"
 sys.path.insert(0, str(tools_path))
 
-from agent_c_tools.tools.plane.tools.plane_labels import PlaneLabelTools
+from agent_c_tools.tools.plane import PlaneLabelTools
 from agent_c_tools.tools.plane.tools.plane_bulk import PlaneBulkTools
 
 async def main():

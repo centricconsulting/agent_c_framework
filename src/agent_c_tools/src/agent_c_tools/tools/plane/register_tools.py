@@ -1,11 +1,12 @@
 """
-PLANE Tools - Main Entry Point
+PLANE Tools Registration
 
-This file ensures all PLANE toolsets are imported and registered.
-The Agent C auto-discovery looks for tool.py files.
+Imports and registers all PLANE toolsets with the Agent C framework.
+This file should be imported by the agent_c_tools package to make
+PLANE tools available to agents.
 """
 
-# Import all toolsets to trigger their Toolset.register() calls
+# Import all toolsets to trigger their registration
 from .tools.plane_projects import PlaneProjectTools
 from .tools.plane_issues import PlaneIssueTools
 from .tools.plane_search import PlaneSearchTools
@@ -14,8 +15,7 @@ from .tools.plane_issue_relations import PlaneIssueRelationsTools
 from .tools.plane_labels import PlaneLabelTools
 from .tools.plane_bulk import PlaneBulkTools
 
-# These imports execute the Toolset.register() calls in each module,
-# making the toolsets available to the Agent C framework
+# Tools are auto-registered via Toolset.register() calls in each module
 
 __all__ = [
     'PlaneProjectTools',

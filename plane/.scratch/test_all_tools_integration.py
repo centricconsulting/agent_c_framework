@@ -15,8 +15,8 @@ sys.path.insert(0, str(tools_path))
 
 from agent_c_tools.tools.plane.tools.plane_projects import PlaneProjectTools
 from agent_c_tools.tools.plane.tools.plane_issues import PlaneIssueTools
-from agent_c_tools.tools.plane.tools.plane_search import PlaneSearchTools
-from agent_c_tools.tools.plane.tools.plane_analytics import PlaneAnalyticsTools
+from agent_c_tools.tools.plane import PlaneSearchTools
+from agent_c_tools.tools.plane import PlaneAnalyticsTools
 
 
 async def test_toolset(toolset_class, toolset_name: str, tests: list):

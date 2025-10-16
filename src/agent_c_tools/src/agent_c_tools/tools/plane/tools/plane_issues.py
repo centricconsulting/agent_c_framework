@@ -137,7 +137,7 @@ class PlaneIssueTools(Toolset):
             filters["assignee"] = kwargs["assignee"]
         
         try:
-            issues = self.client.list_issues(project_id=project_id, filters=filters if filters else None)
+            issues = await self.client.list_issues(project_id=project_id, filters=filters if filters else None)
             return self._format_issue_list(issues)
             
         except PlaneSessionExpired as e:
@@ -158,7 +158,8 @@ class PlaneIssueTools(Toolset):
             },
             "project_id": {
                 "type": "string",
-                "description": "The project ID (optional, recommended for better performance)"
+                "description": "The project ID",
+                "required": True
             }
         }
     )
@@ -180,9 +181,11 @@ class PlaneIssueTools(Toolset):
         
         if not issue_id:
             return "ERROR: issue_id is required"
+        if not project_id:
+            return "ERROR: project_id is required"
         
         try:
-            issue = self.client.get_issue(issue_id, project_id)
+            issue = await self.client.get_issue(issue_id, project_id)
             
             # Format detailed view
             result = yaml.dump({
@@ -282,7 +285,7 @@ class PlaneIssueTools(Toolset):
             issue_data["parent"] = kwargs["parent_id"]
         
         try:
-            issue = self.client.create_issue(project_id, issue_data)
+            issue = await self.client.create_issue(project_id, issue_data)
             
             result = f"✅ Issue created successfully!\n\n"
             result += self._format_issue(issue)
@@ -302,6 +305,11 @@ class PlaneIssueTools(Toolset):
             "issue_id": {
                 "type": "string",
                 "description": "Issue ID to update",
+                "required": True
+            },
+            "project_id": {
+                "type": "string",
+                "description": "Project ID",
                 "required": True
             },
             "name": {
@@ -345,8 +353,12 @@ class PlaneIssueTools(Toolset):
         self._ensure_client()
         
         issue_id = kwargs.get("issue_id")
+        project_id = kwargs.get("project_id")
+        
         if not issue_id:
             return "ERROR: issue_id is required"
+        if not project_id:
+            return "ERROR: project_id is required"
         
         # Build updates dict
         updates = {}
@@ -368,7 +380,7 @@ class PlaneIssueTools(Toolset):
             return "ERROR: No updates provided. Specify at least one field to update."
         
         try:
-            issue = self.client.update_issue(issue_id, updates)
+            issue = await self.client.update_issue(issue_id, project_id, updates)
             
             result = f"✅ Issue updated successfully!\n\n"
             result += self._format_issue(issue)
@@ -419,7 +431,7 @@ class PlaneIssueTools(Toolset):
             return "ERROR: comment is required"
         
         try:
-            comment_data = self.client.add_comment(issue_id, comment)
+            comment_data = await self.client.add_comment(issue_id, comment)
             return f"✅ Comment added successfully to issue {issue_id}"
             
         except PlaneSessionExpired as e:
@@ -437,6 +449,11 @@ class PlaneIssueTools(Toolset):
                 "type": "string",
                 "description": "Issue ID to get comments for",
                 "required": True
+            },
+            "project_id": {
+                "type": "string",
+                "description": "Project ID",
+                "required": True
             }
         }
     )
@@ -453,11 +470,15 @@ class PlaneIssueTools(Toolset):
         self._ensure_client()
         
         issue_id = kwargs.get("issue_id")
+        project_id = kwargs.get("project_id")
+        
         if not issue_id:
             return "ERROR: issue_id is required"
+        if not project_id:
+            return "ERROR: project_id is required"
         
         try:
-            comments = self.client.get_comments(issue_id)
+            comments = await self.client.get_comments(issue_id)
             
             if not comments:
                 return "No comments on this issue."

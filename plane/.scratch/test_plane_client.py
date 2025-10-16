@@ -8,7 +8,7 @@ from pathlib import Path
 tools_path = Path(__file__).parent.parent.parent / "tools" / "src"
 sys.path.insert(0, str(tools_path))
 
-from agent_c_tools.tools.plane.client.plane_client import PlaneClient
+from agent_c_tools.tools.plane import PlaneClient
 
 print("="*70)
 print("TESTING PLANE CLIENT")

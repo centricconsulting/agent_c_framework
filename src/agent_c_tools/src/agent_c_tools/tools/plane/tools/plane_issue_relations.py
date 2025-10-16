@@ -103,7 +103,7 @@ class PlaneIssueRelationsTools(Toolset):
             issue_data["priority"] = priority
         
         try:
-            issue = self.client.create_issue(project_id, issue_data)
+            issue = await self.client.create_issue(project_id, issue_data)
             
             result = f"✅ Sub-issue created successfully under parent {parent_issue_id}!\n\n"
             result += f"**{issue.get('name')}**\n"
@@ -159,12 +159,12 @@ class PlaneIssueRelationsTools(Toolset):
         
         try:
             endpoint = f"/api/workspaces/{self.workspace_slug}/projects/{project_id}/issues/{issue_id}/sub-issues/"
-            response = self.client.session.get(endpoint)
+            response = await self.client.session.get(endpoint)
             
-            if response.status_code != 200:
-                return f"ERROR: Failed to get sub-issues (status {response.status_code})"
+            if response.status != 200:
+                return f"ERROR: Failed to get sub-issues (status {response.status})"
             
-            data = response.json()
+            data = await response.json()
             sub_issues = data.get('sub_issues', [])
             
             if not sub_issues:
@@ -255,13 +255,13 @@ class PlaneIssueRelationsTools(Toolset):
                 "relation_type": relation_type
             }
             
-            response = self.client.session.post(endpoint, json=payload)
+            response = await self.client.session.post(endpoint, json=payload)
             
-            if response.status_code in [200, 201]:
+            if response.status in [200, 201]:
                 return f"✅ Relation added: Issue {issue_id} {relation_type} {related_issue_id}"
             else:
-                error = response.json() if response.content else {}
-                return f"ERROR: Failed to add relation (status {response.status_code}): {error}"
+                error = await response.json() if response.content else {}
+                return f"ERROR: Failed to add relation (status {response.status}): {error}"
             
         except PlaneSessionExpired as e:
             return f"ERROR: {str(e)}"
@@ -307,12 +307,12 @@ class PlaneIssueRelationsTools(Toolset):
         
         try:
             endpoint = f"/api/workspaces/{self.workspace_slug}/projects/{project_id}/issues/{issue_id}/issue-relation/"
-            response = self.client.session.get(endpoint)
+            response = await self.client.session.get(endpoint)
             
-            if response.status_code != 200:
-                return f"ERROR: Failed to get relations (status {response.status_code})"
+            if response.status != 200:
+                return f"ERROR: Failed to get relations (status {response.status})"
             
-            relations = response.json()
+            relations = await response.json()
             
             result = "**Issue Relations:**\n\n"
             
@@ -407,12 +407,12 @@ class PlaneIssueRelationsTools(Toolset):
         
         try:
             endpoint = f"/api/workspaces/{self.workspace_slug}/projects/{project_id}/issues/{issue_id}/issue-relation/{related_issue_id}/"
-            response = self.client.session.delete(endpoint)
+            response = await self.client.session.delete(endpoint)
             
-            if response.status_code in [200, 204]:
+            if response.status in [200, 204]:
                 return f"✅ Relation removed between issues {issue_id} and {related_issue_id}"
             else:
-                return f"ERROR: Failed to remove relation (status {response.status_code})"
+                return f"ERROR: Failed to remove relation (status {response.status})"
             
         except PlaneSessionExpired as e:
             return f"ERROR: {str(e)}"

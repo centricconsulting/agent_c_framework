@@ -213,7 +213,9 @@ Should show: ✅ Cookies are valid and working!
 
 ### Step 2: Import Tools in Agent C
 Tools are auto-registered. Just ensure import:
+
 ```python
+
 from agent_c_tools.tools.plane import register_tools
 ```
 

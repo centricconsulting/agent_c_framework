@@ -231,7 +231,9 @@ python plane_auth_cli.py test agent_c
 The toolsets are already registered via `Toolset.register()` calls.
 
 To use in an agent, simply ensure the tools package is imported:
+
 ```python
+
 from agent_c_tools.tools.plane import register_tools
 ```
 

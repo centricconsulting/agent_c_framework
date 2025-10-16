@@ -715,11 +715,11 @@ TOTAL: 14/14 tests passed (100%)
 from agent_c_tools.tools.plane import register_tools
 
 toolsets = [
-    'PlaneProjectTools',
-    'PlaneIssueTools',
-    'PlaneSearchTools',
-    'PlaneAnalyticsTools',
-    'PlaneIssueRelationsTools',  # NEW!
+   'PlaneProjectTools',
+   'PlaneIssueTools',
+   'PlaneSearchTools',
+   'PlaneAnalyticsTools',
+   'PlaneIssueRelationsTools',  # NEW!
 ]
 ```
 

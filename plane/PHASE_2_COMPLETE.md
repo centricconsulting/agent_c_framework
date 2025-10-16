@@ -281,6 +281,7 @@ python plane_refresh_cookies.py
 ### Add New Toolsets to Rupert
 
 ```python
+
 from agent_c_tools.tools.plane import register_tools
 
 toolsets = [
@@ -290,7 +291,7 @@ toolsets = [
     'PlaneSearchTools',
     'PlaneAnalyticsTools',
     'PlaneIssueRelationsTools',
-    
+
     # Phase 2 - NEW!
     'PlaneLabelTools',
     'PlaneBulkTools',

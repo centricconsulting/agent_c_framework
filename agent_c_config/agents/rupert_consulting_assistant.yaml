@@ -14,13 +14,7 @@ tools:
   - RandomNumberTools
   - MermaidChartTools
   - MarkdownToHtmlReportTools
-  - PlaneProjectTools
-  - PlaneIssueTools
-  - PlaneSearchTools
-  - PlaneAnalyticsTools
-  - PlaneIssueRelationsTools
-  - PlaneLabelTools
-  - PlaneBulkTools
+  - PlaneTools
 agent_params:
   budget_tokens: 15000
 category:

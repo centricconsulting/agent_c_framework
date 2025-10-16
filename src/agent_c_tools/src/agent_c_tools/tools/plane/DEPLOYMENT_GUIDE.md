@@ -92,7 +92,7 @@ Or simpler:
 
 ```python
 
-from plane.plane import register_tools
+from agent_c_tools.tools.plane import register_tools
 ```
 
 ### Step 2: Configure Rupert's Toolsets
