@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 from typing import Optional, Dict, Any, cast
 import requests
 import yaml
@@ -49,7 +50,7 @@ class UiPathTools(Toolset):
             'org_name': self._get_config_value('ORG_NAME'),
             'tenant_name': self._get_config_value('TENANT_NAME', 'DefaultTenant'),
             'folder_id': self._get_config_value('FOLDER_ID'),
-            'auth_scope': self._get_config_value('AUTH_SCOPE')
+           # 'auth_scope': self._get_config_value('AUTH_SCOPE')
         }
         
         if pat_token:
@@ -76,7 +77,7 @@ class UiPathTools(Toolset):
         
         return required_configs
     
-    async def _get_auth_token(self, scope: str = "OR.Administration OR.Administration.Read OR.Administration.Write OR.Analytics OR.Analytics.Read OR.Analytics.Write OR.Assets OR.Assets.Read OR.Assets.Write OR.Audit OR.Audit.Read OR.Audit.Write OR.AutomationSolutions.Access OR.BackgroundTasks OR.BackgroundTasks.Read OR.BackgroundTasks.Write OR.Execution OR.Execution.Read OR.Execution.Write OR.Folders OR.Folders.Read OR.Folders.Write OR.Hypervisor OR.Hypervisor.Read OR.Hypervisor.Write OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.License OR.License.Read OR.License.Write OR.Machines OR.Machines.Read OR.Machines.Write OR.ML OR.ML.Read OR.ML.Write OR.Monitoring OR.Monitoring.Read OR.Monitoring.Write OR.Queues OR.Queues.Read OR.Queues.Write OR.Robots OR.Robots.Read OR.Robots.Write OR.Settings OR.Settings.Read OR.Settings.Write OR.Tasks OR.Tasks.Read OR.Tasks.Write OR.TestDataQueues OR.TestDataQueues.Read OR.TestDataQueues.Write OR.TestSetExecutions OR.TestSetExecutions.Read OR.TestSetExecutions.Write OR.TestSets OR.TestSets.Read OR.TestSets.Write OR.TestSetSchedules OR.TestSetSchedules.Read OR.TestSetSchedules.Write OR.Users OR.Users.Read OR.Users.Write OR.Webhooks OR.Webhooks.Read OR.Webhooks.Write ") -> str:
+    async def _get_auth_token(self, scope:str="OR.Administration OR.Administration.Read OR.Administration.Write OR.Analytics OR.Analytics.Read OR.Analytics.Write OR.Assets OR.Assets.Read OR.Assets.Write OR.Audit OR.Audit.Read OR.Audit.Write OR.AutomationSolutions.Access OR.BackgroundTasks OR.BackgroundTasks.Read OR.BackgroundTasks.Write OR.Execution OR.Execution.Read OR.Execution.Write OR.Folders OR.Folders.Read OR.Folders.Write OR.Hypervisor OR.Hypervisor.Read OR.Hypervisor.Write OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.License OR.License.Read OR.License.Write OR.Machines OR.Machines.Read OR.Machines.Write OR.ML OR.ML.Read OR.ML.Write OR.Monitoring OR.Monitoring.Read OR.Monitoring.Write OR.Queues OR.Queues.Read OR.Queues.Write OR.Robots OR.Robots.Read OR.Robots.Write OR.Settings OR.Settings.Read OR.Settings.Write OR.Tasks OR.Tasks.Read OR.Tasks.Write OR.TestDataQueues OR.TestDataQueues.Read OR.TestDataQueues.Write OR.TestSetExecutions OR.TestSetExecutions.Read OR.TestSetExecutions.Write OR.TestSets OR.TestSets.Read OR.TestSets.Write OR.TestSetSchedules OR.TestSetSchedules.Read OR.TestSetSchedules.Write OR.Users OR.Users.Read OR.Users.Write OR.Webhooks OR.Webhooks.Read OR.Webhooks.Write ") -> str:
         """Get authentication token from UiPath Cloud."""
         try:
             config = self._validate_config()
@@ -86,7 +87,7 @@ class UiPathTools(Toolset):
             cache_key = f"{config['org_name']}_{scope}_{config['auth_method']}"
             if cache_key in self._token_cache:
                 return self._token_cache[cache_key]
-            
+            self.logger.info(f"auth method is {config['auth_method']}")
             if config['auth_method'] == 'pat':
                 # Using Personal Access Token - return it directly
                 access_token = config['pat_token']
@@ -101,8 +102,9 @@ class UiPathTools(Toolset):
                     "scope": scope,
                     "grant_type": "client_credentials",
                 }
-                
+                self.logger.info(f"url is {url} and data for token api is {data}")
                 response = requests.post(url, data=data)
+                self.logger.info(f"response from token api {response}")
                 response.raise_for_status()
                 
                 token_data = response.json()
@@ -189,11 +191,11 @@ class UiPathTools(Toolset):
             config = self._validate_config()
             
             # Get authentication token
-            token = await self._get_auth_token()
-            
+            token = await self._get_auth_token("OR.Assets OR.Assets.Read OR.Assets.Write")
+            self.logger.info(f"token for creating asset is {token}")
             # Prepare the API request
             create_asset_url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/Assets"
-            
+            self.logger.info(f"create_asset_url for creating asset is {create_asset_url}")
             headers = {
                 "Authorization": f"Bearer {token}",
                 "X-UIPATH-TenantName": config['tenant_name'],
@@ -201,14 +203,14 @@ class UiPathTools(Toolset):
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             }
-            
+            self.logger.info(f"headers for creating asset is {headers}")
             # Build payload with correct format for each asset type
             payload = {
                 "Name": asset_name,
                 "ValueScope": "Global",
                 "Description": description
             }
-            
+            self.logger.info(f"payload before setting type is {payload}")
             # Set the correct value field and type based on asset_type
             if asset_type == 'Boolean':
                 # Boolean assets need BoolValue and ValueType "Bool"
@@ -415,10 +417,10 @@ class UiPathTools(Toolset):
         """Test the connection to UiPath Cloud."""
         try:
             tool_context = kwargs.get('tool_context')
-            
+
             # Try to get a token
-            token = await self._get_auth_token()
-            
+            token = await self._get_auth_token("OR.Administration OR.Administration.Read OR.Administration.Write OR.Analytics OR.Analytics.Read OR.Analytics.Write OR.Assets OR.Assets.Read OR.Assets.Write OR.Audit OR.Audit.Read OR.Audit.Write OR.AutomationSolutions.Access OR.BackgroundTasks OR.BackgroundTasks.Read OR.BackgroundTasks.Write OR.Execution OR.Execution.Read OR.Execution.Write OR.Folders OR.Folders.Read OR.Folders.Write OR.Hypervisor OR.Hypervisor.Read OR.Hypervisor.Write OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.License OR.License.Read OR.License.Write OR.Machines OR.Machines.Read OR.Machines.Write OR.ML OR.ML.Read OR.ML.Write OR.Monitoring OR.Monitoring.Read OR.Monitoring.Write OR.Queues OR.Queues.Read OR.Queues.Write OR.Robots OR.Robots.Read OR.Robots.Write OR.Settings OR.Settings.Read OR.Settings.Write OR.Tasks OR.Tasks.Read OR.Tasks.Write OR.TestDataQueues OR.TestDataQueues.Read OR.TestDataQueues.Write OR.TestSetExecutions OR.TestSetExecutions.Read OR.TestSetExecutions.Write OR.TestSets OR.TestSets.Read OR.TestSets.Write OR.TestSetSchedules OR.TestSetSchedules.Read OR.TestSetSchedules.Write OR.Users OR.Users.Read OR.Users.Write OR.Webhooks OR.Webhooks.Read OR.Webhooks.Write ")
+
             if token:
                 config = self._validate_config()
                 result = {
@@ -431,12 +433,12 @@ class UiPathTools(Toolset):
                 return yaml.dump(result, allow_unicode=True)
             else:
                 return "ERROR: Failed to obtain authentication token"
-                
+
         except Exception as e:
             error_msg = f"Connection test failed: {str(e)}"
             self.logger.error(error_msg)
             return f"ERROR: {error_msg}"
-    
+
     @json_schema(
         description="Get information about the current UiPath configuration without exposing sensitive data.",
         params={}
@@ -571,7 +573,7 @@ class UiPathTools(Toolset):
             
             # Get authentication token with execution permissions
             token = await self._get_auth_token("OR.Execution OR.Execution.Read OR.Execution.Write")
-            
+            #REQUIRED = "OR.Execution OR.Execution.Read OR.Execution.Write"
             # Prepare the upload URL
             upload_url = (
                 f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}"
@@ -708,6 +710,7 @@ class UiPathTools(Toolset):
             
             # Get configuration and token
             config = self._validate_config()
+
             token = await self._get_auth_token("OR.Execution OR.Execution.Read OR.Execution.Write")
             
             # Prepare upload URL and headers
@@ -818,6 +821,113 @@ class UiPathTools(Toolset):
             self.logger.error(f"Error getting entry point ID: {str(e)}")
             return None
     
+    async def _get_process_release_details(self, process_name: str, token: str, config: Dict[str, str]) -> tuple[Optional[str], Optional[str]]:
+        """Get the release ID and key for a process by process name."""
+        try:
+            url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/Releases"
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "Accept": "application/json",
+            }
+            
+            params = {
+                "$filter": f"ProcessKey eq '{process_name}'"
+            }
+            
+            response = requests.get(url, headers=headers, params=params)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data["value"]:
+                    release = data["value"][0]  # Get the first (latest) release
+                    return release["Id"], release["Key"]
+                else:
+                    self.logger.error(f"Process '{process_name}' not found in Orchestrator.")
+                    return None, None
+            else:
+                self.logger.error(f"Failed to fetch process details. Status: {response.status_code}, Response: {response.text}")
+                return None, None
+                
+        except Exception as e:
+            self.logger.error(f"Error getting process release details: {str(e)}")
+            return None, None
+    
+    def _parse_time_to_cron(self, time_input: str, days_of_week: Optional[str] = None) -> str:
+        """Parse human-readable time input and convert to cron expression.
+        
+        Supports formats like:
+        - "9 AM", "9:00 AM", "9:30 AM"
+        - "2 PM", "2:00 PM", "2:30 PM" 
+        - "14:30", "09:00" (24-hour format)
+        - "9", "21" (hour only, assumes :00 minutes)
+        
+        Args:
+            time_input: Human-readable time string
+            days_of_week: Optional days specification (e.g., "MON,TUE,FRI", "MON-FRI", "*")
+            
+        Returns:
+            Cron expression string
+        """
+        try:
+            # Clean up the input
+            time_str = time_input.strip().upper()
+            
+            # Default to daily if no days specified
+            if not days_of_week:
+                days_of_week = "*"
+            
+            # Parse different time formats
+            hour = 0
+            minute = 0
+            
+            # Format: "9 AM", "9:30 AM", "2 PM", "2:30 PM"
+            am_pm_pattern = r'^(\d{1,2})(?::(\d{2}))? ?(AM|PM)$'
+            match = re.match(am_pm_pattern, time_str)
+            if match:
+                hour = int(match.group(1))
+                minute = int(match.group(2)) if match.group(2) else 0
+                am_pm = match.group(3)
+                
+                # Convert to 24-hour format
+                if am_pm == 'PM' and hour != 12:
+                    hour += 12
+                elif am_pm == 'AM' and hour == 12:
+                    hour = 0
+            else:
+                # Format: "14:30", "09:00" (24-hour format)
+                time_pattern = r'^(\d{1,2}):(\d{2})$'
+                match = re.match(time_pattern, time_str)
+                if match:
+                    hour = int(match.group(1))
+                    minute = int(match.group(2))
+                else:
+                    # Format: "9", "21" (hour only)
+                    hour_pattern = r'^(\d{1,2})$'
+                    match = re.match(hour_pattern, time_str)
+                    if match:
+                        hour = int(match.group(1))
+                        minute = 0
+                    else:
+                        raise ValueError(f"Unable to parse time format: {time_input}")
+            
+            # Validate hour and minute ranges
+            if not (0 <= hour <= 23):
+                raise ValueError(f"Hour must be between 0-23, got: {hour}")
+            if not (0 <= minute <= 59):
+                raise ValueError(f"Minute must be between 0-59, got: {minute}")
+            
+            # Build cron expression: second minute hour day-of-month month day-of-week
+            cron_expression = f"0 {minute} {hour} ? * {days_of_week}"
+            
+            self.logger.info(f"Parsed time '{time_input}' to cron expression: '{cron_expression}'")
+            return cron_expression
+            
+        except Exception as e:
+            raise ValueError(f"Error parsing time '{time_input}': {str(e)}")
+    
     @json_schema(
         description="Create a new process (release) in UiPath Orchestrator from an existing package. The package with the same name as the process must already be uploaded to Orchestrator before creating a process from it. This creates a process definition that can be executed by UiPath robots.",
         params={
@@ -862,8 +972,8 @@ class UiPathTools(Toolset):
             config = self._validate_config()
             
             # Get authentication token with execution permissions
-            token = await self._get_auth_token("OR.Administration OR.Administration.Read OR.Administration.Write OR.Analytics OR.Analytics.Read OR.Analytics.Write OR.Assets OR.Assets.Read OR.Assets.Write OR.Audit OR.Audit.Read OR.Audit.Write OR.AutomationSolutions.Access OR.BackgroundTasks OR.BackgroundTasks.Read OR.BackgroundTasks.Write OR.Execution OR.Execution.Read OR.Execution.Write OR.Folders OR.Folders.Read OR.Folders.Write OR.Hypervisor OR.Hypervisor.Read OR.Hypervisor.Write OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.License OR.License.Read OR.License.Write OR.Machines OR.Machines.Read OR.Machines.Write OR.ML OR.ML.Read OR.ML.Write OR.Monitoring OR.Monitoring.Read OR.Monitoring.Write OR.Queues OR.Queues.Read OR.Queues.Write OR.Robots OR.Robots.Read OR.Robots.Write OR.Settings OR.Settings.Read OR.Settings.Write OR.Tasks OR.Tasks.Read OR.Tasks.Write OR.TestDataQueues OR.TestDataQueues.Read OR.TestDataQueues.Write OR.TestSetExecutions OR.TestSetExecutions.Read OR.TestSetExecutions.Write OR.TestSets OR.TestSets.Read OR.TestSets.Write OR.TestSetSchedules OR.TestSetSchedules.Read OR.TestSetSchedules.Write OR.Users OR.Users.Read OR.Users.Write OR.Webhooks OR.Webhooks.Read OR.Webhooks.Write ")
-            
+
+            token = await self._get_auth_token("OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.Execution OR.Execution.Read OR.Execution.Write")
             # Step 1: Get the package version
             self.logger.info(f"Getting version for package '{package_name}' (same as process name)...")
             package_version = await self._get_package_version(package_name, token, config)
@@ -945,6 +1055,174 @@ class UiPathTools(Toolset):
                 
         except Exception as e:
             error_msg = f"Error creating UiPath process: {str(e)}"
+            self.logger.error(error_msg)
+            return f"ERROR: {error_msg}"
+    
+    @json_schema(
+        description="Create a new time trigger in UiPath Orchestrator. Time triggers allow you to schedule process executions based on time and day specifications. The process must already exist in Orchestrator before creating a trigger for it. You can specify time in human-readable format (e.g., '9 AM', '2:30 PM') or provide a complete cron expression.",
+        params={
+            "process_name": {
+                "type": "string",
+                "description": "The name of the process/release to trigger. This process must already exist in Orchestrator.",
+                "required": True
+            },
+            "trigger_name": {
+                "type": "string",
+                "description": "The name for the new time trigger",
+                "required": True
+            },
+            "trigger_time": {
+                "type": "string",
+                "description": "Human-readable time when the trigger should run (e.g., '9 AM', '2:30 PM', '14:30', '9'). If provided, this will be converted to a cron expression. If not provided, uses cron_expression parameter.",
+                "required": False
+            },
+            "days_of_week": {
+                "type": "string",
+                "description": "Days when the trigger should run (e.g., 'MON,TUE,FRI', 'MON-FRI', '*' for daily). Only used with trigger_time parameter. Default is '*' (daily).",
+                "default": "*"
+            },
+            "cron_expression": {
+                "type": "string",
+                "description": "Complete cron expression for scheduling (e.g., '0 0 10 * * ?' for daily at 10 AM). Used only if trigger_time is not provided. Default is daily at 10 AM.",
+                "default": "0 0 10 * * ?"
+            },
+            "timezone_id": {
+                "type": "string",
+                "description": "Timezone ID for the schedule (e.g., 'India Standard Time', 'UTC', 'Eastern Standard Time'). Default is 'India Standard Time'.",
+                "default": "India Standard Time"
+            },
+            "enabled": {
+                "type": "boolean",
+                "description": "Whether the trigger should be enabled immediately",
+                "default": True
+            },
+            "advanced_cron_details": {
+                "type": "string",
+                "description": "Advanced cron details in JSON format. Default is daily schedule.",
+                "default": '{"advancedCron":"0 0 0 1/1 * ? *"}'
+            }
+        }
+    )
+    async def create_time_trigger(self, **kwargs) -> str:
+        """Create a new time trigger in UiPath Orchestrator."""
+        try:
+            tool_context = kwargs.get('tool_context')
+            process_name = kwargs.get('process_name')
+            trigger_name = kwargs.get('trigger_name')
+            trigger_time = kwargs.get('trigger_time')
+            days_of_week = kwargs.get('days_of_week', '*')
+            cron_expression = kwargs.get('cron_expression', '0 0 10 * * ?')
+            timezone_id = kwargs.get('timezone_id', 'India Standard Time')
+            enabled = kwargs.get('enabled', True)
+            advanced_cron_details = kwargs.get('advanced_cron_details', '{"advancedCron":"0 0 0 1/1 * ? *"}')
+            
+            if not process_name:
+                return "ERROR: process_name is required"
+            
+            if not trigger_name:
+                return "ERROR: trigger_name is required"
+            
+            # Determine the cron expression to use
+            final_cron_expression = cron_expression
+            time_parsing_info = ""
+            
+            if trigger_time:
+                # User provided human-readable time, convert it to cron
+                try:
+                    final_cron_expression = self._parse_time_to_cron(trigger_time, days_of_week)
+                    time_parsing_info = f"Converted time '{trigger_time}' (days: {days_of_week}) to cron: '{final_cron_expression}'"
+                    self.logger.info(time_parsing_info)
+                except ValueError as e:
+                    return f"ERROR: {str(e)}"
+            else:
+                time_parsing_info = f"Using provided cron expression: '{final_cron_expression}'"
+            
+            # Validate advanced_cron_details is valid JSON
+            try:
+                json.loads(advanced_cron_details)
+            except json.JSONDecodeError:
+                return "ERROR: advanced_cron_details must be valid JSON format"
+            
+            # Get configuration
+            config = self._validate_config()
+            
+            # Get authentication token with appropriate permissions
+            token = await self._get_auth_token("OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.Execution OR.Execution.Read OR.Execution.Write")
+            
+            # Step 1: Get the process release details
+            self.logger.info(f"Getting release details for process '{process_name}'...")
+            release_id, release_key = await self._get_process_release_details(process_name, token, config)
+            
+            if not release_id:
+                return f"ERROR: Could not find process '{process_name}' in Orchestrator. Make sure the process exists and is published."
+            
+            self.logger.info(f"Found process release - ID: {release_id}, Key: {release_key}")
+            
+            # Step 2: Create the time trigger
+            create_trigger_url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/ProcessSchedules"
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+            
+            payload = {
+                "Name": trigger_name,
+                "Enabled": enabled,
+                "ReleaseId": release_id,
+                "StartProcessCronDetails": advanced_cron_details,
+                "StartStrategy": 1,  # Specific - starts jobs for specific robots
+                "StartProcessCron": final_cron_expression,
+                "TimeZoneId": timezone_id
+            }
+            
+            # Debug logging
+            self.logger.info(f"UiPath Create Time Trigger URL: {create_trigger_url}")
+            self.logger.info(f"UiPath Create Time Trigger Headers: {json.dumps({k: v if k != 'Authorization' else 'Bearer ***' for k, v in headers.items()}, indent=2)}")
+            self.logger.info(f"UiPath Create Time Trigger Payload: {json.dumps(payload, indent=2)}")
+            
+            # Make the API call
+            response = requests.post(create_trigger_url, headers=headers, data=json.dumps(payload))
+            
+            # Debug response
+            self.logger.info(f"UiPath Create Time Trigger Response Status: {response.status_code}")
+            self.logger.info(f"UiPath Create Time Trigger Response Body: {response.text}")
+            
+            if response.status_code in [200, 201]:
+                result_data = response.json()
+                self.logger.info(f"Successfully created UiPath time trigger: {trigger_name} for process {process_name}")
+                
+                # Return a formatted success response
+                result = {
+                    "status": "success",
+                    "message": f"Time trigger '{trigger_name}' created successfully for process '{process_name}'",
+                    "trigger_id": result_data.get("Id"),
+                    "trigger_name": trigger_name,
+                    "process_name": process_name,
+                    "release_id": release_id,
+                    "cron_expression": final_cron_expression,
+                    "timezone_id": timezone_id,
+                    "enabled": enabled,
+                    "advanced_cron_details": advanced_cron_details,
+                    "time_parsing_info": time_parsing_info
+                }
+                
+                # Add original time input info if it was provided
+                if trigger_time:
+                    result["original_time_input"] = trigger_time
+                    result["days_of_week_input"] = days_of_week
+                return yaml.dump(result, allow_unicode=True)
+                
+            else:
+                error_msg = f"Failed to create time trigger. Status code: {response.status_code}, Response: {response.text}"
+                self.logger.error(error_msg)
+                return f"ERROR: {error_msg}"
+                
+        except Exception as e:
+            error_msg = f"Error creating UiPath time trigger: {str(e)}"
             self.logger.error(error_msg)
             return f"ERROR: {error_msg}"
 
