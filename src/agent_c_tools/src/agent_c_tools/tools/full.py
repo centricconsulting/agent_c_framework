@@ -13,7 +13,7 @@ from .web import WebTools
 from .weather import Weather
 from .random_number import RandomNumberTools
 from .think import ThinkTools
-from .dynamics import DynamicsTools
+from .dynamics_crm import DynamicsCrmTools
 from .markdown_to_html_report import MarkdownToHtmlReportTools
 from .css_explorer import CssExplorerTools
 from .mariadb import MariadbTools
@@ -36,12 +36,14 @@ from .sars import SarsTools
 from .insurance_demo import InsuranceDemoTools
 from .workspace import DynamicCommandTools
 from .toolbelt.tool import ToolbeltTools
+from .microsoft_stream.tool import MicrosoftStreamTools
 
 __all__ = [
     # Essential Tools for good agents
     'MemoryTools',
     'ThinkTools',
     'MarkdownToHtmlReportTools',
+    'ToolbeltTools',
 
     # Code Exploring Tools
     'CssExplorerTools',
@@ -76,7 +78,7 @@ __all__ = [
     'YoutubeSearchViaWebTools',
 
     # CRM Tools
-    "DynamicsTools",
+    "DynamicsCrmTools",
     "SalesforceTools",
 
     # User preference tools
@@ -95,6 +97,7 @@ __all__ = [
     'MathTools',
     'BrowserPlaywrightTools',
     'CodeInterpreterTools',
+    'MicrosoftStreamTools',
 
     # Data tools
     'DataVisualizationTools',

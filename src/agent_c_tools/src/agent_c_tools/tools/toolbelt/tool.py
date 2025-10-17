@@ -162,5 +162,70 @@ class ToolbeltTools(Toolset):
             self.logger.error(error_msg)
             return f"ERROR: {error_msg}"
 
+    @json_schema(
+        description="Get the list of currently active/equipped toolset names, with optional filtering by validity",
+        params={
+            'show_invalid': {
+                'type': 'boolean',
+                'description': 'Whether to include invalid tools in the results (default: True)',
+                'required': True
+            }
+        }
+    )
+    async def active(self, **kwargs) -> str:
+        """
+        Get a list of currently active/equipped toolset names.
+        Can optionally include or exclude invalid tools.
+        """
+        try:
+            tool_context = kwargs.get('tool_context')
+            show_invalid = kwargs.get('show_invalid', True)
+
+            # Get active tools from bridge's tool_chest
+            if not tool_context or 'bridge' not in tool_context:
+                return "ERROR: Bridge not available in tool context"
+
+            bridge: 'RealtimeBridge' = tool_context['bridge']
+            
+            if not hasattr(bridge, 'tool_chest'):
+                return "ERROR: Bridge does not have tool_chest"
+
+            # Get available tools from the tool_chest
+            active_tools = bridge.tool_chest.available_tools
+
+            if not active_tools:
+                return self._yaml_dump({"valid_toolsets": [], "invalid_toolsets": [], "total_active": 0})
+
+            # Separate valid and invalid tools
+            valid_tools = []
+            invalid_tools = []
+
+            for name, toolset in active_tools.items():
+                # Check if toolset has tool_valid attribute and is valid
+                if hasattr(toolset, 'tool_valid'):
+                    if toolset.tool_valid:
+                        valid_tools.append(name)
+                    else:
+                        invalid_tools.append(name)
+                else:
+                    # If no tool_valid attribute, assume valid (legacy support)
+                    valid_tools.append(name)
+
+            # Build result based on show_invalid parameter
+            result = {
+                "valid_toolsets": valid_tools
+            }
+
+            if show_invalid:
+                result["invalid_toolsets"] = invalid_tools
+                result["total_active"] = len(valid_tools) + len(invalid_tools)
+
+            return self._yaml_dump(result)
+
+        except Exception as e:
+            error_msg = f"Failed to get active toolsets: {str(e)}"
+            self.logger.error(error_msg)
+            return f"ERROR: {error_msg}"
+
 # Register the toolset
 Toolset.register(ToolbeltTools)

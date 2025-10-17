@@ -549,6 +549,7 @@ class MariadbTools(Toolset):
             workspace_name = kwargs.get("workspace_name", "project")
             file_path = kwargs.get('file_path', f'mariadb_query_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
             force_save = kwargs.get("force_save", False)
+            tool_context = kwargs.get('tool_context', None)
 
             if not query:
                 return "ERROR: Query cannot be empty."
@@ -568,14 +569,18 @@ class MariadbTools(Toolset):
                 sent_by_function='execute_query',
                 content_type="text/html",
                 content="<b>Query executed successfully</b>",
-                tool_context=kwargs.get('tool_context', {})
+                tool_context=tool_context
             )
 
             if force_save:
                 try:
                     df = pd.DataFrame(result)
-                    response_size = self.tool_chest.agent.count_tokens(df.to_json())
-                    force_save = True if response_size > 25000 else force_save
+                    if tool_context is None or 'agent_runtime' not in tool_context:
+                        self.logger.debug("No tool_context or agent_runtime available, cannot check token count for response size.")
+                        force_save = True
+                    else:
+                        response_size = tool_context['agent_runtime'].count_tokens(df.to_json())
+                        force_save = True if response_size > 25000 else force_save
 
                     if force_save:
                         file_path = ensure_file_extension(file_path, 'xlsx')
@@ -595,7 +600,7 @@ class MariadbTools(Toolset):
                             sent_by_function='execute_query',
                             content_type="text/html",
                             content=get_file_html(os_path, unc_path),
-                            tool_context=kwargs.get('tool_context', {}),
+                            tool_context=tool_context,
                         )
                         self.logger.debug(save_result)
                 except Exception as df_error:
@@ -664,6 +669,8 @@ class MariadbTools(Toolset):
         Returns:
             String with table schema information
         """
+        tool_context = kwargs.get('tool_context', None)
+
         try:
             table_name = kwargs.get("table_name")
             if not table_name:
@@ -684,7 +691,7 @@ class MariadbTools(Toolset):
                 content_type="text/html",
                 content=schema_html,
                 name=f"{table_name}_schema.html",
-                tool_context=kwargs.get('tool_context', {})
+                tool_context=tool_context
             )
             
             response = {

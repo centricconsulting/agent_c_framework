@@ -30,14 +30,14 @@ git:
 
 pytest:
   # PytestCommandValidator uses SAFE_FLAGS; this sets defaults/timeouts or env overrides
-  flags: [ "-q","--maxfail","--disable-warnings","--color","--no-header","--no-summary","--tb" ]
+  flags: [ "-q","--maxfail","--disable-warnings","--color","--no-header","--no-summary","--tb", "--version" ]
   allow_test_paths: true  # Enable workspace-relative test paths and file:line references
   suppress_success_output: true  # Test runs can be verbose, just show success/failure
   default_timeout: 120
   env_overrides:
     PYTHONDONTWRITEBYTECODE: "1"
     PYTEST_ADDOPTS: "-q --color=no --maxfail=1" # quiet + no ANSI + stop early
-    PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"         # avoids third-party plugin noise
+    # PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"         # avoids third-party plugin noise
     PYTHONWARNINGS: "ignore"                    # ignore depreciation warnings from test runs
 
 # ---- OS basics ----
@@ -190,8 +190,8 @@ pnpm:
         "test:run": { allowed_flags: ["--filter", "--silent", "--reporter"], deny_args: false, allow_test_paths: true, suppress_success_output: true }
         "test:debug": { allowed_flags: [], deny_args: false, allow_test_paths: true, suppress_success_output: false }
         "type-check": { allowed_flags: [], suppress_success_output: false, allow_test_mode: true, deny_args: false }
-        "typecheck": { allowed_flags: [ ], suppress_success_output: false, allow_test_mode: true, deny_args: false }
-        "type_check": { allowed_flags: [ ], suppress_success_output: false, allow_test_mode: true, deny_args: false }
+        "typecheck": { allowed_flags: ["--filter"], suppress_success_output: false, allow_test_mode: true, deny_args: false }
+        "type_check": { allowed_flags: ["--filter" ], suppress_success_output: false, allow_test_mode: true, deny_args: false }
         "test:coverage": { allowed_flags: ["--filter", "--silent", "--reporter"], deny_args: false, allow_test_paths: true, suppress_success_output: false }
         "clean": { suppress_success_output: false, allow_test_mode: true, deny_args: false }
         "install:clean": { suppress_success_output: false, allow_test_mode: true, deny_args: false }
@@ -206,9 +206,9 @@ pnpm:
     "test:ui": { allowed_flags: ["--filter", "--silent", "--reporter"], deny_args: false, allow_test_paths: true, suppress_success_output: true }
     "test:debug": { allowed_flags: [], deny_args: false, allow_test_paths: true, suppress_success_output: true }
     "clean": { suppress_success_output: false, allow_test_mode: true, deny_args: false }
-    "type-check": { allowed_flags: [], suppress_success_output: false, allow_test_mode: true, deny_args: false }
-    "typecheck": { allowed_flags: [], suppress_success_output: false, allow_test_mode: true, deny_args: false }
-    "type_check": { allowed_flags: [], suppress_success_output: false, allow_test_mode: true, deny_args: false }
+    "type-check": { allowed_flags: ["--filter"], suppress_success_output: false, allow_test_mode: true, deny_args: false }
+    "typecheck": { allowed_flags: ["--filter"], suppress_success_output: false, allow_test_mode: true, deny_args: false }
+    "type_check": { allowed_flags: ["--filter"], suppress_success_output: false, allow_test_mode: true, deny_args: false }
     ls: { allowed_flags: [] }
     build: { allowed_flags: [], suppress_success_output: true }
     why: { allowed_flags: ["--json","--long"] }

@@ -27,9 +27,9 @@ class DatabaseQueryTools(Toolset):
     }
     def __init__(self, **kwargs):
         super().__init__(**kwargs, name='database_query')
-        self.workspace_tool = self.tool_chest.active_tools.get('WorkspaceTools')
+        self.workspace_tool = self.tool_chest.available_tools.get('WorkspaceTools')
         self.db_path = None
-        self.dataframe_tool = self.tool_chest.active_tools.get('DataframeTools')
+        self.dataframe_tool = self.tool_chest.available_tools.get('DataframeTools')
 
     def _validate_subqueries_and_functions(self, stmt):
         for token in stmt.tokens:

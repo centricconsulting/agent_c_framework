@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent_c-api"
+version = "0.2.0"
+description = "FastAPI API Wrapper for Agent_C"
+dependencies = [
+    "agent_c-core>=0.1.3",
+    "agent_c-tools>=0.1.3",
+    "fastapi>=0.115.12",
+    "fastapi-pagination>=0.13.1",
+    "fastapi-versioning>=0.10.0",
+    "fastapi-jwt-auth>=0.5.0",
+    "structlog>=25.3.0",
+    "pyhumps>=3.8.0",
+    "spectree>=1.4.7",
+    "fastapi-utils>=0.8.0",
+    "uvicorn==0.34.0",
+    "pydantic>=2.9.2",
+    "pydantic-settings==2.6.0",
+    "weaviate-client>=4.16.1", # Also used by agent_c-rag
+    "python-multipart",
+    "markitdown==0.0.2",
+    "aiofiles",
+    "fastapi-cache2>=0.2.2",
+    "redis>=5.0.0",
+    "sqlalchemy>=2.0.43",
+    "aiosqlite>=0.19.0",
+    "python-jose[cryptography]",
+    "python-multipart",
+    "bcrypt==4.0.1",
+    "passlib[bcrypt]",
+    "openai-agents[voice]"
+]
+
+requires-python = ">=3.12"
+authors = [
+    { name = "Joe Ours", email = "joesph.ours@centricconsulting.com" },
+]
+maintainers = [
+    { name = "Donavan Stanley", email = "donavan.stanley@centricconsulting.com" },
+    { name = "Joe Ours", email = "joesph.ours@centricconsulting.com" },
+]
+
+readme = "README.MD"
+license = { text = "Business Source License 1.1" }
+keywords = ["gpt", "claude", "agents", "ai", "centric"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python"
+]
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio",
+    "respx",
+    "asynctest",
+    "pytest-mock",        # More powerful mocking for pytest
+    "pytest-xdist",      # Parallel test execution
+    "pytest-timeout",    # Test timeout enforcement
+    "faker",             # Test data generation
+    "black",
+    "isort",
+    "mypy",
+    "httpx",             # For async HTTP client testing
+]
+
+[project.urls]
+Homepage = "https://github.com/centricconsulting/agent_c_framework"
+
+
+[project.scripts]
+agent_c-api = "agent_c_api.main:run"
+agent_c-users = "agent_c_api.cli.users:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

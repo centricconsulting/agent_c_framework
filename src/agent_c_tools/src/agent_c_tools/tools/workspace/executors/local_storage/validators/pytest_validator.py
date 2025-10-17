@@ -1,5 +1,7 @@
 import os
 from typing import List, Mapping, Any, Dict
+
+from agent_c.util.logging_utils import LoggingManager
 from .base_validator import ValidationResult
 from .path_safety import is_within_workspace, looks_like_path, extract_file_part
 
@@ -105,11 +107,61 @@ class PytestCommandValidator:
         timeout = policy.get("default_timeout")
         return ValidationResult(True, "OK", timeout=timeout, policy_spec=policy)
 
-    @staticmethod
-    def adjust_environment(base_env: Dict[str, str], parts: List[str], policy: Mapping[str, Any]) -> Dict[str, str]:
+    def adjust_environment(self, base_env: Dict[str, str], parts: List[str], policy: Mapping[str, Any]) -> Dict[str, str]:
+        """
+        Adjust environment for pytest execution.
+        This includes detecting and activating virtual environments.
+
+        Note: This is now an instance method to access the executor for venv detection.
+        """
+
+        logger = LoggingManager(__name__).get_logger()
         env = dict(base_env)
-        # Disable plugin autoload for safety unless explicitly overridden
-        env.setdefault("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
+
+        # Try to detect and activate virtual environment if enabled
+        detect_venv = policy.get("detect_venv", True)  # Default: enabled
+        logger.debug(f"pytest adjust_environment: detect_venv={detect_venv}")
+        
+        if detect_venv:
+            cwd = env.get("CWD") or os.getcwd()
+            workspace_root = env.get("WORKSPACE_ROOT") or policy.get("workspace_root")
+            logger.debug(f"pytest adjust_environment: cwd={cwd}, workspace_root={workspace_root}")
+
+            # Get the executor instance from the validator if available
+            # The executor will pass itself when calling adjust_environment
+            from ..secure_command_executor import SecureCommandExecutor
+            executor = getattr(self, '_executor', None)
+            logger.debug(f"pytest adjust_environment: executor={executor}, has_executor={executor is not None}")
+            
+            if executor and isinstance(executor, SecureCommandExecutor):
+                logger.debug(f"pytest adjust_environment: calling find_and_prepare_venv({cwd}, {workspace_root})")
+                venv_settings = executor.find_and_prepare_venv(cwd, workspace_root)
+                logger.debug(f"pytest adjust_environment: venv_settings={venv_settings}")
+                
+                if venv_settings:
+                    logger.info(f"Detected and activating virtual environment: {venv_settings.get('VIRTUAL_ENV')}")
+                    # Merge venv settings, but don't override existing values
+                    for key, value in venv_settings.items():
+                        if value is None:
+                            # None means unset the variable
+                            env.pop(key, None)
+                            logger.debug(f"pytest adjust_environment: unsetting {key}")
+                        elif key not in env or key == "PATH_PREPEND":
+                            # Always set PATH_PREPEND, and set others if not present
+                            env[key] = value
+                            logger.debug(f"pytest adjust_environment: setting {key}={value}")
+                else:
+                    logger.debug("pytest adjust_environment: no venv found")
+            else:
+                logger.warning(f"pytest adjust_environment: executor not available or wrong type (executor={type(executor).__name__ if executor else 'None'})")
+
+        # Only disable plugin autoload if explicitly requested in policy
+        # Note: Disabling plugins will prevent pytest-cov and other plugins from working
+        if policy.get("disable_plugin_autoload", False):
+            env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
+
+        # Apply any policy-defined environment overrides
         overrides = policy.get("env_overrides") or {}
         env.update(overrides)
+
         return env

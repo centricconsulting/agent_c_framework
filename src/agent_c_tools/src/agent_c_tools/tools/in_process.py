@@ -2,7 +2,7 @@ from .workspace import WorkspaceTools
 from .workspace.local_storage import LocalStorageWorkspace, LocalProjectWorkspace
 from .workspace.s3_storage import S3StorageWorkspace
 from .dall_e.tool import DallETools
-from .dynamics.tool import DynamicsTools
+from .dynamics_crm.tool import DynamicsCrmTools
 from .markdown_to_html_report.tool import MarkdownToHtmlReportTools
 from .memory import MemoryTools
 from .random_number import RandomNumberTools
@@ -22,3 +22,5 @@ from .youtube import YoutubeTranscriptTools, YoutubeCommentsTools, YoutubeSearch
 from .sars import SarsTools
 from .insurance_demo import InsuranceDemoTools
 from .workspace import DynamicCommandTools
+from .toolbelt.tool import ToolbeltTools
+from .microsoft_stream.tool import MicrosoftStreamTools

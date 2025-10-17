@@ -35,7 +35,7 @@ class YouTubeBase(Toolset):
         )
         self.logger: logging.Logger = logging.getLogger(__name__)
         # Get workspace tools for file operations
-        self.workspace_tool = self.tool_chest.active_tools.get('WorkspaceTools')
+        self.workspace_tool = self.tool_chest.available_tools.get('WorkspaceTools')
         if not self.workspace_tool:
             self.logger.warning("Workspace toolset not available. This tool requires workspace tools.")
 
@@ -43,6 +43,23 @@ class YouTubeBase(Toolset):
         self.MAX_TOKEN_SIZE = 35000
         self.cache_expire = 3600  # expires in 1 hour for cache
 
+    def _count_tokens(self, data: str, tool_context) -> int:
+        """
+        Centralized token counting method for YouTube tools.
+
+        Args:
+            data: The text content to count tokens for
+            tool_context: Tool context containing agent_runtime
+
+        Returns:
+            Number of tokens in the data
+
+        Raises:
+            ValueError: If tool_context or agent_runtime is missing
+        """
+        if tool_context is None or 'agent_runtime' not in tool_context:
+            raise ValueError("tool_context with agent_runtime is required for token counting")
+        return tool_context['agent_runtime'].count_tokens(data)
 
     def _handle_api_error(self, response: requests.Response) -> None:
         """Handle YouTube API errors."""
@@ -86,8 +103,8 @@ class YouTubeBase(Toolset):
     def _error_response(message: str) -> str:
         return json.dumps({'success': False, 'error': message})
 
-    def _is_response_to_big(self, response: str) -> bool:
-        response_size = self.tool_chest.agent.count_tokens(response)
+    def _is_response_to_big(self, response: str, tool_context) -> bool:
+        response_size = self._count_tokens(response, tool_context)
         if response_size > self.MAX_TOKEN_SIZE:
             self.logger.debug(f"Response is too big: {response_size}")
             return True

@@ -134,11 +134,18 @@ class OfficeToMarkdownTools(Toolset):
                     mode="write"
                 )
 
-                # Check for write errors
-                write_data = json.loads(write_result)
-                if 'error' in write_data:
-                    return self._format_response(False, f"Failed to write output file: {write_data['error']}",
-                                               input_file=input_unc_path)
+                # Check for write errors - write_result can be either:
+                # 1. JSON string with error: {"error": "message"}
+                # 2. Plain string for success
+                try:
+                    # Try to parse as JSON first to check for structured error response
+                    write_data = json.loads(write_result)
+                    if isinstance(write_data, dict) and 'error' in write_data:
+                        return self._format_response(False, f"Failed to write output file: {write_data['error']}",
+                                                   input_file=input_unc_path)
+                except (json.JSONDecodeError, TypeError):
+                    # Not JSON, so it's a plain string success message
+                    pass
 
                 # Get OS path for media event
                 output_file_system_path = os_file_system_path(self.workspace_tool, output_unc_path)
@@ -161,7 +168,8 @@ class OfficeToMarkdownTools(Toolset):
                     input_file=input_unc_path,
                     output_file=output_unc_path,
                     file_type=result.file_type,
-                    os_path=output_file_system_path
+                    os_path=output_file_system_path,
+                    write_result=write_result
                 )
             
         except Exception as e:

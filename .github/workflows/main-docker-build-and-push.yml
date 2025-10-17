@@ -1,12 +1,6 @@
 name: Build and Push Dev Docker Images
 
 on:
-  pull_request:
-    branches: [ main ]
-    types: [ opened, synchronize, reopened ]
-  pull_request_target:
-    branches: [ main ]
-    types: [ closed ]
   push:
     branches: [ main ]
   workflow_dispatch:
@@ -58,7 +52,7 @@ jobs:
           pip install src/ace_proto/ts_tool-0.1.0-py3-none-any.whl
           pip install -e src/agent_c_core
           pip install -e src/agent_c_tools
-          pip install -e src/agent_c_api_ui/agent_c_api
+          pip install -e src/agent_c_api
       
       - name: Run unit tests
         run: |
@@ -83,18 +77,16 @@ jobs:
         if: needs.check-changes.outputs.base_changed == 'true'
         uses: docker/build-push-action@v4
         with:
-          context: ./dockerfiles/base/python
-          file: ./dockerfiles/base/python/Dockerfile
-          # Push on PR close, push to main, or manual dispatch
-          push: ${{ github.event_name == 'pull_request_target' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+          context: .
+          file: ./pythonbase.Dockerfile
+          push: true
           tags: |
             ghcr.io/${{ env.OWNER }}/agent_c_python_base:latest
             ghcr.io/${{ env.OWNER }}/agent_c_python_base:build-${{ github.run_number }}
-            ghcr.io/${{ env.OWNER }}/agent_c_python_base:${{ env.SHORT_SHA }}
             ghcr.io/${{ env.OWNER }}/agent_c_python_base:${{ env.DATE }}
 
       - name: Verify base image push
-        if: (needs.check-changes.outputs.base_changed == 'true') && (github.event_name == 'pull_request_target' || github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+if: needs.check-changes.outputs.base_changed == 'true'
         run: |
           echo "Verifying base image was published"
           docker pull ghcr.io/${{ env.OWNER }}/agent_c_python_base:${{ env.SHORT_SHA }} || echo "Failed to pull image - may not be available immediately"
@@ -103,37 +95,19 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./dockerfiles/api.Dockerfile
-          # Push on PR close, push to main, or manual dispatch
-          push: ${{ github.event_name == 'pull_request_target' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+          file: ./api.Dockerfile
+          push: true
           tags: |
-            ghcr.io/${{ env.OWNER }}/agent_c_api_dev:latest
-            ghcr.io/${{ env.OWNER }}/agent_c_api_dev:build-${{ github.run_number }}
-            ghcr.io/${{ env.OWNER }}/agent_c_api_dev:${{ env.SHORT_SHA }}
-            ghcr.io/${{ env.OWNER }}/agent_c_api_dev:${{ env.DATE }}
+            ghcr.io/${{ env.OWNER }}/agentc-api:latest
+            ghcr.io/${{ env.OWNER }}/agentc-api:build-${{ github.run_number }}
 
-      - name: Build and push Frontend image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./dockerfiles/frontend.Dockerfile
-          # Push on PR close, push to main, or manual dispatch
-          push: ${{ github.event_name == 'pull_request_target' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
-          tags: |
-            ghcr.io/${{ env.OWNER }}/agent_c_frontend_dev:latest
-            ghcr.io/${{ env.OWNER }}/agent_c_frontend_dev:build-${{ github.run_number }}
-            ghcr.io/${{ env.OWNER }}/agent_c_frontend_dev:${{ env.SHORT_SHA }}
-            ghcr.io/${{ env.OWNER }}/agent_c_frontend_dev:${{ env.DATE }}
-
-      - name: Build and push Realtime Client Demo image
+      - name: Build and push client image
         uses: docker/build-push-action@v4
         with:
           context: ./src/realtime_client
-          file: ./src/realtime_client/Dockerfile
-          # Push on PR close, push to main, or manual dispatch
-          push: ${{ github.event_name == 'pull_request_target' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+          file: ./client.Dockerfile
+          push: true
           tags: |
-            ghcr.io/${{ env.OWNER }}/agent_c_realtime_demo:latest
-            ghcr.io/${{ env.OWNER }}/agent_c_realtime_demo:build-${{ github.run_number }}
-            ghcr.io/${{ env.OWNER }}/agent_c_realtime_demo:${{ env.SHORT_SHA }}
-            ghcr.io/${{ env.OWNER }}/agent_c_realtime_demo:${{ env.DATE }}
+            ghcr.io/${{ env.OWNER }}/agentc-client:latest
+            ghcr.io/${{ env.OWNER }}/agentc-client:build-${{ github.run_number }}
+            ghcr.io/${{ env.OWNER }}/agentc-client:${{ env.DATE }}

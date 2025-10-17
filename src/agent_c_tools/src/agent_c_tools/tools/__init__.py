@@ -22,4 +22,5 @@ from . import insurance_demo  # Insurance Demo toolset
 from . import sars  # SARS toolset
 from agent_c.toolsets.claude_server_tools import ClaudeWebSearchTools, ClaudeWebFetchTools, ClaudeComputerUseTools, ClaudeCodeExecutionTools
 from .toolbelt.tool import ToolbeltTools
+from .microsoft_stream.tool import MicrosoftStreamTools
 

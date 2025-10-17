@@ -1,0 +1,40 @@
+services:
+  # HTTPS Proxy (Nginx)
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: agentc-proxy-dev
+    ports:
+      - "443:443"
+      - "5173:5173"
+    volumes:
+      - ./build_support/config/nginx.conf.client-only:/etc/nginx/nginx.conf:ro
+      - ./build_support/certs:/etc/nginx/certs:ro
+    depends_on:
+      - client
+    networks:
+      - agent-c-network
+    restart: unless-stopped
+
+  client:
+    image: ghcr.io/centricconsulting/agentc-client:latest
+    container_name: agentc-client-dev
+    expose:
+      - "5173"
+    environment:
+      - PORT=5173
+      - NEXT_PUBLIC_APP_URL=https://localhost:5173
+      - AGENT_C_API_URL=https://host.docker.internal:8000
+      - NEXT_PUBLIC_AGENTC_API_URL=wss://localhost:8000
+    restart: unless-stopped
+    networks:
+      - agent-c-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=3", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  agent-c-network:
+    driver: bridge

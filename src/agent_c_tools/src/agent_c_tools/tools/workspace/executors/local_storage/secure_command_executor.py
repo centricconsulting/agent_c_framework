@@ -231,6 +231,12 @@ class SecureCommandExecutor:
             "lerna": LernaCommandValidator(),
         }
 
+        # Give validators access to the executor for helper methods (like venv detection)
+        for validator in self.validators.values():
+            if hasattr(validator, '_executor') or not hasattr(validator, '__dict__'):
+                continue
+            validator._executor = self
+
         if self.policy_provider:
             self._prime_validators_from_policy()
 
@@ -289,6 +295,95 @@ class SecureCommandExecutor:
                 if exe:
                     return exe
         return None
+
+    def find_and_prepare_venv(self, start_dir: str, workspace_root: Optional[str] = None) -> Dict[str, str]:
+        """
+        Walk up the directory tree from start_dir looking for a Python virtual environment.
+        If found and valid, return environment variables to activate it.
+
+        Args:
+            start_dir: Directory to start searching from
+            workspace_root: Optional workspace root to limit search scope
+
+        Returns:
+            Dict with PATH_PREPEND, VIRTUAL_ENV, and PYTHONHOME (None to unset)
+            Empty dict if no venv found
+        """
+        self.logger.debug(f"find_and_prepare_venv: searching from {start_dir}, workspace_root={workspace_root}")
+        
+        # Common venv directory names to look for
+        venv_names = [".venv", "venv", ".virtualenv", "env"]
+
+        # Normalize paths
+        current_dir = os.path.abspath(start_dir)
+        if workspace_root:
+            workspace_root = os.path.abspath(workspace_root)
+        
+        self.logger.debug(f"find_and_prepare_venv: normalized start_dir={current_dir}, workspace_root={workspace_root}")
+
+        # Walk up the directory tree
+        depth = 0
+        while True:
+            depth += 1
+            self.logger.debug(f"find_and_prepare_venv: checking directory (depth {depth}): {current_dir}")
+            
+            # Check if we've gone above the workspace root
+            if workspace_root and not current_dir.startswith(workspace_root):
+                self.logger.debug(f"find_and_prepare_venv: stopped at workspace boundary")
+                break
+
+            # Check each potential venv directory name
+            for venv_name in venv_names:
+                venv_path = os.path.join(current_dir, venv_name)
+                self.logger.debug(f"find_and_prepare_venv: checking {venv_path}")
+
+                if not os.path.isdir(venv_path):
+                    self.logger.debug(f"find_and_prepare_venv: {venv_path} is not a directory")
+                    continue
+
+                # Validate it's a real venv by checking for required files
+                if self.is_windows:
+                    # Windows: check for Scripts/python.exe and Scripts/activate.bat
+                    python_exe = os.path.join(venv_path, "Scripts", "python.exe")
+                    activate_script = os.path.join(venv_path, "Scripts", "activate.bat")
+                    bin_dir = os.path.join(venv_path, "Scripts")
+                else:
+                    # Unix: check for bin/python (or python3) and bin/activate
+                    python_exe = os.path.join(venv_path, "bin", "python")
+                    python3_exe = os.path.join(venv_path, "bin", "python3")
+                    activate_script = os.path.join(venv_path, "bin", "activate")
+                    bin_dir = os.path.join(venv_path, "bin")
+
+                    # Check for either python or python3
+                    if not os.path.isfile(python_exe):
+                        python_exe = python3_exe
+
+                # Validate the venv has the required files
+                self.logger.debug(f"find_and_prepare_venv: checking for {python_exe} and {activate_script}")
+                if os.path.isfile(python_exe) and os.path.isfile(activate_script):
+                    # Found a valid venv!
+                    self.logger.info(f"Found virtual environment at: {venv_path}")
+                    result = {
+                        "PATH_PREPEND": bin_dir,
+                        "VIRTUAL_ENV": venv_path,
+                        "PYTHONHOME": None,  # Unset to avoid conflicts
+                    }
+                    self.logger.debug(f"find_and_prepare_venv: returning {result}")
+                    return result
+                else:
+                    self.logger.debug(f"find_and_prepare_venv: {venv_path} missing required files")
+
+            # Move up one directory
+            parent_dir = os.path.dirname(current_dir)
+            if parent_dir == current_dir:
+                # Reached filesystem root
+                self.logger.debug(f"find_and_prepare_venv: reached filesystem root")
+                break
+            current_dir = parent_dir
+
+        # No venv found
+        self.logger.debug(f"find_and_prepare_venv: no venv found after checking {depth} directories")
+        return {}
 
     @staticmethod
     def _policy_suppress_flag(
@@ -427,6 +522,15 @@ class SecureCommandExecutor:
         # Build env
         effective_env = dict(os.environ)
 
+        # Compute CWD and WORKSPACE_ROOT for use by validators
+        cwd_abs = working_directory or os.getcwd()
+        ws_root = (
+                policy.get("workspace_root")
+                or (override_env or {}).get("WORKSPACE_ROOT")
+                or os.environ.get("WORKSPACE_ROOT")
+                or cwd_abs
+        )
+
         # 1) policy "safe_env" (static, lowest precedence)
         safe_env = policy.get("safe_env") or {}
         effective_env.update({k: str(v) for (k, v) in safe_env.items()})
@@ -435,12 +539,17 @@ class SecureCommandExecutor:
         if override_env:
             effective_env.update(override_env)
 
+        # Ensure CWD and WORKSPACE_ROOT are set for validators to use
+        effective_env.setdefault("CWD", cwd_abs)
+        effective_env.setdefault("WORKSPACE_ROOT", ws_root)
+
         # 3) let the validator add/adjust (may set PATH_PREPEND using WORKSPACE_ROOT/CWD, etc.)
         if hasattr(validator, "adjust_environment"):
             pre_env = effective_env
             try:
                 adjusted = validator.adjust_environment(pre_env, parts, policy)
-            except Exception:
+            except Exception as e:
+                self.logger.error(f"Error in validator.adjust_environment: {e}", exc_info=True)
                 adjusted = None
             effective_env = adjusted if isinstance(adjusted, dict) else pre_env
 
@@ -458,7 +567,11 @@ class SecureCommandExecutor:
         path_prepend = effective_env.pop("PATH_PREPEND", None)
         if path_prepend:
             sep = ";" if self.is_windows else ":"
-            effective_env["PATH"] = f"{path_prepend}{sep}{effective_env.get('PATH', '')}"
+            old_path = effective_env.get('PATH', '')
+            new_path = f"{path_prepend}{sep}{old_path}"
+            effective_env["PATH"] = new_path
+            self.logger.debug(f"PATH_PREPEND processing: prepended '{path_prepend}'")
+            self.logger.debug(f"New PATH starts with: {new_path[:200]}...")
 
         # Final timeout: arg > per-command > executor default
         if timeout is not None:
@@ -470,6 +583,7 @@ class SecureCommandExecutor:
 
         # Resolve the executable using the effective PATH/PATHEXT
         resolved = self._resolve_executable(parts[0], effective_env)
+        self.logger.debug(f"Resolved executable '{parts[0]}' to: {resolved}")
 
         if not resolved:
             return self._failed(command, working_directory, f"Executable not found: {parts[0]}")

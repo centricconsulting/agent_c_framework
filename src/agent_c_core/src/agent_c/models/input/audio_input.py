@@ -4,8 +4,6 @@ import base64
 import logging
 import mimetypes
 import numpy as np
-import soundfile as sf
-
 
 from typing import Union, Optional
 from pathlib import Path
@@ -45,6 +43,7 @@ class AudioInput(FileInput):
         Returns:
             bytes: The audio content as a NumPy array
         """
+        import soundfile as sf
         wav_bytes = base64.b64decode(self.content)
         with io.BytesIO(wav_bytes) as wav_buffer:
             audio_array, sample_rate = sf.read(wav_buffer)

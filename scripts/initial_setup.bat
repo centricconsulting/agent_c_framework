@@ -41,11 +41,11 @@ if exist .local_workspaces.json (
     copy local_workspaces.example.json .local_workspaces.json
 )
 
-if exist src\realtime_client\packages\demo\.env.local (
+if exist src\typescript_client_sdk\packages\demo\.env.local (
     echo Demo local config file already exists. Skipping creation.
 ) else (
-    echo Copying demo example.env to src\realtime_client\packages\demo\.env.local ...
-    copy src\realtime_client\packages\demo\.env.example src\realtime_client\packages\demo\.env.local
+    echo Copying demo example.env to src\typescript_client_sdk\packages\demo\.env.local ...
+    copy src\typescript_client_sdk\packages\demo\.env.example src\typescript_client_sdk\packages\demo\.env.local
 )
 
 :: Activate the virtual environment
@@ -60,6 +60,25 @@ if errorlevel 1 (
 echo Upgrading Pip to the latest version.
 python -m pip install --upgrade pip
 pip install tomli
+
+echo "Installing pnpm version 9 and lerna globally..."
+CALL npm install -g pnpm@9 lerna
+
+if errorlevel 1 (
+    echo Failed to install pnpm and lerna.
+    exit /b 1
+)
+
+echo "Fetching initial client dependencies with pnpm..."
+cd src\typescript_client_sdk
+pnpm install
+
+if errorlevel 1 (
+    echo Failed to install client dependencies with pnpm.
+    exit /b 1
+)
+
+cd ..\..
 
 :: Install the requirements
 echo Installing dependencies.

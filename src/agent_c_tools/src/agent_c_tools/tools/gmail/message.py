@@ -1,5 +1,4 @@
 import html
-import json
 import base64
 import mimetypes
 import re
@@ -9,7 +8,6 @@ from email.mime.text import MIMEText
 from email import encoders
 import logging
 from typing import Optional, Dict, Any, Union, List
-from bs4 import BeautifulSoup
 
 from agent_c.toolsets import Toolset, json_schema
 from .base import GmailBase, ReturnType
@@ -108,7 +106,7 @@ class GmailMessage(GmailBase):
             payload = message_data['payload']
             headers = payload.get('headers', [])
             parts = payload.get('parts', [])
-            body = await self._get_body_from_payload(payload)
+            body = await self._get_body_from_payload(payload, tool_context)
             subject = self._get_header(headers, 'Subject')
             sender = self._get_header(headers, 'From')
 
@@ -164,24 +162,24 @@ class GmailMessage(GmailBase):
             self.logger.error(f"Error fetching email message: {e}")
             return await self.handle_return_type(output={}, return_type=return_type, error=e, calling_function='get_message', tool_context=tool_context)
 
-    async def _get_body_from_payload(self, payload):
+    async def _get_body_from_payload(self, payload, tool_context):
         """Extract the body from the email payload, prioritizing plain text."""
         # First check for plain text
         plain_text = await self._extract_mime_content(payload, 'text/plain')
         if plain_text:
-            return await self._process_text_content(plain_text)
+            return await self._process_text_content(plain_text, tool_context)
 
         # Fall back to HTML if no plain text
         html_content = await self._extract_mime_content(payload, 'text/html')
         if html_content:
-            return await self._convert_html_to_text(html_content)
+            return await self._convert_html_to_text(html_content, tool_context)
 
         # Last resort - try body data
         body_data = payload.get('body', {}).get('data')
         if body_data:
             try:
                 text = base64.urlsafe_b64decode(body_data).decode('utf-8', errors='replace')
-                return await self._process_text_content(text)
+                return await self._process_text_content(text, tool_context)
             except Exception as e:
                 self.logger.warning(f"Error decoding body content: {e}")
 
@@ -210,7 +208,7 @@ class GmailMessage(GmailBase):
 
         return None
 
-    async def _process_text_content(self, text):
+    async def _process_text_content(self, text, tool_context):
         """Clean and process plain text content."""
         # Remove quoted text (lines starting with >)
         text = re.sub(r'(?m)^>.*$', '', text)
@@ -225,12 +223,12 @@ class GmailMessage(GmailBase):
         text = re.sub(r'\n{3,}', '\n\n', text)
 
         # Check if content is too large
-        if self.is_content_too_large(text):
-            return self.truncate_content_by_approx_tokens(text, self.MAX_EMAIL_BODY_TOKEN_SIZE)
+        if self.is_content_too_large(text, tool_context):
+            return self.truncate_content_by_approx_tokens(text, self.MAX_EMAIL_BODY_TOKEN_SIZE, tool_context)
 
         return text.strip()
 
-    async def _convert_html_to_text(self, html_content):
+    async def _convert_html_to_text(self, html_content, tool_context):
         """Convert HTML to plain text."""
         try:
             # Use BeautifulSoup to parse HTML
@@ -248,12 +246,12 @@ class GmailMessage(GmailBase):
             lines = (line.strip() for line in text.splitlines())
             text = '\n'.join(line for line in lines if line)
 
-            return await self._process_text_content(text)
+            return await self._process_text_content(text, tool_context)
         except ImportError:
             # Fallback: basic HTML tag removal
             text = re.sub(r'<[^>]+>', ' ', html_content)
             text = html.unescape(text)
-            return await self._process_text_content(text)
+            return await self._process_text_content(text, tool_context)
 
     @staticmethod
     def _get_header(headers, name):
@@ -465,7 +463,7 @@ class GmailMessage(GmailBase):
                 headers = payload.get('headers', [])
                 subject = self._get_header(headers, 'Subject')
                 sender = self._get_header(headers, 'From')
-                body = self._get_body_from_payload(payload)
+                body = self._get_body_from_payload(payload, tool_context)
 
                 message_info = {
                     "id": message_id,
