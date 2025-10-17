@@ -100,7 +100,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/packages/ui ./packages/ui
 # Copy ALL demo app files from builder (excluding .next if it exists)
 # This includes all source, config files, certificates, etc.
 COPY --from=builder --chown=nextjs:nodejs /app/packages/demo ./packages/demo
-COPY ./packages/demo/.env.example ./packages/demo/.env
+COPY packages/demo/.env.local ./packages/demo/.env
 # Install ALL dependencies including devDependencies for development mode
 # Remove --ignore-scripts to allow postinstall scripts to run (needed for some packages)
 # This will install all dependencies and set up workspace links

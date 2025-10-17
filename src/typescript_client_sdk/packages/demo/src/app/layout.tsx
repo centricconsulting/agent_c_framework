@@ -6,6 +6,11 @@ import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@agentc/realtime-ui"
 
+export const metadata = {
+  title: "Agent C",
+  description: "Agent C Platform"
+}
+
 const inter = Inter({ subsets: ["latin"] })
 
 interface RootLayoutProps {
@@ -15,10 +20,7 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-      </head>
+      <head />
       <body
         className={cn(
           "min-h-screen bg-background antialiased",
