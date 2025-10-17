@@ -77,6 +77,81 @@ class UiPathTools(Toolset):
         
         return required_configs
     
+    async def _get_folder_id_by_name(self, folder_name: str, token: str, config: Dict[str, str]) -> Optional[str]:
+        """Get folder ID by folder name using UiPath Orchestrator API.
+        
+        Args:
+            folder_name: Display name of the folder to find
+            token: Authentication token
+            config: Configuration dictionary with org_name and tenant_name
+            
+        Returns:
+            Folder ID if found, None otherwise
+        """
+        try:
+            url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/Folders"
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "Accept": "application/json",
+            }
+            
+            params = {"$filter": f"DisplayName eq '{folder_name}'"}
+            
+            self.logger.info(f"Looking up folder ID for folder name: '{folder_name}'")
+            response = requests.get(url, headers=headers, params=params)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data["value"]:
+                    folder = data["value"][0]
+                    folder_id = str(folder["Id"])
+                    self.logger.info(f"Found folder '{folder_name}' with ID: {folder_id}")
+                    return folder_id
+                else:
+                    self.logger.warning(f"Folder '{folder_name}' not found in Orchestrator")
+                    return None
+            else:
+                self.logger.error(f"Failed to fetch folder details: {response.status_code} - {response.text}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error looking up folder ID for '{folder_name}': {str(e)}")
+            return None
+    
+    async def _resolve_folder_id(self, folder_name: Optional[str] = None) -> tuple[str, str]:
+        """Resolve folder ID from folder name or use default from environment.
+        
+        Args:
+            folder_name: Optional folder name to lookup. If None, uses default from config.
+            
+        Returns:
+            Tuple of (folder_id, folder_info) where folder_info describes the source
+        """
+        try:
+            config = self._validate_config()
+            
+            if folder_name:
+                # User provided a folder name, look up the folder ID
+                token = await self._get_auth_token("OR.Folders OR.Folders.Read")
+                folder_id = await self._get_folder_id_by_name(folder_name, token, config)
+                
+                if folder_id:
+                    folder_info = f"folder '{folder_name}' (ID: {folder_id})"
+                    return folder_id, folder_info
+                else:
+                    # Folder not found, return error info
+                    return "", f"ERROR: Folder '{folder_name}' not found in Orchestrator"
+            else:
+                # No folder name provided, use default from environment
+                default_folder_id = config['folder_id']
+                folder_info = f"default folder (ID: {default_folder_id})"
+                return default_folder_id, folder_info
+                
+        except Exception as e:
+            return "", f"ERROR: Failed to resolve folder ID: {str(e)}"
+    
     async def _get_auth_token(self, scope:str="OR.Administration OR.Administration.Read OR.Administration.Write OR.Analytics OR.Analytics.Read OR.Analytics.Write OR.Assets OR.Assets.Read OR.Assets.Write OR.Audit OR.Audit.Read OR.Audit.Write OR.AutomationSolutions.Access OR.BackgroundTasks OR.BackgroundTasks.Read OR.BackgroundTasks.Write OR.Execution OR.Execution.Read OR.Execution.Write OR.Folders OR.Folders.Read OR.Folders.Write OR.Hypervisor OR.Hypervisor.Read OR.Hypervisor.Write OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.License OR.License.Read OR.License.Write OR.Machines OR.Machines.Read OR.Machines.Write OR.ML OR.ML.Read OR.ML.Write OR.Monitoring OR.Monitoring.Read OR.Monitoring.Write OR.Queues OR.Queues.Read OR.Queues.Write OR.Robots OR.Robots.Read OR.Robots.Write OR.Settings OR.Settings.Read OR.Settings.Write OR.Tasks OR.Tasks.Read OR.Tasks.Write OR.TestDataQueues OR.TestDataQueues.Read OR.TestDataQueues.Write OR.TestSetExecutions OR.TestSetExecutions.Read OR.TestSetExecutions.Write OR.TestSets OR.TestSets.Read OR.TestSets.Write OR.TestSetSchedules OR.TestSetSchedules.Read OR.TestSetSchedules.Write OR.Users OR.Users.Read OR.Users.Write OR.Webhooks OR.Webhooks.Read OR.Webhooks.Write ") -> str:
         """Get authentication token from UiPath Cloud."""
         try:
@@ -162,6 +237,11 @@ class UiPathTools(Toolset):
                 "type": "string",
                 "description": "Optional description for the asset",
                 "default": "Created via Agent C"
+            },
+            "folder_name": {
+                "type": "string",
+                "description": "Optional folder name where the asset should be created. If not provided, uses the default folder from environment variables.",
+                "required": False
             }
         }
     )
@@ -175,6 +255,7 @@ class UiPathTools(Toolset):
             username = kwargs.get('username')
             password = kwargs.get('password')
             description = kwargs.get('description', 'Created via Agent C')
+            folder_name = kwargs.get('folder_name')
             
             if not asset_name:
                 return "ERROR: asset_name is required"
@@ -186,6 +267,11 @@ class UiPathTools(Toolset):
             else:
                 if not asset_value:
                     return "ERROR: asset_value is required for non-Credential type assets"
+            
+            # Resolve folder ID (either from folder_name or default)
+            folder_id, folder_info = await self._resolve_folder_id(folder_name)
+            if folder_info.startswith("ERROR:"):
+                return folder_info
             
             # Get configuration
             config = self._validate_config()
@@ -199,7 +285,7 @@ class UiPathTools(Toolset):
             headers = {
                 "Authorization": f"Bearer {token}",
                 "X-UIPATH-TenantName": config['tenant_name'],
-                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "X-UIPATH-OrganizationUnitId": folder_id,
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             }
@@ -275,12 +361,13 @@ class UiPathTools(Toolset):
                 # Return a formatted success response
                 result = {
                     "status": "success",
-                    "message": f"Asset '{asset_name}' created successfully",
+                    "message": f"Asset '{asset_name}' created successfully in {folder_info}",
                     "asset_id": result_data.get("Id"),
                     "asset_name": asset_name,
                     "asset_type": asset_type,
                     "asset_value": actual_value,
-                    "description": description
+                    "description": description,
+                    "folder_info": folder_info
                 }
                 return yaml.dump(result, allow_unicode=True)
                 
@@ -321,6 +408,11 @@ class UiPathTools(Toolset):
                 "type": "boolean",
                 "description": "Whether to enforce unique reference IDs for queue items",
                 "default": False
+            },
+            "folder_name": {
+                "type": "string",
+                "description": "Optional folder name where the queue should be created. If not provided, uses the default folder from environment variables.",
+                "required": False
             }
         }
     )
@@ -333,6 +425,7 @@ class UiPathTools(Toolset):
             max_retries = kwargs.get('max_number_of_retries', 0)
             auto_retry = kwargs.get('auto_retry', False)
             unique_ref = kwargs.get('unique_ref', False)
+            folder_name = kwargs.get('folder_name')
             
             if not queue_name:
                 return "ERROR: queue_name is required"
@@ -340,6 +433,11 @@ class UiPathTools(Toolset):
             # Validate parameters
             if not isinstance(max_retries, int) or max_retries < 0 or max_retries > 10:
                 return "ERROR: max_number_of_retries must be an integer between 0 and 10"
+            
+            # Resolve folder ID (either from folder_name or default)
+            folder_id, folder_info = await self._resolve_folder_id(folder_name)
+            if folder_info.startswith("ERROR:"):
+                return folder_info
             
             # Get configuration
             config = self._validate_config()
@@ -353,7 +451,7 @@ class UiPathTools(Toolset):
             headers = {
                 "Authorization": f"Bearer {token}",
                 "X-UIPATH-TenantName": config['tenant_name'],
-                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "X-UIPATH-OrganizationUnitId": folder_id,
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             }
@@ -388,14 +486,15 @@ class UiPathTools(Toolset):
                 # Return a formatted success response
                 result = {
                     "status": "success",
-                    "message": f"Queue '{queue_name}' created successfully",
+                    "message": f"Queue '{queue_name}' created successfully in {folder_info}",
                     "queue_id": result_data.get("Id"),
                     "queue_name": queue_name,
                     "description": description,
                     "max_number_of_retries": max_retries,
                     "auto_retry": auto_retry,
                     "unique_ref": unique_ref,
-                    "processing_type": "Multiple"
+                    "processing_type": "Multiple",
+                    "folder_info": folder_info
                 }
                 return yaml.dump(result, allow_unicode=True)
                 
@@ -523,6 +622,11 @@ class UiPathTools(Toolset):
                 "type": "object",
                 "description": "Optional additional form fields to include with the upload request",
                 "required": False
+            },
+            "folder_name": {
+                "type": "string",
+                "description": "Optional folder name where the package should be uploaded. If not provided, uses the default folder from environment variables.",
+                "required": False
             }
         }
     )
@@ -532,6 +636,7 @@ class UiPathTools(Toolset):
             tool_context = kwargs.get('tool_context')
             nupkg_path = kwargs.get('nupkg_path')
             extra_fields = kwargs.get('extra_fields', {})
+            folder_name = kwargs.get('folder_name')
             
             if not nupkg_path:
                 return "ERROR: nupkg_path is required"
@@ -568,6 +673,11 @@ class UiPathTools(Toolset):
             if not nupkg_path.lower().endswith('.nupkg'):
                 return "ERROR: File must be a .nupkg package file"
             
+            # Resolve folder ID (either from folder_name or default)
+            folder_id, folder_info = await self._resolve_folder_id(folder_name)
+            if folder_info.startswith("ERROR:"):
+                return folder_info
+            
             # Get configuration
             config = self._validate_config()
             
@@ -586,7 +696,7 @@ class UiPathTools(Toolset):
                 "X-UIPATH-TenantName": config['tenant_name'],
                 "Accept": "application/json",
                 "X-UIPATH-Orchestrator": "True",
-                "X-UIPATH-OrganizationUnitId": str(config['folder_id'])
+                "X-UIPATH-OrganizationUnitId": folder_id
             }
             
             # Debug logging
@@ -650,9 +760,10 @@ class UiPathTools(Toolset):
                 # Return a formatted success response
                 result = {
                     "status": "success",
-                    "message": f"Package '{os.path.basename(nupkg_path)}' uploaded successfully",
+                    "message": f"Package '{os.path.basename(nupkg_path)}' uploaded successfully to {folder_info}",
                     "package_name": os.path.basename(nupkg_path),
                     "package_path": nupkg_path,
+                    "folder_info": folder_info,
                     "response_data": response_data
                 }
                 return yaml.dump(result, allow_unicode=True)
@@ -675,6 +786,11 @@ class UiPathTools(Toolset):
                 "type": "string",
                 "description": "Workspace UNC path to the .nupkg package file",
                 "required": True
+            },
+            "folder_name": {
+                "type": "string",
+                "description": "Optional folder name where the package should be uploaded. If not provided, uses the default folder from environment variables.",
+                "required": False
             }
         }
     )
@@ -682,6 +798,7 @@ class UiPathTools(Toolset):
         """Upload a UiPath package from workspace to Orchestrator."""
         try:
             workspace_path = kwargs.get('workspace_nupkg_path')
+            folder_name = kwargs.get('folder_name')
             
             if not workspace_path:
                 return "ERROR: workspace_nupkg_path is required"
@@ -708,6 +825,11 @@ class UiPathTools(Toolset):
             except Exception as e:
                 return f"ERROR: Failed to read workspace file {workspace_path}: {str(e)}"
             
+            # Resolve folder ID (either from folder_name or default)
+            folder_id, folder_info = await self._resolve_folder_id(folder_name)
+            if folder_info.startswith("ERROR:"):
+                return folder_info
+            
             # Get configuration and token
             config = self._validate_config()
 
@@ -724,7 +846,7 @@ class UiPathTools(Toolset):
                 "X-UIPATH-TenantName": config['tenant_name'],
                 "Accept": "application/json",
                 "X-UIPATH-Orchestrator": "True",
-                "X-UIPATH-OrganizationUnitId": str(config['folder_id'])
+                "X-UIPATH-OrganizationUnitId": folder_id
             }
             
             # Upload the package
@@ -742,10 +864,11 @@ class UiPathTools(Toolset):
                 
                 result = {
                     "status": "success",
-                    "message": f"Package '{filename}' uploaded successfully from workspace",
+                    "message": f"Package '{filename}' uploaded successfully from workspace to {folder_info}",
                     "package_name": filename,
                     "workspace_path": workspace_path,
                     "file_size_bytes": len(file_content),
+                    "folder_info": folder_info,
                     "response_data": response_data
                 }
                 return yaml.dump(result, allow_unicode=True)
@@ -755,7 +878,7 @@ class UiPathTools(Toolset):
         except Exception as e:
             return f"ERROR: Exception during workspace upload: {str(e)}"
 
-    async def _get_package_version(self, package_name: str, token: str, config: Dict[str, str]) -> Optional[str]:
+    async def _get_package_version(self, package_name: str, token: str, config: Dict[str, str], folder_id: str) -> Optional[str]:
         """Get the latest version of a package from UiPath Orchestrator."""
         try:
             url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/Processes"
@@ -763,7 +886,7 @@ class UiPathTools(Toolset):
             headers = {
                 "Authorization": f"Bearer {token}",
                 "X-UIPATH-TenantName": config['tenant_name'],
-                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "X-UIPATH-OrganizationUnitId": folder_id,
                 "Accept": "application/json",
             }
             
@@ -789,7 +912,7 @@ class UiPathTools(Toolset):
             self.logger.error(f"Error getting package version: {str(e)}")
             return None
     
-    async def _get_entry_point_id(self, package_name: str, package_version: str, token: str, config: Dict[str, str]) -> Optional[str]:
+    async def _get_entry_point_id(self, package_name: str, package_version: str, token: str, config: Dict[str, str], folder_id: str) -> Optional[str]:
         """Get the entry point ID for a package version."""
         try:
             url = (
@@ -800,7 +923,7 @@ class UiPathTools(Toolset):
             headers = {
                 "Authorization": f"Bearer {token}",
                 "X-UIPATH-TenantName": config['tenant_name'],
-                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "X-UIPATH-OrganizationUnitId": folder_id,
                 "Accept": "application/json",
             }
             
@@ -821,7 +944,7 @@ class UiPathTools(Toolset):
             self.logger.error(f"Error getting entry point ID: {str(e)}")
             return None
     
-    async def _get_process_release_details(self, process_name: str, token: str, config: Dict[str, str]) -> tuple[Optional[str], Optional[str]]:
+    async def _get_process_release_details(self, process_name: str, token: str, config: Dict[str, str], folder_id: str) -> tuple[Optional[str], Optional[str]]:
         """Get the release ID and key for a process by process name."""
         try:
             url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/Releases"
@@ -829,7 +952,7 @@ class UiPathTools(Toolset):
             headers = {
                 "Authorization": f"Bearer {token}",
                 "X-UIPATH-TenantName": config['tenant_name'],
-                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "X-UIPATH-OrganizationUnitId": folder_id,
                 "Accept": "application/json",
             }
             
@@ -945,6 +1068,11 @@ class UiPathTools(Toolset):
                 "type": "string",
                 "description": "Optional input arguments for the process in JSON format",
                 "default": "{}"
+            },
+            "folder_name": {
+                "type": "string",
+                "description": "Optional folder name where the process should be created. If not provided, uses the default folder from environment variables.",
+                "required": False
             }
         }
     )
@@ -955,6 +1083,7 @@ class UiPathTools(Toolset):
             process_name = kwargs.get('process_name')
             description = kwargs.get('description', 'Process created via Agent C')
             input_arguments = kwargs.get('input_arguments', '{}')
+            folder_name = kwargs.get('folder_name')
             
             if not process_name:
                 return "ERROR: process_name is required"
@@ -968,6 +1097,11 @@ class UiPathTools(Toolset):
             except json.JSONDecodeError:
                 return "ERROR: input_arguments must be valid JSON format"
             
+            # Resolve folder ID (either from folder_name or default)
+            folder_id, folder_info = await self._resolve_folder_id(folder_name)
+            if folder_info.startswith("ERROR:"):
+                return folder_info
+            
             # Get configuration
             config = self._validate_config()
             
@@ -976,7 +1110,7 @@ class UiPathTools(Toolset):
             token = await self._get_auth_token("OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.Execution OR.Execution.Read OR.Execution.Write")
             # Step 1: Get the package version
             self.logger.info(f"Getting version for package '{package_name}' (same as process name)...")
-            package_version = await self._get_package_version(package_name, token, config)
+            package_version = await self._get_package_version(package_name, token, config, folder_id)
             
             if not package_version:
                 return f"ERROR: Could not find package '{package_name}' in Orchestrator. Make sure the package with name '{process_name}' is uploaded first."
@@ -985,7 +1119,7 @@ class UiPathTools(Toolset):
             
             # Step 2: Get the entry point ID
             self.logger.info(f"Getting entry point ID for package '{package_name}' version '{package_version}'...")
-            entry_point_id = await self._get_entry_point_id(package_name, package_version, token, config)
+            entry_point_id = await self._get_entry_point_id(package_name, package_version, token, config, folder_id)
             
             if not entry_point_id:
                 return f"ERROR: Could not get entry point ID for package '{package_name}' version '{package_version}'"
@@ -1001,7 +1135,7 @@ class UiPathTools(Toolset):
             headers = {
                 "Authorization": f"Bearer {token}",
                 "X-UIPATH-TenantName": config['tenant_name'],
-                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "X-UIPATH-OrganizationUnitId": folder_id,
                 "Content-Type": "application/json",
                 "Accept": "application/json",
             }
@@ -1037,14 +1171,15 @@ class UiPathTools(Toolset):
                 # Return a formatted success response
                 result = {
                     "status": "success",
-                    "message": f"Process '{process_name}' created successfully from package '{package_name}' (same name)",
+                    "message": f"Process '{process_name}' created successfully from package '{package_name}' in {folder_info}",
                     "process_id": result_data.get("Id"),
                     "process_name": process_name,
                     "package_name": package_name,
                     "package_version": package_version,
                     "entry_point_id": entry_point_id,
                     "description": description,
-                    "input_arguments": input_arguments
+                    "input_arguments": input_arguments,
+                    "folder_info": folder_info
                 }
                 return yaml.dump(result, allow_unicode=True)
                 
@@ -1100,6 +1235,11 @@ class UiPathTools(Toolset):
                 "type": "string",
                 "description": "Advanced cron details in JSON format. Default is daily schedule.",
                 "default": '{"advancedCron":"0 0 0 1/1 * ? *"}'
+            },
+            "folder_name": {
+                "type": "string",
+                "description": "Optional folder name where the time trigger should be created. If not provided, uses the default folder from environment variables.",
+                "required": False
             }
         }
     )
@@ -1114,6 +1254,7 @@ class UiPathTools(Toolset):
             cron_expression = kwargs.get('cron_expression', '0 0 10 * * ?')
             timezone_id = kwargs.get('timezone_id', 'India Standard Time')
             enabled = kwargs.get('enabled', True)
+            folder_name = kwargs.get('folder_name')
             advanced_cron_details = kwargs.get('advanced_cron_details', '{"advancedCron":"0 0 0 1/1 * ? *"}')
             
             if not process_name:
@@ -1143,6 +1284,11 @@ class UiPathTools(Toolset):
             except json.JSONDecodeError:
                 return "ERROR: advanced_cron_details must be valid JSON format"
             
+            # Resolve folder ID (either from folder_name or default)
+            folder_id, folder_info = await self._resolve_folder_id(folder_name)
+            if folder_info.startswith("ERROR:"):
+                return folder_info
+            
             # Get configuration
             config = self._validate_config()
             
@@ -1151,7 +1297,7 @@ class UiPathTools(Toolset):
             
             # Step 1: Get the process release details
             self.logger.info(f"Getting release details for process '{process_name}'...")
-            release_id, release_key = await self._get_process_release_details(process_name, token, config)
+            release_id, release_key = await self._get_process_release_details(process_name, token, config, folder_id)
             
             if not release_id:
                 return f"ERROR: Could not find process '{process_name}' in Orchestrator. Make sure the process exists and is published."
@@ -1164,7 +1310,7 @@ class UiPathTools(Toolset):
             headers = {
                 "Authorization": f"Bearer {token}",
                 "X-UIPATH-TenantName": config['tenant_name'],
-                "X-UIPATH-OrganizationUnitId": str(config['folder_id']),
+                "X-UIPATH-OrganizationUnitId": folder_id,
                 "Content-Type": "application/json",
                 "Accept": "application/json",
             }
@@ -1198,7 +1344,7 @@ class UiPathTools(Toolset):
                 # Return a formatted success response
                 result = {
                     "status": "success",
-                    "message": f"Time trigger '{trigger_name}' created successfully for process '{process_name}'",
+                    "message": f"Time trigger '{trigger_name}' created successfully for process '{process_name}' in {folder_info}",
                     "trigger_id": result_data.get("Id"),
                     "trigger_name": trigger_name,
                     "process_name": process_name,
@@ -1207,7 +1353,8 @@ class UiPathTools(Toolset):
                     "timezone_id": timezone_id,
                     "enabled": enabled,
                     "advanced_cron_details": advanced_cron_details,
-                    "time_parsing_info": time_parsing_info
+                    "time_parsing_info": time_parsing_info,
+                    "folder_info": folder_info
                 }
                 
                 # Add original time input info if it was provided
@@ -1223,6 +1370,145 @@ class UiPathTools(Toolset):
                 
         except Exception as e:
             error_msg = f"Error creating UiPath time trigger: {str(e)}"
+            self.logger.error(error_msg)
+            return f"ERROR: {error_msg}"
+    
+    @json_schema(
+        description="Run/execute a UiPath process in Orchestrator. This starts a job from an existing process/release. The process must already exist in Orchestrator before it can be executed.",
+        params={
+            "process_name": {
+                "type": "string",
+                "description": "The name of the process/release to run. This process must already exist in Orchestrator.",
+                "required": True
+            },
+            "input_arguments": {
+                "type": "string",
+                "description": "Optional input arguments for the process execution in JSON format. Default is empty object '{}'.",
+                "default": "{}"
+            },
+            "folder_name": {
+                "type": "string",
+                "description": "Optional folder name where the process should be executed. If not provided, uses the default folder from environment variables.",
+                "required": False
+            }
+        }
+    )
+    async def run_process(self, **kwargs) -> str:
+        """Run/execute a UiPath process in Orchestrator."""
+        try:
+            tool_context = kwargs.get('tool_context')
+            process_name = kwargs.get('process_name')
+            input_arguments = kwargs.get('input_arguments', '{}')
+            folder_name = kwargs.get('folder_name')
+            
+            if not process_name:
+                return "ERROR: process_name is required"
+            
+            # Validate input_arguments is valid JSON
+            try:
+                parsed_args = json.loads(input_arguments)
+            except json.JSONDecodeError:
+                return "ERROR: input_arguments must be valid JSON format"
+            
+            # Resolve folder ID (either from folder_name or default)
+            folder_id, folder_info = await self._resolve_folder_id(folder_name)
+            if folder_info.startswith("ERROR:"):
+                return folder_info
+            
+            # Get configuration
+            config = self._validate_config()
+            
+            # Get authentication token with job execution permissions
+            token = await self._get_auth_token("OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.Execution OR.Execution.Read OR.Execution.Write")
+            
+            # Step 1: Get the process release details
+            self.logger.info(f"Getting release details for process '{process_name}'...")
+            release_id, release_key = await self._get_process_release_details(process_name, token, config, folder_id)
+            
+            if not release_id:
+                return f"ERROR: Could not find process '{process_name}' in Orchestrator. Make sure the process exists and is published."
+            
+            self.logger.info(f"Found process release - ID: {release_id}, Key: {release_key}")
+            
+            # Step 2: Start the job
+            start_job_url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs"
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "X-UIPATH-OrganizationUnitId": folder_id,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+            
+            # Build the job start request payload
+            payload = {
+                "startInfo": {
+                    "ReleaseKey": release_key,
+                    "Strategy": "ModernJobsCount",  # Run on specific robots
+                    "RobotIds": [],  # Empty array means any available robot
+                    "Source": "Manual",  # Indicates manual execution
+                    "InputArguments": input_arguments if input_arguments != '{}' else None
+                }
+            }
+            
+            # Remove InputArguments if it's empty to avoid API issues
+            if not parsed_args:
+                payload["startInfo"].pop("InputArguments", None)
+            
+            # Debug logging
+            self.logger.info(f"UiPath Start Job URL: {start_job_url}")
+            self.logger.info(f"UiPath Start Job Headers: {json.dumps({k: v if k != 'Authorization' else 'Bearer ***' for k, v in headers.items()}, indent=2)}")
+            self.logger.info(f"UiPath Start Job Payload: {json.dumps(payload, indent=2)}")
+            
+            # Make the API call to start the job
+            response = requests.post(start_job_url, headers=headers, data=json.dumps(payload))
+            
+            # Debug response
+            self.logger.info(f"UiPath Start Job Response Status: {response.status_code}")
+            self.logger.info(f"UiPath Start Job Response Body: {response.text}")
+            
+            if response.status_code in [200, 201]:
+                result_data = response.json()
+                self.logger.info(f"Successfully started UiPath job for process: {process_name}")
+                
+                # Extract job information from response
+                jobs_started = result_data.get("value", [])
+                
+                # Return a formatted success response
+                result = {
+                    "status": "success",
+                    "message": f"Process '{process_name}' started successfully in {folder_info}",
+                    "process_name": process_name,
+                    "release_id": release_id,
+                    "release_key": release_key,
+                    "input_arguments": input_arguments,
+                    "jobs_started_count": len(jobs_started),
+                    "folder_info": folder_info
+                }
+                
+                # Add job details if available
+                if jobs_started:
+                    result["jobs"] = []
+                    for job in jobs_started:
+                        job_info = {
+                            "job_id": job.get("Id"),
+                            "key": job.get("Key"),
+                            "state": job.get("State"),
+                            "creation_time": job.get("CreationTime"),
+                            "robot_name": job.get("Robot", {}).get("Name") if job.get("Robot") else None
+                        }
+                        result["jobs"].append(job_info)
+                
+                return yaml.dump(result, allow_unicode=True)
+                
+            else:
+                error_msg = f"Failed to start job for process '{process_name}'. Status code: {response.status_code}, Response: {response.text}"
+                self.logger.error(error_msg)
+                return f"ERROR: {error_msg}"
+                
+        except Exception as e:
+            error_msg = f"Error running UiPath process: {str(e)}"
             self.logger.error(error_msg)
             return f"ERROR: {error_msg}"
 

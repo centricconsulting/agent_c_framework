@@ -67,6 +67,16 @@ Create a new queue in UiPath Orchestrator.
 
 **Returns:** Queue creation details including queue ID
 
+### `uipath-run_process`
+Run/execute a UiPath process in Orchestrator. This starts a job from an existing process/release.
+
+**Parameters:**
+- `process_name` (required): Name of the process/release to run (must already exist in Orchestrator)
+- `input_arguments` (optional): Input arguments for the process execution in JSON format - defaults to "{}"
+- `folder_name` (optional): Folder name where the process should be executed - defaults to environment folder
+
+**Returns:** Job execution details including job IDs and status
+
 ## Asset Types
 
 - **Text**: String values (URLs, file paths, configuration text)
@@ -136,6 +146,24 @@ await uipath_tools.create_queue(
     auto_retry=True,
     unique_ref=True
 )
+
+# Run a process without input arguments
+await uipath_tools.run_process(
+    process_name="InvoiceProcessor"
+)
+
+# Run a process with input arguments
+await uipath_tools.run_process(
+    process_name="DataProcessor",
+    input_arguments='{"environment": "production", "batch_size": 100}'
+)
+
+# Run a process in a specific folder
+await uipath_tools.run_process(
+    process_name="ReportGenerator",
+    input_arguments='{"report_type": "monthly"}',
+    folder_name="Production"
+)
 ```
 
 ## Security Considerations
@@ -149,8 +177,8 @@ await uipath_tools.create_queue(
 
 This toolset is designed to be extended with additional UiPath functionality:
 
-- Process deployment and management
-- Job triggering and monitoring
+- ✅ Process deployment and management (create_process)
+- ✅ Job triggering and monitoring (run_process)
 - Robot management
 - Queue item processing
 - Audit log retrieval
