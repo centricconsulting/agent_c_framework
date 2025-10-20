@@ -45,6 +45,8 @@ from agent_c_tools.tools.workspace.tool import WorkspaceTools
 from agent_c_tools.tools.think.tool import ThinkTools
 from agent_c_tools.tools.web_search.web_search_tools import WebSearchTools
 
+# PLANE tools auto-discovered via tool.py
+
 def __getattr__(name: str):
     if name in _tools_mapping:
         module = importlib.import_module(_tools_mapping[name])
@@ -53,6 +55,7 @@ def __getattr__(name: str):
     # Handle manually registered tools
     if name == 'WebSearchTools':
         return WebSearchTools
+    
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
