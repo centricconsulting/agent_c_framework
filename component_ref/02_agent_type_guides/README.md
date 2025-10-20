@@ -6,20 +6,49 @@ Comprehensive guides for building different agent types using binary component d
 
 ## Available Guides
 
-### **domo_agent_guide.md** - User-Facing Agents
-Complete guide for agents that interact directly with users.
+### **domo_agent_guide.md** - User-Facing General Agents
+For agents that interact directly with users on general tasks.
 
-**Status**: Production-ready, validated across 3 Phase 1 pilots
+**When to use**: Conversational agents, assistants, general-purpose helpers
 
 ---
 
-## Coming in Phase 2
+### **orchestrator_agent_guide.md** - Workflow Coordinators
+For agents that coordinate teams or manage complex workflows.
 
-Additional agent type guides planned:
-- Orchestrator Agent Guide
-- Specialist Agent Guide
-- Realtime Agent Guide
-- Multi-Agent Team Guide
+**When to use**: Multi-step workflows, team coordination, heavy clone delegation
+
+---
+
+### **specialist_agent_guide.md** - Domain Experts (Assist)
+For agents with deep domain expertise serving as team members.
+
+**When to use**: Technical specialists, domain experts, assist category agents
+
+---
+
+### **project_manager_agent_guide.md** - Project Tracking
+For agents that track projects, provide visibility, and answer project questions.
+
+**When to use**: Project tracking, status reporting, information hub (not executor)
+
+---
+
+### **gatekeeper_agent_guide.md** - Compliance & Authority
+For agents requiring strict approval protocols and enhanced oversight.
+
+**When to use**: Authority signoff, compliance enforcement, quality control
+
+---
+
+### **documentation_agent_guide.md** - Content Preparation
+For agents focused on content creation and client-ready documentation.
+
+**When to use**: Documentation prep, content organization, professional polish
+
+---
+
+**Total: 6 complete agent type guides** ✅
 
 ---
 

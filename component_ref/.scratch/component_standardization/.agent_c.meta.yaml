@@ -1,0 +1,388 @@
+_plans:
+  phase1_validation:
+    created_at: '2025-10-08T12:10:42.697566'
+    description: 'Validate the Component Reference Library Tier 1 components by building
+      3-5 pilot agents using only the existing reference components. Document time
+      savings, pain points, and learnings to refine components before expanding to
+      Phase 2.
+
+
+      Success Criteria:
+
+      - Build 3-5 agents of different types using component references
+
+      - Document build time and compare to typical agent creation time
+
+      - Identify component gaps, unclear guidance, or usability issues
+
+      - Capture real composition examples for the examples library
+
+      - Document lessons learned in evolution tracking
+
+      - Refine Tier 1 components based on validation feedback'
+    id: program-divide
+    lessons_learned: []
+    tasks:
+      andrea-laptop:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-08T12:11:32.539716'
+        description: 'Use the pilot agents to create actual composition examples for
+          the 03_examples/ directory:
+
+          - Document each agent''s component selection process
+
+          - Show binary decision walkthrough
+
+          - Include the final composed persona
+
+          - Highlight customizations made
+
+          - Add lessons learned
+
+
+          Transform pilot agent tracking documents into polished examples that other
+          builders can reference.'
+        id: andrea-laptop
+        parent_id: null
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 7
+        title: Create Real Examples for Examples Library
+        updated_at: '2025-10-08T12:11:32.539729'
+      arizona-common:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-08T12:11:40.285894'
+        description: 'Create initial evolution tracking documents based on validation:
+
+          - Component version history (initial versions, any changes made)
+
+          - Lessons learned from pilot agent building
+
+          - Pattern insights discovered during validation
+
+          - Recommendations for future component improvements
+
+
+          Populate the 04_evolution/ directory with real content from validation experience.'
+        id: arizona-common
+        parent_id: null
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 8
+        title: Document Lessons Learned in Evolution Tracking
+        updated_at: '2025-10-08T12:11:40.285902'
+      aspirin-design:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-08T12:12:02.865896'
+        description: 'Create comprehensive validation report summarizing Phase 1 completion:
+
+          - What was built and validated
+
+          - Time savings achieved
+
+          - Component effectiveness metrics
+
+          - Issues identified and resolved
+
+          - Lessons learned for Phase 2
+
+          - Recommendation on proceeding to Phase 2
+
+
+          This report serves as the formal completion of Phase 1 and approval gate
+          for Phase 2.'
+        id: aspirin-design
+        parent_id: null
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 11
+        title: Create Phase 1 Validation Report
+        updated_at: '2025-10-08T12:12:02.865909'
+      critic-delta:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-08T12:11:06.184092'
+        description: 'Build the first pilot agent using ONLY the component reference
+          library:
+
+          1. Follow the domo agent guide (or appropriate agent type guide)
+
+          2. Make binary YES/NO decisions for each component
+
+          3. Use validation tracking template to document the process
+
+          4. Track total time from start to finish
+
+          5. Note any issues, unclear guidance, or missing components
+
+          6. Save the completed agent persona
+
+
+          Output: Completed agent persona + filled validation tracking document'
+        id: critic-delta
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 3
+        title: 'Build Pilot Agent #1'
+        updated_at: '2025-10-08T12:11:06.184101'
+      disco-serpent:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-08T12:11:46.841130'
+        description: 'Update existing Tier 1 components based on validation findings:
+
+          - Clarify unclear guidance
+
+          - Add missing customization notes
+
+          - Fix any errors or ambiguities discovered
+
+          - Update examples with pilot agents
+
+          - Improve component documentation where needed
+
+
+          Each component should incorporate learnings from the validation process.'
+        id: disco-serpent
+        parent_id: null
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 9
+        title: Refine Tier 1 Components Based on Validation
+        updated_at: '2025-10-08T12:11:46.841134'
+      dream-ibiza:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-08T12:11:55.498523'
+        description: 'Update README files to accurately reflect the current state
+          of the library:
+
+          - Remove references to non-existent Tier 2 and Tier 3 components
+
+          - Mark future components as "Coming in Phase 2"
+
+          - Update component lists to match actual files
+
+          - Ensure agent type guide list only includes domo guide
+
+          - Add clear roadmap showing what exists vs. what''s planned
+
+
+          This eliminates the documentation vs. reality gap identified in the assessment.'
+        id: dream-ibiza
+        parent_id: null
+        priority: medium
+        requires_completion_signoff: 'true'
+        sequence: 10
+        title: Update READMEs to Reflect Reality
+        updated_at: '2025-10-08T12:11:55.498536'
+      folio-resume:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-08T12:10:58.513800'
+        description: 'Create a standardized template for documenting each pilot agent
+          build process, including:
+
+          - Time tracking (start/end, total duration)
+
+          - Component selection decisions (YES/NO for each component with rationale)
+
+          - Pain points encountered
+
+          - Unclear guidance or missing information
+
+          - Component customizations needed
+
+          - Overall experience rating
+
+
+          This template will ensure consistent data collection across all pilot agents.'
+        id: folio-resume
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 2
+        title: Create Validation Tracking Template
+        updated_at: '2025-10-08T12:10:58.513812'
+      forum-sardine:
+        child_tasks: []
+        completed: true
+        completion_report: 'Test cases defined and documented in //components/.scratch/component_standardization/pilot_agent_test_cases.md
+
+
+          Selected 3 pilot agents:
+
+          1. Documentation Organizer (Simple domo, 3 components)
+
+          2. Python Development Pair Programmer (Dev domo, 4 components including
+          Python Code Quality)
+
+          3. TypeScript/JavaScript Development Specialist (Dev domo, 4 components
+          including TypeScript Code Quality)
+
+
+          Coverage: All base components tested 100%, Python and TypeScript code quality
+          tested.
+
+          Note: C# Code Quality not tested in these 3 pilots - recommend Phase 2 follow-up.
+
+
+          Expected time savings: 60-80% across all pilots.'
+        completion_signoff_by: null
+        context: 'We need to select 3 agent types (not 5) that will provide good coverage
+          of the Tier 1 components currently available:
+
+
+          Available Tier 1 Components:
+
+          - Critical Interaction Guidelines (path verification)
+
+          - Reflection Rules
+
+          - Workspace Organization
+
+          - Code Quality: Python
+
+          - Code Quality: C#
+
+          - Code Quality: TypeScript
+
+
+          Constraints:
+
+          - Total of 3 pilot agents
+
+          - Should test diverse use cases
+
+          - Must represent different agent types/roles
+
+          - Should exercise different combinations of components
+
+          - Need to validate the binary decision model in practice
+
+
+          The test cases should include:
+
+          - Agent type/role
+
+          - Primary purpose
+
+          - Expected components to be used
+
+          - Success criteria for that agent
+
+          - Estimated build time for comparison
+
+
+          This selection will guide all subsequent validation work.'
+        created_at: '2025-10-08T12:10:50.080860'
+        description: 'Identify which types of agents we''ll build as validation test
+          cases. Should represent diverse use cases to properly test the component
+          library.
+
+
+          Deliverable: List of 3-5 agent types with clear purpose, expected components,
+          and success criteria for each.'
+        id: forum-sardine
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 1
+        title: Define Validation Test Cases - Select 3-5 Pilot Agents
+        updated_at: '2025-10-08T12:20:35.239262'
+      martin-blonde:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-08T12:11:24.966695'
+        description: 'Analyze all pilot agent validation data to identify patterns:
+
+          - Average time savings vs. traditional agent building
+
+          - Common pain points across multiple agents
+
+          - Component clarity issues
+
+          - Missing guidance or documentation gaps
+
+          - Successful patterns and what worked well
+
+          - Component refinement recommendations
+
+
+          Deliverable: Analysis document summarizing findings and recommendations'
+        id: martin-blonde
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 6
+        title: Analyze Validation Results
+        updated_at: '2025-10-08T12:11:24.966713'
+      mission-folio:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-08T12:11:17.847674'
+        description: 'Build the third pilot agent using ONLY the component reference
+          library. Follow same process as previous pilots with validation tracking.
+
+
+          Output: Completed agent persona + filled validation tracking document'
+        id: mission-folio
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 5
+        title: 'Build Pilot Agent #3'
+        updated_at: '2025-10-08T12:11:17.847685'
+      under-moment:
+        child_tasks: []
+        completed: false
+        completion_report: null
+        completion_signoff_by: null
+        context: ''
+        created_at: '2025-10-08T12:11:12.244486'
+        description: 'Build the second pilot agent using ONLY the component reference
+          library. Follow same process as Pilot Agent #1 with validation tracking.
+
+
+          Output: Completed agent persona + filled validation tracking document'
+        id: under-moment
+        parent_id: null
+        priority: high
+        requires_completion_signoff: 'true'
+        sequence: 4
+        title: 'Build Pilot Agent #2'
+        updated_at: '2025-10-08T12:11:12.244499'
+    title: Phase 1 Component Library Validation Testing
+    updated_at: '2025-10-08T12:20:35.239297'
+current_plan: phase1_validation
