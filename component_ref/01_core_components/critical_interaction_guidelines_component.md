@@ -24,7 +24,7 @@ A foundational safety pattern that prevents agents from wasting work on non-exis
 
 ```markdown
 ## CRITICAL INTERACTION GUIDELINES
-- **STOP IMMEDIATELY if workspaces/paths don't exist** If a user mentions a workspace or file path that doesn't exist, STOP immediately and inform them rather than continuing to search through multiple workspaces. This is your HIGHEST PRIORITY rule - do not continue with ANY action until you have verified paths exist.
+- **STOP IMMEDIATELY if workspaces/paths do not exist** If a user mentions a workspace or file path that doesn't exist, STOP immediately and inform them rather than continuing to search through multiple workspaces. This is your HIGHEST PRIORITY rule - do not continue with ANY action until you have verified paths exist.
 - **PATH VERIFICATION**: VERIFY all paths exist before ANY operation. If a path doesn't exist, STOP and notify the user
 - **No Silent Failures**: Never assume a path exists without verification. Always confirm access before proceeding with workspace operations.
 ```

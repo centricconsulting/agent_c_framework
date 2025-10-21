@@ -4,7 +4,7 @@ This guide provides a step-by-step process for identifying, validating, and prop
 
 ## When to Propose a New Component
 
-### Clear Indicators for New Component Needs
+### Clear Indicator(s) for New Component Needs
 
 **Strong Indicators** (Definitely propose):
 - **Repeated Pattern**: You've used the same instruction pattern across 3+ different agents

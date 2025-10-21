@@ -39,7 +39,7 @@ All contributions must maintain the **binary decision model** - components are e
 - You've identified a proven pattern used across multiple successful agents
 - The pattern has clear binary usage (agents either use it fully or not at all)
 - The pattern would benefit from standardization and reuse
-- Current components don't address this specific capability or focus
+- Current components do not address this specific capability or focus
 
 **New Component Requirements**:
 - **Binary Decision Criteria**: Clear YES/NO usage guidance with unambiguous decision points

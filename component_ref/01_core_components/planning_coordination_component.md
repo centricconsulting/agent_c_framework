@@ -169,7 +169,7 @@ The `context` field is your instruction manual - use it effectively:
 - **Strategic Signoffs**: Use `requires_completion_signoff: true` for critical validation points
 - **Completion Reports**: Capture task outcomes in structured `completion_report` field
 - **Signoff Tracking**: Use `completion_signoff_by` to maintain accountability
-- **Validation Before Proceed**: Don't advance workflow until quality gates are passed
+- **Validation Before Proceed**: Do not advance workflow until quality gates are passed
 - **Human-in-Loop**: Engage user for high-stakes decisions or ambiguous situations
 
 ### Delegation Control Through Planning

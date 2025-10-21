@@ -378,7 +378,7 @@ Foundation → Operational Standards → Domain Expertise → Personality
 - No new issues emerged
 - Confirms maturity and stability
 
-**Lesson**: Don't fix what isn't broken. Absence of issues is a positive finding.
+**Lesson**: Do not fix what isn't broken. Absence of issues is a positive finding.
 
 ---
 

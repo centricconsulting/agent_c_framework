@@ -1,6 +1,6 @@
 # Domo Agent Guide
 
-A comprehensive guide for building agents that interact directly with users, focusing on the core components currently available in the Agent C framework.
+A comprehensive guide for building agents that interact directly with users, focusing on the core components that are currently available in the Agent C framework.
 
 ## When to Use Domo Agent Type
 

@@ -136,7 +136,7 @@ A systematic delegation pattern for agents that delegate work to clones effectiv
 - Technical insights or patterns observed
 - Blockers or issues requiring escalation
 
-**❌ DON'T CAPTURE**:
+**❌ DO NOT CAPTURE**:
 - Generic status updates ("task started", "task in progress")
 - Information already in deliverable files
 - Redundant summaries of obvious outcomes

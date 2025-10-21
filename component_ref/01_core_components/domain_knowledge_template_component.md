@@ -106,7 +106,7 @@ This is a **STRUCTURAL template only** - the same organizational framework is us
 - **Section Naming**: Keep consistent section names, just change the domain prefix
 - **Section Order**: Maintain the standard order for consistency
 - **Subsection Addition**: Add subsections within standard sections as needed
-- **Section Removal**: Skip sections that don't apply to your domain
+- **Section Removal**: Skip sections that do not apply to your domain
 - **Depth Variation**: Adjust detail level based on domain complexity
 
 ## Example Implementation

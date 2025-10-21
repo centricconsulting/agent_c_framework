@@ -241,7 +241,7 @@ General instructions that tried to cover both general and development contexts
 
 **Quality Validation**:
 - Apply full quality guidelines to updated component
-- Ensure improvements don't introduce complexity or ambiguity
+- Ensure improvements do not introduce complexity or ambiguity
 - Verify updated component meets all library standards
 - Confirm binary decision criteria remain clear
 

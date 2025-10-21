@@ -1,6 +1,6 @@
 # Orchestrator Agent Guide
 
-A comprehensive guide for building agents that coordinate teams or manage complex workflows, focusing on the core components currently available in the Agent C framework.
+A comprehensive guide for building agents that coordinate teams or manage complex workflows, focusing on the core components that are currently available in the Agent C framework.
 
 ## When to Use Orchestrator Agent Type
 

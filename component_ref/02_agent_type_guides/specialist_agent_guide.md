@@ -689,7 +689,7 @@ tools:
   - ThinkTools
   - WorkspaceTools
   - WorkspacePlanningTools  # ← WRONG! Not needed for most specialists
-  - AgentTools  # ← WRONG! Specialists don't delegate
+  - AgentTools  # ← WRONG! Specialists do not delegate
 ```
 
 ❌ **WRONG - Includes Human Pairing Protocol in persona:**

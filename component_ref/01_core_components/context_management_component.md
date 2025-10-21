@@ -29,7 +29,7 @@ A comprehensive context window management pattern for agents coordinating comple
 
 ### Proactive Context Window Management
 
-Context exhaustion is preventable through disciplined practices. Don't wait for failures - manage context proactively throughout your workflow.
+Context exhaustion is preventable through disciplined practices. Do not wait for failures - manage context proactively throughout your workflow.
 
 #### Progressive Summarization
 - **Extract Key Insights**: At each workflow phase, distill critical findings into concise summaries

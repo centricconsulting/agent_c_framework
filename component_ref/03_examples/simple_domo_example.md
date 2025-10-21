@@ -283,7 +283,7 @@ All success criteria for this agent were met (9 of 9 = 100%):
 
 5. **Generic is often better than specific**: When in doubt about placeholders (like {workspace}), choose generic language. Makes your agent more flexible and reusable.
 
-6. **Personality matters**: Don't skip the communication style section. It's what makes your agent approachable and effective with users. Budget 10-15 minutes for this.
+6. **Personality matters**: Do not skip the communication style section. It's what makes your agent approachable and effective with users. Budget 10-15 minutes for this.
 
 7. **Follow the YAML structure exactly**: Persona field LAST. This is a requirement in Agent C. Use the Domo Agent Guide as reference.
 

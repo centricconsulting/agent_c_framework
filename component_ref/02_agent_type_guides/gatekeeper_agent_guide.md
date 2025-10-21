@@ -1,6 +1,6 @@
 # Gatekeeper Agent Guide
 
-A comprehensive guide for building gatekeeper agents requiring strict approval protocols and compliance oversight, focusing on the core components currently available in the Agent C framework.
+A comprehensive guide for building gatekeeper agents requiring strict approval protocols and compliance oversight, focusing on the core components that are currently available in the Agent C framework.
 
 ## When to Use Gatekeeper Agent Type
 

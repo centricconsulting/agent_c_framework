@@ -75,7 +75,7 @@ Links to existing agents using this pattern
 
 ## Using a Guide
 
-1. **Select the guide** that matches your agent's primary role
+1. **Select the guide** that adequately matches your agent's primary role
 2. **Follow binary decisions** for each component (YES/NO)
 3. **Copy selected components** into your agent persona
 4. **Customize** the typical structure for your needs

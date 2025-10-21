@@ -65,7 +65,7 @@ Foundational instruction patterns for building agents using the **binary decisio
 
 ---
 
-## How to Use Components
+## How to Use The Components
 
 1. **Decide**: "Does my agent need [capability]?" → YES/NO
 2. **Copy**: If YES, copy the component text into your agent persona

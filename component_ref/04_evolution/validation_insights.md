@@ -117,7 +117,7 @@ Total: 2 minutes
 
 **For Validation**:
 1. **High confidence**: Perfect clarity across diverse agents validates model universally
-2. **No modifications needed**: Model works as designed, don't change it
+2. **No modifications needed**: Model works as designed, do not change it
 3. **Template for Tier 2**: Use same decision criteria format for new components
 
 **Unexpected Benefit**: Decision time decreased with experience (3 min → 2 min), showing model is intuitive but still has learning benefit.

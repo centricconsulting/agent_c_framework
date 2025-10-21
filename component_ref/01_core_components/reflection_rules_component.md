@@ -79,4 +79,4 @@ You MUST use the `think` tool to reflect on new information and record your thou
 - **Quality Improvement**: Reflection leads to better understanding and more thoughtful solutions
 - **Debugging Support**: Thinking logs provide insight into agent reasoning processes
 - **Consistency**: Standardizes reflection behavior across all ThinkTools-enabled agents
-- **Binary Decision**: Clear YES/NO implementation - agents either have systematic reflection or they don't
+- **Binary Decision**: Clear YES/NO implementation - agents either have systematic reflection or they do not

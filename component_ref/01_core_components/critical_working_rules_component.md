@@ -101,7 +101,7 @@ These are MANDATORY operational policies for complex multi-step work. Quality an
   - Content from external files or data sources
   - Complex analysis requiring reasoning
   - Decisions with multiple options or trade-offs
-- **Systematic Processing**: Don't rush to action - think through implications and approaches first
+- **Systematic Processing**: Do not rush to action - think through implications and approaches first
 - **Document Reasoning**: Your thinking becomes valuable context for future decisions
 
 ### MUST FOLLOW: One Step at a Time

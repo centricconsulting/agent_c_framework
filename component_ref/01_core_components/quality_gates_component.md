@@ -154,7 +154,7 @@ Quality-focused orchestrator agent using formal quality gates:
 ### Output Validation Protocol
 Validate each deliverable immediately upon completion to ensure quality and readiness:
 
-- **Immediate Validation**: Review output as soon as it's produced, don't defer quality checks
+- **Immediate Validation**: Review output as soon as it's produced, do not defer quality checks
 - **Completeness Check**: Verify all required elements, sections, or components are present
 - **Quality Assessment**: Confirm output meets established standards, requirements, and specifications
 - **Integration Readiness**: Ensure output can be successfully consumed by subsequent steps or systems

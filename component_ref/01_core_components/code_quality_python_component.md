@@ -172,4 +172,4 @@ All Python coding agents use this identical pattern:
 - **Error Prevention**: Proactive quality measures reduce bugs and technical debt
 - **Maintainability**: Code structure requirements ensure long-term maintainability
 - **Team Consistency**: All Python agents follow identical standards for seamless collaboration
-- **Binary Decision**: Clear YES/NO implementation - agents either follow comprehensive Python standards or they don't
+- **Binary Decision**: Clear YES/NO implementation - agents either follow comprehensive Python standards or they do not

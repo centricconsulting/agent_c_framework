@@ -336,7 +336,7 @@ The component library's promise of language modularity is **100% validated**. Bu
 
 2. **Foundation components are your universal base**: Critical Guidelines, Reflection Rules, and Workspace Organization work for EVERY agent regardless of language. Build these once, reuse everywhere.
 
-3. **Component quality parity is real**: Don't worry that one language's component might be "better" than another. They're all comprehensive and appropriately tailored. TypeScript = Python = C# (presumably) in terms of quality.
+3. **Component quality parity is real**: Do not worry that one language's component might be "better" than another. They're all comprehensive and appropriately tailored. TypeScript = Python = C# (presumably) in terms of quality.
 
 4. **Full-stack justifies extra domain expertise time**: TypeScript spans frontend and backend. Budget extra time (~3-5 min) for covering React patterns, Node.js patterns, and type system nuances. This is value-add, not overhead.
 

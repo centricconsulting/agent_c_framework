@@ -6,7 +6,7 @@ This directory contains practical examples showing how to use the Agent Componen
 
 ### Component Composition Examples
 
-- **domo_agent_composition_example.md** - Step-by-step binary decisions for building a user-facing agent
+- **domo_agent_composition_example.md** - Step-by-step binary decisions for building a user-facing agent effectively
 - **orchestrator_agent_composition_example.md** - Complex workflow coordination agent construction
 - **specialist_agent_composition_example.md** - Domain expert agent with deep technical focus
 - **component_usage_examples.md** - Individual component usage patterns and customizations

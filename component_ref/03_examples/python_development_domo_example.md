@@ -328,7 +328,7 @@ All success criteria for this agent were met (9 of 9 = 100%):
 
 ## Builder Tips
 
-1. **Code Quality components are copy-and-use**: Don't customize them. They're comprehensive and battle-tested. Use verbatim (this build used all 4 components verbatim except workspace placeholder).
+1. **Code Quality components are copy-and-use**: Do not customize them. They're comprehensive and battle-tested. Use verbatim (this build used all 4 components verbatim except workspace placeholder).
 
 2. **Component ordering principle is critical for development agents**: Foundation → Operational → Domain → Personality. This creates logical flow: safety rules → code standards → specialized knowledge → communication style.
 

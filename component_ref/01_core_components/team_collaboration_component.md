@@ -311,7 +311,7 @@ Each specialist has orchestrator key in their category array AND can reach each 
 - **Workflow Oversight**: Manage overall workflow state and progress using planning tools
 - **Quality Gates**: Validate deliverables at critical checkpoints before proceeding
 - **Conflict Resolution**: Resolve specialist disagreements or priority conflicts
-- **Not Execution**: You coordinate, you don't write code or technical deliverables
+- **Not Execution**: You coordinate, you do not write code or technical deliverables
 
 ### Team Communication
 - **Direct Specialist Collaboration**: Specialists communicate peer-to-peer for technical work

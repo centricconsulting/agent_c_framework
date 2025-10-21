@@ -118,7 +118,7 @@ For each component, make a clear **YES** or **NO** decision based on your agent'
 
 **Reference**: [`clone_delegation_component.md`](../01_core_components/clone_delegation_component.md)
 
-**Why Skip**: Project Managers track and report, they don't execute work or coordinate tasks. Work delegation is the Orchestrator's responsibility.
+**Why Skip**: Project Managers track and report, they do not execute work or coordinate tasks. Work delegation is the Orchestrator's responsibility.
 
 **When to Include**: Never for pure Project Manager agents. If delegation is needed, the agent is actually an Orchestrator, not a Project Manager.
 
