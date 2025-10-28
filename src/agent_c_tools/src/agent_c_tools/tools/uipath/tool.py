@@ -1513,5 +1513,243 @@ class UiPathTools(Toolset):
             return f"ERROR: {error_msg}"
 
 
+    @json_schema(
+        description="Copy UiPath project template from source_folder workspace to destination path, renaming folders and updating project.json files. Folders containing 'Name' in their name will have 'Name' replaced with the new project name. Each copied folder's project.json file will be updated with the new folder name and project description.",
+        params={
+            "destination_path": {
+                "type": "string",
+                "description": "Destination path where the project template should be copied (can be workspace UNC path like //workspace/path or local filesystem path)",
+                "required": True
+            },
+            "new_project_name": {
+                "type": "string",
+                "description": "New project name to replace 'Name' in folder names and project.json files",
+                "required": True
+            }
+        }
+    )
+    async def copy_project_template(self, **kwargs) -> str:
+        """Copy UiPath project template from source_folder workspace to destination, renaming folders and updating project.json files."""
+        try:
+            tool_context = kwargs.get('tool_context')
+            destination_path = kwargs.get('destination_path')
+            new_project_name = kwargs.get('new_project_name')
+            
+            if not destination_path:
+                return "ERROR: destination_path is required"
+            
+            if not new_project_name:
+                return "ERROR: new_project_name is required"
+            
+            if not self.workspace_tools:
+                return "ERROR: WorkspaceTools not available for workspace operations"
+            
+            # Source is always from source_folder workspace
+            source_workspace_path = "//source_folder"
+            
+            # Parse the source workspace path to get workspace and relative path
+            try:
+                error, source_workspace, source_relative_path = self.workspace_tools._parse_unc_path(source_workspace_path)
+                if error:
+                    return f"ERROR: Invalid source workspace path: {error}"
+            except Exception as e:
+                return f"ERROR: Failed to parse source workspace path {source_workspace_path}: {str(e)}"
+            
+            # List all items in the source workspace root
+            try:
+                source_items = await source_workspace.list_internal(source_relative_path or "")
+            except Exception as e:
+                return f"ERROR: Failed to list source workspace contents: {str(e)}"
+            
+            # Filter to only directories
+            source_folders = [item for item in source_items if item.is_directory]
+            
+            if not source_folders:
+                return f"ERROR: No folders found in source workspace {source_workspace_path}"
+            
+            self.logger.info(f"Found {len(source_folders)} folders in source workspace: {[f.name for f in source_folders]}")
+            
+            # Determine if destination is workspace or filesystem path
+            is_dest_workspace = destination_path.startswith('//')
+            
+            copied_folders = []
+            errors = []
+            
+            # Process each folder
+            for folder_item in source_folders:
+                try:
+                    folder_name = folder_item.name
+                    
+                    # Determine new folder name (replace "Name" with new_project_name)
+                    if "Name" in folder_name:
+                        new_folder_name = folder_name.replace("Name", new_project_name)
+                    else:
+                        new_folder_name = folder_name
+                    
+                    self.logger.info(f"Processing folder '{folder_name}' -> '{new_folder_name}'")
+                    
+                    # Source folder path in workspace
+                    src_folder_path = f"{source_workspace_path}/{folder_name}"
+                    
+                    # Destination folder path
+                    if is_dest_workspace:
+                        dest_folder_path = f"{destination_path}/{new_folder_name}"
+                    else:
+                        import os
+                        dest_folder_path = os.path.join(destination_path, new_folder_name)
+                    
+                    # Copy the entire folder tree
+                    if is_dest_workspace:
+                        # Workspace to workspace copy
+                        copy_result = await self.workspace_tools.cp(src_path=src_folder_path, dest_path=dest_folder_path, tool_context=tool_context)
+                        if copy_result.startswith("ERROR:"):
+                            errors.append(f"Failed to copy '{folder_name}': {copy_result}")
+                            continue
+                    else:
+                        # Workspace to filesystem copy
+                        # This is more complex - we need to read all files and recreate the structure
+                        try:
+                            await self._copy_workspace_to_filesystem(src_folder_path, dest_folder_path, source_workspace)
+                        except Exception as e:
+                            errors.append(f"Failed to copy '{folder_name}' to filesystem: {str(e)}")
+                            continue
+                    
+                    # Update project.json file in the copied folder
+                    try:
+                        await self._update_project_json(dest_folder_path, new_folder_name, new_project_name, is_dest_workspace)
+                        copied_folders.append(f"'{folder_name}' -> '{new_folder_name}'")
+                    except Exception as e:
+                        errors.append(f"Copied '{folder_name}' but failed to update project.json: {str(e)}")
+                        copied_folders.append(f"'{folder_name}' -> '{new_folder_name}' (project.json update failed)")
+                    
+                except Exception as e:
+                    errors.append(f"Failed to process folder '{folder_name}': {str(e)}")
+                    continue
+            
+            # Prepare result
+            result = {
+                "status": "success" if copied_folders and not errors else "partial" if copied_folders else "error",
+                "message": f"Project template copied from {source_workspace_path} to {destination_path}",
+                "new_project_name": new_project_name,
+                "source_path": source_workspace_path,
+                "destination_path": destination_path,
+                "folders_processed": len(source_folders),
+                "folders_copied": len(copied_folders),
+                "copied_folders": copied_folders
+            }
+            
+            if errors:
+                result["errors"] = errors
+                result["error_count"] = len(errors)
+            
+            return yaml.dump(result, allow_unicode=True)
+            
+        except Exception as e:
+            error_msg = f"Error copying UiPath project template: {str(e)}"
+            self.logger.error(error_msg)
+            return f"ERROR: {error_msg}"
+    
+    async def _copy_workspace_to_filesystem(self, src_workspace_path: str, dest_filesystem_path: str, source_workspace) -> None:
+        """Copy a folder tree from workspace to filesystem."""
+        import os
+        import shutil
+        
+        # Parse the workspace path to get relative path
+        error, _, src_relative_path = self.workspace_tools._parse_unc_path(src_workspace_path)
+        if error:
+            raise Exception(f"Invalid workspace path: {error}")
+        
+        # Create destination directory
+        os.makedirs(dest_filesystem_path, exist_ok=True)
+        
+        # Recursively copy all files and folders
+        await self._copy_workspace_folder_recursive(source_workspace, src_relative_path, dest_filesystem_path)
+    
+    async def _copy_workspace_folder_recursive(self, workspace, src_relative_path: str, dest_path: str) -> None:
+        """Recursively copy workspace folder contents to filesystem."""
+        import os
+        
+        try:
+            # List items in current workspace folder
+            items = await workspace.list_internal(src_relative_path)
+            
+            for item in items:
+                src_item_path = f"{src_relative_path}/{item.name}" if src_relative_path else item.name
+                dest_item_path = os.path.join(dest_path, item.name)
+                
+                if item.is_directory:
+                    # Create directory and recurse
+                    os.makedirs(dest_item_path, exist_ok=True)
+                    await self._copy_workspace_folder_recursive(workspace, src_item_path, dest_item_path)
+                else:
+                    # Copy file
+                    file_content = await workspace.read_bytes_internal(src_item_path)
+                    with open(dest_item_path, 'wb') as f:
+                        f.write(file_content)
+                        
+        except Exception as e:
+            raise Exception(f"Failed to copy workspace folder {src_relative_path}: {str(e)}")
+    
+    async def _update_project_json(self, folder_path: str, new_folder_name: str, new_project_name: str, is_workspace: bool) -> None:
+        """Update project.json file in the specified folder."""
+        import json
+        import os
+        
+        # Construct path to project.json
+        if is_workspace:
+            project_json_path = f"{folder_path}/project.json"
+        else:
+            project_json_path = os.path.join(folder_path, "project.json")
+        
+        try:
+            # Check if project.json exists and read it
+            if is_workspace:
+                # Workspace path
+                try:
+                    project_json_content = await self.workspace_tools.read(path=project_json_path, tool_context={})
+                    if project_json_content.startswith("ERROR:"):
+                        self.logger.info(f"No project.json found in '{new_folder_name}' (workspace)")
+                        return
+                except Exception:
+                    self.logger.info(f"No project.json found in '{new_folder_name}' (workspace)")
+                    return
+            else:
+                # Filesystem path
+                if not os.path.exists(project_json_path):
+                    self.logger.info(f"No project.json found in '{new_folder_name}' (filesystem)")
+                    return
+                
+                with open(project_json_path, 'r', encoding='utf-8') as f:
+                    project_json_content = f.read()
+            
+            # Parse JSON
+            try:
+                data = json.loads(project_json_content)
+            except json.JSONDecodeError as e:
+                raise Exception(f"Invalid JSON in project.json: {str(e)}")
+            
+            # Update the data
+            data["name"] = new_folder_name
+            data["description"] = f"Project for {new_project_name}"
+            
+            # Write back the updated JSON
+            updated_json = json.dumps(data, indent=4)
+            
+            if is_workspace:
+                # Write to workspace
+                write_result = await self.workspace_tools.write(path=project_json_path, data=updated_json, mode="write", tool_context={})
+                if write_result.startswith("ERROR:"):
+                    raise Exception(f"Failed to write updated project.json: {write_result}")
+            else:
+                # Write to filesystem
+                with open(project_json_path, 'w', encoding='utf-8') as f:
+                    f.write(updated_json)
+            
+            self.logger.info(f"Updated project.json in '{new_folder_name}'")
+            
+        except Exception as e:
+            raise Exception(f"Failed to update project.json in '{new_folder_name}': {str(e)}")
+
+
 # Register the toolset with WorkspaceTools dependency
 Toolset.register(UiPathTools, required_tools=['WorkspaceTools'])
