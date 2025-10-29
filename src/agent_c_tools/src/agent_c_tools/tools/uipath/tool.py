@@ -978,6 +978,51 @@ class UiPathTools(Toolset):
             self.logger.error(f"Error getting process release details: {str(e)}")
             return None, None
     
+    async def _get_queue_id_by_name(self, queue_name: str, token: str, config: Dict[str, str], folder_id: str) :
+        """Get queue ID by queue name using UiPath Orchestrator API.
+        
+        Args:
+            queue_name: Name of the queue to find
+            token: Authentication token
+            config: Configuration dictionary with org_name and tenant_name
+            folder_id: Folder ID where to search for the queue
+            
+        Returns:
+            Queue ID if found, None otherwise
+        """
+        try:
+            url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/QueueDefinitions"
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "X-UIPATH-OrganizationUnitId": folder_id,
+                "Accept": "application/json",
+            }
+            
+            params = {"$filter": f"Name eq '{queue_name}'"}
+            
+            self.logger.info(f"Looking up queue ID for queue name: '{queue_name}'")
+            response = requests.get(url, headers=headers, params=params)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data["value"]:
+                    queue = data["value"][0]
+                    queue_id = str(queue["Id"])
+                    self.logger.info(f"Found queue '{queue_name}' with ID: {queue_id}")
+                    return queue_id
+                else:
+                    self.logger.warning(f"Queue '{queue_name}' not found in Orchestrator")
+                    return None
+            else:
+                self.logger.error(f"Failed to fetch queue details: {response.status_code} - {response.text}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error looking up queue ID for '{queue_name}': {str(e)}")
+            return None
+    
     def _parse_time_to_cron(self, time_input: str, days_of_week: Optional[str] = None) -> str:
         """Parse human-readable time input and convert to cron expression.
         
@@ -1509,6 +1554,192 @@ class UiPathTools(Toolset):
                 
         except Exception as e:
             error_msg = f"Error running UiPath process: {str(e)}"
+            self.logger.error(error_msg)
+            return f"ERROR: {error_msg}"
+    
+    @json_schema(
+        description="Create a new queue trigger in UiPath Orchestrator. Queue triggers monitor a queue for new items and automatically start a process to handle them. The queue and process must already exist in Orchestrator before creating the trigger.",
+        params={
+            "trigger_name": {
+                "type": "string",
+                "description": "The name for the new queue trigger",
+                "required": True
+            },
+            "queue_name": {
+                "type": "string",
+                "description": "The name of the queue to monitor for new items. This queue must already exist in Orchestrator.",
+                "required": True
+            },
+            "process_name": {
+                "type": "string",
+                "description": "The name of the process/release to trigger when queue items are available. This process must already exist in Orchestrator.",
+                "required": True
+            },
+            "enabled": {
+                "type": "boolean",
+                "description": "Whether the trigger should be enabled immediately",
+                "default": True
+            },
+            "input_arguments": {
+                "type": "string",
+                "description": "Optional input arguments for the process execution in JSON format",
+                "default": "{}"
+            },
+            "cron_expression": {
+                "type": "string",
+                "description": "Cron expression for the trigger schedule. Default is every minute.",
+                "default": "0 0/1 * 1/1 * ? *"
+            },
+            "advanced_cron_details": {
+                "type": "string",
+                "description": "Advanced cron details in JSON format. Default is every minute schedule.",
+                "default": '{"advancedCron":"0 0/1 * 1/1 * ? *"}'
+            },
+            "timezone_id": {
+                "type": "string",
+                "description": "Timezone ID for the schedule (e.g., 'UTC', 'India Standard Time', 'Eastern Standard Time'). Default is 'UTC'.",
+                "default": "UTC"
+            },
+            "folder_name": {
+                "type": "string",
+                "description": "Optional folder name where the queue trigger should be created. If not provided, uses the default folder from environment variables.",
+                "required": False
+            }
+        }
+    )
+    async def create_queue_trigger(self, **kwargs) -> str:
+        """Create a new queue trigger in UiPath Orchestrator."""
+        try:
+            tool_context = kwargs.get('tool_context')
+            trigger_name = kwargs.get('trigger_name')
+            queue_name = kwargs.get('queue_name')
+            process_name = kwargs.get('process_name')
+            enabled = kwargs.get('enabled', True)
+            input_arguments = kwargs.get('input_arguments', '{}')
+            cron_expression = kwargs.get('cron_expression', '0 0/1 * 1/1 * ? *')
+            advanced_cron_details = kwargs.get('advanced_cron_details', '{"advancedCron":"0 0/1 * 1/1 * ? *"}')
+            timezone_id = kwargs.get('timezone_id', 'UTC')
+            folder_name = kwargs.get('folder_name')
+            
+            if not trigger_name:
+                return "ERROR: trigger_name is required"
+            
+            if not queue_name:
+                return "ERROR: queue_name is required"
+            
+            if not process_name:
+                return "ERROR: process_name is required"
+            
+            # Validate input_arguments is valid JSON
+            try:
+                json.loads(input_arguments)
+            except json.JSONDecodeError:
+                return "ERROR: input_arguments must be valid JSON format"
+            
+            # Validate advanced_cron_details is valid JSON
+            try:
+                json.loads(advanced_cron_details)
+            except json.JSONDecodeError:
+                return "ERROR: advanced_cron_details must be valid JSON format"
+            
+            # Resolve folder ID (either from folder_name or default)
+            folder_id, folder_info = await self._resolve_folder_id(folder_name)
+            if folder_info.startswith("ERROR:"):
+                return folder_info
+            
+            # Get configuration
+            config = self._validate_config()
+            
+            # Get authentication token with appropriate permissions
+            token = await self._get_auth_token("OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.Execution OR.Execution.Read OR.Execution.Write OR.Queues OR.Queues.Read OR.Queues.Write")
+            
+            # Step 1: Get the queue ID
+            self.logger.info(f"Getting queue ID for queue '{queue_name}'...")
+            queue_id = await self._get_queue_id_by_name(queue_name, token, config, folder_id)
+            
+            if not queue_id:
+                return f"ERROR: Could not find queue '{queue_name}' in Orchestrator. Make sure the queue exists in the specified folder."
+            
+            self.logger.info(f"Found queue ID: {queue_id}")
+            
+            # Step 2: Get the process release details
+            self.logger.info(f"Getting release details for process '{process_name}'...")
+            release_id, release_key = await self._get_process_release_details(process_name, token, config, folder_id)
+            
+            if not release_id:
+                return f"ERROR: Could not find process '{process_name}' in Orchestrator. Make sure the process exists and is published."
+            
+            self.logger.info(f"Found process release - ID: {release_id}, Key: {release_key}")
+            
+            # Step 3: Create the queue trigger
+            create_trigger_url = f"https://cloud.uipath.com/{config['org_name']}/{config['tenant_name']}/orchestrator_/odata/ProcessSchedules"
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-UIPATH-TenantName": config['tenant_name'],
+                "X-UIPATH-OrganizationUnitId": folder_id,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+            
+            # Build the payload using the correct structure from the debug comparison
+            payload = {
+                "Name": trigger_name,
+                "Enabled": "true" if enabled else "false",  # String format as per working payload
+                "StartStrategy": 1,
+                "InputArguments": input_arguments,
+                "StartProcessCronDetails": advanced_cron_details,
+                "StartProcessCron": cron_expression,
+                "ReleaseId": release_id,
+                "ReleaseName": process_name,
+                "QueueDefinitionId": int(queue_id),
+                "QueueDefinitionName": queue_name,
+                "TimeZoneId": timezone_id
+            }
+            
+            # Debug logging
+            self.logger.info(f"UiPath Create Queue Trigger URL: {create_trigger_url}")
+            self.logger.info(f"UiPath Create Queue Trigger Headers: {json.dumps({k: v if k != 'Authorization' else 'Bearer ***' for k, v in headers.items()}, indent=2)}")
+            self.logger.info(f"UiPath Create Queue Trigger Payload: {json.dumps(payload, indent=2)}")
+            
+            # Make the API call
+            response = requests.post(create_trigger_url, headers=headers, data=json.dumps(payload))
+            
+            # Debug response
+            self.logger.info(f"UiPath Create Queue Trigger Response Status: {response.status_code}")
+            self.logger.info(f"UiPath Create Queue Trigger Response Body: {response.text}")
+            
+            if response.status_code in [200, 201]:
+                result_data = response.json()
+                self.logger.info(f"Successfully created UiPath queue trigger: {trigger_name} for queue {queue_name} -> process {process_name}")
+                
+                # Return a formatted success response
+                result = {
+                    "status": "success",
+                    "message": f"Queue trigger '{trigger_name}' created successfully to monitor queue '{queue_name}' and trigger process '{process_name}' in {folder_info}",
+                    "trigger_id": result_data.get("Id"),
+                    "trigger_name": trigger_name,
+                    "queue_name": queue_name,
+                    "queue_id": queue_id,
+                    "process_name": process_name,
+                    "release_id": release_id,
+                    "cron_expression": cron_expression,
+                    "timezone_id": timezone_id,
+                    "enabled": enabled,
+                    "input_arguments": input_arguments,
+                    "advanced_cron_details": advanced_cron_details,
+                    "folder_info": folder_info
+                }
+                
+                return yaml.dump(result, allow_unicode=True)
+                
+            else:
+                error_msg = f"Failed to create queue trigger. Status code: {response.status_code}, Response: {response.text}"
+                self.logger.error(error_msg)
+                return f"ERROR: {error_msg}"
+                
+        except Exception as e:
+            error_msg = f"Error creating UiPath queue trigger: {str(e)}"
             self.logger.error(error_msg)
             return f"ERROR: {error_msg}"
 
